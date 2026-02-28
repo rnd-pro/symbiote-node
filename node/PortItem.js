@@ -19,19 +19,10 @@ export class PortItem extends Symbiote {
 
   renderCallback() {
     this.sub('socketColor', (val) => {
-      if (val) {
-        this.style.setProperty('--socket-color', val);
-      }
+      if (val) this.style.setProperty('--socket-color', val);
     });
     this.sub('side', (val) => {
-      if (val) {
-        this.setAttribute('data-side', val);
-      }
-    });
-    this.sub('key', (val) => {
-      if (val && this.ref.socket) {
-        this.ref.socket.setAttribute('data-key', val);
-      }
+      if (val) this.setAttribute('data-side', val);
     });
 
     // Deferred socket registration — _canvas may not be set yet
@@ -70,7 +61,7 @@ export class PortItem extends Symbiote {
 }
 
 PortItem.template = html`
-<div ref="socket" class="sn-socket"></div>
+<div ref="socket" class="sn-socket" ${{ '@data-key': 'key' }}></div>
 <span class="sn-port-label">{{label}}</span>
 `;
 

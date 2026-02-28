@@ -53,30 +53,27 @@ export class GraphNode extends Symbiote {
    * @param {import('../core/Node.js').Node} node
    */
   #populateFromNodeData(node) {
-    // Input ports
-    this.$.inputPorts = Object.entries(node.inputs).map(([key, input]) => ({
-      key,
-      label: input.label || key,
-      socketColor: input.socket?.color || 'var(--sn-node-accent)',
-      side: 'input',
-    }));
-
-    // Output ports
-    this.$.outputPorts = Object.entries(node.outputs).map(([key, output]) => ({
-      key,
-      label: output.label || key,
-      socketColor: output.socket?.color || 'var(--sn-node-accent)',
-      side: 'output',
-    }));
-
-    // Controls
-    this.$.controlsList = Object.entries(node.controls).map(([key, ctrl]) => ({
-      key,
-      label: key,
-      inputType: ctrl.type || 'text',
-      value: ctrl.value !== undefined ? String(ctrl.value) : '',
-      isReadonly: ctrl.readonly || false,
-    }));
+    this.set$({
+      inputPorts: Object.entries(node.inputs).map(([key, input]) => ({
+        key,
+        label: input.label || key,
+        socketColor: input.socket?.color || 'var(--sn-node-accent)',
+        side: 'input',
+      })),
+      outputPorts: Object.entries(node.outputs).map(([key, output]) => ({
+        key,
+        label: output.label || key,
+        socketColor: output.socket?.color || 'var(--sn-node-accent)',
+        side: 'output',
+      })),
+      controlsList: Object.entries(node.controls).map(([key, ctrl]) => ({
+        key,
+        label: key,
+        inputType: ctrl.type || 'text',
+        value: ctrl.value !== undefined ? String(ctrl.value) : '',
+        isReadonly: ctrl.readonly || false,
+      })),
+    });
   }
 }
 

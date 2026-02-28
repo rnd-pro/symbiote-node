@@ -41,6 +41,7 @@ export class ContextMenu extends Symbiote {
 
   init$ = {
     items: [],
+    visible: false,
     onBackdropClick: () => this.hide(),
     onItemClick: (label) => {
       const action = this._actions.get(label);
@@ -66,14 +67,24 @@ export class ContextMenu extends Symbiote {
       menu.style.left = `${x}px`;
       menu.style.top = `${y}px`;
     }
-    this.removeAttribute('hidden');
+    this.$.visible = true;
   }
 
   /** Hide menu */
   hide() {
-    this.setAttribute('hidden', '');
+    this.$.visible = false;
     this.$.items = [];
     this._actions.clear();
+  }
+
+  renderCallback() {
+    this.sub('visible', (val) => {
+      if (val) {
+        this.removeAttribute('hidden');
+      } else {
+        this.setAttribute('hidden', '');
+      }
+    });
   }
 }
 

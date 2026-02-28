@@ -29,6 +29,7 @@ export class QuickToolbar extends Symbiote {
 
   init$ = {
     items: ACTIONS,
+    visible: false,
     onBtnClick: (/** @type {Event} */ e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
@@ -53,7 +54,7 @@ export class QuickToolbar extends Symbiote {
    */
   show(nodeId, nodeEl) {
     this._nodeId = nodeId;
-    this.removeAttribute('hidden');
+    this.$.visible = true;
 
     // Position centered above node
     const w = nodeEl.offsetWidth || 180;
@@ -67,7 +68,17 @@ export class QuickToolbar extends Symbiote {
   /** Hide toolbar */
   hide() {
     this._nodeId = null;
-    this.setAttribute('hidden', '');
+    this.$.visible = false;
+  }
+
+  renderCallback() {
+    this.sub('visible', (val) => {
+      if (val) {
+        this.removeAttribute('hidden');
+      } else {
+        this.setAttribute('hidden', '');
+      }
+    });
   }
 
   /**

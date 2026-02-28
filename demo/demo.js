@@ -135,16 +135,19 @@ function initDemo() {
         await new Promise((r) => setTimeout(r, 300));
       }
     };
+    const setPlayBtn = (icon, label, active) => {
+      btnPlay.querySelector('.material-symbols-outlined').textContent = icon;
+      btnPlay.lastChild.textContent = ' ' + label;
+      btnPlay.classList.toggle('active', active);
+    };
     const toggleFlow = () => {
       if (flowLoop) {
         flowLoop = false;
         sim.stop();
-        btnPlay.classList.remove('active');
-        btnPlay.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Play';
+        setPlayBtn('play_arrow', 'Play', false);
       } else {
         flowLoop = true;
-        btnPlay.classList.add('active');
-        btnPlay.innerHTML = '<span class="material-symbols-outlined">stop</span> Stop';
+        setPlayBtn('stop', 'Stop', true);
         runLoop();
       }
     };

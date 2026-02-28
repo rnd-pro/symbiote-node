@@ -30,7 +30,6 @@ Node graph editors are the standard for visual programming — from Blender's Ge
 ### 🖼️ Canvas
 - Infinite pan & zoom viewport
 - SVG Bézier connections with gradient coloring
-- Data flow animation (marching ants)
 - Pseudo-connection line during drag
 - Context menu (right-click)
 - Keyboard shortcuts (Delete, Ctrl+A, Ctrl+Shift+A)
@@ -42,12 +41,15 @@ Node graph editors are the standard for visual programming — from Blender's Ge
 - Input/Output ports with typed sockets
 - Inline controls (text, number, checkbox)
 - Drag & drop with snap-to-grid
+- Collapse / Mute toggle per node
 
 ### 🎨 Themes
+- **Grey Neutral** — balanced grey UI (default)
 - **Dark Default** — professional dark UI
 - **Light Clean** — light mode
 - **Synthwave** — neon aesthetic
 - Separate `Palette` (colors) and `Skin` (geometry) APIs
+- `extractTheme()` — read current tokens from live DOM
 - Full CSS custom property design token system
 
 ### 🔧 Interactions
@@ -63,8 +65,23 @@ Node graph editors are the standard for visual programming — from Blender's Ge
 - `CircleShape` — hub/junction node
 - `DiamondShape` — decision/condition node
 - `CommentShape` — annotation/documentation node
-- Extensible via `NodeShape` base class
+- Extensible via `NodeShape` base class + `registerShape()`
 - Adaptive socket positioning per shape
+
+### ⚡ Flow Simulator
+- Topological sort-based data flow animation
+- Per-connection marching ants effect
+- Node pulse animation during traversal
+- Configurable speed, cyclic loop support
+
+### 🛠️ Quick Action Toolbar
+- Floating toolbar above selected node
+- Duplicate, Collapse, Mute, Delete actions
+- Animated appearance, follows node position
+
+### 🔒 Readonly Plugin
+- Toggle readonly mode on canvas
+- Blocks all mutation operations (add/delete/drag)
 
 ## Installation
 
@@ -121,6 +138,7 @@ symbiote-node/
 │   ├── NodeCanvas.js           — main viewport (facade)
 │   ├── NodeViewManager.js      — node CRUD + group drag
 │   ├── ConnectionRenderer.js   — SVG paths + gradients + flow
+│   ├── FlowSimulator.js        — data flow animation engine
 │   ├── PseudoConnection.js     — temp connection line
 │   └── ViewportActions.js      — context menu + keyboard
 ├── node/             — GraphNode + PortItem + CtrlItem + NodeSocket
@@ -128,6 +146,7 @@ symbiote-node/
 ├── interactions/     — Drag, Zoom, Selector, SnapGrid, ConnectFlow
 ├── shapes/           — NodeShape + 5 implementations
 ├── themes/           — Theme, Palette, Skin with design tokens
+├── toolbar/          — QuickToolbar (floating actions)
 ├── plugins/          — Readonly
 ├── demo/             — demo page
 └── tests/            — geometry & topology tests
@@ -138,7 +157,7 @@ symbiote-node/
 ### Console Tools (Demo)
 
 ```js
-switchTheme()    // Cycle: Dark → Light → Synthwave
+switchTheme()    // Cycle: Grey → Dark → Light → Synthwave
 switchPalette()  // Change colors only
 switchSkin()     // Change geometry only
 toggleFlow()     // Toggle data flow animation
@@ -153,14 +172,15 @@ node --test tests/geometry.test.js
 
 ## Roadmap
 
+- [x] Quick Action Toolbar
+- [x] Collapse / Mute nodes
+- [x] Flow Simulator
 - [ ] Undo/Redo (History)
 - [ ] Inspector Side Panel
 - [ ] Node Groups / Frames
-- [ ] Quick Action Toolbar
 - [ ] Minimap
 - [ ] Node Search (Omnibox)
 - [ ] Reroute Nodes
-- [ ] Bypass/Mute flag
 - [ ] Subgraphs
 - [ ] Viewport Culling
 

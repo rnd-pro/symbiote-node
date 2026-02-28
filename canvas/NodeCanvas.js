@@ -187,7 +187,7 @@ export class NodeCanvas extends Symbiote {
     });
 
     // Subscribe to editor events
-    editor.on('nodeadded', (node) => this.#viewManager.addView(node));
+    editor.on('nodecreated', (node) => this.#viewManager.addView(node));
     editor.on('noderemoved', (node) => {
       this.#viewManager.removeView(node);
       // Remove connections touching this node
@@ -197,7 +197,7 @@ export class NodeCanvas extends Symbiote {
         }
       }
     });
-    editor.on('connectionadded', (conn) => this.#connRenderer.add(conn));
+    editor.on('connectioncreated', (conn) => this.#connRenderer.add(conn));
     editor.on('connectionremoved', (conn) => {
       this.#connRenderer.remove(conn);
       this.#selector.getSelectedConnections().delete(conn.id);

@@ -27,6 +27,7 @@ import { PseudoConnection } from './PseudoConnection.js';
 import { ViewportActions } from './ViewportActions.js';
 import '../menu/ContextMenu.js';
 import '../toolbar/QuickToolbar.js';
+import '../node/GraphFrame.js';
 
 export class NodeCanvas extends Symbiote {
 
@@ -59,6 +60,9 @@ export class NodeCanvas extends Symbiote {
 
   /** @type {Map<string, HTMLElement>} */
   #nodeViews = new Map();
+
+  /** @type {Map<string, HTMLElement>} */
+  #frameViews = new Map();
 
   /** @type {boolean} */
   #readonly = false;
@@ -217,6 +221,15 @@ export class NodeCanvas extends Symbiote {
     for (const conn of editor.getConnections()) {
       this.#connRenderer.add(conn);
     }
+
+    // Subscribe to frame events
+    editor.on('framecreated', (frame) => this.#addFrameView(frame));
+    editor.on('frameremoved', (frame) => this.#removeFrameView(frame));
+
+    // Render existing frames
+    for (const frame of editor.getFrames()) {
+      this.#addFrameView(frame);
+    }
   }
 
   /** @returns {ConnectFlow|null} */
@@ -324,6 +337,177 @@ export class NodeCanvas extends Symbiote {
       }
     }
     return positions;
+  }
+
+  // --- Frame API ---
+
+  /**
+   * Add a frame to the canvas
+   * @param {import('../core/Frame.js').Frame} frame
+   */
+  addFrame(frame) {
+    this.#editor?.addFrame(frame);
+  }
+
+  /**
+   * Set frame position
+   * @param {string} frameId
+   * @param {number} x
+   * @param {number} y
+   */
+  setFramePosition(frameId, x, y) {
+    const el = this.#frameViews.get(frameId);
+    if (!el) return;
+    el.style.transform = `translate(${x}px, ${y}px)`;
+    el._position = { x, y };
+    const frame = this.#editor?.getFrame(frameId);
+    if (frame) { frame.x = x; frame.y = y; }
+  }
+
+  /**
+   * Set frame size
+   * @param {string} frameId
+   * @param {number} w
+   * @param {number} h
+   */
+  setFrameSize(frameId, w, h) {
+    const el = this.#frameViews.get(frameId);
+    if (!el) return;
+    el.style.width = `${w}px`;
+    el.style.height = `${h}px`;
+    const frame = this.#editor?.getFrame(frameId);
+    if (frame) { frame.width = w; frame.height = h; }
+  }
+
+  /**
+   * Get node IDs that are spatially inside a frame
+   * @param {string} frameId
+   * @returns {string[]}
+   */
+  #getNodesInFrame(frameId) {
+    const el = this.#frameViews.get(frameId);
+    if (!el) return [];
+    const fp = el._position;
+    const fw = parseFloat(el.style.width) || el._frameData?.width || 400;
+    const fh = parseFloat(el.style.height) || el._frameData?.height || 300;
+    const ids = [];
+    for (const [nodeId, nodeEl] of this.#nodeViews) {
+      const np = nodeEl._position;
+      if (np.x >= fp.x && np.y >= fp.y && np.x <= fp.x + fw && np.y <= fp.y + fh) {
+        ids.push(nodeId);
+      }
+    }
+    return ids;
+  }
+
+  /**
+   * Create frame DOM element with drag and resize
+   * @param {import('../core/Frame.js').Frame} frame
+   */
+  #addFrameView(frame) {
+    const el = document.createElement('graph-frame');
+    el.style.position = 'absolute';
+    el.style.width = `${frame.width}px`;
+    el.style.height = `${frame.height}px`;
+    el.style.transform = `translate(${frame.x}px, ${frame.y}px)`;
+    el._position = { x: frame.x, y: frame.y };
+    el._frameData = frame;
+    el.setAttribute('frame-id', frame.id);
+
+    // Wait for Symbiote render, then set state
+    requestAnimationFrame(() => {
+      if (el.$) {
+        el.$.label = frame.label;
+        el.$.color = frame.color;
+      }
+    });
+
+    // Frame drag — moves child nodes too
+    const drag = new Drag();
+    let childStartPositions = null;
+    let frameStartPos = null;
+
+    drag.initialize(
+      el,
+      {
+        getPosition: () => el._position,
+        getZoom: () => this.$.zoom,
+      },
+      {
+        onStart: () => {
+          if (this.#readonly) return;
+          frameStartPos = { ...el._position };
+          // Capture positions of nodes that are inside this frame
+          const nodeIds = this.#getNodesInFrame(frame.id);
+          childStartPositions = new Map();
+          for (const nid of nodeIds) {
+            const nel = this.#nodeViews.get(nid);
+            if (nel) childStartPositions.set(nid, { ...nel._position });
+          }
+        },
+        onTranslate: (x, y) => {
+          if (this.#readonly) return;
+          // Move child nodes by delta from frame start
+          if (childStartPositions && frameStartPos) {
+            const dx = x - frameStartPos.x;
+            const dy = y - frameStartPos.y;
+            for (const [nid, startPos] of childStartPositions) {
+              this.setNodePosition(nid, startPos.x + dx, startPos.y + dy);
+            }
+          }
+          this.setFramePosition(frame.id, x, y);
+        },
+        onDrop: () => {
+          childStartPositions = null;
+          frameStartPos = null;
+        },
+      }
+    );
+    el._drag = drag;
+
+    // Resize handle
+    requestAnimationFrame(() => {
+      const handle = el.ref?.resizeHandle;
+      if (handle) {
+        const resizeDrag = new Drag();
+        let startSize = null;
+        resizeDrag.initialize(
+          handle,
+          {
+            getPosition: () => ({ x: frame.width, y: frame.height }),
+            getZoom: () => this.$.zoom,
+          },
+          {
+            onStart: () => {
+              startSize = { w: frame.width, h: frame.height };
+            },
+            onTranslate: (x, y) => {
+              const w = Math.max(120, x);
+              const h = Math.max(80, y);
+              this.setFrameSize(frame.id, w, h);
+            },
+            onDrop: () => { startSize = null; },
+          }
+        );
+        el._resizeDrag = resizeDrag;
+      }
+    });
+
+    this.ref.framesLayer.appendChild(el);
+    this.#frameViews.set(frame.id, el);
+  }
+
+  /**
+   * Remove frame DOM element
+   * @param {import('../core/Frame.js').Frame} frame
+   */
+  #removeFrameView(frame) {
+    const el = this.#frameViews.get(frame.id);
+    if (!el) return;
+    if (el._drag) el._drag.destroy();
+    if (el._resizeDrag) el._resizeDrag.destroy();
+    el.remove();
+    this.#frameViews.delete(frame.id);
   }
 
   // --- Selection ---

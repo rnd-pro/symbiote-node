@@ -10,6 +10,7 @@
 export { NodeEditor } from './core/Editor.js';
 export { Node } from './core/Node.js';
 export { Connection } from './core/Connection.js';
+export { Frame } from './core/Frame.js';
 export { Socket, Port, Input, Output, Control, InputControl, uid } from './core/Socket.js';
 
 // Canvas

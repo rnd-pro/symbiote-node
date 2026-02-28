@@ -13,6 +13,7 @@ import { Connection } from './Connection.js';
 /**
  * @typedef {'nodecreate'|'nodecreated'|'noderemove'|'noderemoved'|
  *           'connectioncreate'|'connectioncreated'|'connectionremove'|'connectionremoved'|
+ *           'framecreate'|'framecreated'|'frameremove'|'frameremoved'|
  *           'clear'|'cleared'|'nodeselect'|'nodedeselect'} EditorEvent
  */
 
@@ -23,6 +24,9 @@ export class NodeEditor {
 
     /** @type {Map<string, Connection>} */
     this.connections = new Map();
+
+    /** @type {Map<string, import('./Frame.js').Frame>} */
+    this.frames = new Map();
 
     /** @type {Object<string, Set<function>>} */
     this._listeners = {};
@@ -183,6 +187,52 @@ export class NodeEditor {
       this.removeNode(id);
     }
     this.emit('cleared', null);
+    return true;
+  }
+
+  // --- Frame CRUD ---
+
+  /**
+   * Get frame by ID
+   * @param {string} id
+   * @returns {import('./Frame.js').Frame|undefined}
+   */
+  getFrame(id) {
+    return this.frames.get(id);
+  }
+
+  /**
+   * Get all frames
+   * @returns {import('./Frame.js').Frame[]}
+   */
+  getFrames() {
+    return [...this.frames.values()];
+  }
+
+  /**
+   * Add frame
+   * @param {import('./Frame.js').Frame} frame
+   * @returns {boolean}
+   */
+  addFrame(frame) {
+    if (this.frames.has(frame.id)) throw new Error('frame already added');
+    if (!this.emit('framecreate', frame)) return false;
+    this.frames.set(frame.id, frame);
+    this.emit('framecreated', frame);
+    return true;
+  }
+
+  /**
+   * Remove frame
+   * @param {string} id
+   * @returns {boolean}
+   */
+  removeFrame(id) {
+    const frame = this.frames.get(id);
+    if (!frame) return false;
+    if (!this.emit('frameremove', frame)) return false;
+    this.frames.delete(id);
+    this.emit('frameremoved', frame);
     return true;
   }
 

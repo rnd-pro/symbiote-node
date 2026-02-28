@@ -178,6 +178,7 @@ export class ViewportActions {
       const graphY = (e.clientY - rect.top - transform.panY) / transform.zoom;
       contextMenuEl.show(menuX, menuY, [
         { label: 'Add Node', icon: 'add_box', action: () => this.#editor?.emit('contextadd', { x: graphX, y: graphY }) },
+        { label: 'Add Frame', icon: 'dashboard', action: () => this.#editor?.emit('contextaddframe', { x: graphX, y: graphY }) },
         { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
         { label: 'Fit View', icon: 'fit_screen', action: () => this.fitView(container) },
       ]);

@@ -7,7 +7,7 @@
 
 import {
   NodeEditor, Node, Connection, Socket, Input, Output, InputControl,
-  FlowSimulator,
+  FlowSimulator, Frame,
   DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE, GREY_NEUTRAL,
   DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE,
   MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN,
@@ -94,6 +94,12 @@ function initDemo() {
     if (c) c.setNodePosition(newNode.id, x, y);
   });
 
+  // Context menu add frame
+  editor.on('contextaddframe', ({ x, y }) => {
+    const frame = new Frame('Group', { x, y, width: 400, height: 300, color: '#4a9eff' });
+    editor.addFrame(frame);
+  });
+
   // Mount canvas
   const canvas = document.querySelector('node-canvas');
   if (canvas) {
@@ -119,6 +125,10 @@ function initDemo() {
       canvas.setNodePosition(merge.id, 1200, 200);
       canvas.setNodePosition(save.id, 1380, 180);
     }, 200);
+
+    // Demo frame around data source nodes
+    const pipelineFrame = new Frame('Data Source', { x: 40, y: 60, width: 660, height: 360, color: '#5cb8ff' });
+    editor.addFrame(pipelineFrame);
 
     // --- Flow Simulator (cyclic) ---
     const sim = new FlowSimulator(editor, canvas);

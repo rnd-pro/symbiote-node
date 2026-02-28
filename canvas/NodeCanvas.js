@@ -34,6 +34,7 @@ export class NodeCanvas extends Symbiote {
     zoom: 1,
     panX: 0,
     panY: 0,
+    '+contentTransform': () => `translate(${this.$.panX}px, ${this.$.panY}px) scale(${this.$.zoom})`,
   };
 
   /** @type {import('../core/Editor.js').NodeEditor|null} */
@@ -373,10 +374,6 @@ export class NodeCanvas extends Symbiote {
   // --- Transform ---
 
   #updateTransform() {
-    const content = this.ref.content;
-    if (content) {
-      content.style.transform = `translate(${this.$.panX}px, ${this.$.panY}px) scale(${this.$.zoom})`;
-    }
     // Sync grid dots with pan/zoom
     const gridBase = parseInt(getComputedStyle(this).getPropertyValue('--sn-grid-size')) || 20;
     const gridSize = gridBase * this.$.zoom;
@@ -435,6 +432,13 @@ export class NodeCanvas extends Symbiote {
       });
     });
     container.addEventListener('keydown', (e) => this.#actions?.handleKeydown(e));
+
+    // Computed transform — auto-tracks panX, panY, zoom
+    this.sub('+contentTransform', (val) => {
+      if (this.ref.content) {
+        this.ref.content.style.transform = val;
+      }
+    });
 
     this.#updateTransform();
   }

@@ -11,4 +11,5 @@ export const template = html`
   <svg ref="pseudoSvg" class="sn-pseudo-svg"></svg>
   <context-menu ref="contextMenu" hidden></context-menu>
 </div>
+<inspector-panel ref="inspector" hidden></inspector-panel>
 `;

@@ -28,6 +28,7 @@ import { ViewportActions } from './ViewportActions.js';
 import '../menu/ContextMenu.js';
 import '../toolbar/QuickToolbar.js';
 import '../node/GraphFrame.js';
+import '../inspector/InspectorPanel.js';
 
 export class NodeCanvas extends Symbiote {
 
@@ -541,6 +542,18 @@ export class NodeCanvas extends Symbiote {
         if (nodeEl) toolbar.show(nodeId, nodeEl);
       } else {
         toolbar.hide();
+      }
+    }
+
+    // Inspector — show selected node details
+    const inspector = this.ref.inspector;
+    if (inspector) {
+      if (selectedNodes.size === 1) {
+        const nodeId = [...selectedNodes][0];
+        const node = this.#editor?.getNode(nodeId);
+        if (node) inspector.inspect(node);
+      } else {
+        inspector.clear();
       }
     }
   }

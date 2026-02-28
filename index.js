@@ -45,3 +45,6 @@ export { Readonly } from './plugins/Readonly.js';
 // Toolbar
 export { QuickToolbar } from './toolbar/QuickToolbar.js';
 export { FlowSimulator } from './canvas/FlowSimulator.js';
+
+// Inspector
+export { InspectorPanel } from './inspector/InspectorPanel.js';

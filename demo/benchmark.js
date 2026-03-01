@@ -162,8 +162,11 @@ function updateHud() {
     `${Math.min(100, (allNodes.length / TARGET) * 100)}%`;
 }
 
+/** @type {Connection[]} */
+const pendingConns = [];
+
 /**
- * Spawn a batch of nodes with connections
+ * Spawn a batch of nodes (connections deferred)
  */
 function spawnBatch() {
   const startIdx = allNodes.length;
@@ -180,15 +183,14 @@ function spawnBatch() {
     const row = Math.floor(idx / COLS);
     canvas.setNodePosition(node.id, col * SPACING_X + 40, row * SPACING_Y + 40);
 
-    // Connect to a previous node if available
+    // Queue connection (deferred to avoid SVG recalc during spawn)
     if (allNodes.length > 0) {
       const prevIdx = Math.max(0, allNodes.length - 1 - (idx % 3));
       const prev = allNodes[prevIdx];
       const prevOutputs = Object.keys(prev.outputs);
       const nodeInputs = Object.keys(node.inputs);
       if (prevOutputs.length > 0 && nodeInputs.length > 0) {
-        const conn = new Connection(prev, prevOutputs[0], node, nodeInputs[0]);
-        editor.addConnection(conn);
+        pendingConns.push(new Connection(prev, prevOutputs[0], node, nodeInputs[0]));
       }
     }
 
@@ -196,9 +198,6 @@ function spawnBatch() {
   }
 
   updateHud();
-
-  // Update LOD state after spawning
-  if (canvas.updateLOD) canvas.updateLOD();
 }
 
 /**
@@ -224,7 +223,17 @@ async function runBenchmark() {
     await new Promise((r) => setTimeout(r, INTERVAL));
   }
 
-  // Final fit
+  // Add all connections in one batch after nodes are done
+  btn.lastChild.textContent = ` Connecting (${pendingConns.length})...`;
+  await new Promise((r) => setTimeout(r, 50));
+
+  for (const conn of pendingConns) {
+    editor.addConnection(conn);
+  }
+  pendingConns.length = 0;
+  updateHud();
+
+  // Final fit + LOD
   fitToContent();
 
   running = false;
@@ -235,6 +244,7 @@ async function runBenchmark() {
 
 function reset() {
   running = false;
+  pendingConns.length = 0;
 
   // Remove all nodes
   for (const node of [...allNodes]) {

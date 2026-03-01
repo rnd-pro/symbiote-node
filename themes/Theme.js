@@ -20,6 +20,27 @@ export { SYNTHWAVE } from './synthwave.js';
 export { GREY_NEUTRAL } from './grey.js';
 
 /**
+ * Mapping from layout global tokens to symbiote-node tokens.
+ * Layout module uses --bg-*, --text-* format; this bridges them.
+ * @type {Object<string, string>}
+ */
+const LAYOUT_TOKEN_MAP = {
+  '--bg-panel': '--sn-node-bg',
+  '--bg-deeper': '--sn-bg',
+  '--bg-header': '--sn-node-header-bg',
+  '--bg-hover': '--sn-node-hover',
+  '--bg-popup': '--sn-ctx-bg',
+  '--text-main': '--sn-text',
+  '--text-dim': '--sn-text-dim',
+  '--text-muted': '--sn-text-dim',
+  '--layout-border': '--sn-node-border',
+  '--layout-highlight': '--sn-node-selected',
+  '--border-popup': '--sn-ctx-border',
+  '--accent': '--sn-node-selected',
+  '--font-main': '--sn-font',
+};
+
+/**
  * Apply a theme to a DOM element
  * @param {HTMLElement} element
  * @param {ThemeDefinition} theme
@@ -27,6 +48,13 @@ export { GREY_NEUTRAL } from './grey.js';
 export function applyTheme(element, theme) {
   for (const [key, value] of Object.entries(theme.tokens)) {
     element.style.setProperty(key, value);
+  }
+  // Bridge: derive global layout tokens from --sn-* values
+  for (const [layoutToken, snToken] of Object.entries(LAYOUT_TOKEN_MAP)) {
+    const value = theme.tokens[snToken];
+    if (value) {
+      element.style.setProperty(layoutToken, value);
+    }
   }
 }
 

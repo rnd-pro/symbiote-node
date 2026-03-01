@@ -11,9 +11,12 @@ import {
   DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE, GREY_NEUTRAL,
   DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE,
   MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN,
+  Layout, LayoutTree, applyTheme,
 } from '../index.js';
 import '../canvas/NodeCanvas/NodeCanvas.js';
 import '../node/GraphNode/GraphNode.js';
+import '../layout/Layout/Layout.js';
+import '../palette/PaletteBrowser/PaletteBrowser.js';
 
 /**
  * Initialize automation workflow demo
@@ -159,21 +162,63 @@ function initDemo() {
     if (c) c.autoLayout();
   });
 
-  // Mount canvas
-  const canvas = document.querySelector('node-canvas');
-  if (canvas) {
-    canvas.setEditor(editor);
+  // Apply theme to :root so both layout and canvas inherit tokens
+  const applyToRoot = (theme) => {
+    applyTheme(document.documentElement, theme);
+  };
+  applyToRoot(GREY_NEUTRAL);
 
-    // Apply theme CSS vars to :root so header inherits them
-    const applyToRoot = (theme) => {
-      const root = document.documentElement;
-      for (const [k, v] of Object.entries(theme.tokens)) {
-        root.style.setProperty(k, v);
-      }
-    };
-    applyToRoot(GREY_NEUTRAL);
+  // Setup layout
+  const layout = document.querySelector('sn-layout');
+  if (!layout) return;
+
+  // Register panel types
+  layout.registerPanelType('canvas', {
+    title: 'Canvas',
+    icon: 'account_tree',
+    component: 'node-canvas',
+  });
+  layout.registerPanelType('inspector', {
+    title: 'Inspector',
+    icon: 'info',
+    component: 'inspector-panel',
+  });
+  layout.registerPanelType('palette', {
+    title: 'Palette',
+    icon: 'palette',
+    component: 'palette-browser',
+  });
+
+  // Set initial layout: canvas (75%) | inspector (25%)
+  const initialLayout = LayoutTree.createSplit(
+    'horizontal',
+    LayoutTree.createPanel('canvas'),
+    LayoutTree.createPanel('inspector'),
+    0.75,
+  );
+
+  // Only set if no stored layout
+  if (!localStorage.getItem('symbiote-node-demo-layout')) {
+    layout.setLayout(initialLayout);
+  }
+
+  // Wait for layout to render, then find the canvas
+  setTimeout(() => {
+    const canvas = document.querySelector('node-canvas');
+    if (!canvas) {
+      console.warn('node-canvas not found in layout');
+      return;
+    }
+
+    canvas.setEditor(editor);
     canvas.setTheme(GREY_NEUTRAL);
     canvas.setSnapGrid(true, 20);
+
+    // Connect inspector to canvas
+    const inspector = document.querySelector('inspector-panel');
+    if (inspector) {
+      inspector._canvas = canvas;
+    }
 
     // History (Undo/Redo)
     const history = new History();
@@ -289,7 +334,7 @@ function initDemo() {
       canvas.setSkin(skins[skinIdx]);
       console.log(`Skin: ${skins[skinIdx].name}`);
     };
-  }
+  }, 300);
 }
 
 // Auto-init

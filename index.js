@@ -56,7 +56,12 @@ export { Minimap } from './canvas/Minimap/Minimap.js';
 // Search
 export { NodeSearch } from './canvas/NodeSearch/NodeSearch.js';
 
-// Layout
+// Layout (panel workspace)
+export { Layout } from './layout/Layout/Layout.js';
+export { LayoutNode } from './layout/LayoutNode/LayoutNode.js';
+export * as LayoutTree from './layout/LayoutTree.js';
+
+// Auto Layout
 export { computeAutoLayout } from './canvas/AutoLayout.js';
 
 // Portals (Named Reroutes)

@@ -53,8 +53,10 @@ export class Zoom {
   #wheel = (e) => {
     e.preventDefault();
     const rect = this.#content.getBoundingClientRect();
-    const isNegative = e.deltaY < 0;
-    const delta = isNegative ? this.intensity : -this.intensity;
+    // Normalize delta: trackpads send small frequent deltas, mice send large ones
+    const absDelta = Math.min(Math.abs(e.deltaY), 10) / 10;
+    const sign = e.deltaY < 0 ? 1 : -1;
+    const delta = sign * this.intensity * absDelta;
     const ox = (rect.left - e.clientX) * delta;
     const oy = (rect.top - e.clientY) * delta;
     this.#onZoom(delta, ox, oy, 'wheel');

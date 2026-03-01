@@ -79,20 +79,9 @@ graph-node {
     }
 
     & .sn-node-header,
-    & .sn-inputs,
-    & .sn-outputs,
-    & .sn-controls,
-    & .sn-subgraph-preview,
+    & .sn-node-body,
     & .sn-error-frame {
       visibility: hidden;
-      height: 0;
-      padding: 0;
-      margin: 0;
-      overflow: hidden;
-    }
-
-    & .sn-node-body {
-      padding: 0;
     }
   }
 

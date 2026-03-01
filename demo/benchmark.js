@@ -17,7 +17,7 @@ const BATCH = 5;
 const INTERVAL = 60;
 const COLS = 20;
 const SPACING_X = 280;
-const SPACING_Y = 160;
+const SPACING_Y = 300;
 
 const socketTypes = [
   new Socket('data', { color: '#5cb8ff' }),

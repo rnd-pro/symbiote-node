@@ -92,29 +92,24 @@ export class NodeSearch extends Symbiote {
       }
       this.#search(q);
     });
+  }
 
-    // Handle result clicks via delegation
-    this.addEventListener('click', (e) => {
-      const item = e.target.closest('.search-result');
-      if (item?.dataset?.nodeId) {
-        this.#handleResultClick(item.dataset.nodeId);
-      }
-    });
+  onSearchInput(e) {
+    this.$.query = e.target.value;
+  }
 
-    // Handle input
-    this.addEventListener('input', (e) => {
-      if (e.target.classList.contains('search-input')) {
-        this.$.query = e.target.value;
-      }
-    });
+  onSearchKeydown(e) {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      this.close();
+    }
+  }
 
-    // Escape to close
-    this.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        this.close();
-      }
-    });
+  onResultClick(e) {
+    const item = e.target.closest('.search-result');
+    if (item?.dataset?.nodeId) {
+      this.#handleResultClick(item.dataset.nodeId);
+    }
   }
 }
 

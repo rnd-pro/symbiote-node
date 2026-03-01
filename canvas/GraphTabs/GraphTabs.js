@@ -154,13 +154,11 @@ export class GraphTabs extends Symbiote {
     }
   }
 
-  renderCallback() {
-    this.ref.tabAdd?.addEventListener('click', () => {
-      if (this.#onAdd) {
-        const newTab = this.#onAdd();
-        if (newTab) this.addTab(newTab.id, newTab.name, newTab.state);
-      }
-    });
+  onAddTab() {
+    if (this.#onAdd) {
+      const newTab = this.#onAdd();
+      if (newTab) this.addTab(newTab.id, newTab.name, newTab.state);
+    }
   }
 }
 

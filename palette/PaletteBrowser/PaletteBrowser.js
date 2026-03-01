@@ -108,10 +108,8 @@ export class PaletteBrowser extends Symbiote {
     }
   }
 
-  renderCallback() {
-    this.ref.palSearch?.addEventListener('input', (e) => {
-      this.#renderList(e.target.value);
-    });
+  onSearchInput(e) {
+    this.#renderList(e.target.value);
   }
 }
 

@@ -10,7 +10,7 @@ export const template = html`
     Components
   </div>
   <div class="pal-search">
-    <input ref="palSearch" type="text" placeholder="Search components..." />
+    <input ref="palSearch" type="text" placeholder="Search components..." ${{ oninput: 'onSearchInput' }} />
   </div>
   <div ref="palList" class="pal-list"></div>
 `;

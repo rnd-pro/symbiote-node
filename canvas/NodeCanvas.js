@@ -394,10 +394,7 @@ export class NodeCanvas extends Symbiote {
     body.className = 'sn-error-frame-body';
     body.textContent = message;
 
-    const tail = document.createElement('div');
-    tail.className = 'sn-error-frame-tail';
-
-    frame.append(header, body, tail);
+    frame.append(header, body);
     el.append(frame);
   }
 

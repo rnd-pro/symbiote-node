@@ -118,14 +118,7 @@ graph-node {
     word-wrap: break-word;
   }
 
-  & .sn-error-frame-tail {
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 6px solid transparent;
-    border-top: 6px solid color-mix(in srgb, #ef4444 60%, transparent);
-  }
+
 
   &[data-selected] .sn-error-frame {
     bottom: calc(100% + 46px);

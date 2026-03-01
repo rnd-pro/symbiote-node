@@ -1,0 +1,69 @@
+/**
+ * Breadcrumb styles
+ * @module symbiote-node/canvas/Breadcrumb.css
+ */
+import { css } from '@symbiotejs/symbiote';
+
+export const styles = css`
+  graph-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 12px;
+    font-family: var(--sn-font, 'Inter', sans-serif);
+    font-size: 12px;
+    color: var(--sn-text-dim, #a0a0a0);
+    background: var(--sn-ctx-bg, rgba(30, 30, 46, 0.92));
+    border-radius: 6px;
+    backdrop-filter: blur(8px);
+    pointer-events: auto;
+    user-select: none;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 50;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
+    transition: opacity 0.2s ease-out;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .bc-item {
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease-out, color 0.15s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &:hover {
+      background: var(--sn-ctx-hover, rgba(90, 159, 212, 0.15));
+      color: var(--sn-text, #cdd6f4);
+    }
+
+    &[data-active] {
+      color: var(--sn-text, #cdd6f4);
+      font-weight: 500;
+      cursor: default;
+
+      &:hover {
+        background: transparent;
+      }
+    }
+
+    & .material-symbols-outlined {
+      font-size: 14px;
+    }
+  }
+
+  .bc-sep {
+    color: var(--sn-text-dim, #a0a0a0);
+    opacity: 0.5;
+    font-size: 11px;
+    padding: 0 2px;
+  }
+`;

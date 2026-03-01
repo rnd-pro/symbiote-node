@@ -7,7 +7,9 @@
  * @module symbiote-node/components/PortItem
  */
 
-import Symbiote, { html, css } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
+import { template } from './PortItem.tpl.js';
+import { styles } from './PortItem.css.js';
 
 export class PortItem extends Symbiote {
   key = '';
@@ -64,96 +66,8 @@ export class PortItem extends Symbiote {
   }
 }
 
-PortItem.template = html`
-<div ref="socket" class="sn-socket" ${{ '@data-key': 'key' }}></div>
-<span class="sn-port-label">{{label}}</span>
-`;
-
-PortItem.rootStyles = css`
-sn-port-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 12px;
-  min-height: 28px;
-
-  &[data-side="input"] {
-    flex-direction: row;
-
-    & .sn-socket {
-      margin-left: -22px;
-    }
-  }
-
-  &[data-side="output"] {
-    flex-direction: row-reverse;
-
-    & .sn-socket {
-      margin-right: -22px;
-    }
-  }
-
-  & .sn-socket {
-    position: relative;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: transparent;
-    cursor: crosshair;
-    flex-shrink: 0;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &::after {
-      content: '';
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--socket-color, var(--sn-node-accent, #4a9eff));
-      border: 2px solid var(--sn-node-bg, #16213e);
-      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-      pointer-events: none;
-    }
-
-    &[data-socket-shape="square"]::after {
-      border-radius: 2px;
-    }
-
-    &[data-socket-shape="diamond"]::after {
-      border-radius: 1px;
-      transform: rotate(45deg) scale(0.85);
-    }
-
-    &[data-socket-shape="diamond"]:hover::after {
-      transform: rotate(45deg) scale(1.1);
-    }
-
-    &[data-socket-shape="triangle"]::after {
-      border-radius: 0;
-      background: transparent;
-      width: 0;
-      height: 0;
-      border: 6px solid transparent;
-      border-left: 10px solid var(--socket-color, var(--sn-node-accent));
-      border-right: none;
-    }
-
-    &:hover::after {
-      transform: scale(1.3);
-      box-shadow: 0 0 8px var(--socket-color, var(--sn-node-accent));
-    }
-  }
-
-  & .sn-port-label {
-    color: var(--sn-text-dim, #94a3b8);
-    font-size: 12px;
-    white-space: nowrap;
-  }
-}
-`;
-
+PortItem.template = template;
+PortItem.rootStyles = styles;
 PortItem.reg('sn-port-item');
 
 /** @type {Object<string, string>} - Socket type name to visual shape */

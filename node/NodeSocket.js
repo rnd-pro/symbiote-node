@@ -7,7 +7,8 @@
  * @module symbiote-node/components/NodeSocket
  */
 
-import Symbiote, { html, css } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
+import { template } from './NodeSocket.tpl.js';
 
 export class NodeSocket extends Symbiote {
 
@@ -20,5 +21,5 @@ export class NodeSocket extends Symbiote {
   }
 }
 
-NodeSocket.template = html`<slot></slot>`;
+NodeSocket.template = template;
 NodeSocket.reg('node-socket');

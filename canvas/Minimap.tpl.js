@@ -1,0 +1,9 @@
+/**
+ * Minimap template
+ * @module symbiote-node/canvas/Minimap.tpl
+ */
+import { html } from '@symbiotejs/symbiote';
+
+export const template = html`
+<canvas width="200" height="140"></canvas>
+`;

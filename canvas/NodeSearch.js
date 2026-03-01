@@ -8,7 +8,9 @@
  * @module symbiote-node/canvas/NodeSearch
  */
 
-import Symbiote, { html, css } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
+import { template, searchResultTemplate } from './NodeSearch.tpl.js';
+import { styles } from './NodeSearch.css.js';
 
 export class NodeSearch extends Symbiote {
 
@@ -128,113 +130,9 @@ class SearchResultItem extends Symbiote {
   category = '';
 }
 
-SearchResultItem.template = html`
-<div class="sn-search-result" data-node-id="{{id}}">
-  <span class="sn-search-result-label">{{label}}</span>
-  <span class="sn-search-result-type">{{type}}</span>
-</div>
-`;
+SearchResultItem.template = searchResultTemplate;
 SearchResultItem.reg('sn-search-result-item');
 
-NodeSearch.template = html`
-<div class="sn-search-bar">
-  <span class="material-symbols-outlined sn-search-icon">search</span>
-  <input class="sn-search-input" type="text" placeholder="Search nodes..." />
-  <span class="sn-search-hint">Esc</span>
-</div>
-<div class="sn-search-results" ${{ itemize: 'results', 'item-tag': 'sn-search-result-item' }}></div>
-`;
-
-NodeSearch.rootStyles = css`
-node-search {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 360px;
-  z-index: 200;
-  font-family: var(--sn-font, 'Inter', sans-serif);
-
-  &[hidden] {
-    display: none;
-  }
-
-  & .sn-search-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    background: var(--sn-node-bg, #2a2a3e);
-    border: 1px solid var(--sn-node-border, rgba(255,255,255,0.12));
-    border-radius: 10px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  }
-
-  & .sn-search-icon {
-    font-size: 18px;
-    color: var(--sn-text-dim, #888);
-  }
-
-  & .sn-search-input {
-    flex: 1;
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--sn-text, #d4d4d4);
-    font-size: 14px;
-    font-family: inherit;
-  }
-
-  & .sn-search-input::placeholder {
-    color: var(--sn-text-dim, #666);
-  }
-
-  & .sn-search-hint {
-    font-size: 11px;
-    color: var(--sn-text-dim, #555);
-    padding: 2px 6px;
-    border: 1px solid var(--sn-node-border, rgba(255,255,255,0.08));
-    border-radius: 4px;
-  }
-
-  & .sn-search-results {
-    margin-top: 4px;
-    background: var(--sn-node-bg, #2a2a3e);
-    border-radius: 8px;
-    border: 1px solid var(--sn-node-border, rgba(255,255,255,0.08));
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-    overflow: hidden;
-    max-height: 300px;
-    overflow-y: auto;
-  }
-
-  & .sn-search-results:empty {
-    display: none;
-  }
-}
-
-.sn-search-result {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 14px;
-  cursor: pointer;
-  color: var(--sn-text, #d4d4d4);
-  font-size: 13px;
-  transition: background 0.1s;
-
-  &:hover {
-    background: rgba(255,255,255,0.06);
-  }
-}
-
-.sn-search-result-type {
-  font-size: 11px;
-  color: var(--sn-text-dim, #888);
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.05);
-}
-`;
-
+NodeSearch.template = template;
+NodeSearch.rootStyles = styles;
 NodeSearch.reg('node-search');

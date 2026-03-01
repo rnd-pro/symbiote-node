@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>symbiote-node Benchmark</title>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--sn-bg, #2d2d2d);
+      color: var(--sn-text, #d4d4d4);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 12px 20px;
+      background: var(--sn-node-bg, #3d3d3d);
+      border-bottom: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.06));
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    header .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: color-mix(in srgb, #ef4444 20%, transparent);
+      color: #ef4444;
+    }
+
+    header .spacer {
+      flex: 1;
+    }
+
+    header .demo-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border: 1px solid var(--sn-node-border, #555);
+      border-radius: 4px;
+      background: var(--sn-node-hover, #444);
+      color: var(--sn-text, #d4d4d4);
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    header .demo-btn:hover {
+      background: color-mix(in srgb, var(--sn-node-hover, #505050) 80%, white);
+    }
+
+    header .demo-btn.active {
+      background: color-mix(in srgb, #5cd87a 20%, transparent);
+      border-color: #5cd87a;
+      color: #5cd87a;
+    }
+
+    header .demo-btn .material-symbols-outlined {
+      font-size: 16px;
+    }
+
+    main {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* HUD overlay */
+    #hud {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px 20px;
+      min-width: 220px;
+      backdrop-filter: blur(10px);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #hud h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 10px;
+    }
+
+    .hud-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px 0;
+      font-size: 13px;
+    }
+
+    .hud-row .label {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .hud-row .value {
+      font-weight: 700;
+      font-size: 18px;
+      color: #fff;
+    }
+
+    .hud-row .value.nodes {
+      color: #5cb8ff;
+    }
+
+    .hud-row .value.conns {
+      color: #5cd87a;
+    }
+
+    .hud-row .value.fps {
+      color: #f0b840;
+    }
+
+    #hud .progress-bar {
+      margin-top: 12px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    #hud .progress-bar .fill {
+      height: 100%;
+      background: linear-gradient(90deg, #5cb8ff, #5cd87a);
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>symbiote-node</h1>
+    <span class="badge">Benchmark</span>
+    <span class="spacer"></span>
+    <button id="btnStart" class="demo-btn" title="Start benchmark">
+      <span class="material-symbols-outlined">rocket_launch</span> Start
+    </button>
+    <button id="btnReset" class="demo-btn" title="Reset">
+      <span class="material-symbols-outlined">restart_alt</span> Reset
+    </button>
+  </header>
+  <main>
+    <div id="hud">
+      <h3>Benchmark</h3>
+      <div class="hud-row"><span class="label">Nodes</span><span id="hudNodes" class="value nodes">0</span></div>
+      <div class="hud-row"><span class="label">Connections</span><span id="hudConns" class="value conns">0</span></div>
+      <div class="hud-row"><span class="label">FPS</span><span id="hudFps" class="value fps">--</span></div>
+      <div class="progress-bar">
+        <div id="hudProgress" class="fill"></div>
+      </div>
+    </div>
+    <node-canvas></node-canvas>
+  </main>
+  <script type="importmap">
+    {
+      "imports": {
+        "@symbiotejs/symbiote": "https://esm.sh/@symbiotejs/symbiote@3"
+      }
+    }
+  </script>
+  <script type="module" src="benchmark.js"></script>
+</body>
+
+</html>

@@ -10,6 +10,7 @@
 
 import { Drag } from '../interactions/Drag.js';
 import { Selector } from '../interactions/Selector.js';
+import { animateOut } from '@symbiotejs/symbiote';
 
 export class NodeViewManager {
 
@@ -146,7 +147,7 @@ export class NodeViewManager {
     if (!el) return;
     if (el._previewRaf) cancelAnimationFrame(el._previewRaf);
     if (el._drag) el._drag.destroy();
-    el.remove();
+    animateOut(el);
     this.#nodeViews.delete(node.id);
     this.#selector.getSelectedNodes().delete(node.id);
   }

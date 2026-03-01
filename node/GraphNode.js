@@ -23,6 +23,7 @@ const CATEGORY_ICONS = {
 };
 
 export class GraphNode extends Symbiote {
+  destructionDelay = 200;
 
   init$ = {
     '@node-label': '',

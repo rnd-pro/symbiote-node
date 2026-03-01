@@ -100,7 +100,7 @@ npx -y serve -l 3000 .
 <script type="importmap">
 {
   "imports": {
-    "@symbiotejs/symbiote": "https://esm.sh/@symbiotejs/symbiote@3"
+    "@symbiotejs/symbiote": "https://esm.sh/@symbiotejs/symbiote@3.2.1"
   }
 }
 </script>

@@ -20,7 +20,7 @@ export class ActionZone extends Symbiote {
 
   init$ = {
     // Position: 'tl' | 'tr' | 'bl' | 'br'
-    corner: 'tl',
+    '@corner': 'tl',
 
     // Panel ID (inherited from parent node)
     panelId: '',
@@ -36,10 +36,7 @@ export class ActionZone extends Symbiote {
   };
 
   renderCallback() {
-    // Reactive attribute binding for corner
-    this.sub('corner', (val) => this.setAttribute('corner', val));
-
-    // Bind pointer events directly to component (host events require direct binding)
+    // Bind pointer events directly to component
     this.onpointerdown = (e) => this._onPointerDown(e);
     this.onpointermove = (e) => this._onPointerMove(e);
     this.onpointerup = (e) => this._onPointerUp(e);
@@ -93,7 +90,7 @@ export class ActionZone extends Symbiote {
     this.dispatchEvent(new CustomEvent('action-zone-start', {
       bubbles: true,
       composed: true,
-      detail: { panelId: this.$.panelId, corner: this.$.corner }
+      detail: { panelId: this.$.panelId, corner: this.$['@corner'] }
     }));
   }
 
@@ -125,7 +122,7 @@ export class ActionZone extends Symbiote {
         composed: true,
         detail: {
           panelId: this.$.panelId,
-          corner: this.$.corner,
+          corner: this.$['@corner'],
           gesture: gesture,
           dx, dy
         }
@@ -160,7 +157,7 @@ export class ActionZone extends Symbiote {
         composed: true,
         detail: {
           panelId: this.$.panelId,
-          corner: this.$.corner,
+          corner: this.$['@corner'],
           gesture: gesture
         }
       }));
@@ -215,7 +212,7 @@ export class ActionZone extends Symbiote {
    * @returns {'split-h' | 'split-v' | 'join' | null}
    */
   _detectGestureByDirection(dx, dy) {
-    const corner = this.$.corner;
+    const corner = this.$['@corner'];
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
     const isHorizontal = absDx > absDy;

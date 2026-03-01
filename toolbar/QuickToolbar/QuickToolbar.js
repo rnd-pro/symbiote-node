@@ -81,8 +81,7 @@ export class QuickToolbar extends Symbiote {
 
   renderCallback() {
     this.sub('visible', (val) => {
-      if (val) this.removeAttribute('hidden');
-      else this.setAttribute('hidden', '');
+      this.toggleAttribute('hidden', !val);
     });
   }
 

@@ -19,6 +19,12 @@ class BreadcrumbItem extends Symbiote {
     isActive: false,
     isFirst: true,
   };
+
+  renderCallback() {
+    this.sub('isActive', (val) => {
+      this.toggleAttribute('data-active', val);
+    });
+  }
 }
 
 BreadcrumbItem.template = html`
@@ -35,6 +41,7 @@ export class Breadcrumb extends Symbiote {
 
   init$ = {
     crumbs: [],
+    isVisible: false,
   };
 
   /** @type {function|null} */
@@ -54,11 +61,11 @@ export class Breadcrumb extends Symbiote {
    */
   setPath(path) {
     if (path.length <= 1) {
-      this.setAttribute('hidden', '');
+      this.$.isVisible = false;
       return;
     }
 
-    this.removeAttribute('hidden');
+    this.$.isVisible = true;
     this.$.crumbs = path.map((item, i) => ({
       label: item.label,
       icon: i === 0 ? 'home' : 'account_tree',
@@ -75,14 +82,8 @@ export class Breadcrumb extends Symbiote {
   }
 
   renderCallback() {
-    this.sub('crumbs', (items) => {
-      this.querySelectorAll('breadcrumb-item').forEach((el, i) => {
-        if (items[i]?.isActive) {
-          el.setAttribute('data-active', '');
-        } else {
-          el.removeAttribute('data-active');
-        }
-      });
+    this.sub('isVisible', (val) => {
+      this.toggleAttribute('hidden', !val);
     });
   }
 }

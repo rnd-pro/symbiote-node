@@ -40,7 +40,6 @@ export class NodeSearch extends Symbiote {
   /** Open search panel */
   open() {
     this.$.isOpen = true;
-    this.removeAttribute('hidden');
     requestAnimationFrame(() => {
       const input = this.querySelector('.search-input');
       if (input) input.focus();
@@ -53,7 +52,6 @@ export class NodeSearch extends Symbiote {
     this.$.results = [];
     const input = this.querySelector('.search-input');
     if (input) input.value = '';
-    this.setAttribute('hidden', '');
   }
 
   /** Toggle open/close */
@@ -85,6 +83,10 @@ export class NodeSearch extends Symbiote {
   }
 
   renderCallback() {
+    this.sub('isOpen', (val) => {
+      this.toggleAttribute('hidden', !val);
+    });
+
     this.sub('query', (q) => {
       if (!q || q.length < 1) {
         this.$.results = [];

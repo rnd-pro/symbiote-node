@@ -16,7 +16,7 @@ export const template = html`
     <span>Select a node</span>
   </div>
 
-  <div class="insp-content" style="display:none">
+  <div class="insp-content" hidden>
     <div class="insp-field">
       <label>Label</label>
       <div class="insp-value">{{nodeLabel}}</div>
@@ -55,7 +55,7 @@ export const template = html`
       <div ${{ itemize: 'controlsList', 'item-tag': 'insp-ctrl-item' }}></div>
     </div>
 
-    <div class="insp-subgraph" style="display:none">
+    <div class="insp-subgraph" hidden>
       <div class="insp-section-title">
         <span class="material-symbols-outlined">account_tree</span> Subgraph
       </div>

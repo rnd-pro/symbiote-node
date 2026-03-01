@@ -25,7 +25,6 @@ export class LayoutPreview extends Symbiote {
   };
 
   renderCallback() {
-    // Reactive attribute binding for type
     this.sub('previewType', (type) => {
       if (type) {
         this.setAttribute('type', type);
@@ -100,4 +99,3 @@ LayoutPreview.template = template;
 LayoutPreview.rootStyles = styles;
 
 LayoutPreview.reg('layout-preview');
-

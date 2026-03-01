@@ -108,20 +108,19 @@ export class InspectorPanel extends Symbiote {
 
   renderCallback() {
     this.sub('visible', (val) => {
-      if (val) this.removeAttribute('hidden');
-      else this.setAttribute('hidden', '');
+      this.toggleAttribute('hidden', !val);
     });
 
     this.sub('hasSelection', (val) => {
       const empty = this.querySelector('.insp-empty');
       const content = this.querySelector('.insp-content');
-      if (empty) empty.style.display = val ? 'none' : '';
-      if (content) content.style.display = val ? '' : 'none';
+      if (empty) empty.hidden = val;
+      if (content) content.hidden = !val;
     });
 
     this.sub('isSubgraph', (val) => {
       const sgSection = this.querySelector('.insp-subgraph');
-      if (sgSection) sgSection.style.display = val ? '' : 'none';
+      if (sgSection) sgSection.hidden = !val;
     });
   }
 }

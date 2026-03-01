@@ -26,6 +26,12 @@ class TabItem extends Symbiote {
     isActive: false,
     showClose: false,
   };
+
+  renderCallback() {
+    this.sub('isActive', (val) => {
+      this.toggleAttribute('data-active', val);
+    });
+  }
 }
 
 TabItem.template = html`
@@ -162,18 +168,6 @@ export class GraphTabs extends Symbiote {
       const newTab = this.#onAdd();
       if (newTab) this.addTab(newTab.id, newTab.name, newTab.state);
     }
-  }
-
-  renderCallback() {
-    this.sub('tabItems', (items) => {
-      this.querySelectorAll('tab-item').forEach((el, i) => {
-        if (items[i]?.isActive) {
-          el.setAttribute('data-active', '');
-        } else {
-          el.removeAttribute('data-active');
-        }
-      });
-    });
   }
 }
 

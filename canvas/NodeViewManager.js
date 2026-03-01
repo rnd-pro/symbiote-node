@@ -128,6 +128,13 @@ export class NodeViewManager {
 
     this.#nodesLayer.appendChild(el);
     this.#nodeViews.set(node.id, el);
+
+    // Subgraph preview canvas
+    if (node._isSubgraph) {
+      requestAnimationFrame(() => {
+        this.#initSubgraphPreview(el, node);
+      });
+    }
   }
 
   /**
@@ -137,6 +144,7 @@ export class NodeViewManager {
   removeView(node) {
     const el = this.#nodeViews.get(node.id);
     if (!el) return;
+    if (el._previewRaf) cancelAnimationFrame(el._previewRaf);
     if (el._drag) el._drag.destroy();
     el.remove();
     this.#nodeViews.delete(node.id);
@@ -219,5 +227,111 @@ export class NodeViewManager {
     }
 
     this.#editor.emit('nodedragged', { id: nodeId });
+  }
+
+  /**
+   * Initialize subgraph preview canvas inside a graph-node
+   * @param {HTMLElement} el - graph-node element
+   * @param {import('../core/SubgraphNode.js').SubgraphNode} node
+   */
+  #initSubgraphPreview(el, node) {
+    const body = el.querySelector('.sn-node-body');
+    if (!body) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'sn-subgraph-preview';
+    canvas.width = 200;
+    canvas.height = 80;
+    body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    el._previewCanvas = canvas;
+
+    const drawPreview = () => {
+      if (!el.isConnected) return;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const innerEditor = node.innerEditor;
+      if (!innerEditor) return;
+
+      const nodes = innerEditor.getNodes();
+      if (nodes.length === 0) return;
+
+      // Get positions (from saved or auto-grid)
+      const positions = node.innerPositions;
+      const nodeRects = [];
+
+      for (const n of nodes) {
+        const pos = positions[n.id];
+        const x = pos ? pos.x : 0;
+        const y = pos ? pos.y : 0;
+        nodeRects.push({ x, y, w: 160, h: 60, id: n.id });
+      }
+
+      // Calculate bounds
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const r of nodeRects) {
+        minX = Math.min(minX, r.x);
+        minY = Math.min(minY, r.y);
+        maxX = Math.max(maxX, r.x + r.w);
+        maxY = Math.max(maxY, r.y + r.h);
+      }
+
+      const pad = 30;
+      minX -= pad; minY -= pad;
+      maxX += pad; maxY += pad;
+
+      const graphW = maxX - minX;
+      const graphH = maxY - minY;
+      const scale = Math.min(w / graphW, h / graphH);
+      const offsetX = (w - graphW * scale) / 2;
+      const offsetY = (h - graphH * scale) / 2;
+
+      // Draw connections as lines
+      const conns = innerEditor.getConnections();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 1;
+      for (const conn of conns) {
+        const src = nodeRects.find(r => r.id === conn.source);
+        const tgt = nodeRects.find(r => r.id === conn.target);
+        if (src && tgt) {
+          const sx = (src.x + src.w - minX) * scale + offsetX;
+          const sy = (src.y + src.h / 2 - minY) * scale + offsetY;
+          const tx = (tgt.x - minX) * scale + offsetX;
+          const ty = (tgt.y + tgt.h / 2 - minY) * scale + offsetY;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(tx, ty);
+          ctx.stroke();
+        }
+      }
+
+      // Draw node rectangles
+      for (const r of nodeRects) {
+        const rx = (r.x - minX) * scale + offsetX;
+        const ry = (r.y - minY) * scale + offsetY;
+        const rw = r.w * scale;
+        const rh = r.h * scale;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.fillRect(rx, ry, rw, rh);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(rx, ry, rw, rh);
+      }
+    };
+
+    // Initial draw + periodic refresh
+    drawPreview();
+    const loop = () => {
+      drawPreview();
+      el._previewRaf = setTimeout(() => {
+        if (el.isConnected) requestAnimationFrame(loop);
+      }, 2000);
+    };
+    el._previewRaf = setTimeout(() => requestAnimationFrame(loop), 2000);
   }
 }

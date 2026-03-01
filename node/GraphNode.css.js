@@ -45,16 +45,12 @@ graph-node {
     }
   }
 
-  &[node-type="subgraph"] {
-    & .sn-node-body::after {
-      content: '⤵ double-click to enter';
-      display: block;
-      text-align: center;
-      font-size: 10px;
-      color: var(--sn-text-dim, #a0a0a0);
-      opacity: 0.5;
-      padding: 6px 0 4px;
-    }
+  &[node-type="subgraph"] .sn-subgraph-preview {
+    display: block;
+    width: 100%;
+    height: 80px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    opacity: 0.7;
   }
 
   &[data-processing] {

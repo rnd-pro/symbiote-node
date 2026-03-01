@@ -70,11 +70,26 @@ export class Minimap extends Symbiote {
     const w = canvas.width;
     const h = canvas.height;
 
+    // Read theme colors from CSS variables
+    const cs = getComputedStyle(this);
+    const bgColor = cs.getPropertyValue('--sn-minimap-bg').trim()
+      || cs.getPropertyValue('--sn-bg').trim()
+      || 'rgba(20, 20, 35, 0.85)';
+    const nodeColor = cs.getPropertyValue('--sn-minimap-node').trim()
+      || 'rgba(80, 130, 200, 0.6)';
+    const nodeStroke = cs.getPropertyValue('--sn-minimap-node-stroke').trim()
+      || cs.getPropertyValue('--sn-node-border').trim()
+      || 'rgba(120, 170, 255, 0.3)';
+    const vpStroke = cs.getPropertyValue('--sn-minimap-viewport').trim()
+      || 'rgba(255, 255, 255, 0.6)';
+    const vpFill = cs.getPropertyValue('--sn-minimap-viewport-fill').trim()
+      || 'rgba(255, 255, 255, 0.04)';
+
     // Clear
     ctx.clearRect(0, 0, w, h);
 
     // Background
-    ctx.fillStyle = 'rgba(20, 20, 35, 0.85)';
+    ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, w, h);
 
     if (nodes.length === 0) return;
@@ -118,9 +133,9 @@ export class Minimap extends Symbiote {
       const nw = (n.width || 200) * scale;
       const nh = (n.height || 80) * scale;
 
-      ctx.fillStyle = n.bypassed ? 'rgba(100, 100, 100, 0.5)' : 'rgba(80, 130, 200, 0.6)';
+      ctx.fillStyle = n.bypassed ? 'rgba(100, 100, 100, 0.5)' : nodeColor;
       ctx.fillRect(x, y, nw, nh);
-      ctx.strokeStyle = 'rgba(120, 170, 255, 0.3)';
+      ctx.strokeStyle = nodeStroke;
       ctx.lineWidth = 0.5;
       ctx.strokeRect(x, y, nw, nh);
     }
@@ -132,10 +147,10 @@ export class Minimap extends Symbiote {
       const vw = (containerSize.width / transform.zoom) * scale;
       const vh = (containerSize.height / transform.zoom) * scale;
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.strokeStyle = vpStroke;
       ctx.lineWidth = 1.5;
       ctx.strokeRect(vx, vy, vw, vh);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.fillStyle = vpFill;
       ctx.fillRect(vx, vy, vw, vh);
     }
   }

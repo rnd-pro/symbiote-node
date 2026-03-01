@@ -18,6 +18,12 @@ export class NodeSearch extends Symbiote {
     query: '',
     results: [],
     isOpen: false,
+    onResultClick: (e) => {
+      const item = e.target.closest('.search-result');
+      if (item?.dataset?.nodeId) {
+        this.#handleResultClick(item.dataset.nodeId);
+      }
+    },
   };
 
   /** @type {function|null} */
@@ -107,12 +113,7 @@ export class NodeSearch extends Symbiote {
     }
   }
 
-  onResultClick(e) {
-    const item = e.target.closest('.search-result');
-    if (item?.dataset?.nodeId) {
-      this.#handleResultClick(item.dataset.nodeId);
-    }
-  }
+
 }
 
 // Result item for itemize

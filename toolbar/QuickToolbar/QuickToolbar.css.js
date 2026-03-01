@@ -54,6 +54,10 @@ quick-toolbar {
   cursor: pointer;
   transition: background 0.12s, color 0.12s, transform 0.12s;
 
+  &[hidden] {
+    display: none;
+  }
+
   &:hover {
     background: var(--sn-toolbar-hover, rgba(74, 158, 255, 0.2));
     color: var(--sn-toolbar-active, #e2e8f0);

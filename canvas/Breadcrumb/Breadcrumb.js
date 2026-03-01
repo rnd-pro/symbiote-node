@@ -42,6 +42,11 @@ export class Breadcrumb extends Symbiote {
   init$ = {
     crumbs: [],
     isVisible: false,
+    onCrumbClick: (e) => {
+      const item = e.target.closest('breadcrumb-item');
+      if (!item || item.$.isActive) return;
+      if (this.#onNavigate) this.#onNavigate(item.$.level);
+    },
   };
 
   /** @type {function|null} */
@@ -75,11 +80,6 @@ export class Breadcrumb extends Symbiote {
     }));
   }
 
-  onCrumbClick(e) {
-    const item = e.target.closest('breadcrumb-item');
-    if (!item || item.$.isActive) return;
-    if (this.#onNavigate) this.#onNavigate(item.$.level);
-  }
 
   renderCallback() {
     this.sub('isVisible', (val) => {

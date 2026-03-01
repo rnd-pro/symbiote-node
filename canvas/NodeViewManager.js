@@ -33,6 +33,9 @@ export class NodeViewManager {
   #setNodePosition;
 
   /** @type {function} */
+  #animateNodeToPosition;
+
+  /** @type {function} */
   #onNodeClick;
 
   /** @type {Object} */
@@ -55,17 +58,19 @@ export class NodeViewManager {
    * @param {import('../interactions/SnapGrid.js').SnapGrid} config.snapGrid
    * @param {function} config.getZoom
    * @param {function} config.setNodePosition
+   * @param {function} config.animateNodeToPosition
    * @param {function} config.onNodeClick
    * @param {HTMLElement} config.nodesLayer
    * @param {Object} config.canvas - NodeCanvas reference for socket registration
    */
-  constructor({ nodeViews, editor, selector, snapGrid, getZoom, setNodePosition, onNodeClick, nodesLayer, canvas }) {
+  constructor({ nodeViews, editor, selector, snapGrid, getZoom, setNodePosition, animateNodeToPosition, onNodeClick, nodesLayer, canvas }) {
     this.#nodeViews = nodeViews;
     this.#editor = editor;
     this.#selector = selector;
     this.#snapGrid = snapGrid;
     this.#getZoom = getZoom;
     this.#setNodePosition = setNodePosition;
+    this.#animateNodeToPosition = animateNodeToPosition;
     this.#onNodeClick = onNodeClick;
     this.#nodesLayer = nodesLayer;
     this.#canvas = canvas;
@@ -213,7 +218,7 @@ export class NodeViewManager {
         const nodeEl = this.#nodeViews.get(id);
         if (!nodeEl) continue;
         const snapped = this.#snapGrid.snap(nodeEl._position.x, nodeEl._position.y);
-        this.#setNodePosition(id, snapped.x, snapped.y);
+        this.#animateNodeToPosition(id, snapped.x, snapped.y);
       }
     }
 

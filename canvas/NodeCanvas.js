@@ -184,6 +184,7 @@ export class NodeCanvas extends Symbiote {
       snapGrid: this.#snapGrid,
       getZoom: () => this.$.zoom,
       setNodePosition: (id, x, y) => this.setNodePosition(id, x, y),
+      animateNodeToPosition: (id, x, y) => this.animateNodeToPosition(id, x, y),
       onNodeClick: (id, e) => this.#handleNodeClick(id, e),
       nodesLayer: this.ref.nodesLayer,
       canvas: this,
@@ -548,6 +549,56 @@ export class NodeCanvas extends Symbiote {
     if (toolbar && toolbar._nodeId === nodeId) {
       toolbar.updatePosition(el);
     }
+  }
+
+  /**
+   * Animate node to position with wires synced via RAF
+   * @param {string} nodeId
+   * @param {number} targetX
+   * @param {number} targetY
+   * @param {number} [duration=200] - Animation duration in ms
+   */
+  animateNodeToPosition(nodeId, targetX, targetY, duration = 200) {
+    const el = this.#nodeViews.get(nodeId);
+    if (!el) return;
+
+    const startX = el._position.x;
+    const startY = el._position.y;
+    const dx = targetX - startX;
+    const dy = targetY - startY;
+
+    // Skip animation if position hasn't changed
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+
+    const startTime = performance.now();
+
+    const animate = (now) => {
+      const t = Math.min((now - startTime) / duration, 1);
+      // Ease-out cubic
+      const ease = 1 - (1 - t) ** 3;
+      const x = startX + dx * ease;
+      const y = startY + dy * ease;
+
+      el.style.transform = `translate(${x}px, ${y}px)`;
+      el._position = { x, y };
+      this.#connRenderer?.updateForNode(nodeId);
+
+      const toolbar = this.ref.quickToolbar;
+      if (toolbar && toolbar._nodeId === nodeId) {
+        toolbar.updatePosition(el);
+      }
+
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Ensure final position is exact
+        el._position = { x: targetX, y: targetY };
+        el.style.transform = `translate(${targetX}px, ${targetY}px)`;
+        this.#connRenderer?.updateForNode(nodeId);
+      }
+    };
+
+    requestAnimationFrame(animate);
   }
 
   /**

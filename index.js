@@ -58,3 +58,6 @@ export { NodeSearch } from './canvas/NodeSearch.js';
 
 // Layout
 export { computeAutoLayout } from './canvas/AutoLayout.js';
+
+// Portals (Named Reroutes)
+export { PortalManager } from './core/Portal.js';

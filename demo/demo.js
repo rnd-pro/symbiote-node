@@ -172,6 +172,9 @@ function initDemo() {
 
       // Demo: set error on filter node
       canvas.setNodeError(filter.id, 'Missing required condition');
+
+      // Demo: preview area on AI Agent (text) and Debug (text)
+      canvas.setPreview(aiAgent.id, '▶ Processing prompt...\n✓ 847 tokens used\n✓ Response cached', 'text');
     }, 200);
 
     // Demo frame around data source nodes

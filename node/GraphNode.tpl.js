@@ -13,4 +13,5 @@ export const template = html`
   <div class="sn-outputs" ${{ itemize: 'outputPorts', 'item-tag': 'sn-port-item' }}>
   </div>
 </div>
+<div ref="previewArea" class="sn-preview" hidden></div>
 `;

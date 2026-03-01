@@ -356,6 +356,39 @@ export class NodeCanvas extends Symbiote {
   }
 
   /**
+   * Set preview content on a node (image URL or text)
+   * @param {string} nodeId
+   * @param {string} content - Image URL or text
+   * @param {'image'|'text'} [type='text']
+   */
+  setPreview(nodeId, content, type = 'text') {
+    const el = this.#nodeViews.get(nodeId);
+    if (!el) return;
+    const preview = el.ref?.previewArea;
+    if (!preview) return;
+
+    preview.removeAttribute('hidden');
+    if (type === 'image') {
+      preview.innerHTML = `<img src="${content}" alt="Preview" />`;
+    } else {
+      preview.innerHTML = `<div class="sn-preview-text">${content}</div>`;
+    }
+  }
+
+  /**
+   * Clear preview from a node
+   * @param {string} nodeId
+   */
+  clearPreview(nodeId) {
+    const el = this.#nodeViews.get(nodeId);
+    if (!el) return;
+    const preview = el.ref?.previewArea;
+    if (!preview) return;
+    preview.setAttribute('hidden', '');
+    preview.innerHTML = '';
+  }
+
+  /**
    * Get node view element by ID (used by FlowSimulator)
    * @param {string} nodeId
    * @returns {HTMLElement|undefined}

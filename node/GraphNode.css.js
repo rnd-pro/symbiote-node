@@ -323,6 +323,37 @@ graph-node {
   }
 }
 
+/* Preview Area — image/text preview at bottom of node */
+.sn-preview {
+  border-top: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.06));
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  max-height: 120px;
+  background: rgba(0, 0, 0, 0.2);
+
+  &[hidden] {
+    display: none;
+  }
+
+  & img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    max-height: 120px;
+  }
+
+  & .sn-preview-text {
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--sn-text-dim, #94a3b8);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.4;
+  }
+}
+
 node-socket {
   display: block;
   width: 12px;

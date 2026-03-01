@@ -29,6 +29,7 @@ import '../menu/ContextMenu.js';
 import '../toolbar/QuickToolbar.js';
 import '../node/GraphFrame.js';
 import '../inspector/InspectorPanel.js';
+import './Minimap.js';
 
 export class NodeCanvas extends Symbiote {
 
@@ -638,6 +639,40 @@ export class NodeCanvas extends Symbiote {
     });
 
     this.#updateTransform();
+
+    // Minimap state getter
+    const minimap = this.ref.minimap;
+    if (minimap) {
+      minimap.setStateGetter(() => {
+        const nodes = [];
+        for (const [id, el] of this.#nodeViews) {
+          const pos = el._position || { x: 0, y: 0 };
+          const rect = el.getBoundingClientRect();
+          nodes.push({
+            x: pos.x,
+            y: pos.y,
+            width: rect.width / this.$.zoom,
+            height: rect.height / this.$.zoom,
+            bypassed: el.hasAttribute('data-bypassed'),
+          });
+        }
+        return {
+          nodes,
+          transform: { x: this.$.panX, y: this.$.panY, zoom: this.$.zoom },
+          containerSize: {
+            width: container.clientWidth,
+            height: container.clientHeight,
+          },
+        };
+      });
+
+      // Handle minimap viewport drag
+      minimap.addEventListener('minimap-navigate', (e) => {
+        this.$.panX = e.detail.x;
+        this.$.panY = e.detail.y;
+        this.#updateTransform();
+      });
+    }
   }
 
   destroyCallback() {

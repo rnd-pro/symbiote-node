@@ -49,3 +49,6 @@ export { FlowSimulator } from './canvas/FlowSimulator.js';
 
 // Inspector
 export { InspectorPanel } from './inspector/InspectorPanel.js';
+
+// Minimap
+export { Minimap } from './canvas/Minimap.js';

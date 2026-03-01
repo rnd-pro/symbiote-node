@@ -99,7 +99,7 @@ export class Breadcrumb extends Symbiote {
     this.removeAttribute('hidden');
     const container = this.ref.bcList;
     if (!container) return;
-    container.innerHTML = '';
+    container.replaceChildren();
 
     path.forEach((item, i) => {
       if (i > 0) {
@@ -113,11 +113,10 @@ export class Breadcrumb extends Symbiote {
       el.className = 'bc-item';
       const isActive = i === path.length - 1;
 
-      if (i === 0) {
-        el.innerHTML = `<span class="material-symbols-outlined">home</span>${item.label}`;
-      } else {
-        el.innerHTML = `<span class="material-symbols-outlined">account_tree</span>${item.label}`;
-      }
+      const icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined';
+      icon.textContent = i === 0 ? 'home' : 'account_tree';
+      el.append(icon, item.label);
 
       if (isActive) {
         el.setAttribute('data-active', '');

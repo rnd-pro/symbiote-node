@@ -181,7 +181,7 @@ export class PaletteBrowser extends Symbiote {
   #renderList(filter = '') {
     const list = this.ref.palList;
     if (!list) return;
-    list.innerHTML = '';
+    list.replaceChildren();
 
     const lowerFilter = filter.toLowerCase();
 
@@ -194,29 +194,40 @@ export class PaletteBrowser extends Symbiote {
 
       const catDiv = document.createElement('div');
       catDiv.className = 'pal-category';
-      catDiv.innerHTML = `
-        <div class="pal-cat-header">
-          <span class="material-symbols-outlined">expand_more</span>
-          ${cat.category}
-        </div>
-        <div class="pal-cat-items"></div>
-      `;
 
-      const catHeader = catDiv.querySelector('.pal-cat-header');
+      const catHeader = document.createElement('div');
+      catHeader.className = 'pal-cat-header';
+      const headerIcon = document.createElement('span');
+      headerIcon.className = 'material-symbols-outlined';
+      headerIcon.textContent = 'expand_more';
+      catHeader.append(headerIcon, ` ${cat.category}`);
       catHeader.addEventListener('click', () => {
         catDiv.toggleAttribute('data-collapsed');
       });
 
-      const itemsDiv = catDiv.querySelector('.pal-cat-items');
+      const itemsDiv = document.createElement('div');
+      itemsDiv.className = 'pal-cat-items';
+
+      catDiv.append(catHeader, itemsDiv);
+
       for (const item of filteredItems) {
         const el = document.createElement('div');
         el.className = 'pal-item';
         el.style.setProperty('--item-color', cat.color);
-        el.innerHTML = `
-          <span class="pal-item-icon material-symbols-outlined">${item.icon}</span>
-          <span class="pal-item-label">${item.name}</span>
-          <span class="pal-item-desc">${item.desc}</span>
-        `;
+
+        const itemIcon = document.createElement('span');
+        itemIcon.className = 'pal-item-icon material-symbols-outlined';
+        itemIcon.textContent = item.icon;
+
+        const itemLabel = document.createElement('span');
+        itemLabel.className = 'pal-item-label';
+        itemLabel.textContent = item.name;
+
+        const itemDesc = document.createElement('span');
+        itemDesc.className = 'pal-item-desc';
+        itemDesc.textContent = item.desc;
+
+        el.append(itemIcon, itemLabel, itemDesc);
         el.addEventListener('click', () => {
           if (this.#onSelect) this.#onSelect(item.factory, item.name);
         });

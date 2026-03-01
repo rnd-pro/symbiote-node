@@ -210,17 +210,29 @@ export class GraphTabs extends Symbiote {
   #render() {
     const container = this.ref.tabList;
     if (!container) return;
-    container.innerHTML = '';
+    container.replaceChildren();
 
     for (const tab of this.#tabs) {
       const el = document.createElement('div');
       el.className = 'tab-item';
       if (tab.id === this.#activeTabId) el.setAttribute('data-active', '');
-      el.innerHTML = `
-        <span class="material-symbols-outlined">description</span>
-        <span>${tab.name}</span>
-        ${this.#tabs.length > 1 ? '<span class="tab-close material-symbols-outlined">close</span>' : ''}
-      `;
+
+      const icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined';
+      icon.textContent = 'description';
+
+      const label = document.createElement('span');
+      label.textContent = tab.name;
+
+      el.append(icon, label);
+
+      if (this.#tabs.length > 1) {
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'tab-close material-symbols-outlined';
+        closeBtn.textContent = 'close';
+        el.appendChild(closeBtn);
+      }
+
       el.addEventListener('click', (e) => {
         if (e.target.closest('.tab-close')) {
           this.removeTab(tab.id);

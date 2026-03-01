@@ -388,7 +388,10 @@ export class NodeCanvas extends Symbiote {
 
     const header = document.createElement('div');
     header.className = 'sn-error-frame-header';
-    header.innerHTML = '<span class="material-symbols-outlined">error</span> Error';
+    const icon = document.createElement('span');
+    icon.className = 'material-symbols-outlined';
+    icon.textContent = 'error';
+    header.append(icon, ' Error');
 
     const body = document.createElement('div');
     body.className = 'sn-error-frame-body';
@@ -443,10 +446,17 @@ export class NodeCanvas extends Symbiote {
     if (!preview) return;
 
     preview.removeAttribute('hidden');
+    preview.replaceChildren();
     if (type === 'image') {
-      preview.innerHTML = `<img src="${content}" alt="Preview" />`;
+      const img = document.createElement('img');
+      img.src = content;
+      img.alt = 'Preview';
+      preview.appendChild(img);
     } else {
-      preview.innerHTML = `<div class="sn-preview-text">${content}</div>`;
+      const div = document.createElement('div');
+      div.className = 'sn-preview-text';
+      div.textContent = content;
+      preview.appendChild(div);
     }
   }
 
@@ -460,7 +470,7 @@ export class NodeCanvas extends Symbiote {
     const preview = el.ref?.previewArea;
     if (!preview) return;
     preview.setAttribute('hidden', '');
-    preview.innerHTML = '';
+    preview.replaceChildren();
   }
 
   /**

@@ -91,13 +91,14 @@ graph-node {
     font-size: 11px;
     font-weight: 500;
     color: #fecaca;
-    background: rgba(127, 29, 29, 0.92);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    border-radius: 10px;
+    background: color-mix(in srgb, var(--sn-node-bg, #2a2a4a) 90%, rgba(239, 68, 68, 0.6));
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: var(--sn-node-radius, 10px);
     white-space: nowrap;
     pointer-events: none;
     z-index: 10;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
   }
 
   &[data-error]::after {
@@ -107,7 +108,7 @@ graph-node {
     left: 50%;
     transform: translateX(-50%);
     border: 5px solid transparent;
-    border-top: 5px solid rgba(127, 29, 29, 0.92);
+    border-top: 5px solid color-mix(in srgb, var(--sn-node-bg, #2a2a4a) 90%, rgba(239, 68, 68, 0.6));
     pointer-events: none;
     z-index: 10;
   }

@@ -834,6 +834,11 @@ export class NodeCanvas extends Symbiote {
     // LOD thresholds
     const lod = zoom < 0.25 ? 'minimal' : zoom < 0.5 ? 'medium' : 'full';
 
+    // Hide connections at minimal LOD
+    if (this.ref.connections) {
+      this.ref.connections.style.display = lod === 'minimal' ? 'none' : '';
+    }
+
     for (const [, el] of this.#nodeViews) {
       const pos = el._position;
       if (!pos) continue;

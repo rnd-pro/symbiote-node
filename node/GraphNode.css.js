@@ -62,7 +62,7 @@ graph-node {
     }
   }
 
-  /* LOD: minimal — just a compact header bar */
+  /* LOD: minimal — compact colored rectangles */
   &[data-lod="minimal"] {
     box-shadow: none;
     transition: none;
@@ -71,7 +71,14 @@ graph-node {
     border-radius: 4px;
     border-width: 1px;
 
-    & .sn-node-body,
+    & .sn-node-body {
+      padding: 0;
+    }
+
+    & .sn-inputs,
+    & .sn-outputs,
+    & .sn-controls,
+    & .sn-subgraph-preview,
     & .sn-error-frame {
       display: none;
     }

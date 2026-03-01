@@ -97,10 +97,45 @@ export class NodeCanvas extends Symbiote {
   // --- Public API ---
 
   /**
+   * Clear all existing node, connection, and frame views from the DOM.
+   * Called before switching to a new editor to ensure clean state.
+   */
+  #clearViews() {
+    // Remove all node views
+    for (const [id, el] of this.#nodeViews) {
+      if (el._drag) el._drag.destroy();
+      el.remove();
+    }
+    this.#nodeViews.clear();
+
+    // Remove all connection SVG paths
+    if (this.#connRenderer) {
+      const conns = [...this.#connRenderer.data.values()];
+      for (const conn of conns) {
+        this.#connRenderer.remove(conn);
+      }
+    }
+
+    // Remove all frame views
+    for (const [, el] of this.#frameViews) {
+      if (el._drag) el._drag.destroy();
+      if (el._resizeDrag) el._resizeDrag.destroy();
+      el.remove();
+    }
+    this.#frameViews.clear();
+
+    // Clear selection state
+    if (this.#selector) this.#selector.unselectAll();
+  }
+
+  /**
    * Bind editor to canvas
    * @param {import('../core/Editor.js').NodeEditor} editor
    */
   setEditor(editor) {
+    // Clear previous views before switching
+    this.#clearViews();
+
     this.#editor = editor;
 
     // Initialize sub-modules

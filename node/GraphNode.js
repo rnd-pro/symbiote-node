@@ -58,12 +58,14 @@ export class GraphNode extends Symbiote {
         key,
         label: input.label || key,
         socketColor: input.socket?.color || 'var(--sn-node-accent)',
+        socketName: input.socket?.name || 'any',
         side: 'input',
       })),
       outputPorts: Object.entries(node.outputs).map(([key, output]) => ({
         key,
         label: output.label || key,
         socketColor: output.socket?.color || 'var(--sn-node-accent)',
+        socketName: output.socket?.name || 'any',
         side: 'output',
       })),
       controlsList: Object.entries(node.controls).map(([key, ctrl]) => ({

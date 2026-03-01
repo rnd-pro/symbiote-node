@@ -308,6 +308,15 @@ export class NodeCanvas extends Symbiote {
   setAllFlowing(active) { this.#connRenderer?.setAllFlowing(active); }
 
   /**
+   * Set connection path style
+   * @param {'bezier'|'orthogonal'|'straight'} style
+   */
+  setPathStyle(style) { this.#connRenderer?.setPathStyle(style); }
+
+  /** @returns {'bezier'|'orthogonal'|'straight'} */
+  getPathStyle() { return this.#connRenderer?.pathStyle || 'bezier'; }
+
+  /**
    * Set error state on a node
    * @param {string} nodeId
    * @param {string} message - Error message to display

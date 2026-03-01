@@ -14,6 +14,7 @@ export class PortItem extends Symbiote {
     key: '',
     label: '',
     socketColor: '',
+    socketName: 'any',
     side: 'input',
   };
 
@@ -23,6 +24,11 @@ export class PortItem extends Symbiote {
     });
     this.sub('side', (val) => {
       if (val) this.setAttribute('data-side', val);
+    });
+    this.sub('socketName', (val) => {
+      const shape = PortItem.SOCKET_SHAPES[val] || 'circle';
+      const socketEl = this.ref.socket;
+      if (socketEl) socketEl.setAttribute('data-socket-shape', shape);
     });
 
     // Deferred socket registration — _canvas may not be set yet
@@ -113,6 +119,29 @@ sn-port-item {
       pointer-events: none;
     }
 
+    &[data-socket-shape="square"]::after {
+      border-radius: 2px;
+    }
+
+    &[data-socket-shape="diamond"]::after {
+      border-radius: 1px;
+      transform: rotate(45deg) scale(0.85);
+    }
+
+    &[data-socket-shape="diamond"]:hover::after {
+      transform: rotate(45deg) scale(1.1);
+    }
+
+    &[data-socket-shape="triangle"]::after {
+      border-radius: 0;
+      background: transparent;
+      width: 0;
+      height: 0;
+      border: 6px solid transparent;
+      border-left: 10px solid var(--socket-color, var(--sn-node-accent));
+      border-right: none;
+    }
+
     &:hover::after {
       transform: scale(1.3);
       box-shadow: 0 0 8px var(--socket-color, var(--sn-node-accent));
@@ -128,3 +157,19 @@ sn-port-item {
 `;
 
 PortItem.reg('sn-port-item');
+
+/** @type {Object<string, string>} - Socket type name to visual shape */
+PortItem.SOCKET_SHAPES = {
+  number: 'circle',
+  string: 'circle',
+  boolean: 'circle',
+  any: 'circle',
+  array: 'square',
+  object: 'square',
+  json: 'square',
+  exec: 'diamond',
+  execution: 'diamond',
+  trigger: 'diamond',
+  event: 'triangle',
+  signal: 'triangle',
+};

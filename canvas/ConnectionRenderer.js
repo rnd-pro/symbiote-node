@@ -30,6 +30,9 @@ export class ConnectionRenderer {
   /** @type {function} */
   #getZoom;
 
+  /** @type {'bezier'|'orthogonal'|'straight'} */
+  #pathStyle = 'bezier';
+
   /**
    * @param {object} config
    * @param {SVGElement} config.svgLayer
@@ -108,6 +111,20 @@ export class ConnectionRenderer {
   }
 
   /**
+   * Set connection path style
+   * @param {'bezier'|'orthogonal'|'straight'} style
+   */
+  setPathStyle(style) {
+    this.#pathStyle = style;
+    for (const [, conn] of this.#connectionData) {
+      this.#render(conn);
+    }
+  }
+
+  /** @returns {'bezier'|'orthogonal'|'straight'} */
+  get pathStyle() { return this.#pathStyle; }
+
+  /**
    * Get socket offset relative to graph-node using getBoundingClientRect
    * @param {HTMLElement} nodeEl
    * @param {string} portKey
@@ -177,21 +194,30 @@ export class ConnectionRenderer {
     const fromSize = { width: fromEl.offsetWidth || 180, height: fromEl.offsetHeight || 60 };
     const toSize = { width: toEl.offsetWidth || 180, height: toEl.offsetHeight || 60 };
 
-    const fromSockPos = fromShape.getSocketPosition('output', fromPortIndex, fromPortTotal, fromSize);
-    const toSockPos = toShape.getSocketPosition('input', toPortIndex, toPortTotal, toSize);
+    // Generate path based on style
+    let d;
+    if (this.#pathStyle === 'straight') {
+      d = `M ${startX} ${startY} L ${endX} ${endY}`;
+    } else if (this.#pathStyle === 'orthogonal') {
+      const midX = (startX + endX) / 2;
+      d = `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
+    } else {
+      // Tangent-aware Bézier (default)
+      const fromSockPos = fromShape.getSocketPosition('output', fromPortIndex, fromPortTotal, fromSize);
+      const toSockPos = toShape.getSocketPosition('input', toPortIndex, toPortTotal, toSize);
 
-    // Control points from tangent angles
-    const dist = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-    const cpLen = Math.max(50, dist * 0.4);
-    const fromRad = (fromSockPos.angle * Math.PI) / 180;
-    const toRad = (toSockPos.angle * Math.PI) / 180;
+      const dist = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
+      const cpLen = Math.max(50, dist * 0.4);
+      const fromRad = (fromSockPos.angle * Math.PI) / 180;
+      const toRad = (toSockPos.angle * Math.PI) / 180;
 
-    const cp1x = startX + Math.cos(fromRad) * cpLen;
-    const cp1y = startY + Math.sin(fromRad) * cpLen;
-    const cp2x = endX + Math.cos(toRad) * cpLen;
-    const cp2y = endY + Math.sin(toRad) * cpLen;
+      const cp1x = startX + Math.cos(fromRad) * cpLen;
+      const cp1y = startY + Math.sin(fromRad) * cpLen;
+      const cp2x = endX + Math.cos(toRad) * cpLen;
+      const cp2y = endY + Math.sin(toRad) * cpLen;
 
-    const d = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+      d = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+    }
 
     let path = this.#svgLayer.querySelector(`[data-conn-id="${conn.id}"]`);
     if (!path) {

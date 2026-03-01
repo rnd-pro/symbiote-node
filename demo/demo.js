@@ -25,17 +25,21 @@ function initDemo() {
   const dataSocket = new Socket('data', { color: '#5cb8ff' });
   const textSocket = new Socket('text', { color: '#5cd87a' });
   const anySocket = new Socket('any', { color: '#f0b840' });
+  const execSocket = new Socket('exec', { color: '#ffffff' });
+  const arraySocket = new Socket('array', { color: '#a78bfa' });
 
   // ── Pipeline nodes ──
 
   // 1. Trigger (webhook)
   const trigger = new Node('Trigger', { type: 'trigger', category: 'server' });
+  trigger.addOutput('exec', new Output(execSocket, 'Exec'));
   trigger.addOutput('payload', new Output(dataSocket, 'Payload'));
   trigger.addOutput('headers', new Output(textSocket, 'Headers'));
   trigger.addControl('interval', new InputControl('text', { initial: '*/5 * * * *', readonly: true }));
 
   // 2. HTTP Request
   const httpReq = new Node('HTTP Request', { type: 'action', category: 'control' });
+  httpReq.addInput('exec', new Input(execSocket, 'Exec'));
   httpReq.addInput('data', new Input(dataSocket, 'Request'));
   httpReq.addInput('auth', new Input(textSocket, 'Auth'));
   httpReq.addOutput('response', new Output(dataSocket, 'Response'));
@@ -64,6 +68,11 @@ function initDemo() {
   save.addInput('data', new Input(anySocket, 'Data'));
   save.addOutput('status', new Output(textSocket, 'Status'));
 
+  // 7. Debug — inspector node showing incoming data
+  const debug = new Node('Debug', { type: 'debug', category: 'default' });
+  debug.addInput('inspect', new Input(anySocket, 'Inspect'));
+  debug.addControl('output', new InputControl('text', { initial: '{ status: "ok" }', readonly: true }));
+
   // Add all nodes
   editor.addNode(trigger);
   editor.addNode(httpReq);
@@ -71,9 +80,11 @@ function initDemo() {
   editor.addNode(filter);
   editor.addNode(merge);
   editor.addNode(save);
+  editor.addNode(debug);
 
   // ── Connections — real data flow ──
   // Main path: Trigger → HTTP → AI Agent → Filter → Merge(A) → Save
+  editor.addConnection(new Connection(trigger, 'exec', httpReq, 'exec'));
   editor.addConnection(new Connection(trigger, 'payload', httpReq, 'data'));
   editor.addConnection(new Connection(trigger, 'headers', httpReq, 'auth'));
   editor.addConnection(new Connection(httpReq, 'response', aiAgent, 'prompt'));
@@ -83,6 +94,8 @@ function initDemo() {
   editor.addConnection(new Connection(aiAgent, 'tokens', merge, 'b'));
   // Merge → Save
   editor.addConnection(new Connection(merge, 'out', save, 'data'));
+  // Save → Debug
+  editor.addConnection(new Connection(save, 'status', debug, 'inspect'));
 
   // Context menu add node (from right-click or drop-in-empty)
   editor.on('contextadd', ({ x, y }) => {
@@ -148,6 +161,7 @@ function initDemo() {
       canvas.setNodePosition(filter.id, 1020, 120);
       canvas.setNodePosition(merge.id, 1200, 200);
       canvas.setNodePosition(save.id, 1380, 180);
+      canvas.setNodePosition(debug.id, 1580, 260);
 
       // Demo reroute node
       const reroute = new Node('', { type: 'reroute', shape: 'pill' });
@@ -209,6 +223,19 @@ function initDemo() {
     };
     if (btnTheme) btnTheme.addEventListener('click', switchTheme);
     window.switchTheme = switchTheme;
+
+    // --- Wire Style button ---
+    const wireStyles = ['bezier', 'orthogonal', 'straight'];
+    const wireLabels = { bezier: 'Bezier', orthogonal: 'Step', straight: 'Straight' };
+    let wireIdx = 0;
+    const btnWire = document.getElementById('btnWireStyle');
+    if (btnWire) {
+      btnWire.addEventListener('click', () => {
+        wireIdx = (wireIdx + 1) % wireStyles.length;
+        canvas.setPathStyle(wireStyles[wireIdx]);
+        btnWire.lastChild.textContent = ' ' + wireLabels[wireStyles[wireIdx]];
+      });
+    }
 
     // Console palette/skin switching
     const palettes = [GREY_PALETTE, DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE];

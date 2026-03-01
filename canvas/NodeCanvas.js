@@ -30,6 +30,7 @@ import '../toolbar/QuickToolbar.js';
 import '../node/GraphFrame.js';
 import '../inspector/InspectorPanel.js';
 import './Minimap.js';
+import './NodeSearch.js';
 
 export class NodeCanvas extends Symbiote {
 
@@ -631,6 +632,14 @@ export class NodeCanvas extends Symbiote {
     });
     container.addEventListener('keydown', (e) => this.#actions?.handleKeydown(e));
 
+    // Ctrl+F to open node search
+    container.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        this.ref.nodeSearch?.toggle();
+      }
+    });
+
     // Computed transform — auto-tracks panX, panY, zoom
     this.sub('+contentTransform', (val) => {
       if (this.ref.content) {
@@ -671,6 +680,35 @@ export class NodeCanvas extends Symbiote {
         this.$.panX = e.detail.x;
         this.$.panY = e.detail.y;
         this.#updateTransform();
+      });
+    }
+
+    // Node search
+    const nodeSearch = this.ref.nodeSearch;
+    if (nodeSearch) {
+      nodeSearch.configure({
+        getNodes: () => {
+          const result = [];
+          if (this.#editor) {
+            for (const node of this.#editor.getNodes()) {
+              result.push({ id: node.id, label: node.label, type: node.type, category: node.category });
+            }
+          }
+          return result;
+        },
+        onSelect: (nodeId) => {
+          // Select node
+          this.#selector.selectNode(nodeId);
+          // Center viewport on node
+          const el = this.#nodeViews.get(nodeId);
+          if (el?._position) {
+            const cx = container.clientWidth / 2;
+            const cy = container.clientHeight / 2;
+            this.$.panX = -el._position.x * this.$.zoom + cx;
+            this.$.panY = -el._position.y * this.$.zoom + cy;
+            this.#updateTransform();
+          }
+        },
       });
     }
   }

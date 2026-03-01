@@ -52,3 +52,6 @@ export { InspectorPanel } from './inspector/InspectorPanel.js';
 
 // Minimap
 export { Minimap } from './canvas/Minimap.js';
+
+// Search
+export { NodeSearch } from './canvas/NodeSearch.js';

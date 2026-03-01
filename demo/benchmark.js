@@ -130,29 +130,13 @@ function fitToContent() {
 
   const cx = (minX + maxX) / 2;
   const cy = (minY + maxY) / 2;
+  const tx = container.width / 2 - cx * zoom;
+  const ty = container.height / 2 - cy * zoom;
 
-  // Smooth transition via CSS
-  const content = canvas.shadowRoot
-    ? canvas.shadowRoot.querySelector('.sn-content')
-    : canvas.querySelector('.sn-content');
-
-  if (content) {
-    content.style.transition = 'transform 0.4s ease';
-    const tx = container.width / 2 - cx * zoom;
-    const ty = container.height / 2 - cy * zoom;
-    content.style.transform = `translate(${tx}px, ${ty}px) scale(${zoom})`;
-
-    // Update Symbiote reactive state for LOD
-    canvas.$.panX = tx;
-    canvas.$.panY = ty;
-    canvas.$.zoom = zoom;
-
-    setTimeout(() => {
-      content.style.transition = '';
-      content.style.transform = '';  // Remove inline override, let Symbiote binding take over
-      if (canvas.updateLOD) canvas.updateLOD();
-    }, 450);
-  }
+  // Update Symbiote reactive state (binding auto-updates CSS transform)
+  canvas.$.panX = tx;
+  canvas.$.panY = ty;
+  canvas.$.zoom = zoom;
 }
 
 function updateHud() {

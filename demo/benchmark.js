@@ -208,8 +208,10 @@ async function runBenchmark() {
     await new Promise((r) => setTimeout(r, INTERVAL));
   }
 
-  // Add all connections in one batch after nodes are done
+  // Add all connections in one batch (hidden — LOD will show at full zoom)
   btn.lastChild.textContent = ` Connecting (${pendingConns.length})...`;
+  const connSvg = canvas.querySelector('.sn-connections');
+  if (connSvg) connSvg.style.visibility = 'hidden';
   await new Promise((r) => setTimeout(r, 50));
 
   for (const conn of pendingConns) {

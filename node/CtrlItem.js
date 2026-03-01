@@ -10,13 +10,11 @@
 import Symbiote, { html, css } from '@symbiotejs/symbiote';
 
 export class CtrlItem extends Symbiote {
-  init$ = {
-    key: '',
-    label: '',
-    inputType: 'text',
-    value: '',
-    isReadonly: false,
-  };
+  key = '';
+  label = '';
+  inputType = 'text';
+  value = '';
+  isReadonly = false;
 }
 
 CtrlItem.template = html`

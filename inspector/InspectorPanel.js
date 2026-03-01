@@ -11,19 +11,19 @@
 import Symbiote, { html, css } from '@symbiotejs/symbiote';
 
 export class InspectorPanel extends Symbiote {
+  visible = false;
+  nodeLabel = '';
+  nodeType = '';
+  nodeCategory = '';
+  nodeId = '';
+  inputsList = [];
+  outputsList = [];
+  controlsList = [];
+  hasSelection = false;
+  isSubgraph = false;
+  innerNodeCount = 0;
 
   init$ = {
-    visible: false,
-    nodeLabel: '',
-    nodeType: '',
-    nodeCategory: '',
-    nodeId: '',
-    inputsList: [],
-    outputsList: [],
-    controlsList: [],
-    hasSelection: false,
-    isSubgraph: false,
-    innerNodeCount: 0,
     onEnterSubgraph: () => {
       if (this._canvas && this._currentNodeId) {
         this._canvas.drillDown(this._currentNodeId);
@@ -128,7 +128,9 @@ export class InspectorPanel extends Symbiote {
 
 // Port item for itemize
 class InspPortItem extends Symbiote {
-  init$ = { key: '', label: '', socketType: '' };
+  key = '';
+  label = '';
+  socketType = '';
 }
 
 InspPortItem.template = html`
@@ -142,7 +144,10 @@ InspPortItem.reg('sn-insp-port-item');
 
 // Control item for itemize
 class InspCtrlItem extends Symbiote {
-  init$ = { key: '', label: '', value: '', type: '' };
+  key = '';
+  label = '';
+  value = '';
+  type = '';
 }
 
 InspCtrlItem.template = html`

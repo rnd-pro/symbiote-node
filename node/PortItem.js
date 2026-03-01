@@ -10,13 +10,11 @@
 import Symbiote, { html, css } from '@symbiotejs/symbiote';
 
 export class PortItem extends Symbiote {
-  init$ = {
-    key: '',
-    label: '',
-    socketColor: '',
-    socketName: 'any',
-    side: 'input',
-  };
+  key = '';
+  label = '';
+  socketColor = '';
+  socketName = 'any';
+  side = 'input';
 
   renderCallback() {
     this.sub('socketColor', (val) => {

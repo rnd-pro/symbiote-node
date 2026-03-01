@@ -11,11 +11,8 @@
 import Symbiote, { html, css } from '@symbiotejs/symbiote';
 
 export class GraphFrame extends Symbiote {
-
-  init$ = {
-    label: 'Group',
-    color: '#4a9eff',
-  };
+  label = 'Group';
+  color = '#4a9eff';
 
   renderCallback() {
     this.sub('color', (val) => {

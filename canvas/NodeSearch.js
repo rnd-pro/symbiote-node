@@ -122,7 +122,10 @@ export class NodeSearch extends Symbiote {
 
 // Result item for itemize
 class SearchResultItem extends Symbiote {
-  init$ = { id: '', label: '', type: '', category: '' };
+  id = '';
+  label = '';
+  type = '';
+  category = '';
 }
 
 SearchResultItem.template = html`

@@ -10,7 +10,6 @@
 import Symbiote, { html, css } from '@symbiotejs/symbiote';
 
 export class NodeSocket extends Symbiote {
-  init$ = {};
 
   renderCallback() {
     this.sub('@data-socket-color', (val) => {

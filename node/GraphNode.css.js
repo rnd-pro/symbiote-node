@@ -66,12 +66,10 @@ graph-node {
     }
   }
 
-  /* LOD: minimal — flat colored rectangles, no header */
+  /* LOD: minimal — flat colored rectangles, proportional to real size */
   &[data-lod="minimal"] {
     box-shadow: none;
     transition: none;
-    min-width: 60px;
-    max-width: 120px;
     border-radius: 3px;
     border-width: 1px;
 
@@ -86,12 +84,15 @@ graph-node {
     & .sn-controls,
     & .sn-subgraph-preview,
     & .sn-error-frame {
-      display: none;
+      visibility: hidden;
+      height: 0;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
     }
 
     & .sn-node-body {
-      padding: 4px;
-      min-height: 12px;
+      padding: 0;
     }
   }
 

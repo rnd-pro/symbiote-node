@@ -369,13 +369,36 @@ export class NodeCanvas extends Symbiote {
   getPathStyle() { return this.#connRenderer?.pathStyle || 'bezier'; }
 
   /**
-   * Set error state on a node
+   * Set error state on a node with frame-style error display
    * @param {string} nodeId
    * @param {string} message - Error message to display
    */
   setNodeError(nodeId, message) {
     const el = this.#nodeViews.get(nodeId);
-    if (el) el.setAttribute('data-error', message);
+    if (!el) return;
+
+    // Remove existing error frame if any
+    this.clearNodeError(nodeId);
+
+    el.setAttribute('data-error', '');
+
+    // Build error frame DOM
+    const frame = document.createElement('div');
+    frame.className = 'sn-error-frame';
+
+    const header = document.createElement('div');
+    header.className = 'sn-error-frame-header';
+    header.innerHTML = '<span class="material-symbols-outlined">error</span> Error';
+
+    const body = document.createElement('div');
+    body.className = 'sn-error-frame-body';
+    body.textContent = message;
+
+    const tail = document.createElement('div');
+    tail.className = 'sn-error-frame-tail';
+
+    frame.append(header, body, tail);
+    el.append(frame);
   }
 
   /**
@@ -384,15 +407,18 @@ export class NodeCanvas extends Symbiote {
    */
   clearNodeError(nodeId) {
     const el = this.#nodeViews.get(nodeId);
-    if (el) el.removeAttribute('data-error');
+    if (!el) return;
+    el.removeAttribute('data-error');
+    const frame = el.querySelector('.sn-error-frame');
+    if (frame) frame.remove();
   }
 
   /**
    * Clear all error states
    */
   clearAllErrors() {
-    for (const [, el] of this.#nodeViews) {
-      el.removeAttribute('data-error');
+    for (const [id] of this.#nodeViews) {
+      this.clearNodeError(id);
     }
   }
 

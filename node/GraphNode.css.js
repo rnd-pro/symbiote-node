@@ -78,44 +78,57 @@ graph-node {
     background: color-mix(in srgb, #ef4444 10%, transparent);
   }
 
-  &[data-error]::before {
-    content: attr(data-error);
+  & .sn-error-frame {
     position: absolute;
     bottom: calc(100% + 10px);
     left: 50%;
     transform: translateX(-50%);
-    padding: 6px 14px;
-    font-size: 12px;
-    font-weight: 500;
-    color: color-mix(in srgb, #ef4444 90%, white);
-    background: color-mix(in srgb, #ef4444 8%, transparent);
+    min-width: 140px;
+    max-width: 320px;
     border: 2px solid color-mix(in srgb, #ef4444 60%, transparent);
     border-radius: 12px;
-    white-space: nowrap;
+    background: color-mix(in srgb, #ef4444 8%, transparent);
     pointer-events: none;
     z-index: 10;
     transition: bottom 0.15s ease;
   }
 
-  &[data-error]::after {
-    content: '';
+  & .sn-error-frame-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: color-mix(in srgb, #ef4444 90%, white);
+    border-bottom: 1px solid color-mix(in srgb, #ef4444 20%, transparent);
+    user-select: none;
+  }
+
+  & .sn-error-frame-header .material-symbols-outlined {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+
+  & .sn-error-frame-body {
+    padding: 6px 10px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: color-mix(in srgb, #ef4444 75%, white);
+    word-wrap: break-word;
+  }
+
+  & .sn-error-frame-tail {
     position: absolute;
-    bottom: calc(100% + 2px);
+    bottom: -8px;
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
     border-top: 6px solid color-mix(in srgb, #ef4444 60%, transparent);
-    pointer-events: none;
-    z-index: 10;
-    transition: bottom 0.15s ease;
   }
 
-  &[data-error][data-selected]::before {
+  &[data-selected] .sn-error-frame {
     bottom: calc(100% + 46px);
-  }
-
-  &[data-error][data-selected]::after {
-    bottom: calc(100% + 38px);
   }
 
   &:hover {

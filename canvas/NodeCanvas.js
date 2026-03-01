@@ -851,13 +851,13 @@ export class NodeCanvas extends Symbiote {
     const prevLod = this._currentLod || 'full';
     this._currentLod = lod;
 
-    // Hide connections at minimal LOD (visibility preserves layout)
+    // Hide connections when not full LOD (port geometry changes)
     if (this.ref.connections) {
-      this.ref.connections.style.visibility = lod === 'minimal' ? 'hidden' : '';
+      this.ref.connections.style.visibility = lod !== 'full' ? 'hidden' : '';
     }
 
-    // Debounced connection refresh when leaving minimal LOD
-    if (prevLod === 'minimal' && lod !== 'minimal' && this.#connRenderer) {
+    // Debounced connection refresh when returning to full LOD
+    if (prevLod !== 'full' && lod === 'full' && this.#connRenderer) {
       clearTimeout(this._lodRefreshTimer);
       this._lodRefreshTimer = setTimeout(() => {
         for (const [, el] of this.#nodeViews) {

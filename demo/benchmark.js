@@ -122,11 +122,11 @@ function fitToContent() {
   const graphW = maxX - minX;
   const graphH = maxY - minY;
 
-  const zoom = Math.min(
+  const zoom = Math.max(0.1, Math.min(
     container.width / graphW,
     container.height / graphH,
     1.5,
-  );
+  ));
 
   const cx = (minX + maxX) / 2;
   const cy = (minY + maxY) / 2;

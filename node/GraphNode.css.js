@@ -66,12 +66,13 @@ graph-node {
     }
   }
 
-  /* LOD: minimal — flat colored rectangles, proportional to real size */
+  /* LOD: minimal — flat colored rectangles, no interaction */
   &[data-lod="minimal"] {
     box-shadow: none;
     transition: none;
     border-radius: 3px;
     border-width: 1px;
+    pointer-events: none;
 
     &[data-selected] {
       box-shadow: none;
@@ -80,7 +81,8 @@ graph-node {
 
     & .sn-node-header,
     & .sn-node-body,
-    & .sn-error-frame {
+    & .sn-error-frame,
+    & .sn-quick-toolbar {
       visibility: hidden;
     }
   }

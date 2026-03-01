@@ -66,26 +66,6 @@ graph-node {
     }
   }
 
-  /* LOD: minimal — flat colored rectangles, no interaction */
-  &[data-lod="minimal"] {
-    box-shadow: none;
-    transition: none;
-    border-radius: 3px;
-    border-width: 1px;
-    pointer-events: none;
-
-    &[data-selected] {
-      box-shadow: none;
-      border-color: var(--sn-node-border, #2a2a4a);
-    }
-
-    & .sn-node-header,
-    & .sn-node-body,
-    & .sn-error-frame,
-    & .sn-quick-toolbar {
-      visibility: hidden;
-    }
-  }
 
   &[node-type="subgraph"] .sn-subgraph-preview {
     display: block;

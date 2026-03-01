@@ -70,7 +70,13 @@ export class ConnectionRenderer {
   remove(conn) {
     this.#connectionData.delete(conn.id);
     const path = this.#svgLayer.querySelector(`[data-conn-id="${conn.id}"]`);
-    if (path) path.remove();
+    if (path) {
+      // Fade out using existing CSS opacity transition
+      path.style.opacity = '0';
+      path.addEventListener('transitionend', () => path.remove(), { once: true });
+      // Fallback removal if transition doesn't fire
+      setTimeout(() => { if (path.parentNode) path.remove(); }, 200);
+    }
   }
 
   /**

@@ -31,7 +31,21 @@ export const styles = css`
     }
   }
 
-  .bc-item {
+  breadcrumb-item {
+    display: contents;
+
+    &[data-active] .bc-label {
+      color: var(--sn-text, #cdd6f4);
+      font-weight: 500;
+      cursor: default;
+
+      &:hover {
+        background: transparent;
+      }
+    }
+  }
+
+  .bc-label {
     padding: 3px 8px;
     border-radius: 4px;
     cursor: pointer;
@@ -43,16 +57,6 @@ export const styles = css`
     &:hover {
       background: var(--sn-ctx-hover, rgba(90, 159, 212, 0.15));
       color: var(--sn-text, #cdd6f4);
-    }
-
-    &[data-active] {
-      color: var(--sn-text, #cdd6f4);
-      font-weight: 500;
-      cursor: default;
-
-      &:hover {
-        background: transparent;
-      }
     }
 
     & .material-symbols-outlined {

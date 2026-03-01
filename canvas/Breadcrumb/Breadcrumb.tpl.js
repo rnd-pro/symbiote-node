@@ -5,5 +5,5 @@
 import { html } from '@symbiotejs/symbiote';
 
 export const template = html`
-  <div ref="bcList"></div>
+  <div ${{ itemize: 'crumbs', 'item-tag': 'breadcrumb-item' }}></div>
 `;

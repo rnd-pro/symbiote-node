@@ -68,7 +68,7 @@ export const styles = css`
     padding: 4px 0;
   }
 
-  .pal-category {
+  pal-category {
     & .pal-cat-header {
       padding: 6px 14px;
       font-size: 11px;
@@ -100,7 +100,7 @@ export const styles = css`
     }
   }
 
-  .pal-item {
+  pal-item {
     padding: 6px 14px 6px 28px;
     display: flex;
     align-items: center;

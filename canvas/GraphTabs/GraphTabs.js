@@ -8,7 +8,7 @@
  * @module symbiote-node/canvas/GraphTabs
  */
 
-import Symbiote from '@symbiotejs/symbiote';
+import Symbiote, { html } from '@symbiotejs/symbiote';
 import { template } from './GraphTabs.tpl.js';
 import { styles } from './GraphTabs.css.js';
 
@@ -19,7 +19,31 @@ import { styles } from './GraphTabs.css.js';
  * @property {Object} state - Serialized editor state
  */
 
+class TabItem extends Symbiote {
+  init$ = {
+    id: '',
+    name: '',
+    isActive: false,
+    showClose: false,
+  };
+}
+
+TabItem.template = html`
+  <span class="material-symbols-outlined">description</span>
+  <span ${{ textContent: 'name' }}></span>
+  <span
+    class="tab-close material-symbols-outlined"
+    ${{ onclick: '^onCloseTab', '@hidden': '!showClose' }}
+  >close</span>
+`;
+
+TabItem.reg('tab-item');
+
 export class GraphTabs extends Symbiote {
+
+  init$ = {
+    tabItems: [],
+  };
 
   /** @type {TabPage[]} */
   #tabs = [];
@@ -57,7 +81,7 @@ export class GraphTabs extends Symbiote {
    */
   addTab(id, name, state = {}) {
     this.#tabs.push({ id, name, state });
-    this.#render();
+    this.#syncItems();
     this.switchTo(id);
   }
 
@@ -67,7 +91,7 @@ export class GraphTabs extends Symbiote {
    */
   switchTo(id) {
     this.#activeTabId = id;
-    this.#render();
+    this.#syncItems();
     if (this.#onSwitch) this.#onSwitch(id);
   }
 
@@ -82,20 +106,14 @@ export class GraphTabs extends Symbiote {
     if (this.#activeTabId === id && this.#tabs.length > 0) {
       this.switchTo(this.#tabs[Math.max(0, idx - 1)].id);
     }
-    this.#render();
+    this.#syncItems();
     if (this.#onClose) this.#onClose(id);
   }
 
-  /**
-   * Get current active tab ID
-   * @returns {string}
-   */
+  /** @returns {string} */
   get activeTab() { return this.#activeTabId; }
 
-  /**
-   * Get all tabs
-   * @returns {TabPage[]}
-   */
+  /** @returns {TabPage[]} */
   get tabs() { return [...this.#tabs]; }
 
   /**
@@ -117,41 +135,26 @@ export class GraphTabs extends Symbiote {
     return this.#tabs.find(t => t.id === id)?.state;
   }
 
-  #render() {
-    const container = this.ref.tabList;
-    if (!container) return;
-    container.replaceChildren();
+  #syncItems() {
+    const showClose = this.#tabs.length > 1;
+    this.$.tabItems = this.#tabs.map(t => ({
+      id: t.id,
+      name: t.name,
+      isActive: t.id === this.#activeTabId,
+      showClose,
+    }));
+  }
 
-    for (const tab of this.#tabs) {
-      const el = document.createElement('div');
-      el.className = 'tab-item';
-      if (tab.id === this.#activeTabId) el.setAttribute('data-active', '');
+  onTabClick(e) {
+    const item = e.target.closest('tab-item');
+    if (!item) return;
+    this.switchTo(item.$.id);
+  }
 
-      const icon = document.createElement('span');
-      icon.className = 'material-symbols-outlined';
-      icon.textContent = 'description';
-
-      const label = document.createElement('span');
-      label.textContent = tab.name;
-
-      el.append(icon, label);
-
-      if (this.#tabs.length > 1) {
-        const closeBtn = document.createElement('span');
-        closeBtn.className = 'tab-close material-symbols-outlined';
-        closeBtn.textContent = 'close';
-        el.appendChild(closeBtn);
-      }
-
-      el.addEventListener('click', (e) => {
-        if (e.target.closest('.tab-close')) {
-          this.removeTab(tab.id);
-        } else {
-          this.switchTo(tab.id);
-        }
-      });
-      container.appendChild(el);
-    }
+  onCloseTab(e) {
+    e.stopPropagation();
+    const item = e.target.closest('tab-item');
+    if (item) this.removeTab(item.$.id);
   }
 
   onAddTab() {
@@ -159,6 +162,18 @@ export class GraphTabs extends Symbiote {
       const newTab = this.#onAdd();
       if (newTab) this.addTab(newTab.id, newTab.name, newTab.state);
     }
+  }
+
+  renderCallback() {
+    this.sub('tabItems', (items) => {
+      this.querySelectorAll('tab-item').forEach((el, i) => {
+        if (items[i]?.isActive) {
+          el.setAttribute('data-active', '');
+        } else {
+          el.removeAttribute('data-active');
+        }
+      });
+    });
   }
 }
 

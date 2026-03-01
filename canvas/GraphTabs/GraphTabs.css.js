@@ -24,7 +24,7 @@ export const styles = css`
     }
   }
 
-  .tab-item {
+  tab-item {
     display: flex;
     align-items: center;
     gap: 6px;

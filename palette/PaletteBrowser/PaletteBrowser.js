@@ -8,30 +8,73 @@
  * @module symbiote-node/palette/PaletteBrowser
  */
 
-import Symbiote from '@symbiotejs/symbiote';
+import Symbiote, { html } from '@symbiotejs/symbiote';
 import { template } from './PaletteBrowser.tpl.js';
 import { styles } from './PaletteBrowser.css.js';
+
+class PalItem extends Symbiote {
+  init$ = {
+    name: '',
+    icon: 'radio_button_checked',
+    desc: '',
+    type: '',
+    color: '',
+    category: '',
+    isHeader: false,
+  };
+}
+
+PalItem.template = html`
+  <span class="pal-item-icon material-symbols-outlined" ${{ textContent: 'icon' }}></span>
+  <span class="pal-item-label" ${{ textContent: 'name' }}></span>
+  <span class="pal-item-desc" ${{ textContent: 'desc' }}></span>
+`;
+
+PalItem.reg('pal-item');
+
+class PalCategory extends Symbiote {
+  init$ = {
+    category: '',
+    catItems: [],
+  };
+
+  onToggle() {
+    this.toggleAttribute('data-collapsed');
+  }
+}
+
+PalCategory.template = html`
+  <div class="pal-cat-header" ${{ onclick: 'onToggle' }}>
+    <span class="material-symbols-outlined">expand_more</span>
+    <span ${{ textContent: 'category' }}></span>
+  </div>
+  <div class="pal-cat-items" ${{ itemize: 'catItems', 'item-tag': 'pal-item' }}></div>
+`;
+
+PalCategory.reg('pal-category');
 
 export class PaletteBrowser extends Symbiote {
 
   init$ = {
-    items: [],
-    filterText: '',
+    categories: [],
   };
 
   /** @type {Array<{ category: string, color: string, items: Array<{ name: string, icon: string, type: string, desc: string, factory: function }> }>} */
-  #categories = [];
+  #rawCategories = [];
 
   /** @type {function|null} */
   #onSelect = null;
+
+  /** @type {Map<string, function>} */
+  #factoryMap = new Map();
 
   /**
    * Register palette categories and items
    * @param {Array<{ category: string, color: string, items: Array<{ name: string, icon: string, type: string, desc: string, factory: function }> }>} categories
    */
   setCategories(categories) {
-    this.#categories = categories;
-    this.#renderList();
+    this.#rawCategories = categories;
+    this.#syncList();
   }
 
   /**
@@ -42,74 +85,44 @@ export class PaletteBrowser extends Symbiote {
     this.#onSelect = callback;
   }
 
-  #renderList(filter = '') {
-    const list = this.ref.palList;
-    if (!list) return;
-    list.replaceChildren();
-
+  #syncList(filter = '') {
     const lowerFilter = filter.toLowerCase();
+    this.#factoryMap.clear();
 
-    for (const cat of this.#categories) {
-      const filteredItems = lowerFilter
-        ? cat.items.filter(it => it.name.toLowerCase().includes(lowerFilter) || it.desc.toLowerCase().includes(lowerFilter))
-        : cat.items;
+    this.$.categories = this.#rawCategories
+      .map(cat => {
+        const filtered = lowerFilter
+          ? cat.items.filter(it => it.name.toLowerCase().includes(lowerFilter) || it.desc.toLowerCase().includes(lowerFilter))
+          : cat.items;
 
-      if (filteredItems.length === 0) continue;
+        if (filtered.length === 0) return null;
 
-      const catDiv = document.createElement('div');
-      catDiv.className = 'pal-category';
-
-      const catHeader = document.createElement('div');
-      catHeader.className = 'pal-cat-header';
-      const headerIcon = document.createElement('span');
-      headerIcon.className = 'material-symbols-outlined';
-      headerIcon.textContent = 'expand_more';
-      catHeader.append(headerIcon, ` ${cat.category}`);
-      catHeader.addEventListener('click', () => {
-        catDiv.toggleAttribute('data-collapsed');
-      });
-
-      const itemsDiv = document.createElement('div');
-      itemsDiv.className = 'pal-cat-items';
-
-      catDiv.append(catHeader, itemsDiv);
-
-      for (const item of filteredItems) {
-        const el = document.createElement('div');
-        el.className = 'pal-item';
-        el.style.setProperty('--item-color', cat.color);
-
-        const itemIcon = document.createElement('span');
-        itemIcon.className = 'pal-item-icon material-symbols-outlined';
-        itemIcon.textContent = item.icon;
-
-        const itemLabel = document.createElement('span');
-        itemLabel.className = 'pal-item-label';
-        itemLabel.textContent = item.name;
-
-        const itemDesc = document.createElement('span');
-        itemDesc.className = 'pal-item-desc';
-        itemDesc.textContent = item.desc;
-
-        el.append(itemIcon, itemLabel, itemDesc);
-        el.addEventListener('click', () => {
-          if (this.#onSelect) this.#onSelect(item.factory, item.name);
+        const catItems = filtered.map(it => {
+          this.#factoryMap.set(it.name, it.factory);
+          return {
+            name: it.name,
+            icon: it.icon,
+            desc: it.desc,
+            type: it.type,
+            color: cat.color,
+          };
         });
-        // Drag support
-        el.draggable = true;
-        el.addEventListener('dragstart', (e) => {
-          e.dataTransfer.setData('text/plain', JSON.stringify({ name: item.name, type: item.type }));
-          e.dataTransfer.effectAllowed = 'copy';
-        });
-        itemsDiv.appendChild(el);
-      }
 
-      list.appendChild(catDiv);
-    }
+        return { category: cat.category, catItems };
+      })
+      .filter(Boolean);
   }
 
   onSearchInput(e) {
-    this.#renderList(e.target.value);
+    this.#syncList(e.target.value);
+  }
+
+  onItemClick(e) {
+    const item = e.target.closest('pal-item');
+    if (!item) return;
+    const name = item.$.name;
+    const factory = this.#factoryMap.get(name);
+    if (this.#onSelect && factory) this.#onSelect(factory, name);
   }
 }
 

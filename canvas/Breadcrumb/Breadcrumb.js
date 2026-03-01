@@ -7,11 +7,35 @@
  * @module symbiote-node/canvas/Breadcrumb
  */
 
-import Symbiote from '@symbiotejs/symbiote';
+import Symbiote, { html } from '@symbiotejs/symbiote';
 import { template } from './Breadcrumb.tpl.js';
 import { styles } from './Breadcrumb.css.js';
 
+class BreadcrumbItem extends Symbiote {
+  init$ = {
+    label: '',
+    icon: 'home',
+    level: 0,
+    isActive: false,
+    isFirst: true,
+  };
+}
+
+BreadcrumbItem.template = html`
+  <span class="bc-sep" ${{ '@hidden': 'isFirst' }}>›</span>
+  <span class="bc-label" ${{ onclick: '^onCrumbClick' }}>
+    <span class="material-symbols-outlined" ${{ textContent: 'icon' }}></span>
+    <span ${{ textContent: 'label' }}></span>
+  </span>
+`;
+
+BreadcrumbItem.reg('breadcrumb-item');
+
 export class Breadcrumb extends Symbiote {
+
+  init$ = {
+    crumbs: [],
+  };
 
   /** @type {function|null} */
   #onNavigate = null;
@@ -35,36 +59,30 @@ export class Breadcrumb extends Symbiote {
     }
 
     this.removeAttribute('hidden');
-    const container = this.ref.bcList;
-    if (!container) return;
-    container.replaceChildren();
+    this.$.crumbs = path.map((item, i) => ({
+      label: item.label,
+      icon: i === 0 ? 'home' : 'account_tree',
+      level: item.level,
+      isActive: i === path.length - 1,
+      isFirst: i === 0,
+    }));
+  }
 
-    path.forEach((item, i) => {
-      if (i > 0) {
-        const sep = document.createElement('span');
-        sep.className = 'bc-sep';
-        sep.textContent = '›';
-        container.appendChild(sep);
-      }
+  onCrumbClick(e) {
+    const item = e.target.closest('breadcrumb-item');
+    if (!item || item.$.isActive) return;
+    if (this.#onNavigate) this.#onNavigate(item.$.level);
+  }
 
-      const el = document.createElement('span');
-      el.className = 'bc-item';
-      const isActive = i === path.length - 1;
-
-      const icon = document.createElement('span');
-      icon.className = 'material-symbols-outlined';
-      icon.textContent = i === 0 ? 'home' : 'account_tree';
-      el.append(icon, item.label);
-
-      if (isActive) {
-        el.setAttribute('data-active', '');
-      } else {
-        el.addEventListener('click', () => {
-          if (this.#onNavigate) this.#onNavigate(item.level);
-        });
-      }
-
-      container.appendChild(el);
+  renderCallback() {
+    this.sub('crumbs', (items) => {
+      this.querySelectorAll('breadcrumb-item').forEach((el, i) => {
+        if (items[i]?.isActive) {
+          el.setAttribute('data-active', '');
+        } else {
+          el.removeAttribute('data-active');
+        }
+      });
     });
   }
 }

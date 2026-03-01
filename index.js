@@ -61,3 +61,9 @@ export { computeAutoLayout } from './canvas/AutoLayout.js';
 
 // Portals (Named Reroutes)
 export { PortalManager } from './core/Portal.js';
+
+// Palette Browser
+export { PaletteBrowser } from './palette/PaletteBrowser.js';
+
+// Tabs
+export { GraphTabs } from './canvas/GraphTabs.js';

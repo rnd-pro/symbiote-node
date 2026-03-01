@@ -133,26 +133,87 @@ npx -y serve -l 3000 .
 ```
 symbiote-node/
 ├── index.js          — public API exports
-├── core/             — Editor, Node, Connection, Socket
+├── core/             — Editor, Node, Connection, Socket, Portal
 ├── canvas/           — NodeCanvas facade + extracted modules
 │   ├── NodeCanvas.js           — main viewport (facade)
 │   ├── NodeViewManager.js      — node CRUD + group drag
 │   ├── ConnectionRenderer.js   — SVG paths + gradients + flow
 │   ├── FlowSimulator.js        — data flow animation engine
 │   ├── PseudoConnection.js     — temp connection line
-│   └── ViewportActions.js      — context menu + keyboard
+│   ├── ViewportActions.js      — context menu + keyboard
+│   ├── AutoLayout.js           — Sugiyama auto layout
+│   ├── GraphTabs.js            — tab/page management
+│   ├── Minimap.js              — viewport minimap
+│   └── NodeSearch.js           — search/omnibox
 ├── node/             — GraphNode + PortItem + CtrlItem + NodeSocket
 ├── menu/             — ContextMenu
 ├── interactions/     — Drag, Zoom, Selector, SnapGrid, ConnectFlow
 ├── shapes/           — NodeShape + 5 implementations
 ├── themes/           — Theme, Palette, Skin with design tokens
 ├── toolbar/          — QuickToolbar (floating actions)
-├── plugins/          — Readonly
+├── inspector/        — InspectorPanel (side panel)
+├── palette/          — PaletteBrowser (component library)
+├── plugins/          — Readonly, History (undo/redo)
 ├── demo/             — demo page
 └── tests/            — geometry & topology tests
 ```
 
-## API
+## Scripting API
+
+### Graph Construction
+
+```js
+import { NodeEditor, Node, Connection, Socket, Input, Output, InputControl } from './index.js';
+
+const editor = new NodeEditor();
+const socket = new Socket('data', { color: '#4a9eff' });
+
+const node = new Node('My Node', { type: 'action', category: 'control' });
+node.addInput('in', new Input(socket, 'Input'));
+node.addOutput('out', new Output(socket, 'Output'));
+node.addControl('value', new InputControl('text', { initial: 'hello' }));
+editor.addNode(node);
+editor.addConnection(new Connection(node1, 'out', node2, 'in'));
+```
+
+### Canvas API
+
+```js
+const canvas = document.querySelector('node-canvas');
+canvas.setEditor(editor);                          // Bind editor
+canvas.setNodePosition(nodeId, x, y);               // Position node
+canvas.setTheme(DARK_DEFAULT);                      // Switch theme
+canvas.setPalette(SYNTHWAVE_PALETTE);               // Colors only
+canvas.setSkin(COMPACT_SKIN);                       // Geometry only
+canvas.setSnapGrid(true, 20);                       // Snap to grid
+canvas.setPathStyle('orthogonal');                  // Wire style
+canvas.setPreview(nodeId, 'status text', 'text');   // Node preview
+canvas.setPreview(nodeId, '/img.png', 'image');     // Image preview
+canvas.setNodeError(nodeId, 'Error message');       // Error state
+canvas.clearNodeError(nodeId);                      // Clear error
+canvas.autoLayout();                                // Auto arrange
+canvas.fitView();                                   // Fit all nodes
+```
+
+### Plugins
+
+```js
+import { History, FlowSimulator, PortalManager } from './index.js';
+
+// Undo/Redo
+const history = new History();
+history.listen(editor, { getCanvas: () => canvas, classes: { Node, Connection, ... } });
+history.bindKeyboard(canvas);
+
+// Flow animation
+const sim = new FlowSimulator(editor, canvas);
+await sim.run();
+
+// Named reroutes (portals)
+const portals = new PortalManager();
+portals.addSender('channel-a', node1.id, 'out');
+portals.addReceiver('channel-a', node2.id, 'in');
+```
 
 ### Console Tools (Demo)
 
@@ -175,14 +236,23 @@ node --test tests/geometry.test.js
 - [x] Quick Action Toolbar
 - [x] Collapse / Mute nodes
 - [x] Flow Simulator
-- [ ] Undo/Redo (History)
-- [ ] Inspector Side Panel
-- [ ] Node Groups / Frames
-- [ ] Minimap
-- [ ] Node Search (Omnibox)
-- [ ] Reroute Nodes
-- [ ] Subgraphs
-- [ ] Viewport Culling
+- [x] Undo/Redo (History)
+- [x] Inspector Side Panel
+- [x] Node Groups / Frames
+- [x] Minimap
+- [x] Node Search (Omnibox)
+- [x] Reroute Nodes
+- [x] Viewport Culling + LOD
+- [x] Auto Layout (Sugiyama)
+- [x] Port Shapes by Type
+- [x] Debug Node
+- [x] Connection Path Styles
+- [x] Execution Wire Visual
+- [x] Preview Area on Nodes
+- [x] Named Reroutes / Portals
+- [x] Palette Browser
+- [x] Graph Tabs / Pages
+- [ ] Full Subgraphs (drill-down)
 
 ## License
 

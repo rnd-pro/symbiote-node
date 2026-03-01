@@ -810,11 +810,21 @@ export class NodeCanvas extends Symbiote {
   // --- Transform ---
 
   #updateTransform() {
-    // Sync grid dots with pan/zoom
+    // Sync grid dots with pan/zoom (thin at far zoom)
     const gridBase = parseInt(getComputedStyle(this).getPropertyValue('--sn-grid-size')) || 20;
-    const gridSize = gridBase * this.$.zoom;
+    const zoom = this.$.zoom;
+
+    if (zoom < 0.25) {
+      // Minimal: hide dots
+      this.style.backgroundImage = 'none';
+    } else {
+      this.style.backgroundImage = '';
+      // Medium: double the grid step
+      const multiplier = zoom < 0.5 ? 2 : 1;
+      const gridSize = gridBase * multiplier * zoom;
+      this.style.backgroundSize = `${gridSize}px ${gridSize}px`;
+    }
     this.style.backgroundPosition = `${this.$.panX}px ${this.$.panY}px`;
-    this.style.backgroundSize = `${gridSize}px ${gridSize}px`;
 
     // Viewport culling + LOD
     this.#applyCullingAndLOD();

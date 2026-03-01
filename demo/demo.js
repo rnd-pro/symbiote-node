@@ -189,9 +189,9 @@ function initDemo() {
     component: 'palette-browser',
   });
 
-  // Set initial layout: canvas (75%) | inspector (25%)
+  // Set initial layout: canvas (top 75%) | inspector (bottom 25%)
   const initialLayout = LayoutTree.createSplit(
-    'horizontal',
+    'vertical',
     LayoutTree.createPanel('canvas'),
     LayoutTree.createPanel('inspector'),
     0.75,

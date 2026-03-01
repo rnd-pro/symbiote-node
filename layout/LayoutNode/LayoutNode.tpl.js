@@ -19,10 +19,10 @@ export const template = html`
   <div class="panel-content" ref="content" ${{ '@hidden': 'isCollapsed' }}></div>
   
   <!-- Action zones for split/join -->
-  <sn-action-zone corner="tl"></sn-action-zone>
-  <sn-action-zone corner="tr"></sn-action-zone>
-  <sn-action-zone corner="bl"></sn-action-zone>
-  <sn-action-zone corner="br"></sn-action-zone>
+  <action-zone corner="tl"></action-zone>
+  <action-zone corner="tr"></action-zone>
+  <action-zone corner="bl"></action-zone>
+  <action-zone corner="br"></action-zone>
 </div>
 
 <div class="split-view" ${{ '@hidden': '!isSplit', '@direction': 'direction' }}>

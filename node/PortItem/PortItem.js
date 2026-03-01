@@ -68,7 +68,7 @@ export class PortItem extends Symbiote {
 
 PortItem.template = template;
 PortItem.rootStyles = styles;
-PortItem.reg('sn-port-item');
+PortItem.reg('port-item');
 
 /** @type {Object<string, string>} - Socket type name to visual shape */
 PortItem.SOCKET_SHAPES = {

@@ -70,7 +70,7 @@ export class ActionZone extends Symbiote {
     e.stopPropagation();
 
     // Get panel bounds at drag start
-    const panelNode = this.closest('sn-layout-node');
+    const panelNode = this.closest('layout-node');
     if (panelNode) {
       const rect = panelNode.getBoundingClientRect();
       this.$.panelBounds = {
@@ -248,6 +248,5 @@ export class ActionZone extends Symbiote {
 ActionZone.template = template;
 ActionZone.rootStyles = styles;
 
-ActionZone.reg('sn-action-zone');
+ActionZone.reg('action-zone');
 
-export default ActionZone;

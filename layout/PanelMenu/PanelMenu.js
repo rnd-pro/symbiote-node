@@ -76,6 +76,5 @@ export class PanelMenu extends Symbiote {
 PanelMenu.template = template;
 PanelMenu.rootStyles = styles;
 
-PanelMenu.reg('sn-panel-menu');
+PanelMenu.reg('panel-menu');
 
-export default PanelMenu;

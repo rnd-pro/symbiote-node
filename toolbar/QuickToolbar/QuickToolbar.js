@@ -105,8 +105,8 @@ export class QuickToolbar extends Symbiote {
     const isCollapsed = nodeEl.hasAttribute('data-collapsed');
     const isMuted = nodeEl.hasAttribute('data-muted');
 
-    const collapseBtn = this.querySelector('[data-action="collapse"] .sn-tb-icon');
-    const muteBtn = this.querySelector('[data-action="mute"] .sn-tb-icon');
+    const collapseBtn = this.querySelector('[data-action="collapse"] .tb-icon');
+    const muteBtn = this.querySelector('[data-action="mute"] .tb-icon');
 
     if (collapseBtn) collapseBtn.textContent = isCollapsed ? 'unfold_more' : 'unfold_less';
     if (muteBtn) muteBtn.textContent = isMuted ? 'visibility' : 'visibility_off';

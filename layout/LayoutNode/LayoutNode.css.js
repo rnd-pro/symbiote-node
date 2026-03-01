@@ -1,7 +1,7 @@
 import { css } from '@symbiotejs/symbiote';
 
 export const styles = css`
-sn-layout-node {
+layout-node {
   display: flex;
   flex: 1;
   min-width: 0;
@@ -93,7 +93,7 @@ sn-layout-node {
     max-height: 28px !important;
     
     .panel-content,
-    sn-action-zone {
+    action-zone {
       display: none !important;
     }
 
@@ -145,7 +145,7 @@ sn-layout-node {
     }
 
     .panel-content,
-    sn-action-zone {
+    action-zone {
       display: none !important;
     }
 
@@ -205,7 +205,7 @@ sn-layout-node {
   /* Fullscreen: hide panel type selector, collapse btn, action zones */
   &[fullscreen] .type-btn,
   &[fullscreen] .collapse-btn,
-  &[fullscreen] sn-action-zone {
+  &[fullscreen] action-zone {
     display: none !important;
   }
 

@@ -7,7 +7,7 @@ import { html } from '@symbiotejs/symbiote';
 export const template = html`
 <div class="sn-ctx-backdrop" ${{ onclick: 'onBackdropClick' }}></div>
 <div class="sn-ctx-menu">
-  <div class="sn-ctx-items" ${{ itemize: 'items', 'item-tag': 'sn-ctx-item' }}></div>
+  <div class="ctx-items" ${{ itemize: 'items', 'item-tag': 'ctx-item' }}></div>
 </div>
 `;
 

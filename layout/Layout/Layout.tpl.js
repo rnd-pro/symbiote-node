@@ -2,8 +2,8 @@ import { html } from '@symbiotejs/symbiote';
 
 export const template = html`
 <div class="layout-root" ref="root"></div>
-<sn-layout-preview ref="preview"></sn-layout-preview>
-<sn-panel-menu ref="menu"></sn-panel-menu>
+<layout-preview ref="preview"></layout-preview>
+<panel-menu ref="menu"></panel-menu>
 
 <!-- Fullscreen tab bar (hidden by default) -->
 <div class="fullscreen-tab-bar" ${{ '@hidden': '!hasFullscreenTabs' }}>

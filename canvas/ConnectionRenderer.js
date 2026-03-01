@@ -139,11 +139,11 @@ export class ConnectionRenderer {
    */
   getSocketOffset(nodeEl, portKey, side) {
     const container = side === 'output'
-      ? nodeEl.querySelector('.sn-outputs')
-      : nodeEl.querySelector('.sn-inputs');
+      ? nodeEl.querySelector('.outputs')
+      : nodeEl.querySelector('.inputs');
 
     if (container) {
-      const portItems = container.querySelectorAll('sn-port-item');
+      const portItems = container.querySelectorAll('port-item');
       for (const portItem of portItems) {
         if (portItem.$.key === portKey) {
           const socket = portItem.querySelector('.sn-socket');

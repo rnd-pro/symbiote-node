@@ -113,14 +113,14 @@ export class InspectorPanel extends Symbiote {
     });
 
     this.sub('hasSelection', (val) => {
-      const empty = this.querySelector('.sn-insp-empty');
-      const content = this.querySelector('.sn-insp-content');
+      const empty = this.querySelector('.insp-empty');
+      const content = this.querySelector('.insp-content');
       if (empty) empty.style.display = val ? 'none' : '';
       if (content) content.style.display = val ? '' : 'none';
     });
 
     this.sub('isSubgraph', (val) => {
-      const sgSection = this.querySelector('.sn-insp-subgraph');
+      const sgSection = this.querySelector('.insp-subgraph');
       if (sgSection) sgSection.style.display = val ? '' : 'none';
     });
   }
@@ -136,7 +136,7 @@ class InspPortItem extends Symbiote {
 }
 
 InspPortItem.template = inspPortItemTemplate;
-InspPortItem.reg('sn-insp-port-item');
+InspPortItem.reg('insp-port-item');
 
 // Control item for itemize
 class InspCtrlItem extends Symbiote {
@@ -149,7 +149,7 @@ class InspCtrlItem extends Symbiote {
 }
 
 InspCtrlItem.template = inspCtrlItemTemplate;
-InspCtrlItem.reg('sn-insp-ctrl-item');
+InspCtrlItem.reg('insp-ctrl-item');
 
 InspectorPanel.template = template;
 InspectorPanel.rootStyles = styles;

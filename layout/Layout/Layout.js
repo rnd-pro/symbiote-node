@@ -109,7 +109,7 @@ export class Layout extends Symbiote {
       if (this.$.fullscreenPanelId) {
         // Wait for DOM update, then recalculate tabs
         requestAnimationFrame(() => {
-          const allPanels = this.querySelectorAll('sn-layout-node[node-type="panel"]');
+          const allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
           // Check if current fullscreen panel still exists
           const panelExists = Array.from(allPanels).some(p => p.$.nodeId === this.$.fullscreenPanelId);
           if (panelExists) {
@@ -172,9 +172,9 @@ export class Layout extends Symbiote {
     if (!this.$.layoutTree || !this.ref.root) return;
 
     // Ensure root node exists
-    let rootNode = this.ref.root.querySelector('sn-layout-node');
+    let rootNode = this.ref.root.querySelector('layout-node');
     if (!rootNode) {
-      rootNode = document.createElement('sn-layout-node');
+      rootNode = document.createElement('layout-node');
       this.ref.root.appendChild(rootNode);
     }
 
@@ -331,7 +331,7 @@ export class Layout extends Symbiote {
 
           // Update sibling panel
           if (siblingContainer) {
-            const siblingPanel = siblingContainer.querySelector('sn-layout-node[node-type="panel"]');
+            const siblingPanel = siblingContainer.querySelector('layout-node[node-type="panel"]');
             if (siblingPanel?._updatePanelInfo) {
               siblingPanel._updatePanelInfo();
             }
@@ -355,7 +355,7 @@ export class Layout extends Symbiote {
     const panelNode = this._findPanelNode(panelId);
     if (!panelNode) return;
 
-    const allPanels = this.querySelectorAll('sn-layout-node[node-type="panel"]');
+    const allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
 
     if (this.$.fullscreenPanelId === panelId) {
       // Exit fullscreen
@@ -406,7 +406,7 @@ export class Layout extends Symbiote {
    * @param {string} [activePanelId] - Optional, defaults to fullscreenPanelId
    */
   _updateTabItems(allPanels, activePanelId) {
-    const panels = allPanels || this.querySelectorAll('sn-layout-node[node-type="panel"]');
+    const panels = allPanels || this.querySelectorAll('layout-node[node-type="panel"]');
     const activeId = activePanelId || this.$.fullscreenPanelId;
 
     this.$.tabItems = Array.from(panels).map((p) => {
@@ -428,7 +428,7 @@ export class Layout extends Symbiote {
    * @param {string} panelId - Panel ID to switch to
    */
   _switchFullscreenPanel(panelId) {
-    const allPanels = this.querySelectorAll('sn-layout-node[node-type="panel"]');
+    const allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
     const newPanel = this._findPanelNode(panelId);
     if (!newPanel) return;
 
@@ -459,7 +459,7 @@ export class Layout extends Symbiote {
    * @returns {HTMLElement|null}
    */
   _findPanelNode(panelId) {
-    const nodes = this.querySelectorAll('sn-layout-node[node-type="panel"]');
+    const nodes = this.querySelectorAll('layout-node[node-type="panel"]');
     for (const node of nodes) {
       if (node.$.nodeId === panelId) {
         return node;
@@ -573,7 +573,7 @@ export class Layout extends Symbiote {
     }
 
     // Clear stripe mode from all panels
-    this.querySelectorAll('sn-layout-node[stripe]').forEach((node) => {
+    this.querySelectorAll('layout-node[stripe]').forEach((node) => {
       node.removeAttribute('stripe');
       node.style.left = '';
       node.style.top = '';
@@ -582,7 +582,7 @@ export class Layout extends Symbiote {
     });
 
     // Clear all collapsed states from DOM
-    this.querySelectorAll('sn-layout-node[collapsed]').forEach((node) => {
+    this.querySelectorAll('layout-node[collapsed]').forEach((node) => {
       node.removeAttribute('collapsed');
       node.removeAttribute('collapse-dir');
       node.$.isCollapsed = false;
@@ -611,6 +611,5 @@ export class Layout extends Symbiote {
 Layout.template = template;
 Layout.rootStyles = styles;
 
-Layout.reg('sn-layout');
+Layout.reg('panel-layout');
 
-export default Layout;

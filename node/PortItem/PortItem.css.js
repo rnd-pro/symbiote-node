@@ -5,7 +5,7 @@
 import { css } from '@symbiotejs/symbiote';
 
 export const styles = css`
-sn-port-item {
+port-item {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -81,7 +81,7 @@ sn-port-item {
     }
   }
 
-  & .sn-port-label {
+  & .port-label {
     color: var(--sn-text-dim, #94a3b8);
     font-size: 12px;
     white-space: nowrap;

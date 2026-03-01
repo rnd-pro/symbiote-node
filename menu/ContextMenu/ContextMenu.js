@@ -22,7 +22,7 @@ class CtxItem extends Symbiote {
 }
 
 CtxItem.template = ctxItemTemplate;
-CtxItem.reg('sn-ctx-item');
+CtxItem.reg('ctx-item');
 
 export class ContextMenu extends Symbiote {
 

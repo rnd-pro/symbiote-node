@@ -6,5 +6,5 @@ import { html } from '@symbiotejs/symbiote';
 
 export const template = html`
 <div ref="socket" class="sn-socket" ${{ '@data-key': 'key' }}></div>
-<span class="sn-port-label">{{label}}</span>
+<span class="port-label">{{label}}</span>
 `;

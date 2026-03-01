@@ -184,7 +184,7 @@ export class LayoutNode extends Symbiote {
 
       // Check if sibling panel is collapsed (direct child panel only)
       if (siblingContainer) {
-        const siblingNode = siblingContainer.querySelector(':scope > sn-layout-node');
+        const siblingNode = siblingContainer.querySelector(':scope > layout-node');
         // Only check collapsed state if sibling is a panel
         if (siblingNode?.getAttribute('node-type') === 'panel') {
           siblingCollapsed = siblingNode.$.isCollapsed || false;
@@ -199,7 +199,7 @@ export class LayoutNode extends Symbiote {
 
       if (isSplitChild) {
         // Update direction based on parent split
-        let parentNode = container.closest('sn-layout-node');
+        let parentNode = container.closest('layout-node');
         if (!parentNode && container.getRootNode() instanceof ShadowRoot) {
           parentNode = container.getRootNode().host;
         }
@@ -256,7 +256,7 @@ export class LayoutNode extends Symbiote {
       this.removeAttribute('direction');
 
       // CRITICAL: Clean up child nodes if we changed from split to panel
-      // This prevents orphan sn-layout-node elements staying in DOM
+      // This prevents orphan layout-node elements staying in DOM
       if (prevType === 'split') {
         if (this.ref.first) this.ref.first.innerHTML = '';
         if (this.ref.second) this.ref.second.innerHTML = '';
@@ -285,9 +285,9 @@ export class LayoutNode extends Symbiote {
    * @param {Object} nodeData 
    */
   _ensureChildNode(container, nodeData) {
-    let child = container.querySelector('sn-layout-node');
+    let child = container.querySelector('layout-node');
     if (!child) {
-      child = document.createElement('sn-layout-node');
+      child = document.createElement('layout-node');
       container.appendChild(child);
       // Wait for child to initialize then update info
       setTimeout(() => child._updatePanelInfo && child._updatePanelInfo());
@@ -298,7 +298,7 @@ export class LayoutNode extends Symbiote {
 
   _setupActionZones(panelId) {
     // Action zones are in the template, just set their panel ID
-    const zones = this.querySelectorAll('sn-action-zone');
+    const zones = this.querySelectorAll('action-zone');
     zones.forEach((zone) => {
       zone.$.panelId = panelId;
     });
@@ -325,8 +325,8 @@ export class LayoutNode extends Symbiote {
       let rawRatio = (currentPos - startOffset) / containerSize;
 
       // Get first and second child nodes
-      const firstChild = this.ref.first?.querySelector('sn-layout-node');
-      const secondChild = this.ref.second?.querySelector('sn-layout-node');
+      const firstChild = this.ref.first?.querySelector('layout-node');
+      const secondChild = this.ref.second?.querySelector('layout-node');
 
       // Check for collapse/uncollapse of first panel
       if (rawRatio < COLLAPSE_THRESHOLD && firstChild && !firstChild.$.isCollapsed) {
@@ -449,6 +449,5 @@ export class LayoutNode extends Symbiote {
 LayoutNode.template = template;
 LayoutNode.rootStyles = styles;
 
-LayoutNode.reg('sn-layout-node');
+LayoutNode.reg('layout-node');
 
-export default LayoutNode;

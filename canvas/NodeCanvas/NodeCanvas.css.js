@@ -16,7 +16,7 @@ node-canvas {
     cursor: grabbing;
   }
 
-  & .sn-canvas-container {
+  & .canvas-container {
     width: 100%;
     height: 100%;
     position: relative;
@@ -28,7 +28,7 @@ node-canvas {
     cursor: default;
   }
 
-  & .sn-content {
+  & .content {
     position: absolute;
     top: 0;
     left: 0;
@@ -52,7 +52,7 @@ node-canvas {
     position: relative;
   }
 
-  & .sn-pseudo-svg {
+  & .pseudo-svg {
     position: absolute;
     top: 0;
     left: 0;
@@ -86,7 +86,7 @@ node-canvas {
   }
 }
 
-.sn-pseudo-path {
+.pseudo-path {
   fill: none;
   stroke: var(--sn-conn-color, #4a9eff);
   stroke-width: 2;
@@ -107,7 +107,7 @@ node-canvas {
 }
 
 /* Plus indicator at connection drag endpoint */
-.sn-plus-indicator {
+.plus-indicator {
   circle {
     fill: var(--sn-node-bg, #16213e);
     stroke: var(--sn-conn-color, #4a9eff);

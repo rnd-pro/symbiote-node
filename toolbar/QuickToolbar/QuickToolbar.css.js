@@ -15,7 +15,7 @@ quick-toolbar {
     display: none;
   }
 
-  & .sn-toolbar {
+  & .toolbar {
     display: flex;
     gap: 2px;
     padding: 4px;
@@ -26,11 +26,11 @@ quick-toolbar {
     border: 1px solid var(--sn-toolbar-border, rgba(255, 255, 255, 0.1));
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.1);
     transform: translateX(-50%);
-    animation: sn-toolbar-in 0.2s ease-out;
+    animation: toolbar-in 0.2s ease-out;
   }
 }
 
-@keyframes sn-toolbar-in {
+@keyframes toolbar-in {
   from {
     opacity: 0;
     transform: translateX(-50%) translateY(6px) scale(0.92);
@@ -41,7 +41,7 @@ quick-toolbar {
   }
 }
 
-.sn-tb-btn {
+.tb-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -65,17 +65,17 @@ quick-toolbar {
   }
 }
 
-.sn-tb-btn--danger:hover {
+.tb-btn--danger:hover {
   background: var(--sn-toolbar-danger, rgba(255, 107, 107, 0.25));
   color: var(--sn-toolbar-danger-color, #ff6b6b);
 }
 
-.sn-tb-btn--enter:hover {
+.tb-btn--enter:hover {
   background: rgba(167, 139, 250, 0.25);
   color: #a78bfa;
 }
 
-.sn-tb-icon {
+.tb-icon {
   font-size: 18px;
   pointer-events: none;
 }

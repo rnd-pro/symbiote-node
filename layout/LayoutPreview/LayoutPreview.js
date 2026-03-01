@@ -99,6 +99,5 @@ export class LayoutPreview extends Symbiote {
 LayoutPreview.template = template;
 LayoutPreview.rootStyles = styles;
 
-LayoutPreview.reg('sn-layout-preview');
+LayoutPreview.reg('layout-preview');
 
-export default LayoutPreview;

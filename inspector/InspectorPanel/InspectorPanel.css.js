@@ -25,7 +25,7 @@ inspector-panel {
     display: none;
   }
 
-  & .sn-insp-header {
+  & .insp-header {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -36,17 +36,17 @@ inspector-panel {
     background: var(--sn-node-bg, #2a2a3e);
   }
 
-  & .sn-insp-header .material-symbols-outlined {
+  & .insp-header .material-symbols-outlined {
     font-size: 18px;
     opacity: 0.7;
   }
 
-  & .sn-insp-body {
+  & .insp-body {
     flex: 1;
     padding: 12px 16px;
   }
 
-  & .sn-insp-empty {
+  & .insp-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -56,16 +56,16 @@ inspector-panel {
     font-size: 13px;
   }
 
-  & .sn-insp-empty .material-symbols-outlined {
+  & .insp-empty .material-symbols-outlined {
     font-size: 32px;
     opacity: 0.4;
   }
 
-  & .sn-insp-field {
+  & .insp-field {
     margin-bottom: 12px;
   }
 
-  & .sn-insp-field label {
+  & .insp-field label {
     display: block;
     font-size: 11px;
     font-weight: 600;
@@ -75,14 +75,14 @@ inspector-panel {
     letter-spacing: 0.5px;
   }
 
-  & .sn-insp-value {
+  & .insp-value {
     font-size: 13px;
     padding: 6px 8px;
     background: rgba(255,255,255,0.04);
     border-radius: 4px;
   }
 
-  & .sn-insp-tag {
+  & .insp-tag {
     display: inline-block;
     padding: 2px 8px;
     font-size: 11px;
@@ -91,17 +91,17 @@ inspector-panel {
     color: var(--sn-cat-server, #5cb8ff);
   }
 
-  & .sn-insp-mono {
+  & .insp-mono {
     font-family: 'SF Mono', 'Fira Code', monospace;
     font-size: 11px;
     opacity: 0.6;
   }
 
-  & .sn-insp-section {
+  & .insp-section {
     margin-top: 16px;
   }
 
-  & .sn-insp-section-title {
+  & .insp-section-title {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -113,13 +113,13 @@ inspector-panel {
     letter-spacing: 0.5px;
   }
 
-  & .sn-insp-section-title .material-symbols-outlined {
+  & .insp-section-title .material-symbols-outlined {
     font-size: 16px;
     opacity: 0.6;
   }
 }
 
-.sn-insp-port {
+.insp-port {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -129,11 +129,11 @@ inspector-panel {
   margin-bottom: 2px;
 }
 
-.sn-insp-port:hover {
+.insp-port:hover {
   background: rgba(255,255,255,0.04);
 }
 
-.sn-insp-port-dot {
+.insp-port-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -141,17 +141,17 @@ inspector-panel {
   flex-shrink: 0;
 }
 
-.sn-insp-port-label {
+.insp-port-label {
   flex: 1;
 }
 
-.sn-insp-port-type {
+.insp-port-type {
   font-size: 10px;
   color: var(--sn-text-dim, #888);
   font-family: 'SF Mono', 'Fira Code', monospace;
 }
 
-.sn-insp-ctrl {
+.insp-ctrl {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -161,20 +161,20 @@ inspector-panel {
   margin-bottom: 2px;
 }
 
-.sn-insp-ctrl:hover {
+.insp-ctrl:hover {
   background: rgba(255,255,255,0.04);
 }
 
-.sn-insp-ctrl-label {
+.insp-ctrl-label {
   color: var(--sn-text-dim, #aaa);
 }
 
-.sn-insp-ctrl-value {
+.insp-ctrl-value {
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 11px;
 }
 
-.sn-insp-enter-btn {
+.insp-enter-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -193,16 +193,16 @@ inspector-panel {
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 
-.sn-insp-enter-btn:hover {
+.insp-enter-btn:hover {
   background: linear-gradient(135deg, rgba(167, 139, 250, 0.22) 0%, rgba(109, 40, 217, 0.15) 100%);
   border-color: rgba(167, 139, 250, 0.5);
 }
 
-.sn-insp-enter-btn:active {
+.insp-enter-btn:active {
   transform: scale(0.97);
 }
 
-.sn-insp-enter-btn .material-symbols-outlined {
+.insp-enter-btn .material-symbols-outlined {
   font-size: 18px;
 }
 `;

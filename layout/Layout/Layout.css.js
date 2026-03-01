@@ -1,7 +1,7 @@
 import { css } from '@symbiotejs/symbiote';
 
 export const styles = css`
-sn-layout {
+panel-layout {
   display: block;
   width: 100%;
   height: 100%;

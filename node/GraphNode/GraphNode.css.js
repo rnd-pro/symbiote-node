@@ -32,13 +32,13 @@ graph-node {
   }
 
   &[data-collapsed] {
-    & .sn-controls {
+    & .controls {
       display: none;
     }
     & .sn-node-body {
       padding: 4px 0;
     }
-    & .sn-port-label {
+    & .port-label {
       display: none;
     }
   }
@@ -81,10 +81,10 @@ graph-node {
       opacity: 0.5;
     }
 
-    & .sn-controls,
-    & .sn-port-label,
+    & .controls,
+    & .port-label,
     & .sn-subgraph-preview,
-    & .sn-error-frame,
+    & .error-frame,
     & .sn-quick-toolbar {
       display: none;
     }
@@ -134,7 +134,7 @@ graph-node {
     background: color-mix(in srgb, #ef4444 10%, transparent);
   }
 
-  & .sn-error-frame {
+  & .error-frame {
     position: absolute;
     bottom: calc(100% + 10px);
     left: 50%;
@@ -149,7 +149,7 @@ graph-node {
     transition: bottom 0.15s ease;
   }
 
-  & .sn-error-frame-header {
+  & .error-frame-header {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -161,12 +161,12 @@ graph-node {
     user-select: none;
   }
 
-  & .sn-error-frame-header .material-symbols-outlined {
+  & .error-frame-header .material-symbols-outlined {
     font-size: 14px;
     opacity: 0.8;
   }
 
-  & .sn-error-frame-body {
+  & .error-frame-body {
     padding: 6px 10px;
     font-size: 11px;
     line-height: 1.4;
@@ -176,7 +176,7 @@ graph-node {
 
 
 
-  &[data-selected] .sn-error-frame {
+  &[data-selected] .error-frame {
     bottom: calc(100% + 46px);
   }
 
@@ -216,7 +216,7 @@ graph-node {
       flex-direction: row;
       gap: 8px;
     }
-    & .sn-inputs, & .sn-outputs {
+    & .inputs, & .outputs {
       padding: 0;
     }
     & .sn-port-in node-socket {
@@ -225,7 +225,7 @@ graph-node {
     & .sn-port-out node-socket {
       margin-right: -26px;
     }
-    & .sn-controls {
+    & .controls {
       display: none;
     }
   }
@@ -253,22 +253,22 @@ graph-node {
       align-items: center;
       gap: 0;
     }
-    & .sn-inputs {
+    & .inputs {
       position: absolute;
       left: -6px;
       top: 50%;
       transform: translateY(-50%);
     }
-    & .sn-outputs {
+    & .outputs {
       position: absolute;
       right: -6px;
       top: 50%;
       transform: translateY(-50%);
     }
-    & .sn-port-label {
+    & .port-label {
       display: none;
     }
-    & .sn-controls {
+    & .controls {
       display: none;
     }
   }
@@ -291,7 +291,7 @@ graph-node {
       text-align: center;
       padding: 25% 10%;
     }
-    & .sn-controls {
+    & .controls {
       display: none;
     }
   }
@@ -312,7 +312,7 @@ graph-node {
     & .sn-node-body {
       padding: 12px 16px;
     }
-    & .sn-inputs, & .sn-outputs {
+    & .inputs, & .outputs {
       display: none;
     }
   }
@@ -349,7 +349,7 @@ graph-node {
     gap: 4px;
   }
 
-  & .sn-inputs, & .sn-outputs {
+  & .inputs, & .outputs {
     display: flex;
     flex-direction: column;
   }
@@ -379,13 +379,13 @@ graph-node {
     }
   }
 
-  & .sn-port-label {
+  & .port-label {
     color: var(--sn-text-dim, #94a3b8);
     font-size: 12px;
     white-space: nowrap;
   }
 
-  & .sn-controls {
+  & .controls {
     padding: 0 12px;
   }
 

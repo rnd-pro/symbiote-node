@@ -1,7 +1,7 @@
 import { css } from '@symbiotejs/symbiote';
 
 export const styles = css`
-sn-panel-menu {
+panel-menu {
   position: fixed;
   z-index: 1000;
   pointer-events: none;

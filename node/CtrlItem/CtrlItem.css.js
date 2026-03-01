@@ -5,7 +5,7 @@
 import { css } from '@symbiotejs/symbiote';
 
 export const styles = css`
-sn-ctrl-item {
+ctrl-item {
   display: flex;
   flex-direction: column;
   gap: 2px;

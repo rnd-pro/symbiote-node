@@ -21,4 +21,4 @@ export class CtrlItem extends Symbiote {
 
 CtrlItem.template = template;
 CtrlItem.rootStyles = styles;
-CtrlItem.reg('sn-ctrl-item');
+CtrlItem.reg('ctrl-item');

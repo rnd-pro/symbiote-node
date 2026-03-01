@@ -10,7 +10,7 @@ import { css } from '@symbiotejs/symbiote';
 export const ZONE_SIZE = 16;
 
 export const styles = css`
-sn-action-zone {
+action-zone {
   position: absolute;
   width: ${ZONE_SIZE}px;
   height: ${ZONE_SIZE}px;
@@ -82,7 +82,7 @@ sn-action-zone {
 }
 
 /* Parent hover rule */
-sn-layout-node[node-type="panel"]:hover sn-action-zone {
+layout-node[node-type="panel"]:hover action-zone {
   opacity: 0.5;
 }
 `;

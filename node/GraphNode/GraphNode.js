@@ -83,8 +83,4 @@ export class GraphNode extends Symbiote {
 GraphNode.template = template;
 GraphNode.rootStyles = styles;
 
-GraphNode.bindAttributes({
-  'node-label': 'nodeLabel',
-});
-
 GraphNode.reg('graph-node');

@@ -5,65 +5,65 @@
 import { html } from '@symbiotejs/symbiote';
 
 export const template = html`
-<div class="sn-insp-header">
+<div class="insp-header">
   <span class="material-symbols-outlined">info</span>
   <span>Inspector</span>
 </div>
 
-<div class="sn-insp-body">
-  <div class="sn-insp-empty">
+<div class="insp-body">
+  <div class="insp-empty">
     <span class="material-symbols-outlined">touch_app</span>
     <span>Select a node</span>
   </div>
 
-  <div class="sn-insp-content" style="display:none">
-    <div class="sn-insp-field">
+  <div class="insp-content" style="display:none">
+    <div class="insp-field">
       <label>Label</label>
-      <div class="sn-insp-value">{{nodeLabel}}</div>
+      <div class="insp-value">{{nodeLabel}}</div>
     </div>
-    <div class="sn-insp-field">
+    <div class="insp-field">
       <label>Type</label>
-      <div class="sn-insp-value sn-insp-tag">{{nodeType}}</div>
+      <div class="insp-value insp-tag">{{nodeType}}</div>
     </div>
-    <div class="sn-insp-field">
+    <div class="insp-field">
       <label>Category</label>
-      <div class="sn-insp-value sn-insp-tag">{{nodeCategory}}</div>
+      <div class="insp-value insp-tag">{{nodeCategory}}</div>
     </div>
-    <div class="sn-insp-field">
+    <div class="insp-field">
       <label>ID</label>
-      <div class="sn-insp-value sn-insp-mono">{{nodeId}}</div>
+      <div class="insp-value insp-mono">{{nodeId}}</div>
     </div>
 
-    <div class="sn-insp-section">
-      <div class="sn-insp-section-title">
+    <div class="insp-section">
+      <div class="insp-section-title">
         <span class="material-symbols-outlined">input</span> Inputs
       </div>
-      <div ${{ itemize: 'inputsList', 'item-tag': 'sn-insp-port-item' }}></div>
+      <div ${{ itemize: 'inputsList', 'item-tag': 'insp-port-item' }}></div>
     </div>
 
-    <div class="sn-insp-section">
-      <div class="sn-insp-section-title">
+    <div class="insp-section">
+      <div class="insp-section-title">
         <span class="material-symbols-outlined">output</span> Outputs
       </div>
-      <div ${{ itemize: 'outputsList', 'item-tag': 'sn-insp-port-item' }}></div>
+      <div ${{ itemize: 'outputsList', 'item-tag': 'insp-port-item' }}></div>
     </div>
 
-    <div class="sn-insp-section">
-      <div class="sn-insp-section-title">
+    <div class="insp-section">
+      <div class="insp-section-title">
         <span class="material-symbols-outlined">tune</span> Controls
       </div>
-      <div ${{ itemize: 'controlsList', 'item-tag': 'sn-insp-ctrl-item' }}></div>
+      <div ${{ itemize: 'controlsList', 'item-tag': 'insp-ctrl-item' }}></div>
     </div>
 
-    <div class="sn-insp-subgraph" style="display:none">
-      <div class="sn-insp-section-title">
+    <div class="insp-subgraph" style="display:none">
+      <div class="insp-section-title">
         <span class="material-symbols-outlined">account_tree</span> Subgraph
       </div>
-      <div class="sn-insp-field">
+      <div class="insp-field">
         <label>Inner Nodes</label>
-        <div class="sn-insp-value">{{innerNodeCount}}</div>
+        <div class="insp-value">{{innerNodeCount}}</div>
       </div>
-      <button class="sn-insp-enter-btn" ${{ onclick: 'onEnterSubgraph' }}>
+      <button class="insp-enter-btn" ${{ onclick: 'onEnterSubgraph' }}>
         <span class="material-symbols-outlined">login</span>
         Enter Subgraph
       </button>
@@ -73,16 +73,16 @@ export const template = html`
 `;
 
 export const inspPortItemTemplate = html`
-<div class="sn-insp-port">
-  <span class="sn-insp-port-dot"></span>
-  <span class="sn-insp-port-label">{{label}}</span>
-  <span class="sn-insp-port-type">{{socketType}}</span>
+<div class="insp-port">
+  <span class="insp-port-dot"></span>
+  <span class="insp-port-label">{{label}}</span>
+  <span class="insp-port-type">{{socketType}}</span>
 </div>
 `;
 
 export const inspCtrlItemTemplate = html`
-<div class="sn-insp-ctrl">
-  <span class="sn-insp-ctrl-label">{{label}}</span>
-  <span class="sn-insp-ctrl-value">{{value}}</span>
+<div class="insp-ctrl">
+  <span class="insp-ctrl-label">{{label}}</span>
+  <span class="insp-ctrl-value">{{value}}</span>
 </div>
 `;

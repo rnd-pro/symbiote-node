@@ -1,7 +1,7 @@
 import { css } from '@symbiotejs/symbiote';
 
 export const styles = css`
-sn-layout-preview {
+layout-preview {
   position: fixed;
   top: 0;
   left: 0;

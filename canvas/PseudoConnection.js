@@ -36,7 +36,7 @@ export class PseudoConnection {
   show(sx, sy, ex, ey, transform) {
     if (!this.#path) {
       this.#path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      this.#path.setAttribute('class', 'sn-pseudo-path');
+      this.#path.setAttribute('class', 'pseudo-path');
       this.#svg.appendChild(this.#path);
     }
 
@@ -56,7 +56,7 @@ export class PseudoConnection {
     // Plus indicator at endpoint
     if (!this.#plusIndicator) {
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g.setAttribute('class', 'sn-plus-indicator');
+      g.setAttribute('class', 'plus-indicator');
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('r', '8');
       const h = document.createElementNS('http://www.w3.org/2000/svg', 'line');

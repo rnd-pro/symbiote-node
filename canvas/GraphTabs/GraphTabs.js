@@ -154,8 +154,7 @@ export class GraphTabs extends Symbiote {
     }
   }
 
-  initCallback() {
-    super.initCallback();
+  renderCallback() {
     this.ref.tabAdd?.addEventListener('click', () => {
       if (this.#onAdd) {
         const newTab = this.#onAdd();

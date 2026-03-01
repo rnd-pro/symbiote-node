@@ -169,7 +169,7 @@ function initDemo() {
   applyToRoot(GREY_NEUTRAL);
 
   // Setup layout
-  const layout = document.querySelector('sn-layout');
+  const layout = document.querySelector('panel-layout');
   if (!layout) return;
 
   // Register panel types

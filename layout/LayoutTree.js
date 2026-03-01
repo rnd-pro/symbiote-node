@@ -244,20 +244,3 @@ export function getNeighbors(root, panelId) {
   // TODO: Implement neighbor detection for join preview
   return {};
 }
-
-export default {
-  generateId,
-  createPanel,
-  createSplit,
-  findNode,
-  findParent,
-  splitPanel,
-  joinPanels,
-  resizeSplit,
-  serialize,
-  deserialize,
-  clone,
-  getAllPanels,
-  getNeighbors,
-  updateNode
-};

@@ -42,7 +42,7 @@ export class NodeSearch extends Symbiote {
     this.$.isOpen = true;
     this.removeAttribute('hidden');
     requestAnimationFrame(() => {
-      const input = this.querySelector('.sn-search-input');
+      const input = this.querySelector('.search-input');
       if (input) input.focus();
     });
   }
@@ -51,7 +51,7 @@ export class NodeSearch extends Symbiote {
     this.$.isOpen = false;
     this.$.query = '';
     this.$.results = [];
-    const input = this.querySelector('.sn-search-input');
+    const input = this.querySelector('.search-input');
     if (input) input.value = '';
     this.setAttribute('hidden', '');
   }
@@ -60,16 +60,6 @@ export class NodeSearch extends Symbiote {
   toggle() {
     if (this.$.isOpen) this.close();
     else this.open();
-  }
-
-  renderCallback() {
-    this.sub('query', (q) => {
-      if (!q || q.length < 1) {
-        this.$.results = [];
-        return;
-      }
-      this.#search(q);
-    });
   }
 
   #search(query) {
@@ -94,12 +84,18 @@ export class NodeSearch extends Symbiote {
     this.close();
   }
 
-  connectedCallback() {
-    super.connectedCallback();
+  renderCallback() {
+    this.sub('query', (q) => {
+      if (!q || q.length < 1) {
+        this.$.results = [];
+        return;
+      }
+      this.#search(q);
+    });
 
     // Handle result clicks via delegation
     this.addEventListener('click', (e) => {
-      const item = e.target.closest('.sn-search-result');
+      const item = e.target.closest('.search-result');
       if (item?.dataset?.nodeId) {
         this.#handleResultClick(item.dataset.nodeId);
       }
@@ -107,7 +103,7 @@ export class NodeSearch extends Symbiote {
 
     // Handle input
     this.addEventListener('input', (e) => {
-      if (e.target.classList.contains('sn-search-input')) {
+      if (e.target.classList.contains('search-input')) {
         this.$.query = e.target.value;
       }
     });
@@ -131,7 +127,7 @@ class SearchResultItem extends Symbiote {
 }
 
 SearchResultItem.template = searchResultTemplate;
-SearchResultItem.reg('sn-search-result-item');
+SearchResultItem.reg('search-result-item');
 
 NodeSearch.template = template;
 NodeSearch.rootStyles = styles;

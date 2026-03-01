@@ -227,6 +227,9 @@ async function runBenchmark() {
   btn.querySelector('.material-symbols-outlined').textContent = 'check_circle';
   btn.lastChild.textContent = ` Done (${allNodes.length})`;
   btn.classList.remove('active');
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
 }
 
 function reset() {
@@ -244,6 +247,9 @@ function reset() {
   btn.querySelector('.material-symbols-outlined').textContent = 'rocket_launch';
   btn.lastChild.textContent = ' Start';
   btn.classList.remove('active');
+  btn.disabled = false;
+  btn.style.opacity = '';
+  btn.style.pointerEvents = '';
 }
 
 function init() {

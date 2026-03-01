@@ -232,6 +232,22 @@ export class ConnectionRenderer {
     }
     path.setAttribute('d', d);
 
+    // Wire type styling — thicker for exec, normal for data
+    const fromSocketName = fromNode?.outputs[conn.out]?.socket?.name || 'data';
+    if (fromSocketName === 'exec' || fromSocketName === 'execution' || fromSocketName === 'trigger') {
+      path.setAttribute('data-wire-type', 'exec');
+      path.style.strokeWidth = '3';
+      path.style.strokeDasharray = '8 4';
+    } else if (fromSocketName === 'array' || fromSocketName === 'object' || fromSocketName === 'json') {
+      path.setAttribute('data-wire-type', 'data-heavy');
+      path.style.strokeWidth = '2.5';
+      path.style.strokeDasharray = '';
+    } else {
+      path.removeAttribute('data-wire-type');
+      path.style.strokeWidth = '';
+      path.style.strokeDasharray = '';
+    }
+
     // Gradient connection coloring
     this.#applyGradient(path, conn, fromNode, toNode, startX, startY, endX, endY);
   }

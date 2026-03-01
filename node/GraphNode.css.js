@@ -11,7 +11,7 @@ graph-node {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   user-select: none;
   cursor: move;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out;
   overflow: visible;
   font-family: var(--sn-font, 'Inter', sans-serif);
   font-size: 13px;
@@ -332,7 +332,7 @@ node-socket {
   border: 2px solid var(--sn-node-bg, #16213e);
   cursor: crosshair;
   flex-shrink: 0;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   z-index: 10;
   position: relative;
 

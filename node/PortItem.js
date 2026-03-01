@@ -115,7 +115,7 @@ sn-port-item {
       border-radius: 50%;
       background: var(--socket-color, var(--sn-node-accent, #4a9eff));
       border: 2px solid var(--sn-node-bg, #16213e);
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
       pointer-events: none;
     }
 

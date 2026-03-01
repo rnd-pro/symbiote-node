@@ -149,6 +149,7 @@ function fitToContent() {
 
     setTimeout(() => {
       content.style.transition = '';
+      content.style.transform = '';  // Remove inline override, let Symbiote binding take over
       if (canvas.updateLOD) canvas.updateLOD();
     }, 450);
   }

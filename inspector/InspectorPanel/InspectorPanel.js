@@ -12,19 +12,18 @@ import { template, inspPortItemTemplate, inspCtrlItemTemplate } from './Inspecto
 import { styles } from './InspectorPanel.css.js';
 
 export class InspectorPanel extends Symbiote {
-  visible = false;
-  nodeLabel = '';
-  nodeType = '';
-  nodeCategory = '';
-  nodeId = '';
-  inputsList = [];
-  outputsList = [];
-  controlsList = [];
-  hasSelection = false;
-  isSubgraph = false;
-  innerNodeCount = 0;
-
   init$ = {
+    visible: false,
+    nodeLabel: '',
+    nodeType: '',
+    nodeCategory: '',
+    nodeId: '',
+    inputsList: [],
+    outputsList: [],
+    controlsList: [],
+    hasSelection: false,
+    isSubgraph: false,
+    innerNodeCount: 0,
     onEnterSubgraph: () => {
       if (this._canvas && this._currentNodeId) {
         this._canvas.drillDown(this._currentNodeId);
@@ -129,9 +128,11 @@ export class InspectorPanel extends Symbiote {
 
 // Port item for itemize
 class InspPortItem extends Symbiote {
-  key = '';
-  label = '';
-  socketType = '';
+  init$ = {
+    key: '',
+    label: '',
+    socketType: '',
+  };
 }
 
 InspPortItem.template = inspPortItemTemplate;
@@ -139,10 +140,12 @@ InspPortItem.reg('sn-insp-port-item');
 
 // Control item for itemize
 class InspCtrlItem extends Symbiote {
-  key = '';
-  label = '';
-  value = '';
-  type = '';
+  init$ = {
+    key: '',
+    label: '',
+    value: '',
+    type: '',
+  };
 }
 
 InspCtrlItem.template = inspCtrlItemTemplate;

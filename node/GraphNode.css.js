@@ -70,15 +70,12 @@ graph-node {
   }
 
   &[data-error] {
-    border-color: #ef4444;
-    box-shadow: 0 0 16px rgba(239, 68, 68, 0.35),
-                0 0 4px rgba(239, 68, 68, 0.5);
-    animation: sn-node-error-pulse 1.5s ease-in-out infinite;
+    border-color: color-mix(in srgb, #ef4444 60%, transparent);
     position: relative;
   }
 
   &[data-error] .sn-node-header {
-    background: rgba(239, 68, 68, 0.15);
+    background: color-mix(in srgb, #ef4444 10%, transparent);
   }
 
   &[data-error]::before {
@@ -88,17 +85,16 @@ graph-node {
     left: 50%;
     transform: translateX(-50%);
     padding: 6px 14px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
-    color: #fecaca;
-    background: color-mix(in srgb, var(--sn-node-bg, #2a2a4a) 90%, rgba(239, 68, 68, 0.6));
-    border: 1px solid rgba(239, 68, 68, 0.35);
-    border-radius: var(--sn-node-radius, 10px);
+    color: color-mix(in srgb, #ef4444 90%, white);
+    background: color-mix(in srgb, #ef4444 8%, transparent);
+    border: 2px solid color-mix(in srgb, #ef4444 60%, transparent);
+    border-radius: 12px;
     white-space: nowrap;
     pointer-events: none;
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(8px);
+    transition: bottom 0.15s ease;
   }
 
   &[data-error]::after {
@@ -107,10 +103,19 @@ graph-node {
     bottom: calc(100% + 2px);
     left: 50%;
     transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top: 5px solid color-mix(in srgb, var(--sn-node-bg, #2a2a4a) 90%, rgba(239, 68, 68, 0.6));
+    border: 6px solid transparent;
+    border-top: 6px solid color-mix(in srgb, #ef4444 60%, transparent);
     pointer-events: none;
     z-index: 10;
+    transition: bottom 0.15s ease;
+  }
+
+  &[data-error][data-selected]::before {
+    bottom: calc(100% + 46px);
+  }
+
+  &[data-error][data-selected]::after {
+    bottom: calc(100% + 38px);
   }
 
   &:hover {

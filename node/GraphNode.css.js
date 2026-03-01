@@ -45,24 +45,55 @@ graph-node {
     }
   }
 
-  /* LOD: medium — hide controls, port labels, preview, selection */
+  /* LOD: medium — strip heavy rendering for performance */
   &[data-lod="medium"] {
     box-shadow: none;
     transition: none;
+    will-change: auto;
+    pointer-events: auto;
+
+    &:hover {
+      border-color: var(--sn-node-border, #2a2a4a);
+    }
 
     &[data-selected] {
       box-shadow: none;
     }
 
+    &[data-processing] {
+      box-shadow: none;
+      animation: none;
+    }
+
+    &[data-completed] {
+      box-shadow: none;
+    }
+
+    &[data-muted] {
+      filter: none;
+      opacity: 0.5;
+    }
+
     & .sn-controls,
     & .sn-port-label,
     & .sn-subgraph-preview,
-    & .sn-error-frame {
+    & .sn-error-frame,
+    & .sn-quick-toolbar {
       display: none;
     }
 
     & .sn-node-body {
       padding: 2px 0;
+    }
+
+    & node-socket {
+      transition: none;
+      cursor: default;
+
+      &:hover {
+        transform: none;
+        box-shadow: none;
+      }
     }
   }
 
@@ -483,24 +514,7 @@ node-socket {
   50% { box-shadow: 0 0 24px rgba(239,68,68,0.5), 0 0 8px rgba(239,68,68,0.7); }
 }
 
-/* LOD — Level of Detail for zoom levels */
-graph-node[data-lod="medium"] {
-  & .sn-controls {
-    display: none;
-  }
-}
 
-graph-node[data-lod="minimal"] {
-  & .sn-controls {
-    display: none;
-  }
-  & .sn-port-label {
-    display: none;
-  }
-  & .sn-node-body {
-    padding: 2px 0;
-  }
-}
 
 /* Accessibility: reduced motion */
 @media (prefers-reduced-motion: reduce) {

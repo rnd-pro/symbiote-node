@@ -67,7 +67,7 @@ export class QuickToolbar extends Symbiote {
     // Show/hide enter button for subgraph nodes
     const enterBtn = this.querySelector('[data-action="enter"]');
     if (enterBtn) {
-      enterBtn.style.display = nodeEl.hasAttribute('data-subgraph') ? '' : 'none';
+      enterBtn.style.display = nodeEl.getAttribute('node-type') === 'subgraph' ? '' : 'none';
     }
   }
 

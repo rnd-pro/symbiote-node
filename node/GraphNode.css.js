@@ -45,44 +45,15 @@ graph-node {
     }
   }
 
-  &[data-subgraph] {
-    border: 2px solid;
-    border-image: linear-gradient(
-      135deg,
-      var(--sn-subgraph-accent, #a78bfa) 0%,
-      var(--sn-subgraph-accent2, #6d28d9) 50%,
-      var(--sn-subgraph-accent, #a78bfa) 100%
-    ) 1;
-    border-radius: 0;
-    outline: 1px solid rgba(167, 139, 250, 0.15);
-    outline-offset: 2px;
-    box-shadow: inset 0 0 20px rgba(167, 139, 250, 0.06),
-                0 4px 16px rgba(109, 40, 217, 0.2);
-    position: relative;
-
-    & .sn-node-header {
-      background: linear-gradient(
-        135deg,
-        rgba(167, 139, 250, 0.12) 0%,
-        rgba(109, 40, 217, 0.08) 100%
-      );
-      border-bottom: 1px solid rgba(167, 139, 250, 0.2);
-    }
-
-    & .sn-header-icon {
-      color: var(--sn-subgraph-accent, #a78bfa);
-    }
-
+  &[node-type="subgraph"] {
     & .sn-node-body::after {
-      content: 'SUBGRAPH';
+      content: '⤵ double-click to enter';
       display: block;
       text-align: center;
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      color: var(--sn-subgraph-accent, #a78bfa);
+      font-size: 10px;
+      color: var(--sn-text-dim, #a0a0a0);
       opacity: 0.5;
       padding: 6px 0 4px;
-      font-weight: 600;
     }
   }
 

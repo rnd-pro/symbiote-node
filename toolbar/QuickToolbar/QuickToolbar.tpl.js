@@ -6,7 +6,7 @@ import { html } from '@symbiotejs/symbiote';
 
 export const template = html`
 <div class="toolbar" ${{ onclick: 'onBtnClick' }}>
-  <button class="tb-btn tb-btn--enter" data-action="enter" title="Enter Subgraph" style="display:none">
+  <button class="tb-btn tb-btn--enter" data-action="enter" title="Enter Subgraph" hidden>
     <span class="material-symbols-outlined tb-icon">login</span>
   </button>
   <button class="tb-btn" data-action="duplicate" title="Duplicate">

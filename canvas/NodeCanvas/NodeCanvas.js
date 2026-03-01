@@ -446,7 +446,7 @@ export class NodeCanvas extends Symbiote {
     const preview = el.ref?.previewArea;
     if (!preview) return;
 
-    preview.removeAttribute('hidden');
+    preview.hidden = false;
     preview.replaceChildren();
     if (type === 'image') {
       const img = document.createElement('img');
@@ -470,7 +470,7 @@ export class NodeCanvas extends Symbiote {
     if (!el) return;
     const preview = el.ref?.previewArea;
     if (!preview) return;
-    preview.setAttribute('hidden', '');
+    preview.hidden = true;
     preview.replaceChildren();
   }
 

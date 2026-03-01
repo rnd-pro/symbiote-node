@@ -45,6 +45,48 @@ graph-node {
     }
   }
 
+  /* LOD: medium — hide controls, port labels, preview */
+  &[data-lod="medium"] {
+    box-shadow: none;
+    transition: none;
+
+    & .sn-controls,
+    & .sn-port-label,
+    & .sn-subgraph-preview,
+    & .sn-error-frame {
+      display: none;
+    }
+
+    & .sn-node-body {
+      padding: 2px 0;
+    }
+  }
+
+  /* LOD: minimal — just a compact header bar */
+  &[data-lod="minimal"] {
+    box-shadow: none;
+    transition: none;
+    min-width: 100px;
+    max-width: 160px;
+    border-radius: 4px;
+    border-width: 1px;
+
+    & .sn-node-body,
+    & .sn-error-frame {
+      display: none;
+    }
+
+    & .sn-node-header {
+      padding: 3px 6px;
+      font-size: 10px;
+      gap: 3px;
+    }
+
+    & .sn-node-icon {
+      font-size: 10px;
+    }
+  }
+
   &[node-type="subgraph"] .sn-subgraph-preview {
     display: block;
     width: 100%;

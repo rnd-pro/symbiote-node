@@ -62,7 +62,7 @@ export class NodeCanvas extends Symbiote {
   });
 
   /** @type {SnapGrid} */
-  #snapGrid = new SnapGrid({ size: 16, dynamic: true });
+  #snapGrid = new SnapGrid({ size: 16, dynamic: false });
 
   /** @type {Map<string, HTMLElement>} */
   #nodeViews = new Map();

@@ -252,7 +252,7 @@ node --test tests/geometry.test.js
 - [x] Named Reroutes / Portals
 - [x] Palette Browser
 - [x] Graph Tabs / Pages
-- [ ] Full Subgraphs (drill-down)
+- [x] Full Subgraphs (drill-down)
 
 ## License
 

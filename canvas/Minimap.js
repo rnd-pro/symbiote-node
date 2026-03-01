@@ -211,9 +211,10 @@ node-minimap {
   right: 16px;
   width: 200px;
   height: 140px;
-  border-radius: 8px;
+  border-radius: var(--sn-node-radius, 10px);
   overflow: hidden;
   border: 1px solid var(--sn-node-border, rgba(255,255,255,0.08));
+  background: color-mix(in srgb, var(--sn-bg, #1a1a2e) 85%, transparent);
   box-shadow: 0 4px 16px rgba(0,0,0,0.3);
   z-index: 90;
   cursor: crosshair;

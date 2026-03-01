@@ -23,6 +23,9 @@ export class ViewportActions {
   /** @type {boolean} */
   #readonly = false;
 
+  /** @type {Array|null} - clipboard for copy/paste */
+  #clipboard = null;
+
   /**
    * @param {object} config
    * @param {import('../core/Editor.js').NodeEditor} config.editor
@@ -59,6 +62,30 @@ export class ViewportActions {
 
     if (e.key === 'Escape') {
       this.#selector.unselectAll();
+    }
+
+    // Copy selected nodes
+    if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      this.#copySelected();
+    }
+
+    // Paste nodes
+    if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      this.#pasteNodes();
+    }
+
+    // Align horizontal
+    if (e.key === 'h' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault();
+      this.alignSelectedHorizontal();
+    }
+
+    // Align vertical
+    if (e.key === 'j' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault();
+      this.alignSelectedVertical();
     }
   };
 
@@ -178,7 +205,9 @@ export class ViewportActions {
       const graphY = (e.clientY - rect.top - transform.panY) / transform.zoom;
       contextMenuEl.show(menuX, menuY, [
         { label: 'Add Node', icon: 'add_box', action: () => this.#editor?.emit('contextadd', { x: graphX, y: graphY }) },
+        { label: 'Add Comment', icon: 'sticky_note_2', action: () => this.#editor?.emit('contextaddcomment', { x: graphX, y: graphY }) },
         { label: 'Add Frame', icon: 'dashboard', action: () => this.#editor?.emit('contextaddframe', { x: graphX, y: graphY }) },
+        { label: 'Paste', icon: 'content_paste', action: () => this.#pasteNodes(graphX, graphY) },
         { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
         { label: 'Fit View', icon: 'fit_screen', action: () => this.fitView(container) },
       ]);
@@ -293,5 +322,99 @@ export class ViewportActions {
       sourceSide: socketData.side,
       socketType,
     });
+  }
+
+  // --- Copy/Paste ---
+
+  #copySelected() {
+    const selected = this.#selector.getSelectedNodes();
+    if (selected.length === 0) return;
+
+    this.#clipboard = selected.map(nodeId => {
+      const node = this.#editor.getNode(nodeId);
+      const el = this.#nodeViews.get(nodeId);
+      if (!node) return null;
+      return {
+        label: node.label,
+        type: node.type,
+        category: node.category,
+        shape: node.shape,
+        params: { ...node.params },
+        position: el?._position ? { ...el._position } : { x: 0, y: 0 },
+      };
+    }).filter(Boolean);
+  }
+
+  /**
+   * Paste copied nodes at optional position
+   * @param {number} [x]
+   * @param {number} [y]
+   */
+  #pasteNodes(x, y) {
+    if (!this.#clipboard || this.#clipboard.length === 0) return;
+
+    const offset = 30;
+    for (const data of this.#clipboard) {
+      const posX = x != null ? x : data.position.x + offset;
+      const posY = y != null ? y : data.position.y + offset;
+      this.#editor.emit('contextclone', {
+        label: data.label,
+        type: data.type,
+        category: data.category,
+        shape: data.shape,
+        x: posX,
+        y: posY,
+      });
+    }
+  }
+
+  // --- Align Tools ---
+
+  /** Align selected nodes horizontally (same Y) */
+  alignSelectedHorizontal() {
+    const selected = this.#selector.getSelectedNodes();
+    if (selected.length < 2) return;
+
+    let totalY = 0;
+    for (const nodeId of selected) {
+      const el = this.#nodeViews.get(nodeId);
+      totalY += el?._position?.y || 0;
+    }
+    const avgY = totalY / selected.length;
+
+    for (const nodeId of selected) {
+      const el = this.#nodeViews.get(nodeId);
+      if (el?._position) {
+        this.#editor.emit('nodemovetopos', {
+          nodeId,
+          x: el._position.x,
+          y: avgY,
+        });
+      }
+    }
+  }
+
+  /** Align selected nodes vertically (same X) */
+  alignSelectedVertical() {
+    const selected = this.#selector.getSelectedNodes();
+    if (selected.length < 2) return;
+
+    let totalX = 0;
+    for (const nodeId of selected) {
+      const el = this.#nodeViews.get(nodeId);
+      totalX += el?._position?.x || 0;
+    }
+    const avgX = totalX / selected.length;
+
+    for (const nodeId of selected) {
+      const el = this.#nodeViews.get(nodeId);
+      if (el?._position) {
+        this.#editor.emit('nodemovetopos', {
+          nodeId,
+          x: avgX,
+          y: el._position.y,
+        });
+      }
+    }
   }
 }

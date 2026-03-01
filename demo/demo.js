@@ -100,6 +100,14 @@ function initDemo() {
     editor.addFrame(frame);
   });
 
+  // Context menu add comment
+  editor.on('contextaddcomment', ({ x, y }) => {
+    const comment = new Node('Add your notes here...', { type: 'comment', shape: 'comment' });
+    editor.addNode(comment);
+    const c = document.querySelector('node-canvas');
+    if (c) c.setNodePosition(comment.id, x, y);
+  });
+
   // Mount canvas
   const canvas = document.querySelector('node-canvas');
   if (canvas) {

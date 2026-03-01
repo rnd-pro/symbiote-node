@@ -229,6 +229,11 @@ export class NodeCanvas extends Symbiote {
     editor.on('framecreated', (frame) => this.#addFrameView(frame));
     editor.on('frameremoved', (frame) => this.#removeFrameView(frame));
 
+    // Align tools emit nodemovetopos
+    editor.on('nodemovetopos', ({ nodeId, x, y }) => {
+      this.setNodePosition(nodeId, x, y);
+    });
+
     // Render existing frames
     for (const frame of editor.getFrames()) {
       this.#addFrameView(frame);

@@ -142,15 +142,14 @@ function fitToContent() {
     const ty = container.height / 2 - cy * zoom;
     content.style.transform = `translate(${tx}px, ${ty}px) scale(${zoom})`;
 
-    // Update internal state
-    if (canvas._transform) {
-      canvas._transform.x = tx;
-      canvas._transform.y = ty;
-      canvas._transform.zoom = zoom;
-    }
+    // Update Symbiote reactive state for LOD
+    canvas.$.panX = tx;
+    canvas.$.panY = ty;
+    canvas.$.zoom = zoom;
 
     setTimeout(() => {
       content.style.transition = '';
+      if (canvas.updateLOD) canvas.updateLOD();
     }, 450);
   }
 }
@@ -197,6 +196,9 @@ function spawnBatch() {
   }
 
   updateHud();
+
+  // Update LOD state after spawning
+  if (canvas.updateLOD) canvas.updateLOD();
 }
 
 /**

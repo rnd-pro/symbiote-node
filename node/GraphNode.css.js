@@ -45,10 +45,14 @@ graph-node {
     }
   }
 
-  /* LOD: medium — hide controls, port labels, preview */
+  /* LOD: medium — hide controls, port labels, preview, selection */
   &[data-lod="medium"] {
     box-shadow: none;
     transition: none;
+
+    &[data-selected] {
+      box-shadow: none;
+    }
 
     & .sn-controls,
     & .sn-port-label,
@@ -62,19 +66,21 @@ graph-node {
     }
   }
 
-  /* LOD: minimal — compact colored rectangles */
+  /* LOD: minimal — flat colored rectangles, no header */
   &[data-lod="minimal"] {
     box-shadow: none;
     transition: none;
-    min-width: 100px;
-    max-width: 160px;
-    border-radius: 4px;
+    min-width: 60px;
+    max-width: 120px;
+    border-radius: 3px;
     border-width: 1px;
 
-    & .sn-node-body {
-      padding: 0;
+    &[data-selected] {
+      box-shadow: none;
+      border-color: var(--sn-node-border, #2a2a4a);
     }
 
+    & .sn-node-header,
     & .sn-inputs,
     & .sn-outputs,
     & .sn-controls,
@@ -83,14 +89,9 @@ graph-node {
       display: none;
     }
 
-    & .sn-node-header {
-      padding: 3px 6px;
-      font-size: 10px;
-      gap: 3px;
-    }
-
-    & .sn-node-icon {
-      font-size: 10px;
+    & .sn-node-body {
+      padding: 4px;
+      min-height: 12px;
     }
   }
 

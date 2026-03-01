@@ -820,6 +820,11 @@ export class NodeCanvas extends Symbiote {
     this.#applyCullingAndLOD();
   }
 
+  /** Public: force culling and LOD update (call after programmatic zoom) */
+  updateLOD() {
+    this.#applyCullingAndLOD();
+  }
+
   /** Apply viewport culling and LOD based on current transform */
   #applyCullingAndLOD() {
     if (!this.ref.canvasContainer || this.#nodeViews.size === 0) return;

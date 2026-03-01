@@ -55,3 +55,6 @@ export { Minimap } from './canvas/Minimap.js';
 
 // Search
 export { NodeSearch } from './canvas/NodeSearch.js';
+
+// Layout
+export { computeAutoLayout } from './canvas/AutoLayout.js';

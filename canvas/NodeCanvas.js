@@ -31,6 +31,7 @@ import '../node/GraphFrame.js';
 import '../inspector/InspectorPanel.js';
 import './Minimap.js';
 import './NodeSearch.js';
+import { computeAutoLayout } from './AutoLayout.js';
 
 export class NodeCanvas extends Symbiote {
 
@@ -335,6 +336,17 @@ export class NodeCanvas extends Symbiote {
   }
 
   /**
+   * Apply auto layout to all nodes
+   */
+  autoLayout() {
+    if (!this.#editor) return;
+    const positions = computeAutoLayout(this.#editor);
+    for (const [nodeId, pos] of Object.entries(positions)) {
+      this.setNodePosition(nodeId, pos.x, pos.y);
+    }
+  }
+
+  /**
    * Get node view element by ID (used by FlowSimulator)
    * @param {string} nodeId
    * @returns {HTMLElement|undefined}
@@ -611,6 +623,45 @@ export class NodeCanvas extends Symbiote {
     const gridSize = gridBase * this.$.zoom;
     this.style.backgroundPosition = `${this.$.panX}px ${this.$.panY}px`;
     this.style.backgroundSize = `${gridSize}px ${gridSize}px`;
+
+    // Viewport culling + LOD
+    this.#applyCullingAndLOD();
+  }
+
+  /** Apply viewport culling and LOD based on current transform */
+  #applyCullingAndLOD() {
+    if (!this.ref.canvasContainer || this.#nodeViews.size === 0) return;
+
+    const cw = this.ref.canvasContainer.clientWidth;
+    const ch = this.ref.canvasContainer.clientHeight;
+    const zoom = this.$.zoom;
+    const panX = this.$.panX;
+    const panY = this.$.panY;
+    const margin = 100; // px buffer for smooth scrolling
+
+    // LOD thresholds
+    const lod = zoom < 0.25 ? 'minimal' : zoom < 0.5 ? 'medium' : 'full';
+
+    for (const [, el] of this.#nodeViews) {
+      const pos = el._position;
+      if (!pos) continue;
+
+      // Check if node is in viewport
+      const screenX = pos.x * zoom + panX;
+      const screenY = pos.y * zoom + panY;
+      const w = (el.offsetWidth || 180) * zoom;
+      const h = (el.offsetHeight || 60) * zoom;
+
+      const visible = screenX + w > -margin && screenX < cw + margin &&
+        screenY + h > -margin && screenY < ch + margin;
+
+      if (visible) {
+        el.style.contentVisibility = '';
+        el.setAttribute('data-lod', lod);
+      } else {
+        el.style.contentVisibility = 'hidden';
+      }
+    }
   }
 
   // --- Lifecycle ---

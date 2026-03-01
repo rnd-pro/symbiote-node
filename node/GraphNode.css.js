@@ -349,4 +349,23 @@ node-socket {
   0%, 100% { box-shadow: 0 0 16px rgba(239,68,68,0.35), 0 0 4px rgba(239,68,68,0.5); }
   50% { box-shadow: 0 0 24px rgba(239,68,68,0.5), 0 0 8px rgba(239,68,68,0.7); }
 }
+
+/* LOD — Level of Detail for zoom levels */
+graph-node[data-lod="medium"] {
+  & .sn-controls {
+    display: none;
+  }
+}
+
+graph-node[data-lod="minimal"] {
+  & .sn-controls {
+    display: none;
+  }
+  & .sn-port-label {
+    display: none;
+  }
+  & .sn-node-body {
+    padding: 2px 0;
+  }
+}
 `;

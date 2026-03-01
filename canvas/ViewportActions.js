@@ -210,6 +210,7 @@ export class ViewportActions {
         { label: 'Paste', icon: 'content_paste', action: () => this.#pasteNodes(graphX, graphY) },
         { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
         { label: 'Fit View', icon: 'fit_screen', action: () => this.fitView(container) },
+        { label: 'Auto Layout', icon: 'auto_fix_high', action: () => this.#editor?.emit('autolayout') },
       ]);
     }
   }

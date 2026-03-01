@@ -108,6 +108,12 @@ function initDemo() {
     if (c) c.setNodePosition(comment.id, x, y);
   });
 
+  // Auto layout
+  editor.on('autolayout', () => {
+    const c = document.querySelector('node-canvas');
+    if (c) c.autoLayout();
+  });
+
   // Mount canvas
   const canvas = document.querySelector('node-canvas');
   if (canvas) {

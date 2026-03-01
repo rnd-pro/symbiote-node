@@ -11,7 +11,7 @@ graph-node {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   user-select: none;
   cursor: move;
-  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0.2s ease-out, transform 0.2s ease-out;
+  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0.2s ease-out;
   overflow: visible;
   font-family: var(--sn-font, 'Inter', sans-serif);
   font-size: 13px;
@@ -23,6 +23,7 @@ graph-node {
   &[leaving] {
     opacity: 0;
     transform: scale(0.92);
+    transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0.2s ease-out, transform 0.2s ease-out;
   }
 
   &[data-selected] {

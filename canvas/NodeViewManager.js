@@ -94,6 +94,7 @@ export class NodeViewManager {
     el.setAttribute('node-label', node.label);
     el.setAttribute('node-category', node.category);
     el.setAttribute('node-shape', node.shape);
+    if (node._isSubgraph) el.setAttribute('data-subgraph', '');
     el._canvas = this.#canvas;
 
     const drag = new Drag();

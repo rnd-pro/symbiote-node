@@ -63,6 +63,12 @@ export class QuickToolbar extends Symbiote {
 
     // Update collapse icon based on current state
     this.#updateIcons(nodeEl);
+
+    // Show/hide enter button for subgraph nodes
+    const enterBtn = this.querySelector('[data-action="enter"]');
+    if (enterBtn) {
+      enterBtn.style.display = nodeEl.hasAttribute('data-subgraph') ? '' : 'none';
+    }
   }
 
   /** Hide toolbar */
@@ -110,6 +116,9 @@ export class QuickToolbar extends Symbiote {
 
 QuickToolbar.template = html`
 <div class="sn-toolbar" ${{ onclick: 'onBtnClick' }}>
+  <button class="sn-tb-btn sn-tb-btn--enter" data-action="enter" title="Enter Subgraph" style="display:none">
+    <span class="material-symbols-outlined sn-tb-icon">login</span>
+  </button>
   <button class="sn-tb-btn" data-action="duplicate" title="Duplicate">
     <span class="material-symbols-outlined sn-tb-icon">content_copy</span>
   </button>
@@ -189,6 +198,11 @@ quick-toolbar {
 .sn-tb-btn--danger:hover {
   background: var(--sn-toolbar-danger, rgba(255, 107, 107, 0.25));
   color: var(--sn-toolbar-danger-color, #ff6b6b);
+}
+
+.sn-tb-btn--enter:hover {
+  background: rgba(167, 139, 250, 0.25);
+  color: #a78bfa;
 }
 
 .sn-tb-icon {

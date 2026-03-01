@@ -22,7 +22,20 @@ export class InspectorPanel extends Symbiote {
     outputsList: [],
     controlsList: [],
     hasSelection: false,
+    isSubgraph: false,
+    innerNodeCount: 0,
+    onEnterSubgraph: () => {
+      if (this._canvas && this._currentNodeId) {
+        this._canvas.drillDown(this._currentNodeId);
+      }
+    },
   };
+
+  /** @type {*} */
+  _canvas = null;
+
+  /** @type {string|null} */
+  _currentNodeId = null;
 
   /**
    * Show inspector for a node
@@ -53,6 +66,14 @@ export class InspectorPanel extends Symbiote {
       type: ctrl.type || 'text',
     }));
 
+    const isSubgraph = !!node._isSubgraph;
+    let innerNodeCount = 0;
+    if (isSubgraph && node.innerEditor) {
+      innerNodeCount = node.innerEditor.getNodes().length;
+    }
+
+    this._currentNodeId = node.id;
+
     this.set$({
       nodeLabel: node.label,
       nodeType: node.type || 'default',
@@ -63,11 +84,14 @@ export class InspectorPanel extends Symbiote {
       controlsList: controls,
       hasSelection: true,
       visible: true,
+      isSubgraph,
+      innerNodeCount,
     });
   }
 
   /** Clear inspector */
   clear() {
+    this._currentNodeId = null;
     this.set$({
       hasSelection: false,
       nodeLabel: '',
@@ -77,6 +101,8 @@ export class InspectorPanel extends Symbiote {
       inputsList: [],
       outputsList: [],
       controlsList: [],
+      isSubgraph: false,
+      innerNodeCount: 0,
     });
   }
 
@@ -91,6 +117,11 @@ export class InspectorPanel extends Symbiote {
       const content = this.querySelector('.sn-insp-content');
       if (empty) empty.style.display = val ? 'none' : '';
       if (content) content.style.display = val ? '' : 'none';
+    });
+
+    this.sub('isSubgraph', (val) => {
+      const sgSection = this.querySelector('.sn-insp-subgraph');
+      if (sgSection) sgSection.style.display = val ? '' : 'none';
     });
   }
 }
@@ -171,6 +202,20 @@ InspectorPanel.template = html`
         <span class="material-symbols-outlined">tune</span> Controls
       </div>
       <div ${{ itemize: 'controlsList', 'item-tag': 'sn-insp-ctrl-item' }}></div>
+    </div>
+
+    <div class="sn-insp-subgraph" style="display:none">
+      <div class="sn-insp-section-title">
+        <span class="material-symbols-outlined">account_tree</span> Subgraph
+      </div>
+      <div class="sn-insp-field">
+        <label>Inner Nodes</label>
+        <div class="sn-insp-value">{{innerNodeCount}}</div>
+      </div>
+      <button class="sn-insp-enter-btn" ${{ onclick: 'onEnterSubgraph' }}>
+        <span class="material-symbols-outlined">login</span>
+        Enter Subgraph
+      </button>
     </div>
   </div>
 </div>
@@ -344,6 +389,38 @@ inspector-panel {
 .sn-insp-ctrl-value {
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 11px;
+}
+
+.sn-insp-enter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  margin-top: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.12) 0%, rgba(109, 40, 217, 0.08) 100%);
+  color: var(--sn-subgraph-accent, #a78bfa);
+  font-family: var(--sn-font, 'Inter', sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.sn-insp-enter-btn:hover {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.22) 0%, rgba(109, 40, 217, 0.15) 100%);
+  border-color: rgba(167, 139, 250, 0.5);
+}
+
+.sn-insp-enter-btn:active {
+  transform: scale(0.97);
+}
+
+.sn-insp-enter-btn .material-symbols-outlined {
+  font-size: 18px;
 }
 `;
 

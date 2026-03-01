@@ -129,6 +129,7 @@ export class NodeCanvas extends Symbiote {
         switch (action) {
           case 'delete': this.#actions.deleteNode(nodeId); toolbar.hide(); break;
           case 'duplicate': this.#actions.cloneNode(nodeId); break;
+          case 'enter': this.drillDown(nodeId); toolbar.hide(); break;
           case 'collapse':
             this.#actions.collapseNode(nodeId);
             if (nodeEl) toolbar.show(nodeId, nodeEl);
@@ -703,6 +704,7 @@ export class NodeCanvas extends Symbiote {
     // Inspector — show selected node details
     const inspector = this.ref.inspector;
     if (inspector) {
+      inspector._canvas = this;
       if (selectedNodes.size === 1) {
         const nodeId = [...selectedNodes][0];
         const node = this.#editor?.getNode(nodeId);

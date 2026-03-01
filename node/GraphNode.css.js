@@ -56,6 +56,28 @@ graph-node {
     box-shadow: 0 0 8px rgba(92, 216, 122, 0.3);
   }
 
+  &[data-error] {
+    border-color: #ef4444;
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.35),
+                0 0 4px rgba(239, 68, 68, 0.5);
+    animation: sn-node-error-pulse 1.5s ease-in-out infinite;
+  }
+
+  &[data-error] .sn-node-header {
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  &[data-error]::after {
+    content: attr(data-error);
+    display: block;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.1);
+    border-top: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 0 0 10px 10px;
+  }
+
   &:hover {
     border-color: var(--sn-node-hover, #3a3a6a);
   }
@@ -321,5 +343,10 @@ node-socket {
 @keyframes sn-node-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
+}
+
+@keyframes sn-node-error-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(239,68,68,0.35), 0 0 4px rgba(239,68,68,0.5); }
+  50% { box-shadow: 0 0 24px rgba(239,68,68,0.5), 0 0 8px rgba(239,68,68,0.7); }
 }
 `;

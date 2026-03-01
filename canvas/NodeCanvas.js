@@ -302,6 +302,34 @@ export class NodeCanvas extends Symbiote {
   setAllFlowing(active) { this.#connRenderer?.setAllFlowing(active); }
 
   /**
+   * Set error state on a node
+   * @param {string} nodeId
+   * @param {string} message - Error message to display
+   */
+  setNodeError(nodeId, message) {
+    const el = this.#nodeViews.get(nodeId);
+    if (el) el.setAttribute('data-error', message);
+  }
+
+  /**
+   * Clear error state from a node
+   * @param {string} nodeId
+   */
+  clearNodeError(nodeId) {
+    const el = this.#nodeViews.get(nodeId);
+    if (el) el.removeAttribute('data-error');
+  }
+
+  /**
+   * Clear all error states
+   */
+  clearAllErrors() {
+    for (const [, el] of this.#nodeViews) {
+      el.removeAttribute('data-error');
+    }
+  }
+
+  /**
    * Get node view element by ID (used by FlowSimulator)
    * @param {string} nodeId
    * @returns {HTMLElement|undefined}

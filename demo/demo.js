@@ -134,6 +134,16 @@ function initDemo() {
       canvas.setNodePosition(filter.id, 1020, 120);
       canvas.setNodePosition(merge.id, 1200, 200);
       canvas.setNodePosition(save.id, 1380, 180);
+
+      // Demo reroute node
+      const reroute = new Node('', { type: 'reroute', shape: 'pill' });
+      reroute.addInput('in', new Input(new Socket('any'), ''));
+      reroute.addOutput('out', new Output(new Socket('any'), ''));
+      editor.addNode(reroute);
+      canvas.setNodePosition(reroute.id, 920, 250);
+
+      // Demo: set error on filter node
+      canvas.setNodeError(filter.id, 'Missing required condition');
     }, 200);
 
     // Demo frame around data source nodes

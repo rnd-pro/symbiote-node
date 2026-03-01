@@ -41,6 +41,7 @@ export { applySkin, MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN } from './themes/Ski
 
 // Plugins
 export { Readonly } from './plugins/Readonly.js';
+export { History } from './plugins/History.js';
 
 // Toolbar
 export { QuickToolbar } from './toolbar/QuickToolbar.js';

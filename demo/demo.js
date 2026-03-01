@@ -7,7 +7,7 @@
 
 import {
   NodeEditor, Node, Connection, Socket, Input, Output, InputControl,
-  FlowSimulator, Frame,
+  FlowSimulator, Frame, History,
   DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE, GREY_NEUTRAL,
   DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE,
   MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN,
@@ -115,6 +115,16 @@ function initDemo() {
     applyToRoot(GREY_NEUTRAL);
     canvas.setTheme(GREY_NEUTRAL);
     canvas.setSnapGrid(true, 20);
+
+    // History (Undo/Redo)
+    const history = new History();
+    history.listen(editor, {
+      getCanvas: () => canvas,
+      classes: { Node, Connection, Frame, Socket, Input, Output, InputControl },
+    });
+    history.bindKeyboard(canvas);
+    // Clear initial history so setup actions are not undoable
+    history.clear();
 
     // Set positions — real pipeline layout
     setTimeout(() => {

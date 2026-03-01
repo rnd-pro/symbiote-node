@@ -14,11 +14,11 @@ export { Frame } from './core/Frame.js';
 export { Socket, Port, Input, Output, Control, InputControl, uid } from './core/Socket.js';
 
 // Canvas
-export { NodeCanvas } from './canvas/NodeCanvas.js';
+export { NodeCanvas } from './canvas/NodeCanvas/NodeCanvas.js';
 
 // Node components
-export { GraphNode } from './node/GraphNode.js';
-export { NodeSocket } from './node/NodeSocket.js';
+export { GraphNode } from './node/GraphNode/GraphNode.js';
+export { NodeSocket } from './node/NodeSocket/NodeSocket.js';
 
 // Interactions
 export { Drag } from './interactions/Drag.js';
@@ -44,17 +44,17 @@ export { Readonly } from './plugins/Readonly.js';
 export { History } from './plugins/History.js';
 
 // Toolbar
-export { QuickToolbar } from './toolbar/QuickToolbar.js';
+export { QuickToolbar } from './toolbar/QuickToolbar/QuickToolbar.js';
 export { FlowSimulator } from './canvas/FlowSimulator.js';
 
 // Inspector
-export { InspectorPanel } from './inspector/InspectorPanel.js';
+export { InspectorPanel } from './inspector/InspectorPanel/InspectorPanel.js';
 
 // Minimap
-export { Minimap } from './canvas/Minimap.js';
+export { Minimap } from './canvas/Minimap/Minimap.js';
 
 // Search
-export { NodeSearch } from './canvas/NodeSearch.js';
+export { NodeSearch } from './canvas/NodeSearch/NodeSearch.js';
 
 // Layout
 export { computeAutoLayout } from './canvas/AutoLayout.js';
@@ -63,12 +63,12 @@ export { computeAutoLayout } from './canvas/AutoLayout.js';
 export { PortalManager } from './core/Portal.js';
 
 // Palette Browser
-export { PaletteBrowser } from './palette/PaletteBrowser.js';
+export { PaletteBrowser } from './palette/PaletteBrowser/PaletteBrowser.js';
 
 // Tabs
-export { GraphTabs } from './canvas/GraphTabs.js';
+export { GraphTabs } from './canvas/GraphTabs/GraphTabs.js';
 
 // Subgraphs
 export { SubgraphNode } from './core/SubgraphNode.js';
 export { SubgraphManager } from './canvas/SubgraphManager.js';
-export { Breadcrumb } from './canvas/Breadcrumb.js';
+export { Breadcrumb } from './canvas/Breadcrumb/Breadcrumb.js';

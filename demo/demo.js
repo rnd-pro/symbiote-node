@@ -12,8 +12,8 @@ import {
   DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE,
   MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN,
 } from '../index.js';
-import '../canvas/NodeCanvas.js';
-import '../node/GraphNode.js';
+import '../canvas/NodeCanvas/NodeCanvas.js';
+import '../node/GraphNode/GraphNode.js';
 
 /**
  * Initialize automation workflow demo

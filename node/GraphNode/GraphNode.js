@@ -10,8 +10,8 @@
 import Symbiote from '@symbiotejs/symbiote';
 import { template } from './GraphNode.tpl.js';
 import { styles } from './GraphNode.css.js';
-import './PortItem.js';
-import './CtrlItem.js';
+import '../PortItem/PortItem.js';
+import '../CtrlItem/CtrlItem.js';
 
 /** @type {Object<string, string>} */
 const CATEGORY_ICONS = {

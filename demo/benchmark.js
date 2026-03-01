@@ -9,8 +9,8 @@ import {
   NodeEditor, Node, Connection, Socket, Input, Output, InputControl,
   GREY_NEUTRAL,
 } from '../index.js';
-import '../canvas/NodeCanvas.js';
-import '../node/GraphNode.js';
+import '../canvas/NodeCanvas/NodeCanvas.js';
+import '../node/GraphNode/GraphNode.js';
 
 const TARGET = 500;
 const BATCH = 5;

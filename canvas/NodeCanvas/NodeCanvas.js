@@ -13,27 +13,27 @@
 import Symbiote from '@symbiotejs/symbiote';
 import { template } from './NodeCanvas.tpl.js';
 import { styles } from './NodeCanvas.css.js';
-import { Drag } from '../interactions/Drag.js';
-import { Zoom } from '../interactions/Zoom.js';
-import { ConnectFlow } from '../interactions/ConnectFlow.js';
-import { Selector } from '../interactions/Selector.js';
-import { SnapGrid } from '../interactions/SnapGrid.js';
-import { applyTheme, DARK_DEFAULT } from '../themes/Theme.js';
-import { applyPalette } from '../themes/Palette.js';
-import { applySkin } from '../themes/Skin.js';
-import { NodeViewManager } from './NodeViewManager.js';
-import { ConnectionRenderer } from './ConnectionRenderer.js';
-import { PseudoConnection } from './PseudoConnection.js';
-import { ViewportActions } from './ViewportActions.js';
-import { SubgraphManager } from './SubgraphManager.js';
-import '../menu/ContextMenu.js';
-import '../toolbar/QuickToolbar.js';
-import '../node/GraphFrame.js';
-import '../inspector/InspectorPanel.js';
-import './Minimap.js';
-import './NodeSearch.js';
-import './Breadcrumb.js';
-import { computeAutoLayout } from './AutoLayout.js';
+import { Drag } from '../../interactions/Drag.js';
+import { Zoom } from '../../interactions/Zoom.js';
+import { ConnectFlow } from '../../interactions/ConnectFlow.js';
+import { Selector } from '../../interactions/Selector.js';
+import { SnapGrid } from '../../interactions/SnapGrid.js';
+import { applyTheme, DARK_DEFAULT } from '../../themes/Theme.js';
+import { applyPalette } from '../../themes/Palette.js';
+import { applySkin } from '../../themes/Skin.js';
+import { NodeViewManager } from '../NodeViewManager.js';
+import { ConnectionRenderer } from '../ConnectionRenderer.js';
+import { PseudoConnection } from '../PseudoConnection.js';
+import { ViewportActions } from '../ViewportActions.js';
+import { SubgraphManager } from '../SubgraphManager.js';
+import '../../menu/ContextMenu/ContextMenu.js';
+import '../../toolbar/QuickToolbar/QuickToolbar.js';
+import '../../node/GraphFrame/GraphFrame.js';
+import '../../inspector/InspectorPanel/InspectorPanel.js';
+import '../Minimap/Minimap.js';
+import '../NodeSearch/NodeSearch.js';
+import '../Breadcrumb/Breadcrumb.js';
+import { computeAutoLayout } from '../AutoLayout.js';
 
 export class NodeCanvas extends Symbiote {
 

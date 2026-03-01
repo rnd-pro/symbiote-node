@@ -67,3 +67,8 @@ export { PaletteBrowser } from './palette/PaletteBrowser.js';
 
 // Tabs
 export { GraphTabs } from './canvas/GraphTabs.js';
+
+// Subgraphs
+export { SubgraphNode } from './core/SubgraphNode.js';
+export { SubgraphManager } from './canvas/SubgraphManager.js';
+export { Breadcrumb } from './canvas/Breadcrumb.js';

@@ -12,6 +12,7 @@ export const template = html`
   <context-menu ref="contextMenu" hidden></context-menu>
   <node-minimap ref="minimap"></node-minimap>
   <node-search ref="nodeSearch" hidden></node-search>
+  <graph-breadcrumb ref="breadcrumb" hidden></graph-breadcrumb>
 </div>
 <inspector-panel ref="inspector" hidden></inspector-panel>
 `;

@@ -7,7 +7,7 @@
 
 import {
   NodeEditor, Node, Connection, Socket, Input, Output, InputControl,
-  FlowSimulator, Frame, History,
+  FlowSimulator, Frame, History, SubgraphNode,
   DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE, GREY_NEUTRAL,
   DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE,
   MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN,
@@ -73,6 +73,37 @@ function initDemo() {
   debug.addInput('inspect', new Input(anySocket, 'Inspect'));
   debug.addControl('output', new InputControl('text', { initial: '{ status: "ok" }', readonly: true }));
 
+  // 8. Subgraph — "Data Pipeline" with inner nodes
+  const subgraph = new SubgraphNode('Data Pipeline', { category: 'data' });
+  // Set up inner pipeline
+  const innerParseSocket = new Socket('data', { color: '#4a9eff' });
+  const innerParse = new Node('Parse JSON', { type: 'transform', category: 'data' });
+  innerParse.addInput('raw', new Input(innerParseSocket, 'Raw'));
+  innerParse.addOutput('parsed', new Output(innerParseSocket, 'Parsed'));
+  innerParse._exposed = 'input';
+
+  const innerValidate = new Node('Validate Schema', { type: 'validation', category: 'control' });
+  innerValidate.addInput('data', new Input(innerParseSocket, 'Data'));
+  innerValidate.addOutput('valid', new Output(innerParseSocket, 'Valid'));
+
+  const innerTransform = new Node('Transform', { type: 'transform', category: 'instance' });
+  innerTransform.addInput('input', new Input(innerParseSocket, 'Input'));
+  innerTransform.addOutput('output', new Output(innerParseSocket, 'Output'));
+  innerTransform._exposed = 'output';
+
+  subgraph.innerEditor.addNode(innerParse);
+  subgraph.innerEditor.addNode(innerValidate);
+  subgraph.innerEditor.addNode(innerTransform);
+  subgraph.innerEditor.addConnection(new Connection(innerParse, 'parsed', innerValidate, 'data'));
+  subgraph.innerEditor.addConnection(new Connection(innerValidate, 'valid', innerTransform, 'input'));
+  subgraph.innerPositions = {
+    [innerParse.id]: { x: 100, y: 100 },
+    [innerValidate.id]: { x: 400, y: 100 },
+    [innerTransform.id]: { x: 700, y: 100 },
+  };
+  // Sync auto-ports from exposed inner nodes
+  subgraph.syncPorts();
+
   // Add all nodes
   editor.addNode(trigger);
   editor.addNode(httpReq);
@@ -81,6 +112,7 @@ function initDemo() {
   editor.addNode(merge);
   editor.addNode(save);
   editor.addNode(debug);
+  editor.addNode(subgraph);
 
   // ── Connections — real data flow ──
   // Main path: Trigger → HTTP → AI Agent → Filter → Merge(A) → Save
@@ -162,6 +194,7 @@ function initDemo() {
       canvas.setNodePosition(merge.id, 1200, 200);
       canvas.setNodePosition(save.id, 1380, 180);
       canvas.setNodePosition(debug.id, 1580, 260);
+      canvas.setNodePosition(subgraph.id, 680, 400);
 
       // Demo reroute node
       const reroute = new Node('', { type: 'reroute', shape: 'pill' });

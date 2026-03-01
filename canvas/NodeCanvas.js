@@ -25,12 +25,14 @@ import { NodeViewManager } from './NodeViewManager.js';
 import { ConnectionRenderer } from './ConnectionRenderer.js';
 import { PseudoConnection } from './PseudoConnection.js';
 import { ViewportActions } from './ViewportActions.js';
+import { SubgraphManager } from './SubgraphManager.js';
 import '../menu/ContextMenu.js';
 import '../toolbar/QuickToolbar.js';
 import '../node/GraphFrame.js';
 import '../inspector/InspectorPanel.js';
 import './Minimap.js';
 import './NodeSearch.js';
+import './Breadcrumb.js';
 import { computeAutoLayout } from './AutoLayout.js';
 
 export class NodeCanvas extends Symbiote {
@@ -239,6 +241,20 @@ export class NodeCanvas extends Symbiote {
     for (const frame of editor.getFrames()) {
       this.#addFrameView(frame);
     }
+
+    // Initialize subgraph navigation (skip during drill-down/drillUp)
+    if (!this.#navigating) {
+      this.#subgraphManager.initialize(this, editor);
+      const breadcrumb = this.ref.breadcrumb;
+      if (breadcrumb) {
+        this.#subgraphManager.onNavigate((path) => {
+          breadcrumb.setPath(path);
+        });
+        breadcrumb.onNavigate((level) => {
+          this.drillUp(level);
+        });
+      }
+    }
   }
 
   /** @returns {ConnectFlow|null} */
@@ -394,6 +410,56 @@ export class NodeCanvas extends Symbiote {
    * @returns {HTMLElement|undefined}
    */
   _getNodeView(nodeId) { return this.#nodeViews.get(nodeId); }
+
+  /** Alias for SubgraphManager */
+  getNodeView(nodeId) { return this.#nodeViews.get(nodeId); }
+
+  // --- Subgraph Navigation ---
+
+  /** @type {SubgraphManager} */
+  #subgraphManager = new SubgraphManager();
+
+  /** @type {boolean} - guard to prevent setEditor re-init during navigation */
+  #navigating = false;
+
+  /**
+   * Drill down into a subgraph node
+   * @param {string} nodeId - SubgraphNode ID
+   */
+  drillDown(nodeId) {
+    if (!this.#editor) return;
+    const node = this.#editor.getNode(nodeId);
+    if (!node?._isSubgraph) return;
+    this.#navigating = true;
+    this.#subgraphManager.drillDown(node);
+    this.#navigating = false;
+  }
+
+  /**
+   * Navigate up to a breadcrumb level
+   * @param {number} level - 0 = root
+   */
+  drillUp(level) {
+    this.#navigating = true;
+    this.#subgraphManager.drillUp(level);
+    this.#navigating = false;
+  }
+
+  /**
+   * Get current subgraph depth (0 = root)
+   * @returns {number}
+   */
+  getSubgraphDepth() {
+    return this.#subgraphManager.depth;
+  }
+
+  /**
+   * Get subgraph breadcrumb path
+   * @returns {Array<{ label: string, level: number }>}
+   */
+  getSubgraphPath() {
+    return this.#subgraphManager.getPath();
+  }
 
   /**
    * Set node position
@@ -647,9 +713,33 @@ export class NodeCanvas extends Symbiote {
     }
   }
 
+  /** @type {number} */
+  #lastClickTime = 0;
+  /** @type {string|null} */
+  #lastClickNodeId = null;
+
   #handleNodeClick(nodeId, e) {
     const accumulate = e.ctrlKey || e.metaKey;
     this.#selector.selectNode(nodeId, accumulate);
+
+    // Double-click detection for subgraph drill-down
+    const now = Date.now();
+    if (this.#lastClickNodeId === nodeId && now - this.#lastClickTime < 400) {
+      this.#handleNodeDblClick(nodeId);
+      this.#lastClickTime = 0;
+      this.#lastClickNodeId = null;
+    } else {
+      this.#lastClickTime = now;
+      this.#lastClickNodeId = nodeId;
+    }
+  }
+
+  #handleNodeDblClick(nodeId) {
+    if (!this.#editor) return;
+    const node = this.#editor.getNode(nodeId);
+    if (node?._isSubgraph) {
+      this.drillDown(nodeId);
+    }
   }
 
   #handleConnectionClick(connId, e) {

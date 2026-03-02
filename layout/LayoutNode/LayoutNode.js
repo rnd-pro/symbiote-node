@@ -223,22 +223,32 @@ export class LayoutNode extends Symbiote {
   }
 
   /**
-   * Inject custom component into panel content
+   * Inject custom component into panel content.
+   * Hides existing components instead of destroying them to preserve state.
+   * Uses style.display instead of hidden attribute because components may have
+   * CSS rules (e.g. display:block) that override the hidden attribute.
    * @param {Object} config - Panel type configuration
    */
   _injectPanelComponent(config) {
-    const contentEl = this.ref.content;
+    const contentEl = this.ref.panelContent;
     if (!contentEl) return;
 
     const componentTag = config.component;
     if (!componentTag) return;
 
-    // Check if component already exists to avoid duplicates
-    const existingComponent = contentEl.querySelector(componentTag);
-    if (existingComponent) return;
+    // Hide all existing panel components via inline style (overrides CSS)
+    for (const child of contentEl.children) {
+      child.style.display = 'none';
+    }
 
-    // Clear any existing content and create the component
-    contentEl.innerHTML = '';
+    // Check if target component already exists — show it
+    const existing = contentEl.querySelector(componentTag);
+    if (existing) {
+      existing.style.display = '';
+      return;
+    }
+
+    // Create new component
     const component = document.createElement(componentTag);
     component.setAttribute('data-panel-id', this.$.nodeData?.id || '');
     contentEl.appendChild(component);

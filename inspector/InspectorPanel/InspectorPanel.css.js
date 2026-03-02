@@ -54,6 +54,10 @@ inspector-panel {
     padding: 40px 0;
     color: var(--sn-text-dim, #888);
     font-size: 13px;
+
+    &[hidden] {
+      display: none;
+    }
   }
 
   & .insp-empty .material-symbols-outlined {

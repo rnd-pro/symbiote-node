@@ -16,7 +16,7 @@ export const template = html`
       <span class="material-symbols-outlined" ${{ textContent: 'fullscreenIcon' }}></span>
     </button>
   </div>
-  <div class="panel-content" ref="content" ${{ '@hidden': 'isCollapsed' }}></div>
+  <div class="panel-content" ref="panelContent" ${{ '@hidden': 'isCollapsed' }}></div>
   
   <!-- Action zones for split/join -->
   <action-zone corner="tl"></action-zone>

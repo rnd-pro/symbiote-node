@@ -32,10 +32,20 @@ layout-sidebar .sb-header {
   background: var(--bg-header, var(--sn-bg, #1e1e1e));
   border-bottom: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.06));
   flex-shrink: 0;
+
+  /* Collapsed: center the collapse button */
+  layout-sidebar[collapsed] & {
+    justify-content: center;
+    padding: 2px 0;
+  }
 }
 
 layout-sidebar .sb-header-spacer {
   flex: 1;
+
+  layout-sidebar[collapsed] & {
+    display: none;
+  }
 }
 
 /* Header buttons — same style as panel header-btn */
@@ -66,6 +76,11 @@ layout-sidebar .sb-header-btn {
     color: var(--sn-cat-server, #5cb8ff);
     background: rgba(92, 184, 255, 0.1);
   }
+}
+
+/* Hide tune button when collapsed */
+layout-sidebar[collapsed] .sb-header-btn:first-child {
+  display: none;
 }
 
 /* Collapse icon rotation */
@@ -163,7 +178,7 @@ sidebar-section .sec-item {
 }
 
 sidebar-section .sec-icon {
-  font-size: 20px;
+  font-size: 16px;
   flex-shrink: 0;
 }
 

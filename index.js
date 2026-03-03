@@ -59,7 +59,13 @@ export { NodeSearch } from './canvas/NodeSearch/NodeSearch.js';
 // Layout (panel workspace)
 export { Layout } from './layout/Layout/Layout.js';
 export { LayoutNode } from './layout/LayoutNode/LayoutNode.js';
+export { LayoutSidebar } from './layout/LayoutSidebar/LayoutSidebar.js';
 export * as LayoutTree from './layout/LayoutTree.js';
+export {
+  navigate, updateParams, parseQuery, buildHash,
+  getRoute, setDefaultSection,
+} from './layout/LayoutRouter/LayoutRouter.js';
+export { syncWithRouter } from './layout/LayoutRouter/routerSync.js';
 
 // Auto Layout
 export { computeAutoLayout } from './canvas/AutoLayout.js';

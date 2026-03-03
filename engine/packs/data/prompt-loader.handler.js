@@ -1,0 +1,193 @@
+/**
+ * data/prompt-loader — Dynamic Markdown template assembly
+ *
+ * Loads and processes MD prompt templates with variable substitution
+ * and recursive file includes. Supports {{VARIABLE}} placeholders and
+ * {{file.md}} file includes.
+ *
+ * Ported from Mr-Computer/automations/argentine-spanish-bot/src/utils/prompt-loader.js
+ *
+ * @module agi-graph/packs/data/prompt-loader
+ */
+
+import { readFile, readdir } from 'node:fs/promises';
+import path from 'node:path';
+
+/**
+ * Process template with variables and file includes
+ * @param {string} template - Template string
+ * @param {Object} context - Variables to substitute
+ * @param {string} baseDir - Base directory for relative includes
+ * @returns {Promise<string>}
+ */
+async function processTemplate(template, context, baseDir) {
+  let result = template;
+
+  // Process file includes: {{file.md}} or {{path/to/file.md}}
+  const fileIncludeRegex = /\{\{([a-zA-Z0-9_\-\/\.]+\.md)\}\}/g;
+  let match;
+
+  while ((match = fileIncludeRegex.exec(result)) !== null) {
+    const filePath = match[1];
+    const fullMatch = match[0];
+
+    try {
+      let includeContent = await readFile(path.join(baseDir, filePath), 'utf-8');
+      // Recursively process included content
+      includeContent = await processTemplate(includeContent, context, path.dirname(path.join(baseDir, filePath)));
+      result = result.replace(fullMatch, includeContent);
+    } catch {
+      // Leave placeholder as is
+    }
+  }
+
+  // Process variables: {{VARIABLE_NAME}}
+  const variableRegex = /\{\{([A-Z_][A-Z0-9_]*)\}\}/g;
+
+  result = result.replace(variableRegex, (fullMatch, varName) => {
+    if (Object.hasOwn(context, varName)) {
+      const value = context[varName];
+      if (typeof value === 'string') return value;
+      if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+      if (Array.isArray(value)) return value.join('\n');
+      if (typeof value === 'object' && value !== null) return JSON.stringify(value, null, 2);
+      return String(value);
+    }
+    return fullMatch;
+  });
+
+  return result;
+}
+
+/**
+ * Validate prompt template — check for missing variables
+ * @param {string} template
+ * @param {Object} context
+ * @returns {Array<string>}
+ */
+function validatePromptTemplate(template, context) {
+  const variableRegex = /\{\{([A-Z_][A-Z0-9_]*)\}\}/g;
+  const missing = [];
+  let match;
+  while ((match = variableRegex.exec(template)) !== null) {
+    const varName = match[1];
+    if (!Object.hasOwn(context, varName)) missing.push(varName);
+  }
+  return [...new Set(missing)];
+}
+
+/**
+ * List available prompt templates in directory
+ * @param {string} dir
+ * @returns {Promise<Array<string>>}
+ */
+async function listPromptTemplates(dir) {
+  try {
+    const entries = await readdir(dir, { recursive: true });
+    return entries.filter(e => e.endsWith('.md'));
+  } catch {
+    return [];
+  }
+}
+
+// ─── Handler Definition ────────────────────────────────────────────────
+
+export default {
+  type: 'data/prompt-loader',
+  category: 'data',
+  icon: 'article',
+
+  driver: {
+    description: 'Dynamic Markdown template assembly with {{VARIABLE}} substitution and {{file.md}} includes',
+    inputs: [
+      { name: 'template', type: 'string' },
+    ],
+    outputs: [
+      { name: 'result', type: 'any' },
+      { name: 'error', type: 'string' },
+    ],
+    params: {
+      operation: { type: 'string', default: 'load', description: 'Operation: load | load-multi | validate | list' },
+      context: { type: 'any', default: {}, description: 'Variables map for template substitution' },
+      baseDir: { type: 'string', default: '.', description: 'Base directory for file includes' },
+      // load-multi
+      templates: { type: 'any', default: null, description: 'Map of {name: path} for load-multi' },
+      // load from file
+      filePath: { type: 'string', default: null, description: 'Path to template file (alternative to template input)' },
+    },
+  },
+
+  lifecycle: {
+    validate: (inputs, params) => {
+      const op = params.operation;
+      if (op === 'list') return typeof params.baseDir === 'string';
+      if (op === 'load-multi') return typeof params.templates === 'object' && params.templates !== null;
+      if (op === 'validate') return typeof inputs.template === 'string';
+      // load
+      return typeof inputs.template === 'string' || typeof params.filePath === 'string';
+    },
+
+    cacheKey: (inputs, params) => {
+      if (params.operation === 'list') return `prompt-list:${params.baseDir}`;
+      return null; // templates change with context
+    },
+
+    execute: async (inputs, params) => {
+      const { operation, context, baseDir } = params;
+
+      try {
+        switch (operation) {
+          case 'load': {
+            let template = inputs.template;
+            let resolvedBase = baseDir;
+
+            if (!template && params.filePath) {
+              const fullPath = path.isAbsolute(params.filePath)
+                ? params.filePath
+                : path.join(baseDir, params.filePath);
+              template = await readFile(fullPath, 'utf-8');
+              resolvedBase = path.dirname(fullPath);
+            }
+
+            const processed = await processTemplate(template, context, resolvedBase);
+            return { result: { content: processed, variablesUsed: Object.keys(context) } };
+          }
+
+          case 'load-multi': {
+            const entries = Object.entries(params.templates);
+            const results = {};
+            for (const [name, templatePath] of entries) {
+              const fullPath = path.isAbsolute(templatePath)
+                ? templatePath
+                : path.join(baseDir, templatePath);
+              const raw = await readFile(fullPath, 'utf-8');
+              results[name] = await processTemplate(raw, context, path.dirname(fullPath));
+            }
+            return { result: { templates: results, count: entries.length } };
+          }
+
+          case 'validate': {
+            const missing = validatePromptTemplate(inputs.template, context);
+            return {
+              result: {
+                valid: missing.length === 0,
+                missing,
+                totalVariables: (inputs.template.match(/\{\{([A-Z_][A-Z0-9_]*)\}\}/g) || []).length,
+              },
+            };
+          }
+
+          case 'list': {
+            const templates = await listPromptTemplates(baseDir);
+            return { result: { templates, count: templates.length, baseDir } };
+          }
+
+          default:
+            return { error: `Unknown operation: ${operation}` };
+        }
+      } catch (err) {
+        return { error: `prompt-loader ${operation} failed: ${err.message}` };
+      }
+    },
+  },
+};

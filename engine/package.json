@@ -1,0 +1,28 @@
+{
+  "name": "agi-graph",
+  "version": "0.1.0",
+  "description": "Universal node-based execution engine. AI-first, domain-agnostic graph runtime.",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "agi-graph": "./cli.js"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./cli": "./cli.js",
+    "./packs/*": "./packs/*"
+  },
+  "files": [
+    "*.js",
+    "packs/"
+  ],
+  "keywords": [
+    "graph",
+    "nodes",
+    "workflow",
+    "ai",
+    "dag",
+    "automation"
+  ],
+  "license": "MIT"
+}

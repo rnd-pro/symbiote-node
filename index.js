@@ -77,3 +77,7 @@ export { GraphTabs } from './canvas/GraphTabs/GraphTabs.js';
 export { SubgraphNode } from './core/SubgraphNode.js';
 export { SubgraphManager } from './canvas/SubgraphManager.js';
 export { Breadcrumb } from './canvas/Breadcrumb/Breadcrumb.js';
+
+// Engine (server-side graph runtime)
+// Usage: import * as Engine from 'symbiote-node/engine'
+// Or: import { Graph, Executor } from 'symbiote-node/engine'

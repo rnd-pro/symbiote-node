@@ -1,0 +1,65 @@
+/**
+ * flow/retry — Retry on error node
+ *
+ * If input has an error, re-invokes the action up to maxRetries times.
+ * Passes through successful results immediately.
+ *
+ * @module agi-graph/packs/flow/retry
+ */
+
+export default {
+  type: 'flow/retry',
+  category: 'flow',
+  icon: 'refresh',
+
+  driver: {
+    description: 'Retry action on error — up to N attempts',
+    inputs: [
+      { name: 'action', type: 'any' },
+      { name: 'error', type: 'any' },
+    ],
+    outputs: [
+      { name: 'result', type: 'any' },
+      { name: 'error', type: 'string' },
+    ],
+    params: {
+      maxRetries: { type: 'int', default: 3, description: 'Maximum retry attempts' },
+      delay: { type: 'int', default: 1000, description: 'Delay between retries (ms)' },
+    },
+  },
+
+  lifecycle: {
+    execute: async (inputs, params) => {
+      // If no error, pass through the action result
+      if (inputs.error == null && inputs.action != null) {
+        return { result: inputs.action, error: null };
+      }
+
+      // If error but no actionFn to retry, propagate error
+      if (inputs.action?._retryFn) {
+        const { maxRetries, delay } = params;
+        let lastError = inputs.error;
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          if (delay > 0 && attempt > 1) {
+            await new Promise(r => setTimeout(r, delay));
+          }
+          try {
+            const result = await inputs.action._retryFn();
+            return { result, error: null };
+          } catch (err) {
+            lastError = err.message;
+          }
+        }
+
+        return { result: null, error: `Failed after ${maxRetries} retries: ${lastError}` };
+      }
+
+      // No retry function available, pass through with error
+      return {
+        result: inputs.action,
+        error: inputs.error ? String(inputs.error) : null,
+      };
+    },
+  },
+};

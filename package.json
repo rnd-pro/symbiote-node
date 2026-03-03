@@ -1,9 +1,14 @@
 {
   "name": "symbiote-node",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "Visual Node Graph Editor — extensible, themeable, zero-dependency graph editor built on Symbiote.js",
+  "description": "Visual Node Graph Editor + Execution Engine — extensible, themeable graph editor and runtime built on Symbiote.js",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./engine": "./engine/index.js",
+    "./engine/*": "./engine/*"
+  },
   "scripts": {
     "test": "node --test tests/*.test.js",
     "demo": "npx -y serve -l 3000 ."
@@ -17,8 +22,17 @@
     "web-components",
     "data-flow",
     "dag",
-    "no-dependency"
+    "workflow-engine",
+    "execution-engine"
   ],
+  "peerDependencies": {
+    "ws": ">=8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ws": {
+      "optional": true
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/RND-PRO/symbiote-node"

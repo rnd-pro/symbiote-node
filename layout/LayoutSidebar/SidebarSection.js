@@ -3,6 +3,7 @@
  *
  * Renders a master panel entry with icon, label.
  * Edit mode: shows visibility toggle + drag handle.
+ * Shows sub-panel list with close buttons for non-master panels.
  *
  * @module symbiote-node/layout/LayoutSidebar/SidebarSection
  */
@@ -18,6 +19,7 @@ export class SidebarSection extends Symbiote {
     isActive: false,
     isVisible: true,
     eyeIcon: 'visibility',
+    hasSubPanels: false,
     isExpanded: false,
     subPanels: [],
 
@@ -28,6 +30,7 @@ export class SidebarSection extends Symbiote {
 
     onExpandToggle: (e) => {
       e.stopPropagation();
+      if (!this.$.hasSubPanels) return;
       this.$.isExpanded = !this.$.isExpanded;
     },
 
@@ -50,6 +53,14 @@ export class SidebarSection extends Symbiote {
     this.sub('isVisible', (val) => {
       this.toggleAttribute('data-hidden', !val);
       this.$.eyeIcon = val ? 'visibility' : 'visibility_off';
+    });
+
+    this.sub('subPanels', (panels) => {
+      const has = panels && panels.length > 0;
+      this.$.hasSubPanels = has;
+      this.toggleAttribute('data-has-sub', has);
+      // Collapse if no sub-panels
+      if (!has) this.$.isExpanded = false;
     });
 
     // Drag support
@@ -119,19 +130,46 @@ SidebarSection.reg('sidebar-section');
 
 /**
  * SidebarSubItem — sub-panel entry inside a section
+ * Shows close button for non-master panels (isMaster=false)
  */
 export class SidebarSubItem extends Symbiote {
 
   init$ = {
     title: '',
     icon: 'web_asset',
+    panelId: '',
+    isMaster: false,
+
+    onClose: (e) => {
+      e.stopPropagation();
+      const panelId = this.$.panelId;
+      if (!panelId) return;
+
+      // Find the panel-layout and call joinPanels
+      const sidebar = this.closest('layout-sidebar');
+      if (sidebar) {
+        sidebar.dispatchEvent(new CustomEvent('panel-close', {
+          bubbles: true,
+          detail: { panelId },
+        }));
+      }
+    },
   };
+
+  renderCallback() {
+    this.sub('isMaster', (val) => {
+      this.toggleAttribute('data-master', val);
+    });
+  }
 }
 
 SidebarSubItem.template = html`
 <div class="sub-panel-item">
   <span class="material-symbols-outlined" ${{ textContent: 'icon' }}></span>
   <span ${{ textContent: 'title' }}></span>
+  <button class="sub-panel-close" ${{ onclick: 'onClose' }}>
+    <span class="material-symbols-outlined">close</span>
+  </button>
 </div>
 `;
 

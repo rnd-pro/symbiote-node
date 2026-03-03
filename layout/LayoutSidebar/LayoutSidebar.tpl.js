@@ -9,11 +9,11 @@ export const sidebarTemplate = html`
   <button class="sb-header-btn" ${{ onclick: 'onToggleEditMode' }}>
     <span class="material-symbols-outlined">tune</span>
   </button>
+  <div class="sb-header-spacer"></div>
+  <button class="sb-header-btn" ${{ onclick: 'onToggle' }}>
+    <span class="material-symbols-outlined sb-collapse-icon">chevron_left</span>
+  </button>
 </div>
 
 <div class="sb-sections" itemize="sections" item-tag="sidebar-section"></div>
-
-<button class="sb-toggle" ${{ onclick: 'onToggle' }}>
-  <span class="material-symbols-outlined">chevron_left</span>
-</button>
 `;

@@ -4,10 +4,10 @@
  * Uses Symbiote PubSub named data context (ROUTER) to provide
  * reactive routing across the application.
  *
- * URL format: #section/path?param1=value&param2=value
+ * URL format: #panel/subpath?param1=value&param2=value
  *
- * Usage in templates: {{ROUTER/section}}, {{ROUTER/path}}
- * Usage in code: this.$['ROUTER/section'], this.sub('ROUTER/section', cb)
+ * Usage in templates: {{ROUTER/panel}}, {{ROUTER/subpath}}, {{ROUTER/query}}
+ * Usage in code: this.$['ROUTER/panel'], this.sub('ROUTER/panel', cb)
  *
  * @module symbiote-node/layout/LayoutRouter
  */
@@ -16,9 +16,9 @@ import { PubSub } from '@symbiotejs/symbiote';
 const CTX = 'ROUTER';
 
 const routerCtx = PubSub.registerCtx({
-  section: 'default',
-  path: '',
-  params: '',
+  panel: 'default',
+  subpath: '',
+  query: '',
 }, CTX);
 
 /**
@@ -30,61 +30,71 @@ export function parseQuery(str) {
   if (!str) return {};
   const result = {};
   for (const pair of str.split('&')) {
-    const [key, val] = pair.split('=');
-    if (key) result[decodeURIComponent(key)] = decodeURIComponent(val ?? '');
+    const eqIdx = pair.indexOf('=');
+    if (eqIdx >= 0) {
+      result[decodeURIComponent(pair.substring(0, eqIdx))] = decodeURIComponent(pair.substring(eqIdx + 1));
+    }
   }
   return result;
 }
 
 /**
+ * Build query string from key-value object
+ * @param {Object<string, string>} params
+ * @returns {string}
+ */
+export function buildQuery(params) {
+  const entries = Object.entries(params).filter(([, v]) => v !== '' && v != null);
+  if (entries.length === 0) return '';
+  return entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+}
+
+/**
  * Build full hash string from parts
- * @param {string} section
- * @param {string} [path]
+ * @param {string} panel
+ * @param {string} [subpath]
  * @param {Object} [params]
  * @returns {string}
  */
-export function buildHash(section, path, params) {
-  let hash = section;
-  if (path) hash += '/' + path;
-  const q = params
-    ? Object.entries(params)
-      .filter(([, v]) => v !== undefined && v !== '')
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-      .join('&')
-    : '';
+export function buildHash(panel, subpath, params) {
+  let hash = panel;
+  if (subpath) hash += '/' + subpath;
+  const q = params ? buildQuery(params) : '';
   if (q) hash += '?' + q;
   return hash;
 }
 
 /**
  * Navigate to a new route — updates URL and PubSub context
- * @param {string} section - Master panel section ID
- * @param {string} [path] - Sub-path (entity ID, etc.)
+ * @param {string} panel - Master panel section ID
+ * @param {string} [subpath] - Sub-path (entity ID, etc.)
  * @param {Object} [params] - Query parameters
  */
-export function navigate(section, path, params) {
-  const hash = buildHash(section, path, params);
+export function navigate(panel, subpath = '', params = {}) {
+  const hash = buildHash(panel, subpath, params);
   location.hash = hash;
   // hashchange will trigger syncFromHash
 }
 
 /**
- * Update only query params of current route (keeps section/path)
+ * Update only query params of current route (keeps panel/subpath)
+ * Uses replaceState to avoid cluttering browser history
  * @param {Object} params - Params to merge
  */
 export function updateParams(params) {
-  const currentQuery = parseQuery(routerCtx.read('params'));
-  const merged = { ...currentQuery, ...params };
-  // Remove empty values
-  for (const [k, v] of Object.entries(merged)) {
-    if (v === '' || v === undefined || v === null) delete merged[k];
+  const currentQuery = parseQuery(routerCtx.read('query'));
+  const merged = { ...currentQuery };
+  for (const [k, v] of Object.entries(params)) {
+    if (v === '' || v == null) {
+      delete merged[k];
+    } else {
+      merged[k] = v;
+    }
   }
-  const query = Object.entries(merged)
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-    .join('&');
-  const hash = buildHash(routerCtx.read('section'), routerCtx.read('path'), merged);
+  const query = buildQuery(merged);
+  const hash = buildHash(routerCtx.read('panel'), routerCtx.read('subpath'), merged);
   history.replaceState(null, '', '#' + hash);
-  routerCtx.pub('params', query);
+  routerCtx.pub('query', query);
 }
 
 /**
@@ -92,35 +102,39 @@ export function updateParams(params) {
  */
 function syncFromHash() {
   const raw = location.hash.replace(/^#/, '') || 'default';
-  const [pathPart, queryPart = ''] = raw.split('?');
-  const segments = pathPart.split('/');
-  const section = segments[0] || 'default';
-  const path = segments.slice(1).join('/');
 
-  routerCtx.pub('section', section);
-  routerCtx.pub('path', path);
-  routerCtx.pub('params', queryPart);
+  const qIdx = raw.indexOf('?');
+  const pathPart = qIdx >= 0 ? raw.substring(0, qIdx) : raw;
+  const queryPart = qIdx >= 0 ? raw.substring(qIdx + 1) : '';
+
+  const slashIdx = pathPart.indexOf('/');
+  const panel = slashIdx >= 0 ? pathPart.substring(0, slashIdx) : pathPart;
+  const subpath = slashIdx >= 0 ? pathPart.substring(slashIdx + 1) : '';
+
+  routerCtx.pub('panel', panel);
+  routerCtx.pub('subpath', subpath);
+  routerCtx.pub('query', queryPart);
 }
 
 /**
  * Get current route state
- * @returns {{ section: string, path: string, params: string }}
+ * @returns {{ panel: string, subpath: string, query: string }}
  */
 export function getRoute() {
   return {
-    section: routerCtx.read('section'),
-    path: routerCtx.read('path'),
-    params: routerCtx.read('params'),
+    panel: routerCtx.read('panel'),
+    subpath: routerCtx.read('subpath'),
+    query: routerCtx.read('query'),
   };
 }
 
 /**
- * Set default section (first section to show if hash is empty)
- * @param {string} section
+ * Set default panel (first section to show if hash is empty)
+ * @param {string} panel
  */
-export function setDefaultSection(section) {
+export function setDefaultPanel(panel) {
   if (!location.hash || location.hash === '#') {
-    navigate(section);
+    navigate(panel);
   }
 }
 

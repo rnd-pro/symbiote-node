@@ -56,10 +56,10 @@ export class LayoutSidebar extends Symbiote {
     }));
 
     // Subscribe to route changes to update active section
-    this.sub('ROUTER/section', (section) => {
+    this.sub('ROUTER/panel', (panel) => {
       this.$.sections = this.$.sections.map((s) => ({
         ...s,
-        isActive: s.sectionId === section,
+        isActive: s.sectionId === panel,
       }));
     });
   }

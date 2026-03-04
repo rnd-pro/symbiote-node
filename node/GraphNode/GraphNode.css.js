@@ -317,6 +317,36 @@ graph-node {
     }
   }
 
+  /* Shape: SVG custom — node with SVG background path */
+  &[data-svg-shape] {
+    position: relative;
+    min-width: 100px;
+    min-height: 100px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+
+    & .sn-node-header {
+      background: transparent;
+      border-bottom: none;
+      justify-content: center;
+      padding: 4px 8px;
+    }
+    & .sn-node-body {
+      padding: 4px 0;
+      align-items: center;
+    }
+    & .controls {
+      display: none;
+    }
+    /* Hide DOM port items — ConnectionRenderer computes positions mathematically */
+    & .inputs, & .outputs {
+      display: none;
+    }
+  }
+
   & .sn-node-header {
     display: flex;
     align-items: center;

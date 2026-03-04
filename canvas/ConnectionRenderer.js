@@ -138,6 +138,25 @@ export class ConnectionRenderer {
    * @returns {{ x: number, y: number }}
    */
   getSocketOffset(nodeEl, portKey, side) {
+    // SVG shapes: compute edge position mathematically via getSocketPosition()
+    // Check shape.pathData directly — no dependency on DOM attribute timing
+    const shape = getShape(nodeEl.getAttribute('node-shape'));
+    const nodeData = nodeEl._nodeData;
+    if (shape && shape.pathData && nodeData) {
+      const ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
+      if (ports) {
+        const keys = Object.keys(ports);
+        const index = keys.indexOf(portKey);
+        const total = keys.length;
+        const size = { width: nodeEl.offsetWidth || 180, height: nodeEl.offsetHeight || 100 };
+        if (index >= 0) {
+          const pos = shape.getSocketPosition(side, index, total, size);
+          return { x: pos.x, y: pos.y };
+        }
+      }
+    }
+
+    // Standard shapes: read from DOM socket elements
     const container = side === 'output'
       ? nodeEl.querySelector('.outputs')
       : nodeEl.querySelector('.inputs');

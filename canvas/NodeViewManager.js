@@ -136,18 +136,65 @@ export class NodeViewManager {
     this.#nodesLayer.appendChild(el);
     this.#nodeViews.set(node.id, el);
 
-    // Apply dynamic clip-path from shape (for SVGShape and custom shapes)
+    // Apply shape visuals: SVG background layer instead of clip-path
+    // Clip-path clips content (labels, ports). SVG bg preserves them.
+    const shape = getShape(node.shape);
+    if (shape && shape.pathData) {
+      // Set explicit element dimensions to match SVG viewBox aspect ratio
+      // This ensures correct proportions and reliable offsetWidth/Height
+      const vb = shape.viewBox.split(' ').map(Number);
+      const vbW = vb[2];
+      const vbH = vb[3];
+      const baseSize = 120; // base dimension
+      const aspect = vbW / vbH;
+      const nodeW = aspect >= 1 ? baseSize : Math.round(baseSize * aspect);
+      const nodeH = aspect >= 1 ? Math.round(baseSize / aspect) : baseSize;
+      el.style.width = nodeW + 'px';
+      el.style.height = nodeH + 'px';
+      el.style.minWidth = nodeW + 'px';
+      el.style.minHeight = nodeH + 'px';
+    }
+
     requestAnimationFrame(() => {
-      const shape = getShape(node.shape);
-      const size = { width: el.offsetWidth || 180, height: el.offsetHeight || 80 };
-      const clipPath = shape.getClipPath(size);
-      if (clipPath) {
-        el.style.clipPath = clipPath;
+      if (shape && shape.pathData) {
+        const size = { width: el.offsetWidth, height: el.offsetHeight };
+
+        // 1. Inject SVG background — element is properly proportioned
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', shape.viewBox);
+        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible;';
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', shape.pathData);
+        path.setAttribute('fill', 'var(--sn-node-bg, #16213e)');
+        path.setAttribute('stroke', 'var(--sn-node-border, #2a2a4a)');
+        path.setAttribute('stroke-width', '0.4');
+        path.setAttribute('stroke-linejoin', 'round');
+        svg.appendChild(path);
+        el.prepend(svg);
+        el.setAttribute('data-svg-shape', shape.name);
+
+        // Make node background transparent — SVG provides the shape
+        el.style.background = 'transparent';
+        el.style.border = 'none';
+        el.style.boxShadow = 'none';
         el.style.borderRadius = '0';
-      }
-      const radius = shape.getBorderRadius(size);
-      if (radius && radius !== 'var(--sn-node-radius, 10px)') {
-        el.style.borderRadius = radius;
+        el.style.overflow = 'visible';
+
+        // Elevate content above SVG layer
+        for (const child of el.children) {
+          if (child !== svg) child.style.position = 'relative';
+        }
+
+        // 2. Add SVG port markers at computed edge positions
+        this.#addSVGPortMarkers(el, node, shape, size);
+      } else if (shape) {
+        // Standard shapes: apply border-radius
+        const size = { width: el.offsetWidth || 180, height: el.offsetHeight || 60 };
+        const radius = shape.getBorderRadius(size);
+        if (radius && radius !== 'var(--sn-node-radius, 10px)') {
+          el.style.borderRadius = radius;
+        }
       }
     });
 
@@ -174,6 +221,51 @@ export class NodeViewManager {
   }
 
   // --- Private helpers ---
+
+  /**
+   * Add SVG port markers at computed edge positions
+   * Uses same math as ConnectionRenderer for visual consistency
+   * @param {HTMLElement} el - graph-node element
+   * @param {import('../core/Node.js').Node} node
+   * @param {import('../shapes/SVGShape.js').SVGShape} shape
+   * @param {{ width: number, height: number }} size - element dimensions
+   */
+  #addSVGPortMarkers(el, node, shape, size) {
+    // Create a separate SVG overlay for port markers (above shape, below content)
+    const markerSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    markerSvg.setAttribute('viewBox', `0 0 ${size.width} ${size.height}`);
+    markerSvg.setAttribute('preserveAspectRatio', 'none');
+    markerSvg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:visible;';
+
+    const addMarker = (pos, color) => {
+      const d = 5; // half-size of diamond
+      const diamond = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      diamond.setAttribute('points',
+        `${pos.x},${pos.y - d} ${pos.x + d},${pos.y} ${pos.x},${pos.y + d} ${pos.x - d},${pos.y}`
+      );
+      diamond.setAttribute('fill', color);
+      diamond.setAttribute('stroke', '#fff');
+      diamond.setAttribute('stroke-width', '1');
+      markerSvg.appendChild(diamond);
+    };
+
+    // Input port markers
+    const inputKeys = Object.keys(node.inputs);
+    for (let i = 0; i < inputKeys.length; i++) {
+      const pos = shape.getSocketPosition('input', i, inputKeys.length, size);
+      addMarker(pos, 'var(--sn-port-color, #7c8db5)');
+    }
+
+    // Output port markers
+    const outputKeys = Object.keys(node.outputs);
+    for (let i = 0; i < outputKeys.length; i++) {
+      const pos = shape.getSocketPosition('output', i, outputKeys.length, size);
+      addMarker(pos, 'var(--sn-port-color, #7c8db5)');
+    }
+
+    el.appendChild(markerSvg);
+  }
+
 
   #autoSelectOnDragStart(nodeId, e) {
     if (!this.#selector.isNodeSelected(nodeId)) {

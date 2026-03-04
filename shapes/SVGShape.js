@@ -3,12 +3,13 @@
  *
  * Uses SVGPathElement.getPointAtLength() for dynamic connector placement.
  * Any SVG icon path can become a node shape — the outer contour defines
- * the clip mask and connector positions are computed along the perimeter.
+ * the visual fill and connector positions are computed along the perimeter.
  *
  * Port placement strategy:
- *   - Inputs placed on left portion of path perimeter (25%-75% of left arc)
- *   - Outputs placed on right portion of path perimeter (25%-75% of right arc)
+ *   - Inputs placed on left portion of path perimeter
+ *   - Outputs placed on right portion of path perimeter
  *   - Connector angle = normal from center → edge point
+ *   - Aspect ratio of original SVG is preserved (xMidYMid meet)
  *
  * @module symbiote-node/shapes/SVGShape
  */
@@ -37,6 +38,26 @@ function getOffscreenSVG() {
   return _offscreenSVG;
 }
 
+/**
+ * Compute scaling params for viewBox → element mapping
+ * Preserves aspect ratio (equivalent to SVG preserveAspectRatio="xMidYMid meet")
+ *
+ * @param {number[]} vb - [x, y, w, h] viewBox
+ * @param {{ width: number, height: number }} size - element size
+ * @returns {{ scale: number, offsetX: number, offsetY: number }}
+ */
+function computeMapping(vb, size) {
+  const [vx, vy, vw, vh] = vb;
+  const scale = Math.min(size.width / vw, size.height / vh);
+  const renderedW = vw * scale;
+  const renderedH = vh * scale;
+  return {
+    scale,
+    offsetX: (size.width - renderedW) / 2 - vx * scale,
+    offsetY: (size.height - renderedH) / 2 - vy * scale,
+  };
+}
+
 export class SVGShape extends NodeShape {
   /** @type {string} */
   name;
@@ -56,6 +77,9 @@ export class SVGShape extends NodeShape {
   /** @type {{ minWidth: number, minHeight: number }} */
   #minSize;
 
+  /** @type {Map<string, {x:number,y:number,angle:number}>} - position cache */
+  #posCache = new Map();
+
   /**
    * @param {string} name - Shape identifier
    * @param {object} options
@@ -72,24 +96,35 @@ export class SVGShape extends NodeShape {
     this.#vb = viewBox.split(' ').map(Number);
     this.#header = header;
     this.#minSize = {
-      minWidth: minSize.minWidth || 80,
-      minHeight: minSize.minHeight || 80,
+      minWidth: minSize.minWidth || 100,
+      minHeight: minSize.minHeight || 100,
     };
   }
 
   /**
-   * Scale a point from viewBox coordinates to node size
+   * Scale a point from viewBox coordinates to element pixel coordinates
+   * Uses aspect-ratio-preserving mapping (xMidYMid meet)
+   *
    * @param {number} px - x in viewBox
    * @param {number} py - y in viewBox
-   * @param {{ width: number, height: number }} size
+   * @param {{ width: number, height: number }} size - element size
    * @returns {{ x: number, y: number }}
    */
   #scalePoint(px, py, size) {
-    const [vx, vy, vw, vh] = this.#vb;
+    const { scale, offsetX, offsetY } = computeMapping(this.#vb, size);
     return {
-      x: ((px - vx) / vw) * size.width,
-      y: ((py - vy) / vh) * size.height,
+      x: px * scale + offsetX,
+      y: py * scale + offsetY,
     };
+  }
+
+  /**
+   * Get center of SVG shape in viewBox coordinates
+   * @returns {{ x: number, y: number }}
+   */
+  #getCenter() {
+    const [vx, vy, vw, vh] = this.#vb;
+    return { x: vx + vw / 2, y: vy + vh / 2 };
   }
 
   /**
@@ -110,95 +145,111 @@ export class SVGShape extends NodeShape {
   }
 
   /**
-   * Find a point on the path perimeter closest to a given angle from center.
-   * Uses binary search along the path length.
+   * Find the point on the SVG path that a ray from center at a given angle hits.
+   * Uses dense sampling along the path perimeter and finds the point
+   * whose angle from center best matches the target angle.
    *
    * @param {number} targetAngle - angle in radians from center
    * @param {SVGPathElement} pathEl
-   * @returns {{ x: number, y: number, angle: number }}
+   * @returns {{ x: number, y: number }} - point in viewBox coordinates
    */
   #findPointAtAngle(targetAngle, pathEl) {
     const totalLen = pathEl.getTotalLength();
-    const [, , vw, vh] = this.#vb;
-    const cx = vw / 2;
-    const cy = vh / 2;
+    const center = this.#getCenter();
 
+    // Phase 1: coarse scan (128 samples)
     let bestDist = Infinity;
-    let bestPoint = null;
-    const steps = 64;
+    let bestLen = 0;
+    const COARSE = 128;
 
-    for (let i = 0; i <= steps; i++) {
-      const len = (totalLen * i) / steps;
+    for (let i = 0; i <= COARSE; i++) {
+      const len = (totalLen * i) / COARSE;
       const pt = pathEl.getPointAtLength(len);
-      const angle = Math.atan2(pt.y - cy, pt.x - cx);
+      const angle = Math.atan2(pt.y - center.y, pt.x - center.x);
       let diff = Math.abs(angle - targetAngle);
       if (diff > Math.PI) diff = 2 * Math.PI - diff;
       if (diff < bestDist) {
         bestDist = diff;
-        bestPoint = pt;
+        bestLen = len;
       }
     }
 
-    return bestPoint || { x: cx, y: cy };
+    // Phase 2: refine with binary-like search around bestLen
+    const searchRadius = totalLen / COARSE;
+    const FINE = 32;
+    const startLen = Math.max(0, bestLen - searchRadius);
+    const endLen = Math.min(totalLen, bestLen + searchRadius);
+
+    for (let i = 0; i <= FINE; i++) {
+      const len = startLen + ((endLen - startLen) * i) / FINE;
+      const pt = pathEl.getPointAtLength(len);
+      const angle = Math.atan2(pt.y - center.y, pt.x - center.x);
+      let diff = Math.abs(angle - targetAngle);
+      if (diff > Math.PI) diff = 2 * Math.PI - diff;
+      if (diff < bestDist) {
+        bestDist = diff;
+        bestLen = len;
+      }
+    }
+
+    return pathEl.getPointAtLength(bestLen);
   }
 
+  /**
+   * Get socket position on the shape outline.
+   * Results are cached — same params always return same position.
+   *
+   * @param {'input'|'output'} side
+   * @param {number} index - ordinal index of this port
+   * @param {number} total - total ports on this side
+   * @param {{ width: number, height: number }} size - node dimensions
+   * @returns {{ x: number, y: number, angle: number }}
+   */
   getSocketPosition(side, index, total, size) {
+    // Cache key: position depends on side, index, total, and element size
+    const key = `${side}|${index}|${total}|${size.width}|${size.height}`;
+    if (this.#posCache.has(key)) return this.#posCache.get(key);
+
     const pathEl = this.#getPathElement();
-    const [, , vw, vh] = this.#vb;
-    const cx = vw / 2;
-    const cy = vh / 2;
 
     if (!pathEl) {
-      // Fallback to simple rect-like placement
       const y = size.height * (index + 1) / (total + 1);
-      return side === 'input'
+      const result = side === 'input'
         ? { x: 0, y, angle: 180 }
         : { x: size.width, y, angle: 0 };
+      this.#posCache.set(key, result);
+      return result;
     }
 
     // Distribute ports along the relevant side of the path perimeter
-    // Input: left side (angle ~π), Output: right side (angle ~0)
     const centerAngle = side === 'input' ? Math.PI : 0;
-    const arcSpan = Math.PI * 0.6; // ~108° spread
-    const startAngle = centerAngle - arcSpan / 2;
-    const step = total > 1 ? arcSpan / (total - 1) : 0;
-    const targetAngle = startAngle + step * index;
+    const arcSpan = Math.PI * 0.6; // 108° spread
+    let targetAngle;
+
+    if (total === 1) {
+      targetAngle = centerAngle;
+    } else {
+      const startAngle = centerAngle - arcSpan / 2;
+      const step = arcSpan / (total - 1);
+      targetAngle = startAngle + step * index;
+    }
 
     const pt = this.#findPointAtAngle(targetAngle, pathEl);
     const scaled = this.#scalePoint(pt.x, pt.y, size);
+    const center = this.#getCenter();
+    const angleDeg = Math.atan2(pt.y - center.y, pt.x - center.x) * 180 / Math.PI;
 
-    // Connection angle = direction from center to edge point
-    const angleDeg = Math.atan2(pt.y - cy, pt.x - cx) * 180 / Math.PI;
-
-    return {
-      x: scaled.x,
-      y: scaled.y,
-      angle: angleDeg,
-    };
+    const result = { x: scaled.x, y: scaled.y, angle: angleDeg };
+    this.#posCache.set(key, result);
+    return result;
   }
 
   getClipPath(size) {
-    const pathEl = this.#getPathElement();
-    if (!pathEl) return null;
-    const totalLen = pathEl.getTotalLength();
-    const steps = 32;
-    const points = [];
-
-    for (let i = 0; i < steps; i++) {
-      const pt = pathEl.getPointAtLength((totalLen * i) / steps);
-      const scaled = this.#scalePoint(pt.x, pt.y, size);
-      points.push(`${scaled.x}px ${scaled.y}px`);
-    }
-
-    return `polygon(${points.join(', ')})`;
+    return null; // We use SVG background layer instead of clip-path
   }
 
   getOutlinePath(size) {
-    // Scale the original path data to node size
-    const [vx, vy, vw, vh] = this.#vb;
-    const sx = size.width / vw;
-    const sy = size.height / vh;
-    return this.pathData; // Return raw — CSS transform handles scaling
+    return this.pathData;
   }
 
   getBorderRadius() {

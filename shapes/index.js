@@ -9,6 +9,7 @@ import { PillShape } from './PillShape.js';
 import { CircleShape } from './CircleShape.js';
 import { DiamondShape } from './DiamondShape.js';
 import { CommentShape } from './CommentShape.js';
+import { SVGShape, createSVGShape, SVG_PRESETS } from './SVGShape.js';
 
 /** @type {Map<string, NodeShape>} */
 const registry = new Map();
@@ -25,6 +26,11 @@ registry.set('pill', PILL);
 registry.set('circle', CIRCLE);
 registry.set('diamond', DIAMOND);
 registry.set('comment', COMMENT);
+
+// Register SVG preset shapes
+for (const [name, pathData] of Object.entries(SVG_PRESETS)) {
+  registry.set(name, createSVGShape(name, pathData));
+}
 
 /**
  * Get shape by name
@@ -44,4 +50,4 @@ export function registerShape(name, shape) {
   registry.set(name, shape);
 }
 
-export { NodeShape, RectShape, PillShape, CircleShape, DiamondShape, CommentShape };
+export { NodeShape, RectShape, PillShape, CircleShape, DiamondShape, CommentShape, SVGShape, createSVGShape, SVG_PRESETS };

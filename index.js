@@ -30,7 +30,7 @@ export { SnapGrid } from './interactions/SnapGrid.js';
 export { ConnectFlow } from './interactions/ConnectFlow.js';
 
 // Shapes
-export { NodeShape, RectShape, PillShape, CircleShape, DiamondShape, CommentShape, getShape, registerShape } from './shapes/index.js';
+export { NodeShape, RectShape, PillShape, CircleShape, DiamondShape, CommentShape, getShape, registerShape, SVGShape, createSVGShape, SVG_PRESETS } from './shapes/index.js';
 
 // Themes (unified)
 export { applyTheme, extractTheme, DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE, GREY_NEUTRAL } from './themes/Theme.js';

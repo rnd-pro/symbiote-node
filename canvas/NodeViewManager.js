@@ -11,6 +11,7 @@
 import { Drag } from '../interactions/Drag.js';
 import { Selector } from '../interactions/Selector.js';
 import { animateOut } from '@symbiotejs/symbiote';
+import { getShape } from '../shapes/index.js';
 
 export class NodeViewManager {
 
@@ -134,6 +135,21 @@ export class NodeViewManager {
 
     this.#nodesLayer.appendChild(el);
     this.#nodeViews.set(node.id, el);
+
+    // Apply dynamic clip-path from shape (for SVGShape and custom shapes)
+    requestAnimationFrame(() => {
+      const shape = getShape(node.shape);
+      const size = { width: el.offsetWidth || 180, height: el.offsetHeight || 80 };
+      const clipPath = shape.getClipPath(size);
+      if (clipPath) {
+        el.style.clipPath = clipPath;
+        el.style.borderRadius = '0';
+      }
+      const radius = shape.getBorderRadius(size);
+      if (radius && radius !== 'var(--sn-node-radius, 10px)') {
+        el.style.borderRadius = radius;
+      }
+    });
 
     // Subgraph preview canvas
     if (node._isSubgraph) {

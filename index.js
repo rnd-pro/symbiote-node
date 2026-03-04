@@ -12,6 +12,8 @@ export { Node } from './core/Node.js';
 export { Connection } from './core/Connection.js';
 export { Frame } from './core/Frame.js';
 export { Socket, Port, Input, Output, Control, InputControl, uid } from './core/Socket.js';
+export { editorToText, textToGraph, textToEditor } from './core/GraphText.js';
+export { editorToMermaid, mermaidToGraph } from './core/GraphMermaid.js';
 
 // Canvas
 export { NodeCanvas } from './canvas/NodeCanvas/NodeCanvas.js';

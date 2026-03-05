@@ -96,9 +96,9 @@ export class ConnectionRenderer {
    * @param {string} nodeId
    */
   updateForNode(nodeId) {
-    // Only clear angle registry for the dragged node
+    // Only clear slot registry for the dragged node
     const nodeEl = this.#nodeViews.get(nodeId);
-    if (nodeEl) nodeEl._usedAngles = [];
+    if (nodeEl) nodeEl._usedSlots = new Set();
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId || conn.to === nodeId) {
         this.#render(conn, nodeId);
@@ -197,28 +197,38 @@ export class ConnectionRenderer {
           angle = adjustedBase + offset;
         }
 
-        // 4. Quantize angle to fixed grid for consistent discrete movement
-        const step = Math.PI / 12; // 15° grid
-        angle = Math.round(angle / step) * step;
+        // 4. Slot pool: 24 discrete slots (15° each), integer indices
+        const SLOT_COUNT = 24;
+        const step = (2 * Math.PI) / SLOT_COUNT; // 15° per slot
+        if (!nodeEl._usedSlots) nodeEl._usedSlots = new Set();
 
-        // 5. Collision avoidance: bump to next grid slot if occupied
-        if (!nodeEl._usedAngles) nodeEl._usedAngles = [];
-        let nudged = angle;
-        let attempts = 0;
-        const TWO_PI = 2 * Math.PI;
-        while (attempts < 24) {
-          const collision = nodeEl._usedAngles.some(used => {
-            let diff = Math.abs(nudged - used) % TWO_PI;
-            if (diff > Math.PI) diff = TWO_PI - diff;
-            return diff < step * 0.5;
-          });
-          if (!collision) break;
-          nudged = (nudged + step) % TWO_PI;
-          attempts++;
+        // Convert angle to nearest slot index
+        let slot = Math.round(angle / step) % SLOT_COUNT;
+        if (slot < 0) slot += SLOT_COUNT;
+
+        // Find nearest free slot if occupied
+        if (nodeEl._usedSlots.has(slot)) {
+          let found = false;
+          for (let offset = 1; offset <= SLOT_COUNT / 2; offset++) {
+            const fwd = (slot + offset) % SLOT_COUNT;
+            if (!nodeEl._usedSlots.has(fwd)) {
+              slot = fwd;
+              found = true;
+              break;
+            }
+            const bwd = (slot - offset + SLOT_COUNT) % SLOT_COUNT;
+            if (!nodeEl._usedSlots.has(bwd)) {
+              slot = bwd;
+              found = true;
+              break;
+            }
+          }
         }
-        nodeEl._usedAngles.push(nudged);
+        nodeEl._usedSlots.add(slot);
 
-        const pos = shape.getEdgePoint(nudged, size);
+        // Convert slot index back to angle
+        const finalAngle = slot * step;
+        const pos = shape.getEdgePoint(finalAngle, size);
         return { x: pos.x, y: pos.y, angle: pos.angle };
       }
 

@@ -117,6 +117,45 @@ function initDemo() {
   editor.addNode(debug);
   editor.addNode(subgraph);
 
+  // ── SVG Vector Nodes — showcase area ──
+
+  // Hexagon: infrastructure/server hub
+  const svgHex = new Node('API Gateway', { type: 'gateway', category: 'server', shape: 'hexagon' });
+  svgHex.addInput('req', new Input(dataSocket, 'Request'));
+  svgHex.addOutput('res', new Output(dataSocket, 'Response'));
+
+  // Star: highlight/event node
+  const svgStar = new Node('Event', { type: 'event', category: 'control', shape: 'star' });
+  svgStar.addOutput('signal', new Output(execSocket, 'Signal'));
+
+  // Cloud: cloud service node
+  const svgCloud = new Node('Cloud Storage', { type: 'storage', category: 'instance', shape: 'cloud' });
+  svgCloud.addInput('data', new Input(dataSocket, 'Data'));
+  svgCloud.addOutput('url', new Output(textSocket, 'URL'));
+
+  // Shield: security/auth node
+  const svgShield = new Node('Auth Guard', { type: 'auth', category: 'server', shape: 'shield' });
+  svgShield.addInput('token', new Input(textSocket, 'Token'));
+  svgShield.addOutput('ok', new Output(execSocket, 'OK'));
+  svgShield.addOutput('fail', new Output(execSocket, 'Fail'));
+
+  // Heart: health-check node
+  const svgHeart = new Node('Health', { type: 'health', category: 'instance', shape: 'heart' });
+  svgHeart.addInput('ping', new Input(execSocket, 'Ping'));
+  svgHeart.addOutput('pong', new Output(execSocket, 'Pong'));
+
+  editor.addNode(svgHex);
+  editor.addNode(svgStar);
+  editor.addNode(svgCloud);
+  editor.addNode(svgShield);
+  editor.addNode(svgHeart);
+
+  // SVG-to-SVG connections
+  editor.addConnection(new Connection(svgStar, 'signal', svgShield, 'token'));
+  editor.addConnection(new Connection(svgShield, 'ok', svgHex, 'req'));
+  editor.addConnection(new Connection(svgHex, 'res', svgCloud, 'data'));
+  editor.addConnection(new Connection(svgHeart, 'pong', svgHex, 'req'));
+
   // ── Connections — real data flow ──
   // Main path: Trigger → HTTP → AI Agent → Filter → Merge(A) → Save
   editor.addConnection(new Connection(trigger, 'exec', httpReq, 'exec'));
@@ -253,6 +292,13 @@ function initDemo() {
 
       // Demo: preview area on AI Agent (text) and Debug (text)
       canvas.setPreview(aiAgent.id, '▶ Processing prompt...\n✓ 847 tokens used\n✓ Response cached', 'text');
+
+      // Position SVG vector nodes below main pipeline
+      canvas.setNodePosition(svgStar.id, 80, 700);
+      canvas.setNodePosition(svgShield.id, 300, 700);
+      canvas.setNodePosition(svgHex.id, 560, 700);
+      canvas.setNodePosition(svgCloud.id, 820, 700);
+      canvas.setNodePosition(svgHeart.id, 80, 960);
     }, 200);
 
     // Demo frame around data source nodes

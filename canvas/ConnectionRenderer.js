@@ -33,6 +33,9 @@ export class ConnectionRenderer {
   /** @type {function} */
   #getZoom;
 
+  /** @type {function|null} - callback when dot is dragged: (socketData) => void */
+  #onDotDrag = null;
+
   /** @type {'bezier'|'orthogonal'|'straight'} */
   #pathStyle = 'bezier';
 
@@ -44,13 +47,14 @@ export class ConnectionRenderer {
    * @param {function} config.onConnectionClick - (connId, event)
    * @param {function} config.getZoom - Returns current zoom level
    */
-  constructor({ svgLayer, dotLayer, nodeViews, editor, onConnectionClick, getZoom }) {
+  constructor({ svgLayer, dotLayer, nodeViews, editor, onConnectionClick, getZoom, onDotDrag }) {
     this.#svgLayer = svgLayer;
     this.#dotLayer = dotLayer || svgLayer;
     this.#nodeViews = nodeViews;
     this.#editor = editor;
     this.#onConnectionClick = onConnectionClick;
     this.#getZoom = getZoom || (() => 1);
+    this.#onDotDrag = onDotDrag || null;
   }
 
   /** @returns {Map<string, import('../core/Connection.js').Connection>} */
@@ -466,7 +470,23 @@ export class ConnectionRenderer {
       dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       dot.setAttribute('data-conn-dot', dotId);
       dot.setAttribute('r', '5');
+      dot.style.cursor = 'crosshair';
       this.#dotLayer.appendChild(dot);
+
+      // Wire pointerdown for connection dragging from overlay dots
+      if (this.#onDotDrag) {
+        dot.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const conn = this.#connectionData.get(connId);
+          if (!conn) return;
+          // Resolve socket data: which node/key/side this dot represents
+          const socketData = end === 'start'
+            ? { nodeId: conn.from, key: conn.out, side: 'output' }
+            : { nodeId: conn.to, key: conn.in, side: 'input' };
+          this.#onDotDrag(socketData);
+        });
+      }
     }
     dot.setAttribute('cx', x);
     dot.setAttribute('cy', y);

@@ -146,6 +146,12 @@ export class NodeCanvas extends Symbiote {
       editor,
       onConnectionClick: (connId, e) => this.#handleConnectionClick(connId, e),
       getZoom: () => this.$.zoom,
+      onDotDrag: (socketData) => {
+        // Trigger ConnectFlow pick from overlay dot click
+        if (this.#connectFlow && !this.#readonly) {
+          this.#connectFlow.pickSocket(socketData);
+        }
+      },
     });
 
     this.#pseudo = new PseudoConnection(this.ref.pseudoSvg);

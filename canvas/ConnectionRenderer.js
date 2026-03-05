@@ -205,14 +205,15 @@ export class ConnectionRenderer {
         if (!nodeEl._usedAngles) nodeEl._usedAngles = [];
         let nudged = angle;
         let attempts = 0;
-        while (attempts < 12) {
+        const TWO_PI = 2 * Math.PI;
+        while (attempts < 24) {
           const collision = nodeEl._usedAngles.some(used => {
-            let diff = Math.abs(nudged - used);
-            if (diff > Math.PI) diff = 2 * Math.PI - diff;
-            return diff < step * 0.5; // half-step tolerance
+            let diff = Math.abs(nudged - used) % TWO_PI;
+            if (diff > Math.PI) diff = TWO_PI - diff;
+            return diff < step * 0.5;
           });
           if (!collision) break;
-          nudged += step;
+          nudged = (nudged + step) % TWO_PI;
           attempts++;
         }
         nodeEl._usedAngles.push(nudged);

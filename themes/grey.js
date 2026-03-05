@@ -52,6 +52,7 @@ export const GREY_NEUTRAL = {
     '--sn-node-border': 'hsl(var(--sn-hue-base), var(--sn-sat), var(--sn-lit-border))',
     '--sn-node-radius': '6px',
     '--sn-node-shadow': '0 2px 8px rgba(0, 0, 0, 0.4)',
+    '--sn-shadow-color': 'rgba(0, 0, 0, 0.4)',
     '--sn-node-header-bg': 'hsl(var(--sn-hue-base), var(--sn-sat), 20%)',
     '--sn-node-selected': 'hsl(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent))',
     '--sn-node-hover': 'hsl(var(--sn-hue-base), var(--sn-sat), var(--sn-lit-hover))',

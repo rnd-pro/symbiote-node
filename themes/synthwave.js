@@ -52,6 +52,7 @@ export const SYNTHWAVE = {
     '--sn-node-border': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), var(--sn-lit-border))',
     '--sn-node-radius': '12px',
     '--sn-node-shadow': '0 4px 20px hsla(var(--sn-hue-base), var(--sn-sat-vivid), 50%, 0.2)',
+    '--sn-shadow-color': 'hsla(var(--sn-hue-base), var(--sn-sat-vivid), 50%, 0.2)',
     '--sn-node-selected': 'hsl(var(--sn-hue-accent), var(--sn-sat-vivid), 50%)',
     '--sn-node-hover': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), var(--sn-lit-hover))',
     '--sn-node-header-bg': 'hsl(var(--sn-hue-base), var(--sn-sat), 9%)',

@@ -86,6 +86,16 @@ node-canvas {
   }
 }
 
+/* Connector endpoint dots */
+.sn-conn-dot {
+  fill: var(--sn-conn-color, #4a9eff);
+  stroke: rgba(255, 255, 255, 0.6);
+  stroke-width: 1.5;
+  opacity: 0.9;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px var(--sn-conn-color, #4a9eff));
+}
+
 .pseudo-path {
   fill: none;
   stroke: var(--sn-conn-color, #4a9eff);

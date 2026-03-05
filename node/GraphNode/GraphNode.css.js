@@ -359,22 +359,16 @@ graph-node {
 
   /* SVG shape states — target inline svg > path directly.
      border/box-shadow have no effect on SVG nodes (border: none).
-     vector-effect: non-scaling-stroke makes stroke-width in screen px,
-     so stroke-width: 1 = exactly 1px like HTML node border. */
-  &[data-svg-shape] > svg > path {
-    vector-effect: non-scaling-stroke;
-  }
-
+     Only stroke COLOR changes on state — width stays the same as inactive,
+     matching HTML nodes where border-width stays 1px on selection. */
   &[data-svg-shape][data-selected] > svg > path {
     stroke: var(--sn-node-selected, #4a9eff);
-    stroke-width: 1;
     filter: drop-shadow(0 0 3px var(--sn-node-selected, #4a9eff));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 
   &[data-svg-shape][data-error] > svg > path {
     stroke: var(--sn-danger-color, #ef4444);
-    stroke-width: 1;
     filter: drop-shadow(0 0 3px var(--sn-danger-color, #ef4444));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
@@ -387,13 +381,11 @@ graph-node {
 
   &[data-svg-shape][data-processing] > svg > path {
     stroke: var(--sn-node-accent, var(--sn-node-selected, #4a9eff));
-    stroke-width: 1;
     animation: sn-svg-pulse 1s ease-in-out infinite;
   }
 
   &[data-svg-shape][data-completed] > svg > path {
     stroke: var(--sn-success-color, #5cd87a);
-    stroke-width: 1;
     filter: drop-shadow(0 0 3px var(--sn-success-color, #5cd87a));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }

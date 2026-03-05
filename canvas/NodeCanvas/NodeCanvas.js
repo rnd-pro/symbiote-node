@@ -690,11 +690,18 @@ export class NodeCanvas extends Symbiote {
     el._frameData = frame;
     el.setAttribute('frame-id', frame.id);
 
+    // Set frame color directly as CSS variable (reliable, no dependency on Symbiote state)
+    el.style.setProperty('--frame-color', frame.color);
+
     // Wait for Symbiote render, then set state
     requestAnimationFrame(() => {
       if (el.$) {
         el.$.label = frame.label;
         el.$.color = frame.color;
+      } else {
+        // Fallback: set label text directly
+        const labelEl = el.querySelector('.sn-frame-label');
+        if (labelEl) labelEl.textContent = frame.label;
       }
     });
 

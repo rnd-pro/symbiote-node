@@ -12,8 +12,10 @@ import { template } from './GraphFrame.tpl.js';
 import { styles } from './GraphFrame.css.js';
 
 export class GraphFrame extends Symbiote {
-  label = 'Group';
-  color = '#4a9eff';
+  init$ = {
+    label: 'Group',
+    color: '#4a9eff',
+  };
 
   renderCallback() {
     this.sub('color', (val) => {

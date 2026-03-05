@@ -59,14 +59,60 @@ Node graph editors are the standard for visual programming — from Blender's Ge
 - Socket compatibility validation
 - Socket highlighting during connection drag
 
-### 📐 Shapes
-- `RectShape` — standard rectangular node
-- `PillShape` — rounded compact node
-- `CircleShape` — hub/junction node
-- `DiamondShape` — decision/condition node
-- `CommentShape` — annotation/documentation node
-- Extensible via `NodeShape` base class + `registerShape()`
-- Adaptive socket positioning per shape
+### 📐 Node Shapes
+
+symbiote-node supports two coexisting node rendering modes on the same canvas:
+
+**HTML Nodes** (default) — CSS-styled rectangles with `border-radius`, `box-shadow`, `background`.
+
+**SVG Nodes** — arbitrary vector shapes with perimeter-aware connector positioning.
+When a node has a shape assigned, the CSS background is replaced by an inline `<svg><path>` element.
+Connectors automatically slide along the shape's mathematical perimeter.
+
+#### Built-in SVG Shape Presets
+
+| Name | Description |
+|------|-------------|
+| `hexagon` | Six-sided polygon |
+| `star` | Five-pointed star |
+| `cloud` | Cloud silhouette |
+| `shield` | Shield shape |
+| `heart` | Heart shape |
+| `rect`, `pill`, `circle`, `diamond`, `comment` | Standard HTML shapes |
+
+#### Usage
+
+```js
+import { Node, createSVGShape, SVG_PRESETS, registerShape } from './index.js';
+
+// Use a built-in preset
+const node = new Node('Database', { category: 'server', shape: 'hexagon' });
+
+// Create a custom SVG shape from path data
+const myShape = createSVGShape('myshape', 'M12 2L22 8V16L12 22L2 16V8Z');
+registerShape('myshape', myShape);
+
+const node2 = new Node('Custom', { shape: 'myshape' });
+```
+
+#### Per-Shape CSS Theming
+
+SVG shapes support per-shape color overrides via CSS custom properties.
+The cascade is: **shape-specific → global shape → node bg**:
+
+```css
+/* On the canvas element or any ancestor */
+node-canvas {
+  /* Override a specific shape */
+  --sn-shape-shield-fill: hsl(142, 40%, 18%);  /* green tint for shield */
+  --sn-shape-star-fill:   hsl(43, 60%, 18%);   /* gold tint for star */
+
+  /* Or override all SVG shapes at once */
+  --sn-shape-fill:   var(--sn-node-bg);
+  --sn-shape-stroke: var(--sn-node-border);
+}
+```
+
 
 ### ⚡ Flow Simulator
 - Topological sort-based data flow animation

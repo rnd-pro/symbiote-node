@@ -51,6 +51,9 @@ export class NodeViewManager {
   /** @type {HTMLElement} */
   #nodesLayer;
 
+  /** @type {number} Z-index counter: increments on each select/drag */
+  #zCounter = 1;
+
   /**
    * @param {object} config
    * @param {Map<string, HTMLElement>} config.nodeViews - shared Map
@@ -132,6 +135,8 @@ export class NodeViewManager {
           dragStart = { x: e.pageX, y: e.pageY };
           this.#autoSelectOnDragStart(node.id, e);
           this.#captureDragStartPositions();
+          this.#bringToFront(node.id);
+          this.#applyLift(el);
           this.#editor.emit('nodepicked', node);
         },
         onTranslate: (x, y) => {
@@ -242,6 +247,34 @@ export class NodeViewManager {
       const accumulate = e.ctrlKey || e.metaKey;
       this.#selector.selectNode(nodeId, accumulate);
     }
+    this.#bringToFront(nodeId);
+  }
+
+  /**
+   * Bring a node to front by setting highest z-index
+   * @param {string} nodeId
+   */
+  #bringToFront(nodeId) {
+    const el = this.#nodeViews.get(nodeId);
+    if (el) {
+      el.style.zIndex = ++this.#zCounter;
+    }
+  }
+
+  /**
+   * Apply lift effect: scale up + shadow + parallax offset
+   * @param {HTMLElement} el
+   */
+  #applyLift(el) {
+    el.classList.add('sn-node-lifted');
+  }
+
+  /**
+   * Remove lift effect on drop
+   * @param {HTMLElement} el
+   */
+  #removeLift(el) {
+    el.classList.remove('sn-node-lifted');
   }
 
   #captureDragStartPositions() {
@@ -304,6 +337,9 @@ export class NodeViewManager {
     for (const [, nodeEl] of this.#nodeViews) {
       delete nodeEl._dragStartPos;
     }
+
+    // Remove lift effect
+    this.#removeLift(el);
 
     // Click vs drag detection
     if (dragStart && e && Selector.isTwitch(dragStart, { x: e.pageX, y: e.pageY })) {

@@ -358,18 +358,19 @@ graph-node {
   }
 
   /* SVG shape states — target inline svg > path directly.
-     border/box-shadow have no effect on SVG nodes (border: none). */
+     border/box-shadow have no effect on SVG nodes (border: none).
+     stroke-width kept thin to match HTML node border visual weight. */
   &[data-svg-shape][data-selected] > svg > path {
     stroke: var(--sn-node-selected, #4a9eff);
-    stroke-width: 1.5;
-    filter: drop-shadow(0 0 8px var(--sn-node-selected, #4a9eff));
+    stroke-width: 0.8;
+    filter: drop-shadow(0 0 4px var(--sn-node-selected, #4a9eff));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 
   &[data-svg-shape][data-error] > svg > path {
     stroke: var(--sn-danger-color, #ef4444);
-    stroke-width: 1.5;
-    filter: drop-shadow(0 0 10px var(--sn-danger-color, #ef4444));
+    stroke-width: 0.8;
+    filter: drop-shadow(0 0 5px var(--sn-danger-color, #ef4444));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 
@@ -381,14 +382,14 @@ graph-node {
 
   &[data-svg-shape][data-processing] > svg > path {
     stroke: var(--sn-node-accent, var(--sn-node-selected, #4a9eff));
-    stroke-width: 1.5;
+    stroke-width: 0.8;
     animation: sn-svg-pulse 1s ease-in-out infinite;
   }
 
   &[data-svg-shape][data-completed] > svg > path {
     stroke: var(--sn-success-color, #5cd87a);
-    stroke-width: 1.5;
-    filter: drop-shadow(0 0 6px var(--sn-success-color, #5cd87a));
+    stroke-width: 0.8;
+    filter: drop-shadow(0 0 4px var(--sn-success-color, #5cd87a));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 
@@ -439,11 +440,12 @@ graph-node {
     transform: translateX(calc(-100% + 12px));
   }
 
-  /* Compatible SVG node: glow the whole element */
+  /* Compatible SVG node during drag: subtle outline hint only — dots handle highlight */
   &[data-svg-shape][data-port-hint] > svg > path {
-    animation: sn-svg-pulse 0.8s ease-in-out infinite;
     stroke: var(--sn-node-selected, #4a9eff);
-    stroke-width: 1.5;
+    stroke-width: 0.5;
+    opacity: 0.8;
+    transition: stroke 0.15s ease, opacity 0.15s ease;
   }
 
   /* Incompatible dimming for nodes without compatible ports */

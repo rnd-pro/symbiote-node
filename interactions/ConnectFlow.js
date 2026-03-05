@@ -111,6 +111,18 @@ export class ConnectFlow {
     return this.#picked;
   }
 
+  /**
+   * Externally initiate a connection drag from socket data
+   * @param {SocketData} data
+   */
+  pickSocket(data) {
+    // Ensure this socket is in the registry for snap targeting
+    if (!this.#sockets.has(data)) {
+      this.#sockets.add(data);
+    }
+    this.#pick(data);
+  }
+
   #pick(data) {
     this.#picked = data;
     const pos = this.#getSocketWorldPosition(data);

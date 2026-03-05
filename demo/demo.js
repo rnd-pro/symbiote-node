@@ -171,14 +171,51 @@ function initDemo() {
   // Save → Debug
   editor.addConnection(new Connection(save, 'status', debug, 'inspect'));
 
-  // Context menu add node (from right-click or drop-in-empty)
-  editor.on('contextadd', ({ x, y }) => {
-    const newNode = new Node('New Step', { type: 'default', category: 'default' });
+  // Node type catalog for context menu
+  const NODE_TYPES = [
+    { label: 'Standard Node', type: 'default', category: 'default', shape: undefined },
+    { label: 'Trigger', type: 'trigger', category: 'server', shape: undefined },
+    { label: 'Action', type: 'action', category: 'control', shape: undefined },
+    { label: 'Hexagon', type: 'gateway', category: 'server', shape: 'hexagon' },
+    { label: 'Star', type: 'event', category: 'control', shape: 'star' },
+    { label: 'Cloud', type: 'storage', category: 'instance', shape: 'cloud' },
+    { label: 'Shield', type: 'auth', category: 'server', shape: 'shield' },
+    { label: 'Heart', type: 'health', category: 'instance', shape: 'heart' },
+    { label: 'Pill', type: 'filter', category: 'default', shape: 'pill' },
+    { label: 'Circle', type: 'merge', category: 'control', shape: 'circle' },
+  ];
+
+  /**
+   * Create node from type definition at position
+   * @param {object} def
+   * @param {number} x
+   * @param {number} y
+   */
+  const addTypedNode = (def, x, y) => {
+    const opts = { type: def.type, category: def.category };
+    if (def.shape) opts.shape = def.shape;
+    const newNode = new Node(def.label, opts);
     newNode.addInput('in', new Input(dataSocket, 'Input'));
     newNode.addOutput('out', new Output(dataSocket, 'Output'));
     editor.addNode(newNode);
     const c = document.querySelector('node-canvas');
     if (c) c.setNodePosition(newNode.id, x, y);
+  };
+
+  // Context menu add node — show typed catalog
+  editor.on('contextadd', ({ x, y }) => {
+    const c = document.querySelector('node-canvas');
+    if (!c) return;
+    const items = NODE_TYPES.map((def) => ({
+      label: def.label,
+      icon: def.shape ? 'hexagon' : 'add_box',
+      action: () => addTypedNode(def, x, y),
+    }));
+    const container = c.ref?.canvasContainer || c;
+    const rect = container.getBoundingClientRect();
+    const menuX = x * (c.$.zoom || 1) + (c.$.panX || 0);
+    const menuY = y * (c.$.zoom || 1) + (c.$.panY || 0);
+    c.ref?.contextMenu?.show(menuX, menuY, items);
   });
 
   // Context menu add frame

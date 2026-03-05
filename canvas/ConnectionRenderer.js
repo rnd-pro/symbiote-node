@@ -36,6 +36,9 @@ export class ConnectionRenderer {
   /** @type {'bezier'|'orthogonal'|'straight'} */
   #pathStyle = 'bezier';
 
+  /** @type {Map<string, {x: number, y: number, angle: number}>} */
+  #offsetCache = new Map();
+
   /**
    * @param {object} config
    * @param {SVGElement} config.svgLayer
@@ -93,20 +96,12 @@ export class ConnectionRenderer {
    * @param {string} nodeId
    */
   updateForNode(nodeId) {
-    // Clear angle registries for collision avoidance
+    // Only clear angle registry for the dragged node
     const nodeEl = this.#nodeViews.get(nodeId);
     if (nodeEl) nodeEl._usedAngles = [];
-    // Also clear connected nodes' registries
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId || conn.to === nodeId) {
-        const otherId = conn.from === nodeId ? conn.to : conn.from;
-        const otherEl = this.#nodeViews.get(otherId);
-        if (otherEl) otherEl._usedAngles = [];
-      }
-    }
-    for (const [, conn] of this.#connectionData) {
-      if (conn.from === nodeId || conn.to === nodeId) {
-        this.#render(conn);
+        this.#render(conn, nodeId);
       }
     }
   }
@@ -269,7 +264,7 @@ export class ConnectionRenderer {
    * Render a single connection SVG path with tangent-aware Bézier and gradient coloring
    * @param {import('../core/Connection.js').Connection} conn
    */
-  #render(conn) {
+  #render(conn, draggedNodeId = null) {
     const fromEl = this.#nodeViews.get(conn.from);
     const toEl = this.#nodeViews.get(conn.to);
     if (!fromEl || !toEl) return;
@@ -287,8 +282,27 @@ export class ConnectionRenderer {
       y: toPos.y + (toEl.offsetHeight || 100) / 2,
     };
 
-    const fromOffset = this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
-    const toOffset = this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
+    // For dragged node: recalculate. For non-dragged: use cached offset
+    const fromCacheKey = `${conn.id}:${conn.from}`;
+    const toCacheKey = `${conn.id}:${conn.to}`;
+
+    let fromOffset;
+    if (!draggedNodeId || draggedNodeId === conn.from) {
+      fromOffset = this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
+      this.#offsetCache.set(fromCacheKey, fromOffset);
+    } else {
+      fromOffset = this.#offsetCache.get(fromCacheKey)
+        || this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
+    }
+
+    let toOffset;
+    if (!draggedNodeId || draggedNodeId === conn.to) {
+      toOffset = this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
+      this.#offsetCache.set(toCacheKey, toOffset);
+    } else {
+      toOffset = this.#offsetCache.get(toCacheKey)
+        || this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
+    }
 
     const startX = fromPos.x + fromOffset.x;
     const startY = fromPos.y + fromOffset.y;

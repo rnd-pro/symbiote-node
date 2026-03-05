@@ -267,16 +267,8 @@ export class ConnectionRenderer {
 
         // Check cache first (for non-dragged nodes)
         if (nodeEl._slotCache.has(cacheKey)) {
-          const cachedSlot = nodeEl._slotCache.get(cacheKey);
-          const cachedAngle = cachedSlot * SLOT_STEP;
-          // Direct elliptic math — guaranteed unique coords per angle
-          const rx = size.width / 2 * 0.9;
-          const ry = size.height / 2 * 0.9;
-          return {
-            x: size.width / 2 + Math.cos(cachedAngle) * rx,
-            y: size.height / 2 + Math.sin(cachedAngle) * ry,
-            angle: cachedAngle * 180 / Math.PI,
-          };
+          const cached = nodeEl._slotCache.get(cacheKey);
+          return { x: cached.x, y: cached.y, angle: cached.angle };
         }
 
         // Calculate ideal slot index
@@ -294,17 +286,28 @@ export class ConnectionRenderer {
           }
         }
         nodeEl._usedSlots.add(slot);
-        nodeEl._slotCache.set(cacheKey, slot);
 
-        // Direct elliptic math — guaranteed unique coords per angle
         const finalAngle = slot * SLOT_STEP;
-        const rx = size.width / 2 * 0.9;
-        const ry = size.height / 2 * 0.9;
-        return {
-          x: size.width / 2 + Math.cos(finalAngle) * rx,
-          y: size.height / 2 + Math.sin(finalAngle) * ry,
-          angle: finalAngle * 180 / Math.PI,
+
+        // Blend: edge point (on perimeter) + ellipse (guaranteed separation)
+        // Straight edges cause getEdgePoint to return same coords for different angles.
+        // Blending with an inscribed ellipse ensures minimum pixel distance.
+        const edgePos = shape.getEdgePoint(finalAngle, size);
+        const halfW = size.width / 2;
+        const halfH = size.height / 2;
+        const ellipseX = halfW + Math.cos(finalAngle) * halfW * 0.85;
+        const ellipseY = halfH + Math.sin(finalAngle) * halfH * 0.85;
+
+        // 70% edge (shape-aware) + 30% ellipse (guarantees spread)
+        const BLEND = 0.3;
+        const result = {
+          x: edgePos.x * (1 - BLEND) + ellipseX * BLEND,
+          y: edgePos.y * (1 - BLEND) + ellipseY * BLEND,
+          angle: edgePos.angle,
         };
+
+        nodeEl._slotCache.set(cacheKey, result);
+        return result;
       }
 
       // Fixed mode: distribute ports at preset angles

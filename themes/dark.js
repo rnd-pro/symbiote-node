@@ -40,6 +40,10 @@ export const DARK_DEFAULT = {
     '--sn-alpha-subtle': '0.15',
     '--sn-alpha-faint': '0.06',
 
+    // Semantic state colors (composed from atomics)
+    '--sn-danger-color': 'hsl(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent))',
+    '--sn-success-color': 'hsl(var(--sn-hue-success), var(--sn-sat-vivid), var(--sn-lit-accent))',
+
     // === Composed tokens (auto from atomics) ===
 
     // Canvas

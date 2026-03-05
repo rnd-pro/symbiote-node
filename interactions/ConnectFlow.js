@@ -46,6 +46,12 @@ export class ConnectFlow {
   /** @type {function|null} */
   #onDropEmpty = null;
 
+  /** @type {function|null} - called during drag with world XY + picked socket */
+  #onCompatibleMove = null;
+
+  /** @type {number} - last time compatible move was emitted (ms) */
+  #lastMoveTime = 0;
+
   /** @type {Set<SocketData>} */
   #sockets = new Set();
 
@@ -69,6 +75,7 @@ export class ConnectFlow {
     this.#onPseudoMove = callbacks.onPseudoMove;
     this.#onPseudoEnd = callbacks.onPseudoEnd;
     this.#onDropEmpty = callbacks.onDropEmpty || null;
+    this.#onCompatibleMove = callbacks.onCompatibleMove || null;
 
     window.addEventListener('pointermove', this.#onMove);
     window.addEventListener('pointerup', this.#onUp);
@@ -121,6 +128,13 @@ export class ConnectFlow {
     const endY = (e.clientY - t.rect.top - t.y) / t.k;
 
     if (this.#onPseudoMove) this.#onPseudoMove(startPos.x, startPos.y, endX, endY);
+
+    // Throttle to ~60fps
+    const now = performance.now();
+    if (this.#onCompatibleMove && now - this.#lastMoveTime > 16) {
+      this.#lastMoveTime = now;
+      this.#onCompatibleMove(endX, endY, this.#picked);
+    }
   };
 
   #onUp = (e) => {

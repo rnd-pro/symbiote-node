@@ -327,6 +327,16 @@ graph-node {
     box-shadow: none;
     border-radius: 0;
     overflow: visible;
+    cursor: default;
+
+    /* Move cursor only over SVG path fill area */
+    & > svg {
+      pointer-events: none;
+      & > path {
+        pointer-events: visibleFill;
+        cursor: move;
+      }
+    }
 
     & .sn-node-header {
       background: transparent;

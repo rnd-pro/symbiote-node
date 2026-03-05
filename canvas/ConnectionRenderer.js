@@ -84,6 +84,17 @@ export class ConnectionRenderer {
    * @param {string} nodeId
    */
   updateForNode(nodeId) {
+    // Clear angle registries for collision avoidance
+    const nodeEl = this.#nodeViews.get(nodeId);
+    if (nodeEl) nodeEl._usedAngles = [];
+    // Also clear connected nodes' registries
+    for (const [, conn] of this.#connectionData) {
+      if (conn.from === nodeId || conn.to === nodeId) {
+        const otherId = conn.from === nodeId ? conn.to : conn.from;
+        const otherEl = this.#nodeViews.get(otherId);
+        if (otherEl) otherEl._usedAngles = [];
+      }
+    }
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId || conn.to === nodeId) {
         this.#render(conn);
@@ -182,7 +193,24 @@ export class ConnectionRenderer {
           angle = adjustedBase + offset;
         }
 
-        const pos = shape.getEdgePoint(angle, size);
+        // 4. Collision avoidance: nudge if too close to an existing angle
+        const minGap = Math.PI / 12; // ~15° minimum gap between connectors
+        if (!nodeEl._usedAngles) nodeEl._usedAngles = [];
+        let nudged = angle;
+        let attempts = 0;
+        while (attempts < 8) {
+          const collision = nodeEl._usedAngles.some(used => {
+            let diff = Math.abs(nudged - used);
+            if (diff > Math.PI) diff = 2 * Math.PI - diff;
+            return diff < minGap;
+          });
+          if (!collision) break;
+          nudged += minGap;
+          attempts++;
+        }
+        nodeEl._usedAngles.push(nudged);
+
+        const pos = shape.getEdgePoint(nudged, size);
         return { x: pos.x, y: pos.y, angle: pos.angle };
       }
 

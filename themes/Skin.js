@@ -1,9 +1,9 @@
 /**
  * Skin — geometry-only design tokens
  *
- * Contains only structural properties: border-radius, spacing,
- * sizes, shadows, fonts. Independent of colors.
- * Can be extracted from Stitch designs.
+ * Built on a T-shirt spacing scale: change the scale values and all
+ * semantic tokens (radius, sockets, grid) update harmoniously.
+ * Shadow is split into geometry (here) and color (from Palette).
  *
  * @module symbiote-node/themes/Skin
  */
@@ -18,15 +18,28 @@
 export const MODERN_SKIN = {
   name: 'modern',
   geometry: {
-    '--sn-node-radius': '10px',
-    '--sn-node-shadow': '0 4px 16px rgba(0, 0, 0, 0.3)',
-    '--sn-socket-size': '12px',
+    // === Spacing scale (atomic — AI changes these) ===
+    '--sn-space-xs': '4px',
+    '--sn-space-sm': '8px',
+    '--sn-space-md': '12px',
+    '--sn-space-lg': '16px',
+    '--sn-space-xl': '24px',
+
+    // === Semantic geometry (references scale) ===
+    '--sn-node-radius': 'var(--sn-space-md)',
+    '--sn-comment-radius': 'var(--sn-space-sm)',
+    '--sn-socket-size': 'var(--sn-space-md)',
     '--sn-socket-border-width': '2px',
+    '--sn-grid-size': 'var(--sn-space-xl)',
+    '--sn-conn-width': '2',
+
+    // === Typography ===
     '--sn-font': "'Inter', sans-serif",
     '--sn-font-size': '13px',
-    '--sn-grid-size': '20px',
-    '--sn-conn-width': '2',
-    '--sn-comment-radius': '6px',
+
+    // === Shadow geometry (color comes from Palette) ===
+    '--sn-shadow-geometry': '0 4px 16px',
+    '--sn-node-shadow': 'var(--sn-shadow-geometry) var(--sn-shadow-color, rgba(0, 0, 0, 0.3))',
   },
 };
 
@@ -34,15 +47,28 @@ export const MODERN_SKIN = {
 export const COMPACT_SKIN = {
   name: 'compact',
   geometry: {
-    '--sn-node-radius': '6px',
-    '--sn-node-shadow': '0 2px 8px rgba(0, 0, 0, 0.2)',
-    '--sn-socket-size': '10px',
+    // === Spacing scale ===
+    '--sn-space-xs': '3px',
+    '--sn-space-sm': '5px',
+    '--sn-space-md': '8px',
+    '--sn-space-lg': '12px',
+    '--sn-space-xl': '16px',
+
+    // === Semantic geometry ===
+    '--sn-node-radius': 'var(--sn-space-md)',
+    '--sn-comment-radius': 'var(--sn-space-sm)',
+    '--sn-socket-size': 'var(--sn-space-md)',
     '--sn-socket-border-width': '1.5px',
+    '--sn-grid-size': 'var(--sn-space-xl)',
+    '--sn-conn-width': '1.5',
+
+    // === Typography ===
     '--sn-font': "'Inter', sans-serif",
     '--sn-font-size': '12px',
-    '--sn-grid-size': '16px',
-    '--sn-conn-width': '1.5',
-    '--sn-comment-radius': '4px',
+
+    // === Shadow geometry ===
+    '--sn-shadow-geometry': '0 2px 8px',
+    '--sn-node-shadow': 'var(--sn-shadow-geometry) var(--sn-shadow-color, rgba(0, 0, 0, 0.2))',
   },
 };
 
@@ -50,15 +76,28 @@ export const COMPACT_SKIN = {
 export const ROUNDED_SKIN = {
   name: 'rounded',
   geometry: {
-    '--sn-node-radius': '16px',
-    '--sn-node-shadow': '0 6px 24px rgba(0, 0, 0, 0.25)',
-    '--sn-socket-size': '14px',
+    // === Spacing scale ===
+    '--sn-space-xs': '5px',
+    '--sn-space-sm': '10px',
+    '--sn-space-md': '14px',
+    '--sn-space-lg': '20px',
+    '--sn-space-xl': '28px',
+
+    // === Semantic geometry ===
+    '--sn-node-radius': 'var(--sn-space-lg)',       // larger radius for "rounded" feel
+    '--sn-comment-radius': 'var(--sn-space-md)',
+    '--sn-socket-size': 'var(--sn-space-md)',
     '--sn-socket-border-width': '2.5px',
+    '--sn-grid-size': 'var(--sn-space-xl)',
+    '--sn-conn-width': '2.5',
+
+    // === Typography ===
     '--sn-font': "'Space Grotesk', sans-serif",
     '--sn-font-size': '14px',
-    '--sn-grid-size': '24px',
-    '--sn-conn-width': '2.5',
-    '--sn-comment-radius': '12px',
+
+    // === Shadow geometry ===
+    '--sn-shadow-geometry': '0 6px 24px',
+    '--sn-node-shadow': 'var(--sn-shadow-geometry) var(--sn-shadow-color, rgba(0, 0, 0, 0.25))',
   },
 };
 

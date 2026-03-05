@@ -64,7 +64,44 @@ export class ConnectionRenderer {
    */
   add(conn) {
     this.#connectionData.set(conn.id, conn);
-    this.#render(conn);
+    // Full re-render for affected nodes (slot pool needs full context)
+    this.#fullRerenderForNodes(new Set([conn.from, conn.to]));
+  }
+
+  /**
+   * Clear slot registries and caches for all known nodes
+   */
+  #clearAllSlots() {
+    for (const [, el] of this.#nodeViews) {
+      el._usedSlots = new Set();
+      el._slotCache = new Map();
+    }
+  }
+
+  /**
+   * Full re-render: clear all slots for affected nodes, recalculate everything
+   * @param {Set<string>} nodeIds
+   */
+  #fullRerenderForNodes(nodeIds) {
+    const allNodes = new Set(nodeIds);
+    const conns = [];
+    for (const [, conn] of this.#connectionData) {
+      if (nodeIds.has(conn.from) || nodeIds.has(conn.to)) {
+        allNodes.add(conn.from);
+        allNodes.add(conn.to);
+        conns.push(conn);
+      }
+    }
+    for (const nid of allNodes) {
+      const el = this.#nodeViews.get(nid);
+      if (el) {
+        el._usedSlots = new Set();
+        el._slotCache = new Map();
+      }
+    }
+    for (const conn of conns) {
+      this.#render(conn);
+    }
   }
 
   /**
@@ -81,11 +118,13 @@ export class ConnectionRenderer {
       // Fallback removal if transition doesn't fire
       setTimeout(() => { if (path.parentNode) path.remove(); }, 200);
     }
-    // Remove endpoint dots
+    // Remove endpoint dots and arrow
     for (const end of ['start', 'end']) {
       const dot = this.#dotLayer.querySelector(`[data-conn-dot="${conn.id}-${end}"]`);
       if (dot) dot.remove();
     }
+    const arrow = this.#svgLayer.querySelector(`[data-conn-arrow="${conn.id}"]`);
+    if (arrow) arrow.remove();
   }
 
   /**
@@ -93,24 +132,31 @@ export class ConnectionRenderer {
    * @param {string} nodeId
    */
   updateForNode(nodeId) {
-    // Collect all nodes involved in connections touching this node
-    const touchedNodeIds = new Set([nodeId]);
+    // Only clear and recalculate the DRAGGED node.
+    // Non-dragged nodes use cached slot assignments (no jitter).
+    const draggedEl = this.#nodeViews.get(nodeId);
+    if (draggedEl) {
+      draggedEl._usedSlots = new Set();
+      draggedEl._slotCache = new Map();
+    }
+
+    // Rebuild _usedSlots for non-dragged nodes from their caches
     const touchedConns = [];
+    const otherNodeIds = new Set();
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId || conn.to === nodeId) {
-        touchedNodeIds.add(conn.from);
-        touchedNodeIds.add(conn.to);
         touchedConns.push(conn);
+        const otherId = conn.from === nodeId ? conn.to : conn.from;
+        otherNodeIds.add(otherId);
+      }
+    }
+    for (const nid of otherNodeIds) {
+      const el = this.#nodeViews.get(nid);
+      if (el && el._slotCache) {
+        el._usedSlots = new Set(el._slotCache.values());
       }
     }
 
-    // Clear slot registries for ALL touched nodes
-    for (const nid of touchedNodeIds) {
-      const el = this.#nodeViews.get(nid);
-      if (el) el._usedSlots = new Set();
-    }
-
-    // Re-render all touched connections
     for (const conn of touchedConns) {
       this.#render(conn, nodeId);
     }
@@ -147,10 +193,15 @@ export class ConnectionRenderer {
    */
   setPathStyle(style) {
     this.#pathStyle = style;
+    this.#clearAllSlots();
     for (const [, conn] of this.#connectionData) {
       this.#render(conn);
     }
   }
+
+  /** Slot pool constants */
+  static SLOT_COUNT = 24;
+  static SLOT_STEP = (2 * Math.PI) / 24;
 
   /** @returns {'bezier'|'orthogonal'|'straight'} */
   get pathStyle() { return this.#pathStyle; }
@@ -208,36 +259,38 @@ export class ConnectionRenderer {
         }
 
         // 4. Slot pool: 24 discrete slots (15° each), integer indices
-        const SLOT_COUNT = 24;
-        const step = (2 * Math.PI) / SLOT_COUNT; // 15° per slot
+        const { SLOT_COUNT, SLOT_STEP } = ConnectionRenderer;
         if (!nodeEl._usedSlots) nodeEl._usedSlots = new Set();
+        if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
 
-        // Convert angle to nearest slot index
-        let slot = Math.round(angle / step) % SLOT_COUNT;
-        if (slot < 0) slot += SLOT_COUNT;
+        const cacheKey = `${portKey}:${side}`;
+
+        // Check cache first (for non-dragged nodes)
+        if (nodeEl._slotCache.has(cacheKey)) {
+          const cachedSlot = nodeEl._slotCache.get(cacheKey);
+          const cachedAngle = cachedSlot * SLOT_STEP;
+          const pos = shape.getEdgePoint(cachedAngle, size);
+          return { x: pos.x, y: pos.y, angle: pos.angle };
+        }
+
+        // Calculate ideal slot index
+        let idealSlot = Math.round(angle / SLOT_STEP) % SLOT_COUNT;
+        if (idealSlot < 0) idealSlot += SLOT_COUNT;
 
         // Find nearest free slot if occupied
+        let slot = idealSlot;
         if (nodeEl._usedSlots.has(slot)) {
-          let found = false;
-          for (let offset = 1; offset <= SLOT_COUNT / 2; offset++) {
-            const fwd = (slot + offset) % SLOT_COUNT;
-            if (!nodeEl._usedSlots.has(fwd)) {
-              slot = fwd;
-              found = true;
-              break;
-            }
-            const bwd = (slot - offset + SLOT_COUNT) % SLOT_COUNT;
-            if (!nodeEl._usedSlots.has(bwd)) {
-              slot = bwd;
-              found = true;
-              break;
-            }
+          for (let off = 1; off <= SLOT_COUNT / 2; off++) {
+            const fwd = (idealSlot + off) % SLOT_COUNT;
+            if (!nodeEl._usedSlots.has(fwd)) { slot = fwd; break; }
+            const bwd = (idealSlot - off + SLOT_COUNT) % SLOT_COUNT;
+            if (!nodeEl._usedSlots.has(bwd)) { slot = bwd; break; }
           }
         }
         nodeEl._usedSlots.add(slot);
+        nodeEl._slotCache.set(cacheKey, slot);
 
-        // Convert slot index back to angle
-        const finalAngle = slot * step;
+        const finalAngle = slot * SLOT_STEP;
         const pos = shape.getEdgePoint(finalAngle, size);
         return { x: pos.x, y: pos.y, angle: pos.angle };
       }
@@ -398,9 +451,16 @@ export class ConnectionRenderer {
     // Gradient connection coloring
     this.#applyGradient(path, conn, fromNode, toNode, startX, startY, endX, endY);
 
-    // Endpoint dots: small circles at connector attachment points
-    this.#updateDot(conn.id, 'start', startX, startY);
-    this.#updateDot(conn.id, 'end', endX, endY);
+    // Determine socket type for visual dot styling
+    const outSocketName = fromNode?.outputs?.[conn.out]?.socket?.name || 'data';
+    const inSocketName = toNode?.inputs?.[conn.in]?.socket?.name || outSocketName;
+
+    // Endpoint dots with side and type coloring
+    this.#updateDot(conn.id, 'start', startX, startY, 'output', outSocketName);
+    this.#updateDot(conn.id, 'end', endX, endY, 'input', inSocketName);
+
+    // Direction arrow at wire midpoint
+    this.#updateArrow(conn.id, d);
   }
 
   /**
@@ -409,19 +469,62 @@ export class ConnectionRenderer {
    * @param {'start'|'end'} end
    * @param {number} x
    * @param {number} y
+   * @param {'input'|'output'} side
+   * @param {string} socketType
    */
-  #updateDot(connId, end, x, y) {
+  #updateDot(connId, end, x, y, side = 'output', socketType = 'data') {
     const dotId = `${connId}-${end}`;
     let dot = this.#dotLayer.querySelector(`[data-conn-dot="${dotId}"]`);
     if (!dot) {
       dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      dot.setAttribute('class', 'sn-conn-dot');
       dot.setAttribute('data-conn-dot', dotId);
       dot.setAttribute('r', '5');
       this.#dotLayer.appendChild(dot);
     }
     dot.setAttribute('cx', x);
     dot.setAttribute('cy', y);
+
+    // Classify socket type
+    let typeClass = 'sn-dot-data';
+    if (socketType === 'exec' || socketType === 'execution' || socketType === 'trigger') {
+      typeClass = 'sn-dot-exec';
+    } else if (socketType === 'ctrl' || socketType === 'control' || socketType === 'signal') {
+      typeClass = 'sn-dot-ctrl';
+    }
+    const sideClass = side === 'input' ? 'sn-dot-input' : 'sn-dot-output';
+    dot.setAttribute('class', `sn-conn-dot ${sideClass} ${typeClass}`);
+  }
+
+  /**
+   * Create or update a direction arrow at the midpoint of a bezier path
+   * @param {string} connId
+   * @param {string} pathD - SVG path d attribute
+   */
+  #updateArrow(connId, pathD) {
+    // Parse midpoint from bezier: M sx sy C cp1x cp1y, cp2x cp2y, ex ey
+    const match = pathD.match(/M ([\d.-]+) ([\d.-]+) C ([\d.-]+) ([\d.-]+), ([\d.-]+) ([\d.-]+), ([\d.-]+) ([\d.-]+)/);
+    if (!match) return;
+
+    const [, sx, sy, cp1x, cp1y, cp2x, cp2y, ex, ey] = match.map(Number);
+    // Cubic bezier at t=0.5
+    const t = 0.5;
+    const mt = 1 - t;
+    const mx = mt * mt * mt * sx + 3 * mt * mt * t * cp1x + 3 * mt * t * t * cp2x + t * t * t * ex;
+    const my = mt * mt * mt * sy + 3 * mt * mt * t * cp1y + 3 * mt * t * t * cp2y + t * t * t * ey;
+    // Tangent at t=0.5
+    const tx = 3 * mt * mt * (cp1x - sx) + 6 * mt * t * (cp2x - cp1x) + 3 * t * t * (ex - cp2x);
+    const ty = 3 * mt * mt * (cp1y - sy) + 6 * mt * t * (cp2y - cp1y) + 3 * t * t * (ey - cp2y);
+    const angle = Math.atan2(ty, tx) * 180 / Math.PI;
+
+    let arrow = this.#svgLayer.querySelector(`[data-conn-arrow="${connId}"]`);
+    if (!arrow) {
+      arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      arrow.setAttribute('data-conn-arrow', connId);
+      arrow.setAttribute('class', 'sn-conn-arrow');
+      arrow.setAttribute('points', '-5,-3.5 5,0 -5,3.5');
+      this.#svgLayer.appendChild(arrow);
+    }
+    arrow.setAttribute('transform', `translate(${mx},${my}) rotate(${angle})`);
   }
 
   /**

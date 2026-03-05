@@ -199,9 +199,9 @@ export class ConnectionRenderer {
     }
   }
 
-  /** Slot pool constants */
-  static SLOT_COUNT = 24;
-  static SLOT_STEP = (2 * Math.PI) / 24;
+  /** Slot pool constants: 12 slots = 30° each (visible separation on small shapes) */
+  static SLOT_COUNT = 12;
+  static SLOT_STEP = (2 * Math.PI) / 12;
 
   /** @returns {'bezier'|'orthogonal'|'straight'} */
   get pathStyle() { return this.#pathStyle; }
@@ -238,7 +238,7 @@ export class ConnectionRenderer {
         const baseAngle = Math.atan2(targetPos.y - cy, targetPos.x - cx);
 
         // 1. Separate input/output zones: gap between types
-        const sideGap = Math.PI / 8; // ~22° gap
+        const sideGap = Math.PI / 6; // 30° gap = one full slot between input/output
         const adjustedBase = baseAngle + (side === 'output' ? -sideGap : sideGap);
 
         // 2. Anti-crossing: reverse port order based on perpendicular direction
@@ -258,7 +258,7 @@ export class ConnectionRenderer {
           angle = adjustedBase + offset;
         }
 
-        // 4. Slot pool: 24 discrete slots (15° each), integer indices
+        // 4. Slot pool: 12 discrete slots (30° each)
         const { SLOT_COUNT, SLOT_STEP } = ConnectionRenderer;
         if (!nodeEl._usedSlots) nodeEl._usedSlots = new Set();
         if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
@@ -269,8 +269,14 @@ export class ConnectionRenderer {
         if (nodeEl._slotCache.has(cacheKey)) {
           const cachedSlot = nodeEl._slotCache.get(cacheKey);
           const cachedAngle = cachedSlot * SLOT_STEP;
-          const pos = shape.getEdgePoint(cachedAngle, size);
-          return { x: pos.x, y: pos.y, angle: pos.angle };
+          // Direct elliptic math — guaranteed unique coords per angle
+          const rx = size.width / 2 * 0.9;
+          const ry = size.height / 2 * 0.9;
+          return {
+            x: size.width / 2 + Math.cos(cachedAngle) * rx,
+            y: size.height / 2 + Math.sin(cachedAngle) * ry,
+            angle: cachedAngle * 180 / Math.PI,
+          };
         }
 
         // Calculate ideal slot index
@@ -290,9 +296,15 @@ export class ConnectionRenderer {
         nodeEl._usedSlots.add(slot);
         nodeEl._slotCache.set(cacheKey, slot);
 
+        // Direct elliptic math — guaranteed unique coords per angle
         const finalAngle = slot * SLOT_STEP;
-        const pos = shape.getEdgePoint(finalAngle, size);
-        return { x: pos.x, y: pos.y, angle: pos.angle };
+        const rx = size.width / 2 * 0.9;
+        const ry = size.height / 2 * 0.9;
+        return {
+          x: size.width / 2 + Math.cos(finalAngle) * rx,
+          y: size.height / 2 + Math.sin(finalAngle) * ry,
+          angle: finalAngle * 180 / Math.PI,
+        };
       }
 
       // Fixed mode: distribute ports at preset angles

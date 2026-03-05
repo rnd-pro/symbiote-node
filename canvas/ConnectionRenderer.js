@@ -73,7 +73,7 @@ export class ConnectionRenderer {
    */
   #clearAllSlots() {
     for (const [, el] of this.#nodeViews) {
-      el._usedSlots = new Set();
+      el._usedCoords = [];
       el._slotCache = new Map();
     }
   }
@@ -95,7 +95,7 @@ export class ConnectionRenderer {
     for (const nid of allNodes) {
       const el = this.#nodeViews.get(nid);
       if (el) {
-        el._usedSlots = new Set();
+        el._usedCoords = [];
         el._slotCache = new Map();
       }
     }
@@ -136,24 +136,15 @@ export class ConnectionRenderer {
     // Non-dragged nodes use cached slot assignments (no jitter).
     const draggedEl = this.#nodeViews.get(nodeId);
     if (draggedEl) {
-      draggedEl._usedSlots = new Set();
+      draggedEl._usedCoords = [];
       draggedEl._slotCache = new Map();
     }
 
-    // Rebuild _usedSlots for non-dragged nodes from their caches
+    // Collect touched connections for re-render
     const touchedConns = [];
-    const otherNodeIds = new Set();
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId || conn.to === nodeId) {
         touchedConns.push(conn);
-        const otherId = conn.from === nodeId ? conn.to : conn.from;
-        otherNodeIds.add(otherId);
-      }
-    }
-    for (const nid of otherNodeIds) {
-      const el = this.#nodeViews.get(nid);
-      if (el && el._slotCache) {
-        el._usedSlots = new Set(el._slotCache.values());
       }
     }
 
@@ -199,9 +190,6 @@ export class ConnectionRenderer {
     }
   }
 
-  /** Slot pool constants: 12 slots = 30° each (visible separation on small shapes) */
-  static SLOT_COUNT = 12;
-  static SLOT_STEP = (2 * Math.PI) / 12;
 
   /** @returns {'bezier'|'orthogonal'|'straight'} */
   get pathStyle() { return this.#pathStyle; }
@@ -258,54 +246,38 @@ export class ConnectionRenderer {
           angle = adjustedBase + offset;
         }
 
-        // 4. Slot pool: 12 discrete slots (30° each)
-        const { SLOT_COUNT, SLOT_STEP } = ConnectionRenderer;
-        if (!nodeEl._usedSlots) nodeEl._usedSlots = new Set();
-        if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
-
-        const cacheKey = `${portKey}:${side}`;
+        // 4. Quantize to 15° grid for stable discrete movement
+        const step = Math.PI / 12; // 15° grid
+        angle = Math.round(angle / step) * step;
 
         // Check cache first (for non-dragged nodes)
+        if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
+        const cacheKey = `${portKey}:${side}`;
         if (nodeEl._slotCache.has(cacheKey)) {
           const cached = nodeEl._slotCache.get(cacheKey);
           return { x: cached.x, y: cached.y, angle: cached.angle };
         }
 
-        // Calculate ideal slot index
-        let idealSlot = Math.round(angle / SLOT_STEP) % SLOT_COUNT;
-        if (idealSlot < 0) idealSlot += SLOT_COUNT;
-
-        // Find nearest free slot if occupied
-        let slot = idealSlot;
-        if (nodeEl._usedSlots.has(slot)) {
-          for (let off = 1; off <= SLOT_COUNT / 2; off++) {
-            const fwd = (idealSlot + off) % SLOT_COUNT;
-            if (!nodeEl._usedSlots.has(fwd)) { slot = fwd; break; }
-            const bwd = (idealSlot - off + SLOT_COUNT) % SLOT_COUNT;
-            if (!nodeEl._usedSlots.has(bwd)) { slot = bwd; break; }
-          }
+        // 5. Collision avoidance by PIXEL COORDINATES (not just angles)
+        // Straight edges cause getEdgePoint to return same coords for different angles,
+        // so we check actual pixel distance instead of angular difference.
+        if (!nodeEl._usedCoords) nodeEl._usedCoords = [];
+        const MIN_PIX = 5;
+        let nudged = angle;
+        let attempts = 0;
+        while (attempts < 24) {
+          const testPos = shape.getEdgePoint(nudged, size);
+          const tooClose = nodeEl._usedCoords.some(
+            c => Math.abs(testPos.x - c.x) < MIN_PIX && Math.abs(testPos.y - c.y) < MIN_PIX
+          );
+          if (!tooClose) break;
+          nudged += step;
+          attempts++;
         }
-        nodeEl._usedSlots.add(slot);
 
-        const finalAngle = slot * SLOT_STEP;
-
-        // Blend: edge point (on perimeter) + ellipse (guaranteed separation)
-        // Straight edges cause getEdgePoint to return same coords for different angles.
-        // Blending with an inscribed ellipse ensures minimum pixel distance.
-        const edgePos = shape.getEdgePoint(finalAngle, size);
-        const halfW = size.width / 2;
-        const halfH = size.height / 2;
-        const ellipseX = halfW + Math.cos(finalAngle) * halfW * 0.85;
-        const ellipseY = halfH + Math.sin(finalAngle) * halfH * 0.85;
-
-        // 70% edge (shape-aware) + 30% ellipse (guarantees spread)
-        const BLEND = 0.3;
-        const result = {
-          x: edgePos.x * (1 - BLEND) + ellipseX * BLEND,
-          y: edgePos.y * (1 - BLEND) + ellipseY * BLEND,
-          angle: edgePos.angle,
-        };
-
+        const pos = shape.getEdgePoint(nudged, size);
+        nodeEl._usedCoords.push({ x: pos.x, y: pos.y });
+        const result = { x: pos.x, y: pos.y, angle: pos.angle };
         nodeEl._slotCache.set(cacheKey, result);
         return result;
       }

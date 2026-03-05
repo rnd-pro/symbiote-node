@@ -18,6 +18,9 @@ export class ConnectionRenderer {
   /** @type {SVGElement} */
   #svgLayer;
 
+  /** @type {SVGElement} - overlay layer for dots (z-index above nodes) */
+  #dotLayer;
+
   /** @type {Map<string, HTMLElement>} */
   #nodeViews;
 
@@ -41,8 +44,9 @@ export class ConnectionRenderer {
    * @param {function} config.onConnectionClick - (connId, event)
    * @param {function} config.getZoom - Returns current zoom level
    */
-  constructor({ svgLayer, nodeViews, editor, onConnectionClick, getZoom }) {
+  constructor({ svgLayer, dotLayer, nodeViews, editor, onConnectionClick, getZoom }) {
     this.#svgLayer = svgLayer;
+    this.#dotLayer = dotLayer || svgLayer;
     this.#nodeViews = nodeViews;
     this.#editor = editor;
     this.#onConnectionClick = onConnectionClick;
@@ -79,7 +83,7 @@ export class ConnectionRenderer {
     }
     // Remove endpoint dots
     for (const end of ['start', 'end']) {
-      const dot = this.#svgLayer.querySelector(`[data-conn-dot="${conn.id}-${end}"]`);
+      const dot = this.#dotLayer.querySelector(`[data-conn-dot="${conn.id}-${end}"]`);
       if (dot) dot.remove();
     }
   }
@@ -388,13 +392,13 @@ export class ConnectionRenderer {
    */
   #updateDot(connId, end, x, y) {
     const dotId = `${connId}-${end}`;
-    let dot = this.#svgLayer.querySelector(`[data-conn-dot="${dotId}"]`);
+    let dot = this.#dotLayer.querySelector(`[data-conn-dot="${dotId}"]`);
     if (!dot) {
       dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       dot.setAttribute('class', 'sn-conn-dot');
       dot.setAttribute('data-conn-dot', dotId);
       dot.setAttribute('r', '5');
-      this.#svgLayer.appendChild(dot);
+      this.#dotLayer.appendChild(dot);
     }
     dot.setAttribute('cx', x);
     dot.setAttribute('cy', y);

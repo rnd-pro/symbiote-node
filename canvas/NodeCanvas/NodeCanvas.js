@@ -141,6 +141,7 @@ export class NodeCanvas extends Symbiote {
     // Initialize sub-modules
     this.#connRenderer = new ConnectionRenderer({
       svgLayer: this.ref.connections,
+      dotLayer: this.ref.pseudoSvg,
       nodeViews: this.#nodeViews,
       editor,
       onConnectionClick: (connId, e) => this.#handleConnectionClick(connId, e),

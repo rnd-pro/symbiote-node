@@ -1,6 +1,9 @@
 /**
  * Light Clean — bright minimal theme
  *
+ * Inverted lightness values: bg=95%, surface=100%, text=15%.
+ * Same atomic HSL structure as dark theme.
+ *
  * @module symbiote-node/themes/light
  */
 
@@ -8,44 +11,96 @@
 export const LIGHT_CLEAN = {
   name: 'light-clean',
   tokens: {
-    '--sn-bg': '#f0f2f5',
-    '--sn-grid-dot': 'rgba(0,0,0,0.06)',
+    // === Atomic tokens ===
+
+    // Hues
+    '--sn-hue-base': '220',
+    '--sn-hue-accent': '217',
+    '--sn-hue-success': '142',
+    '--sn-hue-warning': '38',
+    '--sn-hue-danger': '0',
+    '--sn-hue-data': '262',
+
+    // Saturation levels
+    '--sn-sat': '14%',
+    '--sn-sat-vivid': '60%',
+    '--sn-sat-muted': '8%',
+
+    // Lightness levels (inverted for light theme)
+    '--sn-lit-bg': '95%',
+    '--sn-lit-surface': '100%',
+    '--sn-lit-border': '83%',
+    '--sn-lit-hover': '90%',
+    '--sn-lit-text': '15%',
+    '--sn-lit-text-dim': '45%',
+    '--sn-lit-accent': '50%',
+
+    // Alpha levels
+    '--sn-alpha-overlay': '0.95',
+    '--sn-alpha-subtle': '0.1',
+    '--sn-alpha-faint': '0.06',
+
+    // === Composed tokens ===
+
+    // Canvas
+    '--sn-bg': 'hsl(var(--sn-hue-base), var(--sn-sat), var(--sn-lit-bg))',
+    '--sn-grid-dot': 'hsla(0, 0%, 0%, var(--sn-alpha-faint))',
     '--sn-grid-size': '20px',
-    '--sn-node-bg': '#ffffff',
-    '--sn-node-border': '#d1d5db',
+
+    // Node
+    '--sn-node-bg': 'hsl(0, 0%, var(--sn-lit-surface))',
+    '--sn-node-border': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), var(--sn-lit-border))',
     '--sn-node-radius': '10px',
     '--sn-node-shadow': '0 2px 8px rgba(0, 0, 0, 0.08)',
-    '--sn-node-selected': '#3b82f6',
-    '--sn-node-hover': '#e5e7eb',
+    '--sn-node-selected': 'hsl(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent))',
+    '--sn-node-hover': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), var(--sn-lit-hover))',
+    '--sn-node-header-bg': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), 96%)',
+
+    // Typography
     '--sn-font': "'Inter', sans-serif",
-    '--sn-text': '#1f2937',
-    '--sn-text-dim': '#6b7280',
+    '--sn-text': 'hsl(var(--sn-hue-base), 10%, var(--sn-lit-text))',
+    '--sn-text-dim': 'hsl(var(--sn-hue-base), 8%, var(--sn-lit-text-dim))',
+
+    // Sockets
     '--sn-socket-size': '12px',
     '--sn-socket-border-width': '2px',
-    '--sn-conn-color': '#3b82f6',
+
+    // Connections
+    '--sn-conn-color': 'hsl(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent))',
     '--sn-conn-width': '2',
-    '--sn-conn-selected': '#ef4444',
-    '--sn-cat-server': '#3b82f6',
-    '--sn-cat-instance': '#22c55e',
-    '--sn-cat-control': '#f59e0b',
-    '--sn-cat-data': '#8b5cf6',
-    '--sn-cat-default': '#6b7280',
-    '--sn-ctx-bg': '#ffffff',
-    '--sn-ctx-border': '#e5e7eb',
-    '--sn-ctx-color': '#1f2937',
-    '--sn-ctx-hover': 'rgba(59, 130, 246, 0.1)',
-    '--sn-comment-bg': 'rgba(0, 0, 0, 0.03)',
-    '--sn-comment-border': 'rgba(0, 0, 0, 0.08)',
+    '--sn-conn-selected': 'hsl(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent))',
+
+    // Category accent colors
+    '--sn-cat-server': 'hsl(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent))',
+    '--sn-cat-instance': 'hsl(var(--sn-hue-success), var(--sn-sat-vivid), 45%)',
+    '--sn-cat-control': 'hsl(var(--sn-hue-warning), var(--sn-sat-vivid), var(--sn-lit-accent))',
+    '--sn-cat-data': 'hsl(var(--sn-hue-data), var(--sn-sat-vivid), 55%)',
+    '--sn-cat-default': 'hsl(0, 0%, var(--sn-lit-text-dim))',
+
+    // Context menu
+    '--sn-ctx-bg': 'hsl(0, 0%, var(--sn-lit-surface))',
+    '--sn-ctx-border': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), var(--sn-lit-hover))',
+    '--sn-ctx-color': 'hsl(var(--sn-hue-base), 10%, var(--sn-lit-text))',
+    '--sn-ctx-hover': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), var(--sn-alpha-subtle))',
+
+    // Comments
+    '--sn-comment-bg': 'hsla(0, 0%, 0%, 0.03)',
+    '--sn-comment-border': 'hsla(0, 0%, 0%, 0.08)',
     '--sn-comment-radius': '6px',
 
     // Toolbar
-    '--sn-toolbar-bg': 'rgba(255, 255, 255, 0.95)',
-    '--sn-toolbar-border': 'rgba(0, 0, 0, 0.1)',
-    '--sn-toolbar-color': '#4b5563',
-    '--sn-toolbar-hover': 'rgba(59, 130, 246, 0.12)',
-    '--sn-toolbar-active': '#1f2937',
-    '--sn-toolbar-danger': 'rgba(239, 68, 68, 0.15)',
-    '--sn-toolbar-danger-color': '#ef4444',
+    '--sn-toolbar-bg': 'hsla(0, 0%, var(--sn-lit-surface), var(--sn-alpha-overlay))',
+    '--sn-toolbar-border': 'hsla(0, 0%, 0%, 0.1)',
+    '--sn-toolbar-color': 'hsl(var(--sn-hue-base), 8%, 35%)',
+    '--sn-toolbar-hover': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), 0.12)',
+    '--sn-toolbar-active': 'hsl(var(--sn-hue-base), 10%, var(--sn-lit-text))',
+    '--sn-toolbar-danger': 'hsla(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent), 0.15)',
+    '--sn-toolbar-danger-color': 'hsl(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent))',
+
+    // Shape fill/stroke
+    '--sn-shape-fill': 'var(--sn-node-bg)',
+    '--sn-shape-stroke': 'var(--sn-node-border)',
+    '--sn-shape-stroke-width': '0.4',
   },
 };
 
@@ -53,33 +108,24 @@ export const LIGHT_CLEAN = {
 export const LIGHT_PALETTE = {
   name: 'light',
   colors: {
-    '--sn-bg': '#f0f2f5',
-    '--sn-grid-dot': 'rgba(0,0,0,0.06)',
-    '--sn-node-bg': '#ffffff',
-    '--sn-node-border': '#d1d5db',
-    '--sn-node-selected': '#3b82f6',
-    '--sn-node-hover': '#e5e7eb',
-    '--sn-text': '#1f2937',
-    '--sn-text-dim': '#6b7280',
-    '--sn-conn-color': '#3b82f6',
-    '--sn-conn-selected': '#ef4444',
-    '--sn-cat-server': '#3b82f6',
-    '--sn-cat-instance': '#22c55e',
-    '--sn-cat-control': '#f59e0b',
-    '--sn-cat-data': '#8b5cf6',
-    '--sn-cat-default': '#6b7280',
-    '--sn-ctx-bg': '#ffffff',
-    '--sn-ctx-border': '#e5e7eb',
-    '--sn-ctx-color': '#1f2937',
-    '--sn-ctx-hover': 'rgba(59, 130, 246, 0.1)',
-    '--sn-comment-bg': 'rgba(0, 0, 0, 0.03)',
-    '--sn-comment-border': 'rgba(0, 0, 0, 0.08)',
-    '--sn-toolbar-bg': 'rgba(255, 255, 255, 0.95)',
-    '--sn-toolbar-border': 'rgba(0, 0, 0, 0.1)',
-    '--sn-toolbar-color': '#4b5563',
-    '--sn-toolbar-hover': 'rgba(59, 130, 246, 0.12)',
-    '--sn-toolbar-active': '#1f2937',
-    '--sn-toolbar-danger': 'rgba(239, 68, 68, 0.15)',
-    '--sn-toolbar-danger-color': '#ef4444',
+    '--sn-hue-base': '220',
+    '--sn-hue-accent': '217',
+    '--sn-hue-success': '142',
+    '--sn-hue-warning': '38',
+    '--sn-hue-danger': '0',
+    '--sn-hue-data': '262',
+    '--sn-sat': '14%',
+    '--sn-sat-vivid': '60%',
+    '--sn-sat-muted': '8%',
+    '--sn-lit-bg': '95%',
+    '--sn-lit-surface': '100%',
+    '--sn-lit-border': '83%',
+    '--sn-lit-hover': '90%',
+    '--sn-lit-text': '15%',
+    '--sn-lit-text-dim': '45%',
+    '--sn-lit-accent': '50%',
+    '--sn-alpha-overlay': '0.95',
+    '--sn-alpha-subtle': '0.1',
+    '--sn-alpha-faint': '0.06',
   },
 };

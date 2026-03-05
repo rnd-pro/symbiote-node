@@ -184,9 +184,9 @@ export class NodeViewManager {
         svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible;';
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', shape.pathData);
-        path.setAttribute('fill', 'var(--sn-node-bg, #16213e)');
-        path.setAttribute('stroke', 'var(--sn-node-border, #2a2a4a)');
-        path.setAttribute('stroke-width', '0.4');
+        path.setAttribute('fill', `var(--sn-shape-${shape.name}-fill, var(--sn-shape-fill, var(--sn-node-bg, #16213e)))`);
+        path.setAttribute('stroke', `var(--sn-shape-${shape.name}-stroke, var(--sn-shape-stroke, var(--sn-node-border, #2a2a4a)))`);
+        path.setAttribute('stroke-width', 'var(--sn-shape-stroke-width, 0.4)');
         path.setAttribute('stroke-linejoin', 'round');
         svg.appendChild(path);
         el.prepend(svg);

@@ -6,9 +6,9 @@ export const template = html`
     <svg ref="connections" class="sn-connections"></svg>
     <div ref="framesLayer" class="sn-frames"></div>
     <div ref="nodesLayer" class="sn-nodes"></div>
+    <svg ref="pseudoSvg" class="pseudo-svg"></svg>
     <quick-toolbar ref="quickToolbar" hidden></quick-toolbar>
   </div>
-  <svg ref="pseudoSvg" class="pseudo-svg"></svg>
   <context-menu ref="contextMenu" hidden></context-menu>
   <node-minimap ref="minimap"></node-minimap>
   <node-search ref="nodeSearch" hidden></node-search>

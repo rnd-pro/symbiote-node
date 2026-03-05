@@ -56,9 +56,9 @@ node-canvas {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
     overflow: visible;
+    width: 1px;
+    height: 1px;
     pointer-events: none;
     z-index: 100;
   }
@@ -146,5 +146,11 @@ node-canvas {
 .sn-socket[data-incompatible] {
   opacity: 0.25;
   transform: scale(0.8);
+}
+
+/* Node lift effect when dragging */
+.sn-node-lifted {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+  border-color: var(--sn-node-active-border, rgba(74, 158, 255, 0.5)) !important;
 }
 `;

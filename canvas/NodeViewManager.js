@@ -199,8 +199,7 @@ export class NodeViewManager {
           if (child !== svg) child.style.position = 'relative';
         }
 
-        // 2. Add SVG port markers at computed edge positions
-        this.#addSVGPortMarkers(el, node, shape, size);
+
       } else if (shape) {
         // Standard shapes: apply border-radius
         const size = { width: el.offsetWidth || 180, height: el.offsetHeight || 60 };
@@ -235,49 +234,7 @@ export class NodeViewManager {
 
   // --- Private helpers ---
 
-  /**
-   * Add SVG port markers at computed edge positions
-   * Uses same math as ConnectionRenderer for visual consistency
-   * @param {HTMLElement} el - graph-node element
-   * @param {import('../core/Node.js').Node} node
-   * @param {import('../shapes/SVGShape.js').SVGShape} shape
-   * @param {{ width: number, height: number }} size - element dimensions
-   */
-  #addSVGPortMarkers(el, node, shape, size) {
-    // Create a separate SVG overlay for port markers (above shape, below content)
-    const markerSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    markerSvg.setAttribute('viewBox', `0 0 ${size.width} ${size.height}`);
-    markerSvg.setAttribute('preserveAspectRatio', 'none');
-    markerSvg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:visible;';
 
-    const addMarker = (pos, color) => {
-      const d = 5; // half-size of diamond
-      const diamond = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-      diamond.setAttribute('points',
-        `${pos.x},${pos.y - d} ${pos.x + d},${pos.y} ${pos.x},${pos.y + d} ${pos.x - d},${pos.y}`
-      );
-      diamond.setAttribute('fill', color);
-      diamond.setAttribute('stroke', '#fff');
-      diamond.setAttribute('stroke-width', '1');
-      markerSvg.appendChild(diamond);
-    };
-
-    // Input port markers
-    const inputKeys = Object.keys(node.inputs);
-    for (let i = 0; i < inputKeys.length; i++) {
-      const pos = shape.getSocketPosition('input', i, inputKeys.length, size);
-      addMarker(pos, 'var(--sn-port-color, #7c8db5)');
-    }
-
-    // Output port markers
-    const outputKeys = Object.keys(node.outputs);
-    for (let i = 0; i < outputKeys.length; i++) {
-      const pos = shape.getSocketPosition('output', i, outputKeys.length, size);
-      addMarker(pos, 'var(--sn-port-color, #7c8db5)');
-    }
-
-    el.appendChild(markerSvg);
-  }
 
 
   #autoSelectOnDragStart(nodeId, e) {

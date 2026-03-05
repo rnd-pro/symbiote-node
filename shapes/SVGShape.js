@@ -244,6 +244,38 @@ export class SVGShape extends NodeShape {
     return result;
   }
 
+  /**
+   * Get edge point at a specific angle (direction toward target node).
+   * Used for dynamic connectors that slide along the perimeter.
+   *
+   * @param {number} angle - angle in radians from center to target
+   * @param {{ width: number, height: number }} size - element dimensions
+   * @returns {{ x: number, y: number, angle: number }}
+   */
+  getEdgePoint(angle, size) {
+    // Quantize angle to 2° steps for cache efficiency during drag
+    const quantized = Math.round(angle * 180 / Math.PI / 2) * 2 * Math.PI / 180;
+    const key = `edge|${quantized.toFixed(4)}|${size.width}|${size.height}`;
+    if (this.#posCache.has(key)) return this.#posCache.get(key);
+
+    const pathEl = this.#getPathElement();
+    if (!pathEl) {
+      // Fallback: project to rectangle edge
+      const cx = size.width / 2;
+      const cy = size.height / 2;
+      return { x: cx + Math.cos(angle) * cx, y: cy + Math.sin(angle) * cy, angle: angle * 180 / Math.PI };
+    }
+
+    const pt = this.#findPointAtAngle(quantized, pathEl);
+    const scaled = this.#scalePoint(pt.x, pt.y, size);
+    const center = this.#getCenter();
+    const angleDeg = Math.atan2(pt.y - center.y, pt.x - center.x) * 180 / Math.PI;
+
+    const result = { x: scaled.x, y: scaled.y, angle: angleDeg };
+    this.#posCache.set(key, result);
+    return result;
+  }
+
   getClipPath(size) {
     return null; // We use SVG background layer instead of clip-path
   }

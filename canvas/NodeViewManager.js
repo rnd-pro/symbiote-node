@@ -114,6 +114,19 @@ export class NodeViewManager {
         getZoom: this.#getZoom,
       },
       {
+        shouldStart: (e) => {
+          // SVG shapes: only start drag if click is inside the SVG path
+          const svgPath = el.querySelector('svg > path');
+          if (!svgPath) return true; // not an SVG shape node
+          const svg = svgPath.ownerSVGElement;
+          const rect = svg.getBoundingClientRect();
+          const vb = svg.viewBox.baseVal;
+          // Convert page coords to SVG viewBox coords
+          const sx = (e.clientX - rect.left) / rect.width * vb.width + vb.x;
+          const sy = (e.clientY - rect.top) / rect.height * vb.height + vb.y;
+          const pt = new DOMPoint(sx, sy);
+          return svgPath.isPointInFill(pt);
+        },
         onStart: (e) => {
           if (this.#readonly) return;
           dragStart = { x: e.pageX, y: e.pageY };

@@ -32,6 +32,9 @@ export class Drag {
   /** @type {HTMLElement|null} */
   #element = null;
 
+  /** @type {function|null} - optional hit-test before starting drag */
+  #shouldStart = null;
+
   /**
    * Initialize drag handler on element
    * @param {HTMLElement} element - Element to attach drag to
@@ -50,6 +53,7 @@ export class Drag {
     this.#onStart = callbacks.onStart || null;
     this.#onTranslate = callbacks.onTranslate;
     this.#onDrop = callbacks.onDrop || null;
+    this.#shouldStart = callbacks.shouldStart || null;
 
     element.style.touchAction = 'none';
     element.addEventListener('pointerdown', this.#down);
@@ -61,6 +65,8 @@ export class Drag {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     // Skip if event originates from a socket (ConnectFlow handles those)
     if (e.target.closest && e.target.closest('.sn-socket')) return;
+    // Optional hit-test: allow caller to reject drag (e.g. SVG perimeter check)
+    if (this.#shouldStart && !this.#shouldStart(e)) return;
     e.stopPropagation();
     this.#pointerStart = { x: e.pageX, y: e.pageY };
     this.#startPosition = { ...this.#getPosition() };

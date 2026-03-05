@@ -132,6 +132,38 @@ export class ConnectionRenderer {
   }
 
   /**
+   * Highlight overlay dots belonging to compatible nodes during drag
+   * @param {Set<string>} compatibleNodeIds - set of node IDs that have compatible ports
+   */
+  highlightDotsForNodes(compatibleNodeIds) {
+    const dots = this.#dotLayer.querySelectorAll('.sn-conn-dot');
+    for (const dot of dots) {
+      const dotId = dot.getAttribute('data-conn-dot') || '';
+      // dotId format: "connId-start" or "connId-end"
+      const connId = dotId.replace(/-(?:start|end)$/, '');
+      const conn = this.#connectionData.get(connId);
+      if (!conn) continue;
+      const end = dotId.endsWith('-start') ? 'start' : 'end';
+      const nodeId = end === 'start' ? conn.from : conn.to;
+      if (compatibleNodeIds.has(nodeId)) {
+        dot.classList.add('sn-dot-hint');
+      } else {
+        dot.classList.remove('sn-dot-hint');
+      }
+    }
+  }
+
+  /**
+   * Clear all dot highlights
+   */
+  clearDotHighlights() {
+    const dots = this.#dotLayer.querySelectorAll('.sn-dot-hint');
+    for (const dot of dots) {
+      dot.classList.remove('sn-dot-hint');
+    }
+  }
+
+  /**
    * Update all connections touching a node
    * @param {string} nodeId
    */
@@ -480,10 +512,13 @@ export class ConnectionRenderer {
           e.preventDefault();
           const conn = this.#connectionData.get(connId);
           if (!conn) return;
-          // Resolve socket data: which node/key/side this dot represents
+          // Read actual dot world position from SVG attributes
+          const dotX = parseFloat(dot.getAttribute('cx')) || 0;
+          const dotY = parseFloat(dot.getAttribute('cy')) || 0;
+          // Resolve socket data with world position
           const socketData = end === 'start'
-            ? { nodeId: conn.from, key: conn.out, side: 'output' }
-            : { nodeId: conn.to, key: conn.in, side: 'input' };
+            ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
+            : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
           this.#onDotDrag(socketData);
         });
       }

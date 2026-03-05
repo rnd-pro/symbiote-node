@@ -92,8 +92,22 @@ node-canvas {
   stroke: rgba(255, 255, 255, 0.6);
   stroke-width: 1.5;
   opacity: 0.9;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: crosshair;
   filter: drop-shadow(0 0 2px var(--sn-conn-color, #4a9eff));
+  transition: r 0.15s ease, filter 0.15s ease;
+}
+
+/* Dot highlight during compatible connector drag */
+.sn-dot-hint {
+  r: 7;
+  filter: drop-shadow(0 0 6px var(--sn-node-selected, #4a9eff));
+  animation: sn-dot-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes sn-dot-pulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
 }
 
 .pseudo-path {

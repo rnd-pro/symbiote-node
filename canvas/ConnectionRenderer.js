@@ -77,6 +77,11 @@ export class ConnectionRenderer {
       // Fallback removal if transition doesn't fire
       setTimeout(() => { if (path.parentNode) path.remove(); }, 200);
     }
+    // Remove endpoint dots
+    for (const end of ['start', 'end']) {
+      const dot = this.#svgLayer.querySelector(`[data-conn-dot="${conn.id}-${end}"]`);
+      if (dot) dot.remove();
+    }
   }
 
   /**
@@ -368,6 +373,31 @@ export class ConnectionRenderer {
 
     // Gradient connection coloring
     this.#applyGradient(path, conn, fromNode, toNode, startX, startY, endX, endY);
+
+    // Endpoint dots: small circles at connector attachment points
+    this.#updateDot(conn.id, 'start', startX, startY);
+    this.#updateDot(conn.id, 'end', endX, endY);
+  }
+
+  /**
+   * Create or update a small circle dot at a connector endpoint
+   * @param {string} connId
+   * @param {'start'|'end'} end
+   * @param {number} x
+   * @param {number} y
+   */
+  #updateDot(connId, end, x, y) {
+    const dotId = `${connId}-${end}`;
+    let dot = this.#svgLayer.querySelector(`[data-conn-dot="${dotId}"]`);
+    if (!dot) {
+      dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('class', 'sn-conn-dot');
+      dot.setAttribute('data-conn-dot', dotId);
+      dot.setAttribute('r', '5');
+      this.#svgLayer.appendChild(dot);
+    }
+    dot.setAttribute('cx', x);
+    dot.setAttribute('cy', y);
   }
 
   /**

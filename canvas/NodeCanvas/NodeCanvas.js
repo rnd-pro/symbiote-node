@@ -220,6 +220,10 @@ export class NodeCanvas extends Symbiote {
       onPseudoEnd: () => {
         this.#pseudo.hide();
         this.#actions.clearSocketHighlights(this.ref.nodesLayer);
+        this.#actions.clearPortHints();
+      },
+      onCompatibleMove: (worldX, worldY, socketData) => {
+        this.#actions.updatePortHints(worldX, worldY, socketData);
       },
       onDropEmpty: (x, y, socketData) => {
         this.#actions.handleDropEmpty(x, y, socketData);

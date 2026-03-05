@@ -303,6 +303,59 @@ export class ViewportActions {
   }
 
   /**
+   * Show port hints: highlight compatible ports and show them on the nearest side
+   * @param {number} worldX - Cursor X in graph coordinates
+   * @param {number} worldY - Cursor Y in graph coordinates
+   * @param {object} socketData - Picked socket data
+   */
+  updatePortHints(worldX, worldY, socketData) {
+    const pickedNode = this.#editor.getNode(socketData.nodeId);
+    if (!pickedNode) return;
+
+    const isOutput = socketData.side === 'output';
+    const pickedPort = isOutput ? pickedNode.outputs[socketData.key] : pickedNode.inputs[socketData.key];
+    if (!pickedPort) return;
+
+    const pickedSocket = pickedPort.socket;
+
+    for (const [nodeId, el] of this.#nodeViews) {
+      if (nodeId === socketData.nodeId) continue;
+      const targetNode = this.#editor.getNode(nodeId);
+      if (!targetNode) continue;
+
+      // Check if node has any compatible ports on the opposite side
+      const ports = isOutput ? targetNode.inputs : targetNode.outputs;
+      let hasCompatible = false;
+      for (const [, port] of Object.entries(ports)) {
+        if (pickedSocket.isCompatibleWith(port.socket)) {
+          hasCompatible = true;
+          break;
+        }
+      }
+
+      if (hasCompatible) {
+        // Determine nearest side: left or right based on cursor X vs node center X
+        const nodePos = el._position;
+        const nodeW = el.offsetWidth || 180;
+        const nodeCenterX = nodePos ? nodePos.x + nodeW / 2 : 0;
+        const hint = worldX < nodeCenterX ? 'left' : 'right';
+        el.setAttribute('data-port-hint', hint);
+      } else {
+        el.removeAttribute('data-port-hint');
+      }
+    }
+  }
+
+  /**
+   * Clear all port hints
+   */
+  clearPortHints() {
+    for (const [, el] of this.#nodeViews) {
+      el.removeAttribute('data-port-hint');
+    }
+  }
+
+  /**
    * Handle connection dropped in empty space
    * @param {number} x
    * @param {number} y

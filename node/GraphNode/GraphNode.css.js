@@ -121,17 +121,17 @@ graph-node {
   }
 
   &[data-completed] {
-    border-color: #5cd87a;
+    border-color: var(--sn-success-color, #5cd87a);
     box-shadow: 0 0 8px rgba(92, 216, 122, 0.3);
   }
 
   &[data-error] {
-    border-color: color-mix(in srgb, #ef4444 60%, transparent);
+    border-color: color-mix(in srgb, var(--sn-danger-color, #ef4444) 60%, transparent);
     position: relative;
   }
 
   &[data-error] .sn-node-header {
-    background: color-mix(in srgb, #ef4444 10%, transparent);
+    background: color-mix(in srgb, var(--sn-danger-color, #ef4444) 10%, transparent);
   }
 
   & .error-frame {
@@ -141,9 +141,9 @@ graph-node {
     transform: translateX(-50%);
     min-width: 140px;
     max-width: 320px;
-    border: 2px solid color-mix(in srgb, #ef4444 60%, transparent);
+    border: 2px solid color-mix(in srgb, var(--sn-danger-color, #ef4444) 60%, transparent);
     border-radius: 12px;
-    background: color-mix(in srgb, #ef4444 8%, transparent);
+    background: color-mix(in srgb, var(--sn-danger-color, #ef4444) 8%, transparent);
     pointer-events: none;
     z-index: 10;
     transition: bottom 0.15s ease;
@@ -156,8 +156,8 @@ graph-node {
     padding: 5px 10px;
     font-size: 12px;
     font-weight: 600;
-    color: color-mix(in srgb, #ef4444 90%, white);
-    border-bottom: 1px solid color-mix(in srgb, #ef4444 20%, transparent);
+    color: color-mix(in srgb, var(--sn-danger-color, #ef4444) 90%, white);
+    border-bottom: 1px solid color-mix(in srgb, var(--sn-danger-color, #ef4444) 20%, transparent);
     user-select: none;
   }
 
@@ -170,7 +170,7 @@ graph-node {
     padding: 6px 10px;
     font-size: 11px;
     line-height: 1.4;
-    color: color-mix(in srgb, #ef4444 75%, white);
+    color: color-mix(in srgb, var(--sn-danger-color, #ef4444) 75%, white);
     word-wrap: break-word;
   }
 
@@ -357,6 +357,41 @@ graph-node {
     }
   }
 
+  /* SVG shape states — target inline svg > path directly.
+     border/box-shadow have no effect on SVG nodes (border: none). */
+  &[data-svg-shape][data-selected] > svg > path {
+    stroke: var(--sn-node-selected, #4a9eff);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 8px var(--sn-node-selected, #4a9eff));
+    transition: stroke 0.2s ease, filter 0.2s ease;
+  }
+
+  &[data-svg-shape][data-error] > svg > path {
+    stroke: var(--sn-danger-color, #ef4444);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 10px var(--sn-danger-color, #ef4444));
+    transition: stroke 0.2s ease, filter 0.2s ease;
+  }
+
+  &[data-svg-shape][data-muted] > svg > path {
+    opacity: 0.35;
+    filter: saturate(0.2);
+    transition: opacity 0.2s ease, filter 0.2s ease;
+  }
+
+  &[data-svg-shape][data-processing] > svg > path {
+    stroke: var(--sn-node-accent, var(--sn-node-selected, #4a9eff));
+    stroke-width: 1.5;
+    animation: sn-svg-pulse 1s ease-in-out infinite;
+  }
+
+  &[data-svg-shape][data-completed] > svg > path {
+    stroke: var(--sn-success-color, #5cd87a);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 6px var(--sn-success-color, #5cd87a));
+    transition: stroke 0.2s ease, filter 0.2s ease;
+  }
+
   & .sn-node-header {
     display: flex;
     align-items: center;
@@ -392,6 +427,29 @@ graph-node {
   & .inputs, & .outputs {
     display: flex;
     flex-direction: column;
+    transition: transform 0.15s ease;
+  }
+
+  /* Port hint: slide ports to nearest side during connector drag */
+  &[data-port-hint="right"] .inputs {
+    transform: translateX(calc(100% - 12px));
+  }
+
+  &[data-port-hint="left"] .outputs {
+    transform: translateX(calc(-100% + 12px));
+  }
+
+  /* Compatible SVG node: glow the whole element */
+  &[data-svg-shape][data-port-hint] > svg > path {
+    animation: sn-svg-pulse 0.8s ease-in-out infinite;
+    stroke: var(--sn-node-selected, #4a9eff);
+    stroke-width: 1.5;
+  }
+
+  /* Incompatible dimming for nodes without compatible ports */
+  &[data-port-hint="none"] {
+    opacity: 0.4;
+    pointer-events: none;
   }
 
   & .sn-port {
@@ -559,6 +617,11 @@ node-socket {
 @keyframes sn-node-error-pulse {
   0%, 100% { box-shadow: 0 0 16px rgba(239,68,68,0.35), 0 0 4px rgba(239,68,68,0.5); }
   50% { box-shadow: 0 0 24px rgba(239,68,68,0.5), 0 0 8px rgba(239,68,68,0.7); }
+}
+
+@keyframes sn-svg-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px currentColor); }
+  50% { filter: drop-shadow(0 0 12px currentColor) drop-shadow(0 0 20px currentColor); }
 }
 
 

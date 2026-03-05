@@ -131,24 +131,54 @@ export class ConnectionRenderer {
   get pathStyle() { return this.#pathStyle; }
 
   /**
-   * Get socket offset relative to graph-node using getBoundingClientRect
+   * Get socket offset relative to graph-node.
+   * For SVG shapes with a target position, computes dynamic edge point
+   * in the direction of the connected node (connector slides along perimeter).
+   *
    * @param {HTMLElement} nodeEl
    * @param {string} portKey
    * @param {'input'|'output'} side
+   * @param {{ x: number, y: number }} [targetPos] - center of the connected node (for dynamic edge)
    * @returns {{ x: number, y: number }}
    */
-  getSocketOffset(nodeEl, portKey, side) {
-    // SVG shapes: compute edge position mathematically via getSocketPosition()
-    // Check shape.pathData directly — no dependency on DOM attribute timing
+  getSocketOffset(nodeEl, portKey, side, targetPos) {
+    // SVG shapes: compute edge position mathematically
     const shape = getShape(nodeEl.getAttribute('node-shape'));
     const nodeData = nodeEl._nodeData;
     if (shape && shape.pathData && nodeData) {
+      const size = { width: nodeEl.offsetWidth || 180, height: nodeEl.offsetHeight || 100 };
+
+      // Dynamic mode: connector slides toward the target node
+      // Multiple connectors spread around the base direction angle
+      if (targetPos && shape.getEdgePoint) {
+        const ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
+        const keys = ports ? Object.keys(ports) : [portKey];
+        const index = keys.indexOf(portKey);
+        const total = keys.length;
+
+        const nodePos = nodeEl._position;
+        const cx = nodePos.x + size.width / 2;
+        const cy = nodePos.y + size.height / 2;
+        const baseAngle = Math.atan2(targetPos.y - cy, targetPos.x - cx);
+
+        // Spread: divide circle by total*2 for angular segment
+        let angle = baseAngle;
+        if (total > 1) {
+          const segment = (2 * Math.PI) / (total * 2);
+          const offset = (index - (total - 1) / 2) * segment;
+          angle = baseAngle + offset;
+        }
+
+        const pos = shape.getEdgePoint(angle, size);
+        return { x: pos.x, y: pos.y, angle: pos.angle };
+      }
+
+      // Fixed mode: distribute ports at preset angles
       const ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
       if (ports) {
         const keys = Object.keys(ports);
         const index = keys.indexOf(portKey);
         const total = keys.length;
-        const size = { width: nodeEl.offsetWidth || 180, height: nodeEl.offsetHeight || 100 };
         if (index >= 0) {
           const pos = shape.getSocketPosition(side, index, total, size);
           return { x: pos.x, y: pos.y };
@@ -197,8 +227,18 @@ export class ConnectionRenderer {
     const fromPos = fromEl._position;
     const toPos = toEl._position;
 
-    const fromOffset = this.getSocketOffset(fromEl, conn.out, 'output');
-    const toOffset = this.getSocketOffset(toEl, conn.in, 'input');
+    // Compute centers for dynamic edge positioning on SVG shapes
+    const fromCenter = {
+      x: fromPos.x + (fromEl.offsetWidth || 180) / 2,
+      y: fromPos.y + (fromEl.offsetHeight || 100) / 2,
+    };
+    const toCenter = {
+      x: toPos.x + (toEl.offsetWidth || 180) / 2,
+      y: toPos.y + (toEl.offsetHeight || 100) / 2,
+    };
+
+    const fromOffset = this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
+    const toOffset = this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
 
     const startX = fromPos.x + fromOffset.x;
     const startY = fromPos.y + fromOffset.y;
@@ -211,11 +251,6 @@ export class ConnectionRenderer {
     const fromShape = getShape(fromNode?.shape);
     const toShape = getShape(toNode?.shape);
 
-    const fromPortIndex = fromNode ? Object.keys(fromNode.outputs).indexOf(conn.out) : 0;
-    const fromPortTotal = fromNode ? Object.keys(fromNode.outputs).length : 1;
-    const toPortIndex = toNode ? Object.keys(toNode.inputs).indexOf(conn.in) : 0;
-    const toPortTotal = toNode ? Object.keys(toNode.inputs).length : 1;
-
     const fromSize = { width: fromEl.offsetWidth || 180, height: fromEl.offsetHeight || 60 };
     const toSize = { width: toEl.offsetWidth || 180, height: toEl.offsetHeight || 60 };
 
@@ -227,14 +262,31 @@ export class ConnectionRenderer {
       const midX = (startX + endX) / 2;
       d = `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
     } else {
-      // Tangent-aware Bézier (default)
-      const fromSockPos = fromShape.getSocketPosition('output', fromPortIndex, fromPortTotal, fromSize);
-      const toSockPos = toShape.getSocketPosition('input', toPortIndex, toPortTotal, toSize);
+      // Tangent direction: use dynamic edge angle if available, else fixed socket angle
+      let fromAngleDeg, toAngleDeg;
+
+      if (fromOffset.angle !== undefined) {
+        fromAngleDeg = fromOffset.angle;
+      } else {
+        const fromPortIndex = fromNode ? Object.keys(fromNode.outputs).indexOf(conn.out) : 0;
+        const fromPortTotal = fromNode ? Object.keys(fromNode.outputs).length : 1;
+        const pos = fromShape?.getSocketPosition?.('output', fromPortIndex, fromPortTotal, fromSize);
+        fromAngleDeg = pos?.angle ?? 0;
+      }
+
+      if (toOffset.angle !== undefined) {
+        toAngleDeg = toOffset.angle;
+      } else {
+        const toPortIndex = toNode ? Object.keys(toNode.inputs).indexOf(conn.in) : 0;
+        const toPortTotal = toNode ? Object.keys(toNode.inputs).length : 1;
+        const pos = toShape?.getSocketPosition?.('input', toPortIndex, toPortTotal, toSize);
+        toAngleDeg = pos?.angle ?? 180;
+      }
 
       const dist = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
       const cpLen = Math.max(50, dist * 0.4);
-      const fromRad = (fromSockPos.angle * Math.PI) / 180;
-      const toRad = (toSockPos.angle * Math.PI) / 180;
+      const fromRad = (fromAngleDeg * Math.PI) / 180;
+      const toRad = (toAngleDeg * Math.PI) / 180;
 
       const cp1x = startX + Math.cos(fromRad) * cpLen;
       const cp1y = startY + Math.sin(fromRad) * cpLen;

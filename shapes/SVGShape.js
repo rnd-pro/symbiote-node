@@ -253,25 +253,30 @@ export class SVGShape extends NodeShape {
    * @returns {{ x: number, y: number, angle: number }}
    */
   getEdgePoint(angle, size) {
-    // Quantize angle to 2° steps for cache efficiency during drag
-    const quantized = Math.round(angle * 180 / Math.PI / 2) * 2 * Math.PI / 180;
-    const key = `edge|${quantized.toFixed(4)}|${size.width}|${size.height}`;
+    // Round to 3 decimal places (~0.06° precision, invisible jitter)
+    const rounded = Math.round(angle * 1000) / 1000;
+    const key = `edge|${rounded}|${size.width}|${size.height}`;
     if (this.#posCache.has(key)) return this.#posCache.get(key);
 
     const pathEl = this.#getPathElement();
     if (!pathEl) {
-      // Fallback: project to rectangle edge
       const cx = size.width / 2;
       const cy = size.height / 2;
       return { x: cx + Math.cos(angle) * cx, y: cy + Math.sin(angle) * cy, angle: angle * 180 / Math.PI };
     }
 
-    const pt = this.#findPointAtAngle(quantized, pathEl);
+    const pt = this.#findPointAtAngle(angle, pathEl);
     const scaled = this.#scalePoint(pt.x, pt.y, size);
     const center = this.#getCenter();
     const angleDeg = Math.atan2(pt.y - center.y, pt.x - center.x) * 180 / Math.PI;
 
     const result = { x: scaled.x, y: scaled.y, angle: angleDeg };
+
+    // Bounded cache: evict oldest when exceeding 360 entries
+    if (this.#posCache.size > 360) {
+      const first = this.#posCache.keys().next().value;
+      this.#posCache.delete(first);
+    }
     this.#posCache.set(key, result);
     return result;
   }

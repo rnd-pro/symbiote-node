@@ -149,7 +149,7 @@ export class ConnectionRenderer {
       const size = { width: nodeEl.offsetWidth || 180, height: nodeEl.offsetHeight || 100 };
 
       // Dynamic mode: connector slides toward the target node
-      // Multiple connectors spread around the base direction angle
+      // Smart routing: inputs/outputs separated, sorted to minimize crossings
       if (targetPos && shape.getEdgePoint) {
         const ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
         const keys = ports ? Object.keys(ports) : [portKey];
@@ -161,12 +161,25 @@ export class ConnectionRenderer {
         const cy = nodePos.y + size.height / 2;
         const baseAngle = Math.atan2(targetPos.y - cy, targetPos.x - cx);
 
-        // Spread: divide circle by total*2 for angular segment
-        let angle = baseAngle;
+        // 1. Separate input/output zones: gap between types
+        const sideGap = Math.PI / 8; // ~22° gap
+        const adjustedBase = baseAngle + (side === 'output' ? -sideGap : sideGap);
+
+        // 2. Anti-crossing: reverse port order based on perpendicular direction
+        // Cross product of connection vector tells us orientation
+        const dx = targetPos.x - cx;
+        const dy = targetPos.y - cy;
+        // Perpendicular direction sign: if target is more to the right,
+        // upper ports should go to upper positions on target (no crossing)
+        const shouldReverse = (side === 'output') ? (dy < 0) : (dy > 0);
+        const effectiveIndex = shouldReverse ? (total - 1 - index) : index;
+
+        // 3. Spread ports around adjusted base angle
+        let angle = adjustedBase;
         if (total > 1) {
           const segment = (2 * Math.PI) / (total * 2);
-          const offset = (index - (total - 1) / 2) * segment;
-          angle = baseAngle + offset;
+          const offset = (effectiveIndex - (total - 1) / 2) * segment;
+          angle = adjustedBase + offset;
         }
 
         const pos = shape.getEdgePoint(angle, size);

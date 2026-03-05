@@ -36,9 +36,6 @@ export class ConnectionRenderer {
   /** @type {'bezier'|'orthogonal'|'straight'} */
   #pathStyle = 'bezier';
 
-  /** @type {Map<string, {x: number, y: number, angle: number}>} */
-  #offsetCache = new Map();
-
   /**
    * @param {object} config
    * @param {SVGElement} config.svgLayer
@@ -96,13 +93,26 @@ export class ConnectionRenderer {
    * @param {string} nodeId
    */
   updateForNode(nodeId) {
-    // Only clear slot registry for the dragged node
-    const nodeEl = this.#nodeViews.get(nodeId);
-    if (nodeEl) nodeEl._usedSlots = new Set();
+    // Collect all nodes involved in connections touching this node
+    const touchedNodeIds = new Set([nodeId]);
+    const touchedConns = [];
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId || conn.to === nodeId) {
-        this.#render(conn, nodeId);
+        touchedNodeIds.add(conn.from);
+        touchedNodeIds.add(conn.to);
+        touchedConns.push(conn);
       }
+    }
+
+    // Clear slot registries for ALL touched nodes
+    for (const nid of touchedNodeIds) {
+      const el = this.#nodeViews.get(nid);
+      if (el) el._usedSlots = new Set();
+    }
+
+    // Re-render all touched connections
+    for (const conn of touchedConns) {
+      this.#render(conn, nodeId);
     }
   }
 
@@ -296,27 +306,9 @@ export class ConnectionRenderer {
       y: toPos.y + (toEl.offsetHeight || 100) / 2,
     };
 
-    // For dragged node: recalculate. For non-dragged: use cached offset
-    const fromCacheKey = `${conn.id}:${conn.from}`;
-    const toCacheKey = `${conn.id}:${conn.to}`;
-
-    let fromOffset;
-    if (!draggedNodeId || draggedNodeId === conn.from) {
-      fromOffset = this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
-      this.#offsetCache.set(fromCacheKey, fromOffset);
-    } else {
-      fromOffset = this.#offsetCache.get(fromCacheKey)
-        || this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
-    }
-
-    let toOffset;
-    if (!draggedNodeId || draggedNodeId === conn.to) {
-      toOffset = this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
-      this.#offsetCache.set(toCacheKey, toOffset);
-    } else {
-      toOffset = this.#offsetCache.get(toCacheKey)
-        || this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
-    }
+    // Always recalculate both sides (slot pool makes this cheap and deterministic)
+    const fromOffset = this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
+    const toOffset = this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
 
     const startX = fromPos.x + fromOffset.x;
     const startY = fromPos.y + fromOffset.y;

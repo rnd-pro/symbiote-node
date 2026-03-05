@@ -175,6 +175,11 @@ export class ConnectFlow {
    * @returns {{ x: number, y: number }}
    */
   #getSocketWorldPosition(data) {
+    // Direct world coordinates (from overlay dot drag)
+    if (data.worldX !== undefined && data.worldY !== undefined) {
+      return { x: data.worldX, y: data.worldY };
+    }
+
     const pos = this.#getNodePosition(data.nodeId);
     if (!pos) return { x: 0, y: 0 };
 

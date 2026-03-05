@@ -310,13 +310,14 @@ export class ViewportActions {
    */
   updatePortHints(worldX, worldY, socketData) {
     const pickedNode = this.#editor.getNode(socketData.nodeId);
-    if (!pickedNode) return;
+    if (!pickedNode) return new Set();
 
     const isOutput = socketData.side === 'output';
     const pickedPort = isOutput ? pickedNode.outputs[socketData.key] : pickedNode.inputs[socketData.key];
-    if (!pickedPort) return;
+    if (!pickedPort) return new Set();
 
     const pickedSocket = pickedPort.socket;
+    const compatibleIds = new Set();
 
     for (const [nodeId, el] of this.#nodeViews) {
       if (nodeId === socketData.nodeId) continue;
@@ -334,6 +335,7 @@ export class ViewportActions {
       }
 
       if (hasCompatible) {
+        compatibleIds.add(nodeId);
         // Determine nearest side: left or right based on cursor X vs node center X
         const nodePos = el._position;
         const nodeW = el.offsetWidth || 180;
@@ -344,6 +346,8 @@ export class ViewportActions {
         el.removeAttribute('data-port-hint');
       }
     }
+
+    return compatibleIds;
   }
 
   /**

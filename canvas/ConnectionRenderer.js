@@ -197,19 +197,22 @@ export class ConnectionRenderer {
           angle = adjustedBase + offset;
         }
 
-        // 4. Collision avoidance: nudge if too close to an existing angle
-        const minGap = Math.PI / 12; // ~15° minimum gap between connectors
+        // 4. Quantize angle to fixed grid for consistent discrete movement
+        const step = Math.PI / 12; // 15° grid
+        angle = Math.round(angle / step) * step;
+
+        // 5. Collision avoidance: bump to next grid slot if occupied
         if (!nodeEl._usedAngles) nodeEl._usedAngles = [];
         let nudged = angle;
         let attempts = 0;
-        while (attempts < 8) {
+        while (attempts < 12) {
           const collision = nodeEl._usedAngles.some(used => {
             let diff = Math.abs(nudged - used);
             if (diff > Math.PI) diff = 2 * Math.PI - diff;
-            return diff < minGap;
+            return diff < step * 0.5; // half-step tolerance
           });
           if (!collision) break;
-          nudged += minGap;
+          nudged += step;
           attempts++;
         }
         nodeEl._usedAngles.push(nudged);

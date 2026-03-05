@@ -153,4 +153,32 @@ node-canvas {
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
   border-color: var(--sn-node-active-border, rgba(74, 158, 255, 0.5)) !important;
 }
+
+/* Connector dot: input vs output side */
+.sn-dot-output {
+  fill: var(--sn-dot-output, #e8915a);
+}
+.sn-dot-input {
+  fill: var(--sn-dot-input, #5ac8e8);
+}
+
+/* Connector dot: socket type overrides */
+.sn-dot-exec {
+  fill: var(--sn-dot-exec, #e8a15a);
+  r: 6;
+}
+.sn-dot-data {
+  /* uses side color by default */
+}
+.sn-dot-ctrl {
+  fill: var(--sn-dot-ctrl, #78d97a);
+  r: 4;
+}
+
+/* Direction arrow on wire midpoint */
+.sn-conn-arrow {
+  fill: var(--sn-conn-color, #4a9eff);
+  opacity: 0.5;
+  pointer-events: none;
+}
 `;

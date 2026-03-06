@@ -503,32 +503,35 @@ export class ConnectionRenderer {
       dot.setAttribute('data-conn-dot', dotId);
       dot.setAttribute('r', '5');
       this.#dotLayer.appendChild(dot);
-
-      // Make dot interactive ONLY for SVG nodes (they have no PortItem sockets)
-      if (this.#onDotDrag) {
-        const conn = this.#connectionData.get(connId);
-        if (conn) {
-          const nodeId = end === 'start' ? conn.from : conn.to;
-          const nodeEl = this.#nodeViews.get(nodeId);
-          if (nodeEl?.hasAttribute('data-svg-shape')) {
-            dot.style.pointerEvents = 'auto';
-            dot.style.cursor = 'crosshair';
-            dot.addEventListener('pointerdown', (e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              const dotX = parseFloat(dot.getAttribute('cx')) || 0;
-              const dotY = parseFloat(dot.getAttribute('cy')) || 0;
-              const socketData = end === 'start'
-                ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
-                : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
-              this.#onDotDrag(socketData);
-            });
-          }
-        }
-      }
     }
     dot.setAttribute('cx', x);
     dot.setAttribute('cy', y);
+
+    // Make dot interactive for SVG nodes (no PortItem sockets)
+    // Runs on every update to handle timing — NodeViewManager may set
+    // data-svg-shape after initial connection render
+    if (this.#onDotDrag && !dot.hasAttribute('data-svg-wired')) {
+      const conn = this.#connectionData.get(connId);
+      if (conn) {
+        const nodeId = end === 'start' ? conn.from : conn.to;
+        const nodeEl = this.#nodeViews.get(nodeId);
+        if (nodeEl?.hasAttribute('data-svg-shape')) {
+          dot.setAttribute('data-svg-wired', '');
+          dot.style.pointerEvents = 'auto';
+          dot.style.cursor = 'crosshair';
+          dot.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const dotX = parseFloat(dot.getAttribute('cx')) || 0;
+            const dotY = parseFloat(dot.getAttribute('cy')) || 0;
+            const socketData = end === 'start'
+              ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
+              : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
+            this.#onDotDrag(socketData);
+          });
+        }
+      }
+    }
 
     // Classify socket type
     let typeClass = 'sn-dot-data';

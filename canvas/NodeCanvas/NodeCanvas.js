@@ -989,6 +989,11 @@ export class NodeCanvas extends Symbiote {
         getZoom: () => 1,
       },
       {
+        onStart: (e) => {
+          if (e?.target === container) {
+            this.#selector.unselectAll();
+          }
+        },
         onTranslate: (x, y) => {
           if (this.#zoom?.isTranslating()) return;
           if (this.#connectFlow?.isPicking()) return;
@@ -996,11 +1001,6 @@ export class NodeCanvas extends Symbiote {
           this.$.panY = y;
           this.#updateTransform();
           this.dispatchEvent(new CustomEvent('manualviewport'));
-        },
-        onDrop: (e) => {
-          if (e?.target === container) {
-            this.#selector.unselectAll();
-          }
         },
       }
     );

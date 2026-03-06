@@ -9,6 +9,10 @@ panel-layout {
   position: relative;
   font-family: var(--font-main);
 
+  &[hidden] {
+    display: none;
+  }
+
   .layout-root {
     display: flex;
     width: 100%;

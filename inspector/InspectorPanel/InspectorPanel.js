@@ -122,6 +122,35 @@ export class InspectorPanel extends Symbiote {
       const sgSection = this.querySelector('.insp-subgraph');
       if (sgSection) sgSection.hidden = !val;
     });
+
+    // Resize drag handle
+    const handle = this.querySelector('.insp-resize-handle');
+    if (handle) {
+      let startX = 0;
+      let startW = 0;
+
+      const onMove = (e) => {
+        const delta = startX - e.clientX;
+        const newWidth = Math.max(200, Math.min(600, startW + delta));
+        this.style.width = newWidth + 'px';
+      };
+
+      const onUp = () => {
+        handle.classList.remove('dragging');
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+      };
+
+      handle.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startX = e.clientX;
+        startW = this.offsetWidth;
+        handle.classList.add('dragging');
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      });
+    }
   }
 }
 

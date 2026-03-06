@@ -25,6 +25,22 @@ inspector-panel {
     display: none;
   }
 
+  & .insp-resize-handle {
+    position: absolute;
+    top: 0;
+    left: -2px;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 110;
+    transition: background 0.15s;
+
+    &:hover, &.dragging {
+      background: var(--sn-node-selected, #4a9eff);
+      opacity: 0.5;
+    }
+  }
+
   & .insp-header {
     display: flex;
     align-items: center;

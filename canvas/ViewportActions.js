@@ -351,6 +351,39 @@ export class ViewportActions {
   }
 
   /**
+   * Get set of node IDs with compatible ports (no teleportation)
+   * @param {object} socketData - Picked socket data
+   * @returns {Set<string>}
+   */
+  getCompatibleNodeIds(socketData) {
+    const pickedNode = this.#editor.getNode(socketData.nodeId);
+    if (!pickedNode) return new Set();
+
+    const isOutput = socketData.side === 'output';
+    const pickedPort = isOutput ? pickedNode.outputs[socketData.key] : pickedNode.inputs[socketData.key];
+    if (!pickedPort) return new Set();
+
+    const pickedSocket = pickedPort.socket;
+    const compatibleIds = new Set();
+
+    for (const [nodeId] of this.#nodeViews) {
+      if (nodeId === socketData.nodeId) continue;
+      const targetNode = this.#editor.getNode(nodeId);
+      if (!targetNode) continue;
+
+      const ports = isOutput ? targetNode.inputs : targetNode.outputs;
+      for (const [, port] of Object.entries(ports)) {
+        if (pickedSocket.isCompatibleWith(port.socket)) {
+          compatibleIds.add(nodeId);
+          break;
+        }
+      }
+    }
+
+    return compatibleIds;
+  }
+
+  /**
    * Clear all port hints
    */
   clearPortHints() {

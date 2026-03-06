@@ -116,6 +116,8 @@ export class ConnectionRenderer {
    * @param {import('../core/Connection.js').Connection} conn
    */
   remove(conn) {
+    const fromId = conn.from;
+    const toId = conn.to;
     this.#connectionData.delete(conn.id);
     const path = this.#svgLayer.querySelector(`[data-conn-id="${conn.id}"]`);
     if (path) {
@@ -132,6 +134,10 @@ export class ConnectionRenderer {
     }
     const arrow = this.#svgLayer.querySelector(`[data-conn-arrow="${conn.id}"]`);
     if (arrow) arrow.remove();
+
+    // Re-render free dots for freed ports
+    this.renderFreeDots(fromId);
+    this.renderFreeDots(toId);
   }
 
   /**
@@ -139,15 +145,26 @@ export class ConnectionRenderer {
    * @param {Set<string>} compatibleNodeIds - set of node IDs that have compatible ports
    */
   highlightDotsForNodes(compatibleNodeIds) {
-    const dots = this.#dotLayer.querySelectorAll('.sn-conn-dot');
-    for (const dot of dots) {
+    // Highlight connected dots
+    const connDots = this.#dotLayer.querySelectorAll('.sn-conn-dot');
+    for (const dot of connDots) {
       const dotId = dot.getAttribute('data-conn-dot') || '';
-      // dotId format: "connId-start" or "connId-end"
       const connId = dotId.replace(/-(?:start|end)$/, '');
       const conn = this.#connectionData.get(connId);
       if (!conn) continue;
       const end = dotId.endsWith('-start') ? 'start' : 'end';
       const nodeId = end === 'start' ? conn.from : conn.to;
+      if (compatibleNodeIds.has(nodeId)) {
+        dot.classList.add('sn-dot-hint');
+      } else {
+        dot.classList.remove('sn-dot-hint');
+      }
+    }
+
+    // Highlight free dots
+    const freeDots = this.#dotLayer.querySelectorAll('.sn-free-dot');
+    for (const dot of freeDots) {
+      const nodeId = dot.getAttribute('data-node-id');
       if (compatibleNodeIds.has(nodeId)) {
         dot.classList.add('sn-dot-hint');
       } else {
@@ -735,14 +752,36 @@ export class ConnectionRenderer {
   }
 
   /**
-   * Refresh free dot positions after node move
+   * Refresh free dot positions after node move (updates coords without recreating)
    * @param {string} nodeId
    */
   refreshFreeDots(nodeId) {
-    // Remove all free dots for this node and re-render
     const dots = this.#dotLayer.querySelectorAll(`[data-node-id="${nodeId}"][data-free-dot]`);
-    for (const dot of dots) dot.remove();
-    this.renderFreeDots(nodeId);
+    if (!dots.length) return;
+
+    const nodeEl = this.#nodeViews.get(nodeId);
+    const node = this.#editor.getNode(nodeId);
+    if (!nodeEl || !node) return;
+
+    const shapeName = nodeEl.getAttribute('data-svg-shape') || nodeEl.getAttribute('node-shape');
+    const shape = getShape(shapeName);
+    if (!shape?.pathData) return;
+
+    const size = { width: nodeEl.offsetWidth || 100, height: nodeEl.offsetHeight || 100 };
+    const pos = nodeEl._position;
+    if (!pos) return;
+
+    for (const dot of dots) {
+      const key = dot.getAttribute('data-port-key');
+      const side = dot.getAttribute('data-port-side');
+      const ports = side === 'output' ? node.outputs : node.inputs;
+      const keys = Object.keys(ports);
+      const index = keys.indexOf(key);
+      if (index < 0) continue;
+      const sp = shape.getSocketPosition(side, index, keys.length, size);
+      dot.setAttribute('cx', pos.x + sp.x);
+      dot.setAttribute('cy', pos.y + sp.y);
+    }
   }
 
   /**

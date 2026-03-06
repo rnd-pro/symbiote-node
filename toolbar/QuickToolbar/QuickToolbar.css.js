@@ -83,15 +83,4 @@ quick-toolbar {
   font-size: 18px;
   pointer-events: none;
 }
-
-/* === Liquid Glass theme overrides === */
-[data-sn-theme="glass"] quick-toolbar .toolbar {
-  backdrop-filter: blur(24px) saturate(1.5);
-  -webkit-backdrop-filter: blur(24px) saturate(1.5);
-  border: 1px solid hsla(0, 0%, 100%, 0.15);
-  border-radius: 14px;
-  box-shadow:
-    0 8px 32px var(--sn-shadow-color, rgba(0, 0, 0, 0.4)),
-    inset 0 1px 0 hsla(0, 0%, 100%, 0.1);
-}
 `;

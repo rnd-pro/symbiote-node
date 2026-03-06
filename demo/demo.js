@@ -8,7 +8,7 @@
 import {
   NodeEditor, Node, Connection, Socket, Input, Output, InputControl,
   FlowSimulator, Frame, History, SubgraphNode,
-  DARK_DEFAULT, SYNTHWAVE, GREY_NEUTRAL, GLASS,
+  DARK_DEFAULT, SYNTHWAVE, GREY_NEUTRAL, NEON_GLOW,
   DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE,
   MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN,
   Layout, LayoutTree, applyTheme,
@@ -427,7 +427,7 @@ function initDemo() {
     }
 
     // --- Theme button ---
-    const themes = [GREY_NEUTRAL, DARK_DEFAULT, GLASS, SYNTHWAVE];
+    const themes = [GREY_NEUTRAL, DARK_DEFAULT, SYNTHWAVE, NEON_GLOW];
     let themeIdx = 0;
     const btnTheme = document.getElementById('btnTheme');
     const switchTheme = () => {

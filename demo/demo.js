@@ -1,8 +1,8 @@
 /**
- * Demo — automation workflow showcase for symbiote-node
+ * Demo — AI Content Pipeline showcase for symbiote-node
  *
- * Real connected pipeline: Trigger → HTTP Request → AI Agent → Filter → Merge → Save
- * FlowSimulator traverses the actual connection graph.
+ * Unified workflow: data acquisition → AI processing → delivery
+ * Mixes standard and SVG nodes in one logical data flow.
  */
 
 import {
@@ -19,7 +19,7 @@ import '../layout/Layout/Layout.js';
 import '../palette/PaletteBrowser/PaletteBrowser.js';
 
 /**
- * Initialize automation workflow demo
+ * Initialize AI content pipeline demo
  */
 function initDemo() {
   const editor = new NodeEditor();
@@ -31,151 +31,169 @@ function initDemo() {
   const execSocket = new Socket('exec', { color: '#ffffff' });
   const arraySocket = new Socket('array', { color: '#a78bfa' });
 
-  // ── Pipeline nodes ──
+  // ══════════════════════════════════════════════════
+  // Row 1: Data Acquisition & Auth
+  // ══════════════════════════════════════════════════
 
-  // 1. Trigger (webhook)
-  const trigger = new Node('Trigger', { type: 'trigger', category: 'server' });
+  // ⬡ API Gateway — hexagon SVG node (entry point)
+  const gateway = new Node('API Gateway', { type: 'gateway', category: 'server', shape: 'hexagon' });
+  gateway.addInput('auth', new Input(execSocket, 'Auth'));
+  gateway.addOutput('data', new Output(dataSocket, 'Data'));
+  gateway.addOutput('meta', new Output(textSocket, 'Meta'));
+
+  // ⛨ Auth Guard — shield SVG node (security layer)
+  const auth = new Node('Auth Guard', { type: 'auth', category: 'server', shape: 'shield' });
+  auth.addInput('token', new Input(textSocket, 'Token'));
+  auth.addOutput('ok', new Output(execSocket, 'Verified'));
+
+  // ☁ Cloud Storage — cloud SVG node (data source)
+  const cloudSrc = new Node('Cloud Fetch', { type: 'storage', category: 'instance', shape: 'cloud' });
+  cloudSrc.addInput('query', new Input(dataSocket, 'Query'));
+  cloudSrc.addOutput('docs', new Output(arraySocket, 'Documents'));
+
+  // ⚡ Event Trigger — bolt SVG node (startup signal)
+  const trigger = new Node('Trigger', { type: 'trigger', category: 'control', shape: 'bolt' });
   trigger.addOutput('exec', new Output(execSocket, 'Exec'));
-  trigger.addOutput('payload', new Output(dataSocket, 'Payload'));
-  trigger.addOutput('headers', new Output(textSocket, 'Headers'));
-  trigger.addControl('interval', new InputControl('text', { initial: '*/5 * * * *', readonly: true }));
+  trigger.addOutput('config', new Output(textSocket, 'Config'));
 
-  // 2. HTTP Request
+  // ══════════════════════════════════════════════════
+  // Row 2: Processing Pipeline (standard nodes)
+  // ══════════════════════════════════════════════════
+
+  // HTTP Request (standard rect)
   const httpReq = new Node('HTTP Request', { type: 'action', category: 'control' });
   httpReq.addInput('exec', new Input(execSocket, 'Exec'));
   httpReq.addInput('data', new Input(dataSocket, 'Request'));
-  httpReq.addInput('auth', new Input(textSocket, 'Auth'));
   httpReq.addOutput('response', new Output(dataSocket, 'Response'));
-  httpReq.addControl('url', new InputControl('text', { initial: 'api.example.com' }));
+  httpReq.addControl('url', new InputControl('text', { initial: 'api.openai.com/v1/chat' }));
 
-  // 3. AI Agent — processes query
+  // AI Agent (standard rect)
   const aiAgent = new Node('AI Agent', { type: 'ai', category: 'data' });
   aiAgent.addInput('prompt', new Input(dataSocket, 'Prompt'));
+  aiAgent.addInput('context', new Input(arraySocket, 'Context'));
   aiAgent.addOutput('result', new Output(dataSocket, 'Result'));
   aiAgent.addOutput('tokens', new Output(textSocket, 'Tokens'));
   aiAgent.addControl('model', new InputControl('text', { initial: 'gpt-4o' }));
 
-  // 4. Filter (pill) — passes/rejects based on criteria
+  // Filter (pill shape)
   const filter = new Node('Filter', { type: 'filter', category: 'default', shape: 'pill' });
   filter.addInput('in', new Input(dataSocket, 'In'));
-  filter.addOutput('out', new Output(dataSocket, 'Out'));
+  filter.addOutput('pass', new Output(dataSocket, 'Pass'));
+  filter.addOutput('reject', new Output(dataSocket, 'Reject'));
 
-  // 5. Merge (circle) — combines multiple streams
+  // Merge (circle shape)
   const merge = new Node('Merge', { type: 'merge', category: 'control', shape: 'circle' });
   merge.addInput('a', new Input(anySocket, 'A'));
   merge.addInput('b', new Input(anySocket, 'B'));
   merge.addOutput('out', new Output(anySocket, 'Out'));
 
-  // 6. Save Result
-  const save = new Node('Save Result', { type: 'output', category: 'instance' });
-  save.addInput('data', new Input(anySocket, 'Data'));
-  save.addOutput('status', new Output(textSocket, 'Status'));
+  // ══════════════════════════════════════════════════
+  // Row 3: Delivery & Monitoring
+  // ══════════════════════════════════════════════════
 
-  // 7. Debug — inspector node showing incoming data
-  const debug = new Node('Debug', { type: 'debug', category: 'default' });
+  // ⬡ CDN Publish — octagon SVG (distribution)
+  const cdn = new Node('CDN Publish', { type: 'publish', category: 'server', shape: 'octagon' });
+  cdn.addInput('content', new Input(anySocket, 'Content'));
+  cdn.addOutput('url', new Output(textSocket, 'URL'));
+
+  // 🗄 Database — database SVG (persistence)
+  const db = new Node('Database', { type: 'database', category: 'data', shape: 'database' });
+  db.addInput('data', new Input(anySocket, 'Data'));
+  db.addOutput('id', new Output(textSocket, 'Record ID'));
+
+  // ♥ Health Monitor — heart SVG (system health)
+  const health = new Node('Health', { type: 'health', category: 'instance', shape: 'heart' });
+  health.addInput('ping', new Input(execSocket, 'Ping'));
+  health.addOutput('status', new Output(textSocket, 'Status'));
+
+  // Debug (standard rect — inspector)
+  const debug = new Node('Debug Log', { type: 'debug', category: 'default' });
   debug.addInput('inspect', new Input(anySocket, 'Inspect'));
-  debug.addControl('output', new InputControl('text', { initial: '{ status: "ok" }', readonly: true }));
+  debug.addControl('output', new InputControl('text', { initial: '{ status: "ok", latency: "42ms" }', readonly: true }));
 
-  // 8. Subgraph — "Data Pipeline" with inner nodes
-  const subgraph = new SubgraphNode('Data Pipeline', { category: 'data' });
-  // Set up inner pipeline
-  const innerParseSocket = new Socket('data', { color: '#4a9eff' });
+  // ★ Notification — star SVG (alerts)
+  const notify = new Node('Notify', { type: 'event', category: 'control', shape: 'star' });
+  notify.addInput('event', new Input(textSocket, 'Event'));
+
+  // ══════════════════════════════════════════════════
+  // Subgraph: Data Enrichment Pipeline
+  // ══════════════════════════════════════════════════
+
+  const subgraph = new SubgraphNode('Data Enrichment', { category: 'data' });
+  const innerSocket = new Socket('data', { color: '#4a9eff' });
+
   const innerParse = new Node('Parse JSON', { type: 'transform', category: 'data' });
-  innerParse.addInput('raw', new Input(innerParseSocket, 'Raw'));
-  innerParse.addOutput('parsed', new Output(innerParseSocket, 'Parsed'));
+  innerParse.addInput('raw', new Input(innerSocket, 'Raw'));
+  innerParse.addOutput('parsed', new Output(innerSocket, 'Parsed'));
   innerParse._exposed = 'input';
 
-  const innerValidate = new Node('Validate Schema', { type: 'validation', category: 'control' });
-  innerValidate.addInput('data', new Input(innerParseSocket, 'Data'));
-  innerValidate.addOutput('valid', new Output(innerParseSocket, 'Valid'));
+  const innerValidate = new Node('Validate', { type: 'validation', category: 'control' });
+  innerValidate.addInput('data', new Input(innerSocket, 'Data'));
+  innerValidate.addOutput('valid', new Output(innerSocket, 'Valid'));
 
-  const innerTransform = new Node('Transform', { type: 'transform', category: 'instance' });
-  innerTransform.addInput('input', new Input(innerParseSocket, 'Input'));
-  innerTransform.addOutput('output', new Output(innerParseSocket, 'Output'));
-  innerTransform._exposed = 'output';
+  const innerEnrich = new Node('Enrich', { type: 'transform', category: 'instance' });
+  innerEnrich.addInput('input', new Input(innerSocket, 'Input'));
+  innerEnrich.addOutput('output', new Output(innerSocket, 'Output'));
+  innerEnrich._exposed = 'output';
 
   subgraph.innerEditor.addNode(innerParse);
   subgraph.innerEditor.addNode(innerValidate);
-  subgraph.innerEditor.addNode(innerTransform);
+  subgraph.innerEditor.addNode(innerEnrich);
   subgraph.innerEditor.addConnection(new Connection(innerParse, 'parsed', innerValidate, 'data'));
-  subgraph.innerEditor.addConnection(new Connection(innerValidate, 'valid', innerTransform, 'input'));
+  subgraph.innerEditor.addConnection(new Connection(innerValidate, 'valid', innerEnrich, 'input'));
   subgraph.innerPositions = {
     [innerParse.id]: { x: 100, y: 100 },
     [innerValidate.id]: { x: 400, y: 100 },
-    [innerTransform.id]: { x: 700, y: 100 },
+    [innerEnrich.id]: { x: 700, y: 100 },
   };
-  // Sync auto-ports from exposed inner nodes
   subgraph.syncPorts();
 
+  // ══════════════════════════════════════════════════
   // Add all nodes
-  editor.addNode(trigger);
-  editor.addNode(httpReq);
-  editor.addNode(aiAgent);
-  editor.addNode(filter);
-  editor.addNode(merge);
-  editor.addNode(save);
-  editor.addNode(debug);
-  editor.addNode(subgraph);
+  // ══════════════════════════════════════════════════
 
-  // ── SVG Vector Nodes — showcase area ──
+  const allNodes = [
+    trigger, auth, gateway, cloudSrc,
+    httpReq, aiAgent, filter, merge,
+    cdn, db, health, debug, notify,
+    subgraph,
+  ];
+  allNodes.forEach((n) => editor.addNode(n));
 
-  // Hexagon: infrastructure/server hub
-  const svgHex = new Node('API Gateway', { type: 'gateway', category: 'server', shape: 'hexagon' });
-  svgHex.addInput('req', new Input(dataSocket, 'Request'));
-  svgHex.addOutput('res', new Output(dataSocket, 'Response'));
+  // ══════════════════════════════════════════════════
+  // Connections — unified data flow
+  // ══════════════════════════════════════════════════
 
-  // Star: highlight/event node
-  const svgStar = new Node('Event', { type: 'event', category: 'control', shape: 'star' });
-  svgStar.addOutput('signal', new Output(execSocket, 'Signal'));
+  // Row 1: Trigger → Auth → Gateway, Gateway → HTTP & Cloud
+  editor.addConnection(new Connection(trigger, 'exec', auth, 'token'));
+  editor.addConnection(new Connection(auth, 'ok', gateway, 'auth'));
+  editor.addConnection(new Connection(gateway, 'data', httpReq, 'data'));
+  editor.addConnection(new Connection(gateway, 'meta', cloudSrc, 'query'));
 
-  // Cloud: cloud service node
-  const svgCloud = new Node('Cloud Storage', { type: 'storage', category: 'instance', shape: 'cloud' });
-  svgCloud.addInput('data', new Input(dataSocket, 'Data'));
-  svgCloud.addOutput('url', new Output(textSocket, 'URL'));
-
-  // Shield: security/auth node
-  const svgShield = new Node('Auth Guard', { type: 'auth', category: 'server', shape: 'shield' });
-  svgShield.addInput('token', new Input(textSocket, 'Token'));
-  svgShield.addOutput('ok', new Output(execSocket, 'OK'));
-  svgShield.addOutput('fail', new Output(execSocket, 'Fail'));
-
-  // Heart: health-check node
-  const svgHeart = new Node('Health', { type: 'health', category: 'instance', shape: 'heart' });
-  svgHeart.addInput('ping', new Input(execSocket, 'Ping'));
-  svgHeart.addOutput('pong', new Output(execSocket, 'Pong'));
-
-  editor.addNode(svgHex);
-  editor.addNode(svgStar);
-  editor.addNode(svgCloud);
-  editor.addNode(svgShield);
-  editor.addNode(svgHeart);
-
-  // SVG-to-SVG connections
-  editor.addConnection(new Connection(svgStar, 'signal', svgShield, 'token'));
-  editor.addConnection(new Connection(svgShield, 'ok', svgHex, 'req'));
-  editor.addConnection(new Connection(svgHex, 'res', svgCloud, 'data'));
-  editor.addConnection(new Connection(svgHeart, 'pong', svgHex, 'req'));
-
-  // ── Connections — real data flow ──
-  // Main path: Trigger → HTTP → AI Agent → Filter → Merge(A) → Save
-  editor.addConnection(new Connection(trigger, 'exec', httpReq, 'exec'));
-  editor.addConnection(new Connection(trigger, 'payload', httpReq, 'data'));
-  editor.addConnection(new Connection(trigger, 'headers', httpReq, 'auth'));
+  // Row 2: HTTP → AI, Cloud → AI context, AI → Filter → Merge → Subgraph
   editor.addConnection(new Connection(httpReq, 'response', aiAgent, 'prompt'));
+  editor.addConnection(new Connection(cloudSrc, 'docs', aiAgent, 'context'));
   editor.addConnection(new Connection(aiAgent, 'result', filter, 'in'));
-  editor.addConnection(new Connection(filter, 'out', merge, 'a'));
-  // Side path: AI tokens → Merge(B) (metadata stream)
+  editor.addConnection(new Connection(filter, 'pass', merge, 'a'));
   editor.addConnection(new Connection(aiAgent, 'tokens', merge, 'b'));
-  // Merge → Save
-  editor.addConnection(new Connection(merge, 'out', save, 'data'));
-  // Save → Debug
-  editor.addConnection(new Connection(save, 'status', debug, 'inspect'));
+  editor.addConnection(new Connection(merge, 'out', subgraph, 'raw'));
 
+  // Row 3: Subgraph → CDN & DB, DB → Debug, CDN → Notify, Health loop
+  editor.addConnection(new Connection(subgraph, 'output', cdn, 'content'));
+  editor.addConnection(new Connection(subgraph, 'output', db, 'data'));
+  editor.addConnection(new Connection(db, 'id', debug, 'inspect'));
+  editor.addConnection(new Connection(cdn, 'url', notify, 'event'));
+  editor.addConnection(new Connection(trigger, 'config', health, 'ping'));
+  editor.addConnection(new Connection(health, 'status', debug, 'inspect'));
+
+  // ══════════════════════════════════════════════════
   // Node type catalog for context menu
+  // ══════════════════════════════════════════════════
+
   const NODE_TYPES = [
-    { label: 'Standard Node', type: 'default', category: 'default', shape: undefined },
-    { label: 'Trigger', type: 'trigger', category: 'server', shape: undefined },
-    { label: 'Action', type: 'action', category: 'control', shape: undefined },
+    { label: 'Standard Node', type: 'default', category: 'default' },
+    { label: 'Trigger', type: 'trigger', category: 'server' },
+    { label: 'Action', type: 'action', category: 'control' },
     { label: 'Hexagon', type: 'gateway', category: 'server', shape: 'hexagon' },
     { label: 'Star', type: 'event', category: 'control', shape: 'star' },
     { label: 'Cloud', type: 'storage', category: 'instance', shape: 'cloud' },
@@ -183,6 +201,10 @@ function initDemo() {
     { label: 'Heart', type: 'health', category: 'instance', shape: 'heart' },
     { label: 'Pill', type: 'filter', category: 'default', shape: 'pill' },
     { label: 'Circle', type: 'merge', category: 'control', shape: 'circle' },
+    { label: 'Octagon', type: 'publish', category: 'server', shape: 'octagon' },
+    { label: 'Database', type: 'database', category: 'data', shape: 'database' },
+    { label: 'Bolt', type: 'trigger', category: 'control', shape: 'bolt' },
+    { label: 'Diamond', type: 'decision', category: 'control', shape: 'diamond' },
   ];
 
   /**
@@ -202,7 +224,7 @@ function initDemo() {
     if (c) c.setNodePosition(newNode.id, x, y);
   };
 
-  // Context menu add node — show typed catalog
+  // Context menu: add node
   editor.on('contextadd', ({ x, y }) => {
     const c = document.querySelector('node-canvas');
     if (!c) return;
@@ -212,19 +234,18 @@ function initDemo() {
       action: () => addTypedNode(def, x, y),
     }));
     const container = c.ref?.canvasContainer || c;
-    const rect = container.getBoundingClientRect();
     const menuX = x * (c.$.zoom || 1) + (c.$.panX || 0);
     const menuY = y * (c.$.zoom || 1) + (c.$.panY || 0);
     c.ref?.contextMenu?.show(menuX, menuY, items);
   });
 
-  // Context menu add frame
+  // Context menu: add frame
   editor.on('contextaddframe', ({ x, y }) => {
     const frame = new Frame('Group', { x, y, width: 400, height: 300, color: '#4a9eff' });
     editor.addFrame(frame);
   });
 
-  // Context menu add comment
+  // Context menu: add comment
   editor.on('contextaddcomment', ({ x, y }) => {
     const comment = new Node('Add your notes here...', { type: 'comment', shape: 'comment' });
     editor.addNode(comment);
@@ -239,16 +260,13 @@ function initDemo() {
   });
 
   // Apply theme to :root so both layout and canvas inherit tokens
-  const applyToRoot = (theme) => {
-    applyTheme(document.documentElement, theme);
-  };
+  const applyToRoot = (theme) => applyTheme(document.documentElement, theme);
   applyToRoot(GREY_NEUTRAL);
 
   // Setup layout
   const layout = document.querySelector('panel-layout');
   if (!layout) return;
 
-  // Register panel types
   layout.registerPanelType('canvas', {
     title: 'Canvas',
     icon: 'account_tree',
@@ -265,7 +283,6 @@ function initDemo() {
     component: 'palette-browser',
   });
 
-  // Set initial layout: canvas (top 75%) | inspector (bottom 25%)
   const initialLayout = LayoutTree.createSplit(
     'vertical',
     LayoutTree.createPanel('canvas'),
@@ -273,7 +290,6 @@ function initDemo() {
     0.75,
   );
 
-  // Only set if no stored layout
   if (!localStorage.getItem('symbiote-node-demo-layout')) {
     layout.setLayout(initialLayout);
   }
@@ -303,44 +319,45 @@ function initDemo() {
       classes: { Node, Connection, Frame, Socket, Input, Output, InputControl },
     });
     history.bindKeyboard(canvas);
-    // Clear initial history so setup actions are not undoable
     history.clear();
 
-    // Set positions — real pipeline layout
+    // ══════════════════════════════════════════════════
+    // Layout: 3 staggered rows
+    // ══════════════════════════════════════════════════
+
     setTimeout(() => {
+      // Row 1: Data Acquisition (y ~ 100)
       canvas.setNodePosition(trigger.id, 60, 120);
-      canvas.setNodePosition(httpReq.id, 360, 100);
-      canvas.setNodePosition(aiAgent.id, 680, 80);
-      canvas.setNodePosition(filter.id, 1020, 120);
-      canvas.setNodePosition(merge.id, 1200, 200);
-      canvas.setNodePosition(save.id, 1380, 180);
-      canvas.setNodePosition(debug.id, 1580, 260);
-      canvas.setNodePosition(subgraph.id, 680, 400);
+      canvas.setNodePosition(auth.id, 280, 100);
+      canvas.setNodePosition(gateway.id, 500, 100);
+      canvas.setNodePosition(cloudSrc.id, 800, 60);
 
-      // Demo reroute node
-      const reroute = new Node('', { type: 'reroute', shape: 'pill' });
-      reroute.addInput('in', new Input(new Socket('any'), ''));
-      reroute.addOutput('out', new Output(new Socket('any'), ''));
-      editor.addNode(reroute);
-      canvas.setNodePosition(reroute.id, 920, 250);
+      // Row 2: Processing (y ~ 320)
+      canvas.setNodePosition(httpReq.id, 500, 320);
+      canvas.setNodePosition(aiAgent.id, 800, 300);
+      canvas.setNodePosition(filter.id, 1120, 340);
+      canvas.setNodePosition(merge.id, 1320, 320);
+      canvas.setNodePosition(subgraph.id, 1520, 300);
 
-      // Demo: set error on filter node
+      // Row 3: Delivery & Monitoring (y ~ 540)
+      canvas.setNodePosition(cdn.id, 1520, 560);
+      canvas.setNodePosition(db.id, 1800, 540);
+      canvas.setNodePosition(debug.id, 2060, 520);
+      canvas.setNodePosition(notify.id, 1800, 740);
+      canvas.setNodePosition(health.id, 60, 360);
+
+      // Demo features
       canvas.setNodeError(filter.id, 'Missing required condition');
-
-      // Demo: preview area on AI Agent (text) and Debug (text)
       canvas.setPreview(aiAgent.id, '▶ Processing prompt...\n✓ 847 tokens used\n✓ Response cached', 'text');
-
-      // Position SVG vector nodes below main pipeline
-      canvas.setNodePosition(svgStar.id, 80, 700);
-      canvas.setNodePosition(svgShield.id, 300, 700);
-      canvas.setNodePosition(svgHex.id, 560, 700);
-      canvas.setNodePosition(svgCloud.id, 820, 700);
-      canvas.setNodePosition(svgHeart.id, 80, 960);
     }, 200);
 
-    // Demo frame around data source nodes
-    const pipelineFrame = new Frame('Data Source', { x: 40, y: 60, width: 660, height: 360, color: '#5cb8ff' });
-    editor.addFrame(pipelineFrame);
+    // Frames
+    const sourceFrame = new Frame('Data Sources', { x: 40, y: 40, width: 840, height: 240, color: '#5cb8ff' });
+    const processFrame = new Frame('AI Processing', { x: 460, y: 260, width: 1200, height: 200, color: '#a78bfa' });
+    const deliveryFrame = new Frame('Delivery', { x: 1480, y: 500, width: 700, height: 300, color: '#5cd87a' });
+    editor.addFrame(sourceFrame);
+    editor.addFrame(processFrame);
+    editor.addFrame(deliveryFrame);
 
     // --- Flow Simulator (cyclic) ---
     const sim = new FlowSimulator(editor, canvas);

@@ -129,7 +129,6 @@ export class ConnectFlow {
   #pick(data) {
     this.#picked = data;
     const pos = this.#getSocketWorldPosition(data);
-    this.#pickedStartPos = pos;
     if (this.#onPseudoStart) this.#onPseudoStart(pos.x, pos.y, data);
   }
 
@@ -137,8 +136,7 @@ export class ConnectFlow {
     if (!this.#picked) return;
     e.preventDefault();
 
-    // Use cached start position (fixed at pick time, not recalculated per frame)
-    const startPos = this.#pickedStartPos;
+    const startPos = this.#getSocketWorldPosition(this.#picked);
     const t = this.#getTransform();
     // Use clientX/Y minus container rect for accurate positioning
     const endX = (e.clientX - t.rect.left - t.x) / t.k;
@@ -171,7 +169,6 @@ export class ConnectFlow {
     }
 
     this.#picked = null;
-    this.#pickedStartPos = null;
     if (this.#onPseudoEnd) this.#onPseudoEnd();
   };
   /**

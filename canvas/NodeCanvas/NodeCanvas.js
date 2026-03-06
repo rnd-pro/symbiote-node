@@ -76,6 +76,9 @@ export class NodeCanvas extends Symbiote {
   /** @type {boolean} */
   #snapEnabled = false;
 
+  /** @type {number|null} */
+  #panAnimFrame = null;
+
   /** @type {string} */
   #themeName = 'dark-default';
 
@@ -1094,7 +1097,71 @@ export class NodeCanvas extends Symbiote {
     }
   }
 
+  /**
+   * Smoothly pan viewport to center on a node
+   * @param {string} nodeId
+   * @param {number} [duration=400] - Animation duration in ms
+   */
+  panToNode(nodeId, duration = 400) {
+    const el = this.#nodeViews.get(nodeId);
+    if (!el?._position) return;
+    const container = this.ref.canvasContainer;
+    if (!container) return;
+
+    const cx = container.clientWidth / 2;
+    const cy = container.clientHeight / 2;
+    const nodeW = (el.offsetWidth || 180) / 2;
+    const nodeH = (el.offsetHeight || 60) / 2;
+    const targetX = -(el._position.x + nodeW) * this.$.zoom + cx;
+    const targetY = -(el._position.y + nodeH) * this.$.zoom + cy;
+
+    this.#animatePan(targetX, targetY, duration);
+  }
+
+  /**
+   * RAF-based smooth pan animation with easeOutCubic
+   * @param {number} targetX
+   * @param {number} targetY
+   * @param {number} duration
+   */
+  #animatePan(targetX, targetY, duration) {
+    if (this.#panAnimFrame) {
+      cancelAnimationFrame(this.#panAnimFrame);
+      this.#panAnimFrame = null;
+    }
+
+    const startX = this.$.panX;
+    const startY = this.$.panY;
+    const dx = targetX - startX;
+    const dy = targetY - startY;
+
+    // Skip if already close enough
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+
+    const startTime = performance.now();
+
+    const step = (now) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      // easeOutCubic
+      const ease = 1 - Math.pow(1 - t, 3);
+
+      this.$.panX = startX + dx * ease;
+      this.$.panY = startY + dy * ease;
+      this.#updateTransform();
+
+      if (t < 1) {
+        this.#panAnimFrame = requestAnimationFrame(step);
+      } else {
+        this.#panAnimFrame = null;
+      }
+    };
+
+    this.#panAnimFrame = requestAnimationFrame(step);
+  }
+
   destroyCallback() {
+    if (this.#panAnimFrame) cancelAnimationFrame(this.#panAnimFrame);
     if (this.#drag) this.#drag.destroy();
     if (this.#zoom) this.#zoom.destroy();
     if (this.#connectFlow) this.#connectFlow.destroy();

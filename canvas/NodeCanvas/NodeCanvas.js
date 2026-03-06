@@ -985,6 +985,7 @@ export class NodeCanvas extends Symbiote {
           this.$.panX = x;
           this.$.panY = y;
           this.#updateTransform();
+          this.dispatchEvent(new CustomEvent('manualviewport'));
         },
         onDrop: (e) => {
           if (e?.target === container) {
@@ -1004,6 +1005,7 @@ export class NodeCanvas extends Symbiote {
       this.$.panX += ox;
       this.$.panY += oy;
       this.#updateTransform();
+      this.dispatchEvent(new CustomEvent('manualviewport'));
     });
 
     // Context menu + keyboard

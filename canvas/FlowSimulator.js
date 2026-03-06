@@ -33,6 +33,26 @@ export class FlowSimulator {
   /** @type {boolean} follow active node with camera */
   followActive = false;
 
+  /** @type {boolean} temporarily paused by manual interaction */
+  #followPaused = false;
+
+  /** @type {number|null} */
+  #followResumeTimer = null;
+
+  /** @type {number} ms before follow resumes after manual interaction */
+  followResumDelay = 3000;
+
+  /** Bound handler for manualviewport event */
+  #handleManualViewport = () => {
+    if (!this.followActive || !this.#running) return;
+    this.#followPaused = true;
+    if (this.#followResumeTimer) clearTimeout(this.#followResumeTimer);
+    this.#followResumeTimer = setTimeout(() => {
+      this.#followPaused = false;
+      this.#followResumeTimer = null;
+    }, this.followResumDelay);
+  };
+
   /**
    * @param {import('../core/Editor.js').NodeEditor} editor
    * @param {Object} canvas - NodeCanvas instance
@@ -55,6 +75,8 @@ export class FlowSimulator {
     if (this.#running) return;
     this.#running = true;
     this.#abort = new AbortController();
+    this.#followPaused = false;
+    this.#canvas.addEventListener('manualviewport', this.#handleManualViewport);
 
     const order = this.#topologicalSort();
     const connections = this.#editor.getConnections();
@@ -67,7 +89,7 @@ export class FlowSimulator {
         this.#setNodeState(nodeId, 'processing');
 
         // Smooth pan to active node
-        if (this.followActive) {
+        if (this.followActive && !this.#followPaused) {
           this.#canvas.panToNode?.(nodeId);
         }
 
@@ -99,6 +121,7 @@ export class FlowSimulator {
     } finally {
       this.#running = false;
       this.#abort = null;
+      this.#canvas.removeEventListener('manualviewport', this.#handleManualViewport);
     }
   }
 
@@ -106,6 +129,12 @@ export class FlowSimulator {
   stop() {
     if (this.#abort) this.#abort.abort();
     this.#running = false;
+    this.#canvas.removeEventListener('manualviewport', this.#handleManualViewport);
+    if (this.#followResumeTimer) {
+      clearTimeout(this.#followResumeTimer);
+      this.#followResumeTimer = null;
+    }
+    this.#followPaused = false;
 
     // Clear all node states
     for (const node of this.#editor.getNodes()) {

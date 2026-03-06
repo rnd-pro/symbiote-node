@@ -435,6 +435,28 @@ function initDemo() {
       });
     }
 
+    // --- Copy Layout button ---
+    const btnCopy = document.getElementById('btnCopyLayout');
+    if (btnCopy) {
+      btnCopy.addEventListener('click', async () => {
+        const positions = canvas.getPositions();
+        const nodes = editor.getNodes();
+        const labeled = {};
+        for (const n of nodes) {
+          const pos = positions[n.id];
+          if (pos) labeled[n.label] = { id: n.id, x: Math.round(pos[0]), y: Math.round(pos[1]) };
+        }
+        const layout = {
+          viewport: { panX: Math.round(canvas.$.panX), panY: Math.round(canvas.$.panY), zoom: Math.round(canvas.$.zoom * 100) / 100 },
+          nodes: labeled,
+        };
+        const json = JSON.stringify(layout, null, 2);
+        await navigator.clipboard.writeText(json);
+        btnCopy.lastChild.textContent = ' Copied!';
+        setTimeout(() => { btnCopy.lastChild.textContent = ' Copy Layout'; }, 1500);
+      });
+    }
+
     // Console palette/skin switching
     const palettes = [GREY_PALETTE, DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE];
     let paletteIdx = 0;

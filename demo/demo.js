@@ -19,6 +19,7 @@ import '../layout/Layout/Layout.js';
 import '../palette/PaletteBrowser/PaletteBrowser.js';
 import './EventLog/EventLog.js';
 import './AiChat/AiChat.js';
+import '../layout/LayoutSidebar/LayoutSidebar.js';
 
 /**
  * Initialize AI content pipeline demo
@@ -270,6 +271,17 @@ function initDemo() {
   // Setup layout
   const layout = document.querySelector('panel-layout');
   if (!layout) return;
+
+  // Setup sidebar
+  const sidebar = document.querySelector('layout-sidebar');
+  if (sidebar) {
+    sidebar.setSections([
+      { id: 'canvas', icon: 'account_tree', label: 'Canvas' },
+      { id: 'eventlog', icon: 'terminal', label: 'Event Log' },
+      { id: 'palette', icon: 'palette', label: 'Palette' },
+      { id: 'aichat', icon: 'smart_toy', label: 'AI Chat' },
+    ]);
+  }
 
   layout.registerPanelType('canvas', {
     title: 'Canvas',

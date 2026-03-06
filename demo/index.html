@@ -84,6 +84,12 @@
 
     main {
       flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    main panel-layout {
+      flex: 1;
       overflow: hidden;
     }
   </style>
@@ -114,6 +120,7 @@
     </a>
   </header>
   <main>
+    <layout-sidebar></layout-sidebar>
     <panel-layout storage-key="symbiote-node-demo-v4"></panel-layout>
   </main>
   <script type="importmap">

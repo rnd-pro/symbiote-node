@@ -368,6 +368,16 @@ graph-node {
     & .controls {
       display: none;
     }
+    & .sn-shape-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 40px;
+      color: var(--sn-shape-watermark-color, rgba(255, 255, 255, 0.08));
+      pointer-events: none;
+      z-index: 0;
+    }
     /* Hide DOM port items — ConnectionRenderer computes positions mathematically */
     & .inputs, & .outputs {
       display: none;

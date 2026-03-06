@@ -386,6 +386,12 @@ export class NodeCanvas extends Symbiote {
   getPathStyle() { return this.#connRenderer?.pathStyle || 'bezier'; }
 
   /**
+   * Clear all connector caches and re-render.
+   * Call after initial node positioning to settle SVG connectors.
+   */
+  refreshConnections() { this.#connRenderer?.refreshAll(); }
+
+  /**
    * Set error state on a node with frame-style error display
    * @param {string} nodeId
    * @param {string} message - Error message to display

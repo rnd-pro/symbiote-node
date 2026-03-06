@@ -354,6 +354,9 @@ function initDemo() {
       // Demo features: error state, preview
       canvas.setNodeError(filter.id, 'Missing required condition');
       canvas.setPreview(aiAgent.id, '▶ Processing prompt...\n✓ 847 tokens used\n✓ Response cached', 'text');
+
+      // Settle SVG connectors after all nodes are positioned
+      requestAnimationFrame(() => canvas.refreshConnections());
     }, 200);
 
     // Frames

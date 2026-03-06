@@ -16,4 +16,5 @@ export const sidebarTemplate = html`
 </div>
 
 <div class="sb-sections" itemize="sections" item-tag="sidebar-section"></div>
+<div class="sb-resize-handle"></div>
 `;

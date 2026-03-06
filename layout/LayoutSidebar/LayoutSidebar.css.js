@@ -15,10 +15,32 @@ layout-sidebar {
   overflow: hidden;
   transition: width 0.2s ease, min-width 0.2s ease;
   user-select: none;
+  position: relative;
 
   &[collapsed] {
     width: 48px;
     min-width: 48px;
+  }
+}
+
+/* Resize handle — right edge */
+layout-sidebar .sb-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  transition: background 0.15s;
+
+  &:hover, &.dragging {
+    background: var(--sn-node-selected, #4a9eff);
+    opacity: 0.5;
+  }
+
+  layout-sidebar[collapsed] & {
+    display: none;
   }
 }
 

@@ -14,6 +14,7 @@ import './SidebarSection.js';
 
 const STORAGE_KEY_COLLAPSED = 'sn-sidebar-collapsed';
 const STORAGE_KEY_CONFIG = 'sn-sidebar-config';
+const STORAGE_KEY_WIDTH = 'sn-sidebar-width';
 
 export class LayoutSidebar extends Symbiote {
 
@@ -43,16 +44,65 @@ export class LayoutSidebar extends Symbiote {
       this.toggleAttribute('edit-mode', val);
     });
 
-    // Restore collapsed state
+    // Restore collapsed state (default: collapsed)
     const stored = localStorage.getItem(STORAGE_KEY_COLLAPSED);
-    if (stored === 'true') {
+    if (stored === null || stored === 'true') {
       this.$.collapsed = true;
     }
+
+    // Restore saved width
+    const savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
+    if (savedWidth) this.style.width = savedWidth + 'px';
 
     // Persist collapsed state
     this.sub('collapsed', (val) => {
       localStorage.setItem(STORAGE_KEY_COLLAPSED, String(val));
+      // Reset inline width when collapsing (CSS handles 48px)
+      if (val) {
+        this.style.width = '';
+        this.style.minWidth = '';
+      } else {
+        // Restore saved width when expanding
+        const w = localStorage.getItem(STORAGE_KEY_WIDTH);
+        if (w) {
+          this.style.width = w + 'px';
+          this.style.minWidth = w + 'px';
+        }
+      }
     });
+
+    // Resize drag handle
+    const handle = this.querySelector('.sb-resize-handle');
+    if (handle) {
+      let startX = 0;
+      let startW = 0;
+
+      const onMove = (e) => {
+        const newWidth = Math.max(120, Math.min(600, startW + (e.clientX - startX)));
+        this.style.width = newWidth + 'px';
+        this.style.minWidth = newWidth + 'px';
+        this.style.transition = 'none';
+      };
+
+      const onUp = () => {
+        handle.classList.remove('dragging');
+        this.style.transition = '';
+        const w = this.offsetWidth;
+        localStorage.setItem(STORAGE_KEY_WIDTH, w);
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+      };
+
+      handle.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startX = e.clientX;
+        startW = this.offsetWidth;
+        handle.classList.add('dragging');
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      });
+    }
   }
 
   /**

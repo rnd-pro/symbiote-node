@@ -329,37 +329,37 @@ function initDemo() {
     // ══════════════════════════════════════════════════
 
     setTimeout(() => {
-      // Row 1: Data Acquisition (y=120, columns at x=80, 340, 600, 860)
-      canvas.setNodePosition(trigger.id, 80, 120);
-      canvas.setNodePosition(auth.id, 340, 120);
-      canvas.setNodePosition(gateway.id, 600, 120);
-      canvas.setNodePosition(cloudSrc.id, 860, 120);
+      // Row 1: Data Acquisition
+      canvas.setNodePosition(trigger.id, 13, 118);
+      canvas.setNodePosition(auth.id, 180, 100);
+      canvas.setNodePosition(gateway.id, 380, 100);
+      canvas.setNodePosition(cloudSrc.id, 580, 100);
 
-      // Row 2: Processing (y=380, columns at x=340, 600, 880, 1060, 1240)
-      canvas.setNodePosition(httpReq.id, 340, 380);
-      canvas.setNodePosition(aiAgent.id, 620, 380);
-      canvas.setNodePosition(filter.id, 920, 400);
-      canvas.setNodePosition(merge.id, 1100, 380);
-      canvas.setNodePosition(subgraph.id, 1280, 380);
+      // Row 2: Processing
+      canvas.setNodePosition(httpReq.id, -158, 378);
+      canvas.setNodePosition(aiAgent.id, 122, 378);
+      canvas.setNodePosition(filter.id, 380, 500);
+      canvas.setNodePosition(merge.id, 580, 480);
+      canvas.setNodePosition(subgraph.id, 740, 420);
 
-      // Row 3: Delivery (y=620, columns matching row 2 end)
-      canvas.setNodePosition(cdn.id, 1280, 620);
-      canvas.setNodePosition(db.id, 1540, 620);
-      canvas.setNodePosition(debug.id, 1800, 620);
-      canvas.setNodePosition(notify.id, 1540, 800);
+      // Row 3: Delivery
+      canvas.setNodePosition(cdn.id, 80, 820);
+      canvas.setNodePosition(db.id, 320, 820);
+      canvas.setNodePosition(debug.id, 540, 800);
+      canvas.setNodePosition(notify.id, 340, 1020);
 
-      // Side: Health monitor (y=380, left side — connected to trigger)
-      canvas.setNodePosition(health.id, 80, 400);
+      // Side: Health monitor
+      canvas.setNodePosition(health.id, -160, 820);
 
       // Demo features: error state, preview
       canvas.setNodeError(filter.id, 'Missing required condition');
       canvas.setPreview(aiAgent.id, '▶ Processing prompt...\n✓ 847 tokens used\n✓ Response cached', 'text');
     }, 200);
 
-    // Frames — precise wrapping with 20px padding
-    const sourceFrame = new Frame('Data Sources', { x: 40, y: 60, width: 980, height: 200, color: '#5cb8ff' });
-    const processFrame = new Frame('AI Processing', { x: 300, y: 320, width: 1120, height: 180, color: '#a78bfa' });
-    const deliveryFrame = new Frame('Delivery', { x: 1240, y: 560, width: 720, height: 180, color: '#5cd87a' });
+    // Frames
+    const sourceFrame = new Frame('Data Sources', { x: -30, y: 40, width: 780, height: 200, color: '#5cb8ff' });
+    const processFrame = new Frame('AI Processing', { x: -200, y: 320, width: 580, height: 180, color: '#a78bfa' });
+    const deliveryFrame = new Frame('Delivery', { x: -200, y: 760, width: 840, height: 180, color: '#5cd87a' });
     editor.addFrame(sourceFrame);
     editor.addFrame(processFrame);
     editor.addFrame(deliveryFrame);

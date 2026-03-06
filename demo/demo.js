@@ -290,7 +290,9 @@ function initDemo() {
     0.75,
   );
 
-  if (!localStorage.getItem('symbiote-node-demo-layout')) {
+  const STORAGE_KEY = 'symbiote-node-demo-v3';
+
+  if (!localStorage.getItem(STORAGE_KEY)) {
     layout.setLayout(initialLayout);
   }
 
@@ -322,39 +324,41 @@ function initDemo() {
     history.clear();
 
     // ══════════════════════════════════════════════════
-    // Layout: 3 staggered rows
+    // Node Positions — 20px grid, 280px column spacing
     // ══════════════════════════════════════════════════
 
     setTimeout(() => {
-      // Row 1: Data Acquisition (y ~ 100)
-      canvas.setNodePosition(trigger.id, 60, 120);
-      canvas.setNodePosition(auth.id, 280, 100);
-      canvas.setNodePosition(gateway.id, 500, 100);
-      canvas.setNodePosition(cloudSrc.id, 800, 60);
+      // Row 1: Data Acquisition (y=120, columns at x=80, 340, 600, 860)
+      canvas.setNodePosition(trigger.id, 80, 120);
+      canvas.setNodePosition(auth.id, 340, 120);
+      canvas.setNodePosition(gateway.id, 600, 120);
+      canvas.setNodePosition(cloudSrc.id, 860, 120);
 
-      // Row 2: Processing (y ~ 320)
-      canvas.setNodePosition(httpReq.id, 500, 320);
-      canvas.setNodePosition(aiAgent.id, 800, 300);
-      canvas.setNodePosition(filter.id, 1120, 340);
-      canvas.setNodePosition(merge.id, 1320, 320);
-      canvas.setNodePosition(subgraph.id, 1520, 300);
+      // Row 2: Processing (y=380, columns at x=340, 600, 880, 1060, 1240)
+      canvas.setNodePosition(httpReq.id, 340, 380);
+      canvas.setNodePosition(aiAgent.id, 620, 380);
+      canvas.setNodePosition(filter.id, 920, 400);
+      canvas.setNodePosition(merge.id, 1100, 380);
+      canvas.setNodePosition(subgraph.id, 1280, 380);
 
-      // Row 3: Delivery & Monitoring (y ~ 540)
-      canvas.setNodePosition(cdn.id, 1520, 560);
-      canvas.setNodePosition(db.id, 1800, 540);
-      canvas.setNodePosition(debug.id, 2060, 520);
-      canvas.setNodePosition(notify.id, 1800, 740);
-      canvas.setNodePosition(health.id, 60, 360);
+      // Row 3: Delivery (y=620, columns matching row 2 end)
+      canvas.setNodePosition(cdn.id, 1280, 620);
+      canvas.setNodePosition(db.id, 1540, 620);
+      canvas.setNodePosition(debug.id, 1800, 620);
+      canvas.setNodePosition(notify.id, 1540, 800);
 
-      // Demo features
+      // Side: Health monitor (y=380, left side — connected to trigger)
+      canvas.setNodePosition(health.id, 80, 400);
+
+      // Demo features: error state, preview
       canvas.setNodeError(filter.id, 'Missing required condition');
       canvas.setPreview(aiAgent.id, '▶ Processing prompt...\n✓ 847 tokens used\n✓ Response cached', 'text');
     }, 200);
 
-    // Frames
-    const sourceFrame = new Frame('Data Sources', { x: 40, y: 40, width: 840, height: 240, color: '#5cb8ff' });
-    const processFrame = new Frame('AI Processing', { x: 460, y: 260, width: 1200, height: 200, color: '#a78bfa' });
-    const deliveryFrame = new Frame('Delivery', { x: 1480, y: 500, width: 700, height: 300, color: '#5cd87a' });
+    // Frames — precise wrapping with 20px padding
+    const sourceFrame = new Frame('Data Sources', { x: 40, y: 60, width: 980, height: 200, color: '#5cb8ff' });
+    const processFrame = new Frame('AI Processing', { x: 300, y: 320, width: 1120, height: 180, color: '#a78bfa' });
+    const deliveryFrame = new Frame('Delivery', { x: 1240, y: 560, width: 720, height: 180, color: '#5cd87a' });
     editor.addFrame(sourceFrame);
     editor.addFrame(processFrame);
     editor.addFrame(deliveryFrame);

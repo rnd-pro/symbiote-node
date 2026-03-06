@@ -88,9 +88,9 @@
       overflow: hidden;
     }
 
-    main panel-layout {
-      flex: 1;
-      overflow: hidden;
+    #contentArea panel-layout {
+      position: absolute;
+      inset: 0;
     }
   </style>
 </head>
@@ -121,7 +121,7 @@
   </header>
   <main>
     <layout-sidebar></layout-sidebar>
-    <panel-layout storage-key="symbiote-node-demo-v4"></panel-layout>
+    <div id="contentArea" style="flex:1;overflow:hidden;position:relative;"></div>
   </main>
   <script type="importmap">
     {

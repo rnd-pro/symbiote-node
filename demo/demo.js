@@ -24,7 +24,7 @@ import '../layout/LayoutSidebar/LayoutSidebar.js';
 /**
  * Initialize AI content pipeline demo
  */
-function initDemo() {
+async function initDemo() {
   const editor = new NodeEditor();
 
   // Socket types
@@ -268,59 +268,150 @@ function initDemo() {
   const applyToRoot = (theme) => applyTheme(document.documentElement, theme);
   applyToRoot(GREY_NEUTRAL);
 
-  // Setup layout
-  const layout = document.querySelector('panel-layout');
-  if (!layout) return;
+  // ═══ Panel type registry ═══
+  const PANEL_TYPES = {
+    canvas: { title: 'Canvas', icon: 'account_tree', component: 'node-canvas' },
+    eventlog: { title: 'Event Log', icon: 'terminal', component: 'event-log' },
+    palette: { title: 'Palette', icon: 'palette', component: 'palette-browser' },
+    aichat: { title: 'AI Assistant', icon: 'smart_toy', component: 'ai-chat' },
+  };
 
-  // Setup sidebar
+  // ═══ Sidebar sections ═══
+  const SIDEBAR_SECTIONS = [
+    { id: 'canvas', icon: 'account_tree', label: 'Canvas' },
+    { id: 'eventlog', icon: 'terminal', label: 'Event Log' },
+    { id: 'palette', icon: 'palette', label: 'Palette' },
+    { id: 'aichat', icon: 'smart_toy', label: 'AI Chat' },
+  ];
+
+  // ═══ Section-based workspace (admin-panel pattern) ═══
+  const contentArea = document.getElementById('contentArea');
   const sidebar = document.querySelector('layout-sidebar');
+  /** @type {Map<string, HTMLElement>} */
+  const sectionPanels = new Map();
+
   if (sidebar) {
-    sidebar.setSections([
-      { id: 'canvas', icon: 'account_tree', label: 'Canvas' },
-      { id: 'eventlog', icon: 'terminal', label: 'Event Log' },
-      { id: 'palette', icon: 'palette', label: 'Palette' },
-      { id: 'aichat', icon: 'smart_toy', label: 'AI Chat' },
-    ]);
+    sidebar.setSections(SIDEBAR_SECTIONS);
   }
 
-  layout.registerPanelType('canvas', {
-    title: 'Canvas',
-    icon: 'account_tree',
-    component: 'node-canvas',
-  });
-  layout.registerPanelType('eventlog', {
-    title: 'Event Log',
-    icon: 'terminal',
-    component: 'event-log',
-  });
-  layout.registerPanelType('palette', {
-    title: 'Palette',
-    icon: 'palette',
-    component: 'palette-browser',
-  });
+  // Import LayoutRouter
+  const { navigate, setDefaultPanel } = await import('../layout/LayoutRouter/LayoutRouter.js');
+  setDefaultPanel('canvas');
 
-  layout.registerPanelType('aichat', {
-    title: 'AI Assistant',
-    icon: 'smart_toy',
-    component: 'ai-chat',
-  });
+  /**
+   * Show a section's panel-layout, hiding others
+   * @param {string} sectionId
+   */
+  function showSection(sectionId) {
+    if (!contentArea) return;
 
-  const initialLayout = LayoutTree.createSplit(
-    'horizontal',
-    LayoutTree.createSplit(
-      'vertical',
-      LayoutTree.createPanel('canvas'),
-      LayoutTree.createPanel('eventlog'),
-      0.78,
-    ),
-    LayoutTree.createPanel('aichat'),
-    0.78,
-  );
+    // Hide all existing section panels
+    for (const [id, el] of sectionPanels) {
+      el.hidden = id !== sectionId;
+    }
 
-  // Set layout after component template is mounted (ref.root must exist)
-  requestAnimationFrame(() => {
-    layout.setLayout(initialLayout);
-  });
+    // Create section panel if doesn't exist yet
+    if (!sectionPanels.has(sectionId)) {
+      const panelConfig = PANEL_TYPES[sectionId];
+      if (!panelConfig) return;
+
+      /** @type {*} */
+      const layout = document.createElement('panel-layout');
+      layout.setAttribute('storage-key', `sn-demo-layout-${sectionId}`);
+      layout.setAttribute('min-panel-size', '200');
+
+      contentArea.appendChild(layout);
+      sectionPanels.set(sectionId, layout);
+
+      requestAnimationFrame(() => {
+        // Register all panel types (so user can split and add any panel)
+        for (const [name, config] of Object.entries(PANEL_TYPES)) {
+          layout.registerPanelType(name, config);
+        }
+
+        // Default layout per section
+        const storageKey = `sn-demo-layout-${sectionId}`;
+        const saved = localStorage.getItem(storageKey);
+        if (!saved) {
+          if (sectionId === 'canvas') {
+            // Canvas gets the original 3-panel split layout
+            layout.setLayout(LayoutTree.createSplit(
+              'horizontal',
+              LayoutTree.createSplit(
+                'vertical',
+                LayoutTree.createPanel('canvas'),
+                LayoutTree.createPanel('eventlog'),
+                0.78,
+              ),
+              LayoutTree.createPanel('aichat'),
+              0.78,
+            ));
+          } else {
+            // Other sections get a single panel
+            layout.setLayout({
+              type: 'panel',
+              id: `p_${sectionId}`,
+              panelType: sectionId,
+            });
+          }
+        }
+
+        // Wire sub-panels to sidebar
+        watchLayoutTree(layout, sectionId);
+      });
+    }
+  }
+
+  /**
+   * Subscribe to layoutTree changes and update sidebar sub-panels
+   * @param {*} layout
+   * @param {string} sectionId
+   */
+  function watchLayoutTree(layout, sectionId) {
+    if (!sidebar) return;
+
+    const updateSubPanels = () => {
+      const tree = layout.$.layoutTree;
+      if (!tree) return;
+
+      const panels = LayoutTree.getAllPanels(tree);
+      if (panels.length <= 1) {
+        sidebar.updateSubPanels(sectionId, []);
+        return;
+      }
+
+      const subPanels = panels.map((p) => {
+        const config = PANEL_TYPES[p.panelType];
+        return {
+          title: config?.title ?? p.panelType,
+          icon: config?.icon ?? 'web_asset',
+          panelId: p.id,
+          isMaster: p.panelType === sectionId,
+        };
+      });
+      sidebar.updateSubPanels(sectionId, subPanels);
+    };
+
+    layout.sub('layoutTree', updateSubPanels);
+
+    sidebar.addEventListener('panel-close', (e) => {
+      const { panelId } = /** @type {CustomEvent} */ (e).detail;
+      if (!panelId) return;
+      const tree = layout.$.layoutTree;
+      if (!tree) return;
+      const panels = LayoutTree.getAllPanels(tree);
+      if (panels.some((p) => p.id === panelId)) {
+        layout.joinPanels(panelId);
+      }
+    });
+  }
+
+  // Listen to route changes — show/hide section panels
+  if (sidebar) {
+    sidebar.sub('ROUTER/panel', (panel) => {
+      showSection(panel);
+    });
+  }
 
   // Wait for layout to render, then find the canvas
   setTimeout(() => {

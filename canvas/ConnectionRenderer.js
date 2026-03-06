@@ -507,28 +507,35 @@ export class ConnectionRenderer {
     dot.setAttribute('cx', x);
     dot.setAttribute('cy', y);
 
-    // Make dot interactive for SVG nodes (no PortItem sockets)
+    // Dots are only visible for SVG nodes (HTML nodes have PortItem sockets)
     // Runs on every update to handle timing — NodeViewManager may set
     // data-svg-shape after initial connection render
-    if (this.#onDotDrag && !dot.hasAttribute('data-svg-wired')) {
+    if (!dot.hasAttribute('data-svg-wired')) {
       const conn = this.#connectionData.get(connId);
       if (conn) {
         const nodeId = end === 'start' ? conn.from : conn.to;
         const nodeEl = this.#nodeViews.get(nodeId);
         if (nodeEl?.hasAttribute('data-svg-shape')) {
           dot.setAttribute('data-svg-wired', '');
-          dot.style.pointerEvents = 'auto';
-          dot.style.cursor = 'crosshair';
-          dot.addEventListener('pointerdown', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            const dotX = parseFloat(dot.getAttribute('cx')) || 0;
-            const dotY = parseFloat(dot.getAttribute('cy')) || 0;
-            const socketData = end === 'start'
-              ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
-              : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
-            this.#onDotDrag(socketData);
-          });
+          dot.style.display = '';
+          if (this.#onDotDrag) {
+            dot.style.pointerEvents = 'auto';
+            dot.style.cursor = 'crosshair';
+            dot.addEventListener('pointerdown', (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              const dotX = parseFloat(dot.getAttribute('cx')) || 0;
+              const dotY = parseFloat(dot.getAttribute('cy')) || 0;
+              const socketData = end === 'start'
+                ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
+                : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
+              this.#onDotDrag(socketData);
+            });
+          }
+        } else if (nodeEl && !nodeEl.hasAttribute('data-svg-shape')) {
+          // HTML node — hide dot (PortItem handles visual)
+          dot.setAttribute('data-svg-wired', 'html');
+          dot.style.display = 'none';
         }
       }
     }

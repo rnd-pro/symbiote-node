@@ -446,9 +446,14 @@ function initDemo() {
           const pos = positions[n.id];
           if (pos) labeled[n.label] = { id: n.id, x: Math.round(pos[0]), y: Math.round(pos[1]) };
         }
+        const frames = {};
+        for (const f of editor.getFrames()) {
+          frames[f.label] = { x: Math.round(f.x), y: Math.round(f.y), width: Math.round(f.width), height: Math.round(f.height), color: f.color };
+        }
         const layout = {
           viewport: { panX: Math.round(canvas.$.panX), panY: Math.round(canvas.$.panY), zoom: Math.round(canvas.$.zoom * 100) / 100 },
           nodes: labeled,
+          frames,
         };
         const json = JSON.stringify(layout, null, 2);
         await navigator.clipboard.writeText(json);

@@ -336,20 +336,20 @@ function initDemo() {
       canvas.setNodePosition(cloudSrc.id, 580, 100);
 
       // Row 2: Processing
-      canvas.setNodePosition(httpReq.id, -158, 378);
-      canvas.setNodePosition(aiAgent.id, 122, 378);
-      canvas.setNodePosition(filter.id, 380, 500);
+      canvas.setNodePosition(httpReq.id, -153, 375);
+      canvas.setNodePosition(aiAgent.id, 127, 375);
+      canvas.setNodePosition(filter.id, 385, 497);
       canvas.setNodePosition(merge.id, 580, 480);
       canvas.setNodePosition(subgraph.id, 740, 420);
 
       // Row 3: Delivery
-      canvas.setNodePosition(cdn.id, 80, 820);
-      canvas.setNodePosition(db.id, 320, 820);
-      canvas.setNodePosition(debug.id, 540, 800);
+      canvas.setNodePosition(cdn.id, 159, 813);
+      canvas.setNodePosition(db.id, 399, 813);
+      canvas.setNodePosition(debug.id, 619, 773);
       canvas.setNodePosition(notify.id, 340, 1020);
 
       // Side: Health monitor
-      canvas.setNodePosition(health.id, -160, 820);
+      canvas.setNodePosition(health.id, -81, 813);
 
       // Demo features: error state, preview
       canvas.setNodeError(filter.id, 'Missing required condition');

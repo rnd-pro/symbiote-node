@@ -26,31 +26,23 @@ export class PseudoConnection {
   }
 
   /**
-   * Show pseudo-connection between two world-space points
+   * Show pseudo-connection between two world-space points.
+   * pseudo-svg is inside .content which applies CSS transform (zoom+pan),
+   * so coordinates must be in world-space (same as ConnectionRenderer dots).
    * @param {number} sx - Start X (world space)
    * @param {number} sy - Start Y (world space)
    * @param {number} ex - End X (world space)
    * @param {number} ey - End Y (world space)
-   * @param {{ zoom: number, panX: number, panY: number }} transform
    */
-  show(sx, sy, ex, ey, transform) {
+  show(sx, sy, ex, ey) {
     if (!this.#path) {
       this.#path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       this.#path.setAttribute('class', 'pseudo-path');
       this.#svg.appendChild(this.#path);
     }
 
-    const k = transform.zoom;
-    const px = transform.panX;
-    const py = transform.panY;
-
-    const screenSx = sx * k + px;
-    const screenSy = sy * k + py;
-    const screenEx = ex * k + px;
-    const screenEy = ey * k + py;
-
-    const dx = Math.abs(screenEx - screenSx) * 0.5;
-    const d = `M ${screenSx} ${screenSy} C ${screenSx + dx} ${screenSy}, ${screenEx - dx} ${screenEy}, ${screenEx} ${screenEy}`;
+    const dx = Math.abs(ex - sx) * 0.5;
+    const d = `M ${sx} ${sy} C ${sx + dx} ${sy}, ${ex - dx} ${ey}, ${ex} ${ey}`;
     this.#path.setAttribute('d', d);
 
     // Plus indicator at endpoint
@@ -71,7 +63,7 @@ export class PseudoConnection {
       this.#svg.appendChild(g);
       this.#plusIndicator = g;
     }
-    this.#plusIndicator.setAttribute('transform', `translate(${screenEx}, ${screenEy})`);
+    this.#plusIndicator.setAttribute('transform', `translate(${ex}, ${ey})`);
   }
 
   /** Hide and clean up pseudo-connection */

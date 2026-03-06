@@ -341,10 +341,16 @@ graph-node {
     }
 
     & .sn-node-header {
-      background: transparent;
-      border-bottom: none;
-      justify-content: center;
-      padding: 4px 8px;
+      position: absolute;
+      top: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--sn-node-header-bg, color-mix(in srgb, var(--sn-node-accent, #4a9eff) 20%, var(--sn-node-bg, #16213e)));
+      border: 1px solid var(--sn-node-border, #2a2a4a);
+      border-radius: 20px;
+      padding: 3px 12px;
+      white-space: nowrap;
+      z-index: 1;
     }
     & .sn-node-body {
       padding: 4px 0;

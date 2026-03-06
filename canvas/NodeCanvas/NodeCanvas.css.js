@@ -102,6 +102,20 @@ node-canvas {
   display: initial;
 }
 
+/* Free dots for unconnected SVG ports */
+.sn-free-dot {
+  fill: var(--sn-conn-color, #4a9eff);
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 1;
+  opacity: 0.5;
+  transition: r 0.15s ease, opacity 0.15s ease;
+}
+.sn-free-dot:hover {
+  opacity: 1;
+  r: 6;
+  filter: drop-shadow(0 0 4px var(--sn-conn-color, #4a9eff));
+}
+
 /* Dot highlight during compatible connector drag */
 .sn-dot-hint {
   r: 7;

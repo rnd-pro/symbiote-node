@@ -42,6 +42,9 @@ export class NodeViewManager {
   /** @type {Object} */
   #canvas;
 
+  /** @type {function|null} */
+  #onSvgShapeReady = null;
+
   /** @type {boolean} */
   #readonly = false;
 
@@ -67,7 +70,7 @@ export class NodeViewManager {
    * @param {HTMLElement} config.nodesLayer
    * @param {Object} config.canvas - NodeCanvas reference for socket registration
    */
-  constructor({ nodeViews, editor, selector, snapGrid, getZoom, setNodePosition, animateNodeToPosition, onNodeClick, nodesLayer, canvas }) {
+  constructor({ nodeViews, editor, selector, snapGrid, getZoom, setNodePosition, animateNodeToPosition, onNodeClick, nodesLayer, canvas, onSvgShapeReady }) {
     this.#nodeViews = nodeViews;
     this.#editor = editor;
     this.#selector = selector;
@@ -78,6 +81,7 @@ export class NodeViewManager {
     this.#onNodeClick = onNodeClick;
     this.#nodesLayer = nodesLayer;
     this.#canvas = canvas;
+    this.#onSvgShapeReady = onSvgShapeReady || null;
   }
 
   /** @param {boolean} readonly */
@@ -212,6 +216,9 @@ export class NodeViewManager {
           watermark.textContent = iconEl.textContent;
           el.appendChild(watermark);
         }
+
+        // Notify canvas to render free dots for this SVG node
+        if (this.#onSvgShapeReady) this.#onSvgShapeReady(nodeId);
 
 
       } else if (shape) {

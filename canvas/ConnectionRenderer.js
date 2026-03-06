@@ -507,7 +507,7 @@ export class ConnectionRenderer {
     dot.setAttribute('cx', x);
     dot.setAttribute('cy', y);
 
-    // Dots are only visible for SVG nodes (HTML nodes have PortItem sockets)
+    // Dots are hidden by default (CSS). Only show for SVG nodes.
     // Runs on every update to handle timing — NodeViewManager may set
     // data-svg-shape after initial connection render
     if (!dot.hasAttribute('data-svg-wired')) {
@@ -532,10 +532,6 @@ export class ConnectionRenderer {
               this.#onDotDrag(socketData);
             });
           }
-        } else if (nodeEl && !nodeEl.hasAttribute('data-svg-shape')) {
-          // HTML node — hide dot (PortItem handles visual)
-          dot.setAttribute('data-svg-wired', 'html');
-          dot.style.display = 'none';
         }
       }
     }

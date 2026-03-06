@@ -109,6 +109,7 @@ function initDemo() {
   // Debug (standard rect — inspector)
   const debug = new Node('Debug Log', { type: 'debug', category: 'default' });
   debug.addInput('inspect', new Input(anySocket, 'Inspect'));
+  debug.addInput('health', new Input(textSocket, 'Health'));
   debug.addControl('output', new InputControl('text', { initial: '{ status: "ok", latency: "42ms" }', readonly: true }));
 
   // ★ Notification — star SVG (alerts)
@@ -125,7 +126,6 @@ function initDemo() {
   const innerParse = new Node('Parse JSON', { type: 'transform', category: 'data' });
   innerParse.addInput('raw', new Input(innerSocket, 'Raw'));
   innerParse.addOutput('parsed', new Output(innerSocket, 'Parsed'));
-  innerParse._exposed = 'input';
 
   const innerValidate = new Node('Validate', { type: 'validation', category: 'control' });
   innerValidate.addInput('data', new Input(innerSocket, 'Data'));
@@ -134,7 +134,6 @@ function initDemo() {
   const innerEnrich = new Node('Enrich', { type: 'transform', category: 'instance' });
   innerEnrich.addInput('input', new Input(innerSocket, 'Input'));
   innerEnrich.addOutput('output', new Output(innerSocket, 'Output'));
-  innerEnrich._exposed = 'output';
 
   subgraph.innerEditor.addNode(innerParse);
   subgraph.innerEditor.addNode(innerValidate);
@@ -146,7 +145,10 @@ function initDemo() {
     [innerValidate.id]: { x: 400, y: 100 },
     [innerEnrich.id]: { x: 700, y: 100 },
   };
-  subgraph.syncPorts();
+
+  // Manual ports (stable names — don't use syncPorts which generates dynamic IDs)
+  subgraph.addInput('raw', new Input(anySocket, 'Raw Data'));
+  subgraph.addOutput('output', new Output(anySocket, 'Enriched'));
 
   // ══════════════════════════════════════════════════
   // Add all nodes
@@ -184,7 +186,7 @@ function initDemo() {
   editor.addConnection(new Connection(db, 'id', debug, 'inspect'));
   editor.addConnection(new Connection(cdn, 'url', notify, 'event'));
   editor.addConnection(new Connection(trigger, 'config', health, 'ping'));
-  editor.addConnection(new Connection(health, 'status', debug, 'inspect'));
+  editor.addConnection(new Connection(health, 'status', debug, 'health'));
 
   // ══════════════════════════════════════════════════
   // Node type catalog for context menu
@@ -290,11 +292,10 @@ function initDemo() {
     0.75,
   );
 
-  const STORAGE_KEY = 'symbiote-node-demo-v3';
-
-  if (!localStorage.getItem(STORAGE_KEY)) {
+  // Set layout after component template is mounted (ref.root must exist)
+  requestAnimationFrame(() => {
     layout.setLayout(initialLayout);
-  }
+  });
 
   // Wait for layout to render, then find the canvas
   setTimeout(() => {

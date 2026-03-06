@@ -217,11 +217,7 @@ export class NodeCanvas extends Symbiote {
         this.#actions.highlightCompatibleSockets(socketData, this.ref.nodesLayer);
       },
       onPseudoMove: (sx, sy, ex, ey) => {
-        this.#pseudo.show(sx, sy, ex, ey, {
-          zoom: this.$.zoom,
-          panX: this.$.panX,
-          panY: this.$.panY,
-        });
+        this.#pseudo.show(sx, sy, ex, ey);
       },
       onPseudoEnd: () => {
         this.#pseudo.hide();

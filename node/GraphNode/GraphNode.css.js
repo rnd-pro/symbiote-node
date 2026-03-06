@@ -363,13 +363,13 @@ graph-node {
      matching HTML nodes where border-width stays 1px on selection. */
   &[data-svg-shape][data-selected] > svg > path {
     stroke: var(--sn-node-selected, #4a9eff);
-    filter: drop-shadow(0 0 12px rgba(74, 158, 255, 0.4));
+    filter: drop-shadow(0 0 6px rgba(74, 158, 255, 0.35));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 
   &[data-svg-shape][data-error] > svg > path {
     stroke: var(--sn-danger-color, #ef4444);
-    filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.4));
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.35));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 
@@ -386,7 +386,7 @@ graph-node {
 
   &[data-svg-shape][data-completed] > svg > path {
     stroke: var(--sn-success-color, #5cd87a);
-    filter: drop-shadow(0 0 12px rgba(92, 216, 122, 0.4));
+    filter: drop-shadow(0 0 6px rgba(92, 216, 122, 0.35));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 

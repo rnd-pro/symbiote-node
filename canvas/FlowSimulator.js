@@ -80,6 +80,7 @@ export class FlowSimulator {
 
     const order = this.#topologicalSort();
     const connections = this.#editor.getConnections();
+    this.#editor.emit('flowstart', { nodes: order });
 
     try {
       for (const nodeId of order) {
@@ -87,6 +88,7 @@ export class FlowSimulator {
 
         // Mark node as processing
         this.#setNodeState(nodeId, 'processing');
+        this.#editor.emit('nodeprocessing', { nodeId });
 
         // Smooth pan to active node
         if (this.followActive && !this.#followPaused) {
@@ -104,6 +106,7 @@ export class FlowSimulator {
 
         // Mark node as completed
         this.#setNodeState(nodeId, 'completed');
+        this.#editor.emit('nodecompleted', { nodeId });
 
         // Animate outgoing connections
         const outgoing = connections.filter((c) => c.from === nodeId);

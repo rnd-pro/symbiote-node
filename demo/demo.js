@@ -17,6 +17,7 @@ import '../canvas/NodeCanvas/NodeCanvas.js';
 import '../node/GraphNode/GraphNode.js';
 import '../layout/Layout/Layout.js';
 import '../palette/PaletteBrowser/PaletteBrowser.js';
+import './EventLog/EventLog.js';
 
 /**
  * Initialize AI content pipeline demo
@@ -274,10 +275,10 @@ function initDemo() {
     icon: 'account_tree',
     component: 'node-canvas',
   });
-  layout.registerPanelType('inspector', {
-    title: 'Inspector',
-    icon: 'info',
-    component: 'inspector-panel',
+  layout.registerPanelType('eventlog', {
+    title: 'Event Log',
+    icon: 'terminal',
+    component: 'event-log',
   });
   layout.registerPanelType('palette', {
     title: 'Palette',
@@ -288,7 +289,7 @@ function initDemo() {
   const initialLayout = LayoutTree.createSplit(
     'vertical',
     LayoutTree.createPanel('canvas'),
-    LayoutTree.createPanel('inspector'),
+    LayoutTree.createPanel('eventlog'),
     0.75,
   );
 
@@ -309,10 +310,10 @@ function initDemo() {
     canvas.setTheme(GREY_NEUTRAL);
     canvas.setSnapGrid(true, 20);
 
-    // Connect inspector to canvas
-    const inspector = document.querySelector('inspector-panel');
-    if (inspector) {
-      inspector._canvas = canvas;
+    // Connect event log to editor
+    const eventLog = document.querySelector('event-log');
+    if (eventLog) {
+      eventLog.listen(editor);
     }
 
     // History (Undo/Redo)

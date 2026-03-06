@@ -18,6 +18,7 @@ import '../node/GraphNode/GraphNode.js';
 import '../layout/Layout/Layout.js';
 import '../palette/PaletteBrowser/PaletteBrowser.js';
 import './EventLog/EventLog.js';
+import './AiChat/AiChat.js';
 
 /**
  * Initialize AI content pipeline demo
@@ -286,11 +287,22 @@ function initDemo() {
     component: 'palette-browser',
   });
 
+  layout.registerPanelType('aichat', {
+    title: 'AI Assistant',
+    icon: 'smart_toy',
+    component: 'ai-chat',
+  });
+
   const initialLayout = LayoutTree.createSplit(
-    'vertical',
-    LayoutTree.createPanel('canvas'),
-    LayoutTree.createPanel('eventlog'),
-    0.75,
+    'horizontal',
+    LayoutTree.createSplit(
+      'vertical',
+      LayoutTree.createPanel('canvas'),
+      LayoutTree.createPanel('eventlog'),
+      0.78,
+    ),
+    LayoutTree.createPanel('aichat'),
+    0.78,
   );
 
   // Set layout after component template is mounted (ref.root must exist)

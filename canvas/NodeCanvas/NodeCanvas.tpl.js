@@ -10,7 +10,10 @@ export const template = html`
     <quick-toolbar ref="quickToolbar" hidden></quick-toolbar>
   </div>
   <context-menu ref="contextMenu" hidden></context-menu>
-  <node-minimap ref="minimap"></node-minimap>
+  <node-minimap ref="minimap" hidden></node-minimap>
+  <button ref="minimapToggle" class="sn-minimap-toggle" title="Toggle minimap">
+    <span class="material-symbols-outlined">map</span>
+  </button>
   <node-search ref="nodeSearch" hidden></node-search>
   <graph-breadcrumb ref="breadcrumb" hidden></graph-breadcrumb>
 </div>

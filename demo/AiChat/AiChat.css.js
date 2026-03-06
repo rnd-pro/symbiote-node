@@ -23,7 +23,7 @@ ai-chat .chat-header {
 
 ai-chat .chat-icon {
   font-size: 16px;
-  background: linear-gradient(135deg, #a78bfa, #4a9eff);
+  background: linear-gradient(135deg, var(--sn-cat-data, #a78bfa), var(--sn-node-selected, #4a9eff));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -61,8 +61,8 @@ ai-chat .chat-bubble {
 
 ai-chat .chat-bubble[data-role="user"] {
   align-self: flex-end;
-  background: linear-gradient(135deg, rgba(74, 158, 255, 0.2), rgba(167, 139, 250, 0.2));
-  border: 1px solid rgba(74, 158, 255, 0.15);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--sn-node-selected, #4a9eff) 20%, transparent), color-mix(in srgb, var(--sn-cat-data, #a78bfa) 20%, transparent));
+  border: 1px solid color-mix(in srgb, var(--sn-node-selected, #4a9eff) 15%, transparent);
   border-bottom-right-radius: 4px;
 }
 
@@ -74,7 +74,7 @@ ai-chat .chat-bubble[data-role="ai"] {
 }
 
 ai-chat .chat-bubble[data-role="ai"] .ai-prefix {
-  color: #a78bfa;
+  color: var(--sn-cat-data, #a78bfa);
   font-weight: 600;
   font-size: 10px;
   text-transform: uppercase;
@@ -114,7 +114,7 @@ ai-chat .chat-input-area textarea {
   transition: border-color 0.15s;
 
   &:focus {
-    border-color: rgba(74, 158, 255, 0.3);
+    border-color: color-mix(in srgb, var(--sn-node-selected, #4a9eff) 30%, transparent);
   }
 
   &::placeholder {
@@ -123,7 +123,7 @@ ai-chat .chat-input-area textarea {
 }
 
 ai-chat .chat-send {
-  background: linear-gradient(135deg, #4a9eff, #a78bfa);
+  background: linear-gradient(135deg, var(--sn-node-selected, #4a9eff), var(--sn-cat-data, #a78bfa));
   border: none;
   border-radius: 8px;
   color: white;

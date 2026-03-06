@@ -74,7 +74,7 @@ layout-sidebar .sb-header-btn {
   /* Active tune button in edit mode */
   layout-sidebar[edit-mode] &:first-child {
     color: var(--sn-cat-server, #5cb8ff);
-    background: rgba(92, 184, 255, 0.1);
+    background: color-mix(in srgb, var(--sn-cat-server, #5cb8ff) 10%, transparent);
   }
 }
 
@@ -326,8 +326,8 @@ sidebar-section .sub-panel-close {
   }
 
   &:hover {
-    background: rgba(255, 80, 80, 0.15);
-    color: #ff6b6b;
+    background: color-mix(in srgb, var(--sn-danger-color, #ef4444) 15%, transparent);
+    color: var(--sn-danger-color, #ff6b6b);
   }
 }
 

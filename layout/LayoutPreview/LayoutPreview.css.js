@@ -16,8 +16,8 @@ layout-preview {
 
   .preview-overlay {
     position: absolute;
-    background: rgba(255, 100, 100, 0.3);
-    border: 2px solid rgba(255, 100, 100, 0.6);
+    background: color-mix(in srgb, var(--sn-danger-color, #ef4444) 30%, transparent);
+    border: 2px solid color-mix(in srgb, var(--sn-danger-color, #ef4444) 60%, transparent);
     display: none;
   }
 

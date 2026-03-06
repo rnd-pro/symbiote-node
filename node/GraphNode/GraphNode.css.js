@@ -8,7 +8,7 @@ graph-node {
   border-radius: 10px;
   background: var(--sn-node-bg, #16213e);
   border: 2px solid var(--sn-node-border, #2a2a4a);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px var(--sn-shadow-color, rgba(0, 0, 0, 0.3));
   user-select: none;
   cursor: move;
   transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0.2s ease-out;
@@ -28,7 +28,7 @@ graph-node {
 
   &[data-selected] {
     border-color: var(--sn-node-selected, #4a9eff);
-    box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--sn-node-selected, #4a9eff) 30%, transparent);
   }
 
   &[data-collapsed] {
@@ -122,7 +122,7 @@ graph-node {
 
   &[data-completed] {
     border-color: var(--sn-success-color, #5cd87a);
-    box-shadow: 0 0 8px rgba(92, 216, 122, 0.3);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--sn-success-color, #5cd87a) 30%, transparent);
   }
 
   &[data-error] {
@@ -335,7 +335,7 @@ graph-node {
       & > path {
         pointer-events: visibleFill;
         cursor: move;
-        filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.3));
+        filter: drop-shadow(0 1px 4px var(--sn-shadow-color, rgba(0, 0, 0, 0.3)));
         transition: stroke 0.2s ease, filter 0.2s ease;
       }
     }
@@ -390,13 +390,13 @@ graph-node {
      matching HTML nodes where border-width stays 1px on selection. */
   &[data-svg-shape][data-selected] > svg > path {
     stroke: var(--sn-node-selected, #4a9eff);
-    filter: drop-shadow(0 0 1px rgba(74, 158, 255, 0.5));
+    filter: drop-shadow(0 0 1px color-mix(in srgb, var(--sn-node-selected, #4a9eff) 50%, transparent));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 
   &[data-svg-shape][data-error] > svg > path {
     stroke: var(--sn-danger-color, #ef4444);
-    filter: drop-shadow(0 0 1px rgba(239, 68, 68, 0.5));
+    filter: drop-shadow(0 0 1px color-mix(in srgb, var(--sn-danger-color, #ef4444) 50%, transparent));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 
@@ -408,13 +408,13 @@ graph-node {
 
   &[data-svg-shape][data-processing] > svg > path {
     stroke: var(--sn-node-accent, var(--sn-node-selected, #4a9eff));
-    filter: drop-shadow(0 0 0.5px rgba(74, 158, 255, 0.5));
+    filter: drop-shadow(0 0 0.5px color-mix(in srgb, var(--sn-node-selected, #4a9eff) 50%, transparent));
     animation: sn-svg-pulse 1s ease-in-out infinite;
   }
 
   &[data-svg-shape][data-completed] > svg > path {
     stroke: var(--sn-success-color, #5cd87a);
-    filter: drop-shadow(0 0 1px rgba(92, 216, 122, 0.5));
+    filter: drop-shadow(0 0 1px color-mix(in srgb, var(--sn-success-color, #5cd87a) 50%, transparent));
     transition: stroke 0.2s ease, filter 0.2s ease;
   }
 
@@ -642,8 +642,8 @@ node-socket {
 }
 
 @keyframes sn-node-error-pulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(239,68,68,0.35), 0 0 4px rgba(239,68,68,0.5); }
-  50% { box-shadow: 0 0 24px rgba(239,68,68,0.5), 0 0 8px rgba(239,68,68,0.7); }
+  0%, 100% { box-shadow: 0 0 16px color-mix(in srgb, var(--sn-danger-color, #ef4444) 35%, transparent), 0 0 4px color-mix(in srgb, var(--sn-danger-color, #ef4444) 50%, transparent); }
+  50% { box-shadow: 0 0 24px color-mix(in srgb, var(--sn-danger-color, #ef4444) 50%, transparent), 0 0 8px color-mix(in srgb, var(--sn-danger-color, #ef4444) 70%, transparent); }
 }
 
 @keyframes sn-svg-pulse {

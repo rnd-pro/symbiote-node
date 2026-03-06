@@ -26,7 +26,7 @@ node-search {
     background: var(--sn-node-bg, #2a2a3e);
     border: 1px solid var(--sn-node-border, rgba(255,255,255,0.12));
     border-radius: 10px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 32px var(--sn-shadow-color, rgba(0,0,0,0.4));
   }
 
   & .search-icon {
@@ -61,7 +61,7 @@ node-search {
     background: var(--sn-node-bg, #2a2a3e);
     border-radius: 8px;
     border: 1px solid var(--sn-node-border, rgba(255,255,255,0.08));
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 16px var(--sn-shadow-color, rgba(0,0,0,0.3));
     overflow: hidden;
     max-height: 300px;
     overflow-y: auto;

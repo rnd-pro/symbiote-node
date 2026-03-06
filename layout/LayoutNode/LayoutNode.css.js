@@ -199,7 +199,7 @@ layout-node {
     inset: 0 !important;
     top: 28px !important;
     z-index: 10001 !important;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 40px var(--sn-shadow-color, rgba(0, 0, 0, 0.8));
   }
 
   /* Fullscreen: hide panel type selector, collapse btn, action zones */

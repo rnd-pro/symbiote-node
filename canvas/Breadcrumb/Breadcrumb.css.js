@@ -22,7 +22,7 @@ export const styles = css`
     top: 10px;
     left: 10px;
     z-index: 50;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px var(--sn-shadow-color, rgba(0, 0, 0, 0.3));
     border: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
     transition: opacity 0.2s ease-out;
 

@@ -18,6 +18,7 @@ export { DARK_DEFAULT } from './dark.js';
 export { LIGHT_CLEAN } from './light.js';
 export { SYNTHWAVE } from './synthwave.js';
 export { GREY_NEUTRAL } from './grey.js';
+export { GLASS } from './glass.js';
 
 /**
  * Mapping from layout global tokens to symbiote-node tokens.

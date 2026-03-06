@@ -33,7 +33,7 @@ export { ConnectFlow } from './interactions/ConnectFlow.js';
 export { NodeShape, RectShape, PillShape, CircleShape, DiamondShape, CommentShape, getShape, registerShape, SVGShape, createSVGShape, SVG_PRESETS } from './shapes/index.js';
 
 // Themes (unified)
-export { applyTheme, extractTheme, DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE, GREY_NEUTRAL } from './themes/Theme.js';
+export { applyTheme, extractTheme, DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE, GREY_NEUTRAL, GLASS } from './themes/Theme.js';
 
 // Palette (color-only)
 export { applyPalette, DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE } from './themes/Palette.js';

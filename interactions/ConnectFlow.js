@@ -49,6 +49,9 @@ export class ConnectFlow {
   /** @type {function|null} - called during drag with world XY + picked socket */
   #onCompatibleMove = null;
 
+  /** @type {function|null} - find nearest SVG dot as drop target */
+  #findNearestDot = null;
+
   /** @type {number} - last time compatible move was emitted (ms) */
   #lastMoveTime = 0;
 
@@ -79,6 +82,7 @@ export class ConnectFlow {
     this.#onPseudoEnd = callbacks.onPseudoEnd;
     this.#onDropEmpty = callbacks.onDropEmpty || null;
     this.#onCompatibleMove = callbacks.onCompatibleMove || null;
+    this.#findNearestDot = callbacks.findNearestDot || null;
 
     window.addEventListener('pointermove', this.#onMove);
     window.addEventListener('pointerup', this.#onUp);
@@ -163,6 +167,19 @@ export class ConnectFlow {
 
     if (target && this.#canConnect(this.#picked, target)) {
       this.#makeConnection(this.#picked, target);
+    } else if (this.#findNearestDot) {
+      // Fallback: check SVG dots as drop target
+      const dotTarget = this.#findNearestDot(pointerX, pointerY);
+      if (dotTarget) {
+        const dotSocket = { nodeId: dotTarget.nodeId, key: dotTarget.key, side: dotTarget.side };
+        if (this.#canConnect(this.#picked, dotSocket)) {
+          this.#makeConnection(this.#picked, dotSocket);
+        } else if (this.#onDropEmpty) {
+          this.#onDropEmpty(pointerX, pointerY, this.#picked);
+        }
+      } else if (this.#onDropEmpty) {
+        this.#onDropEmpty(pointerX, pointerY, this.#picked);
+      }
     } else if (this.#onDropEmpty) {
       // No target found — emit drop-in-empty event
       this.#onDropEmpty(pointerX, pointerY, this.#picked);

@@ -68,6 +68,9 @@ export class ConnectionRenderer {
    */
   add(conn) {
     this.#connectionData.set(conn.id, conn);
+    // Remove free dots for now-connected ports
+    this.removeFreeDot(conn.from, conn.out, 'output');
+    this.removeFreeDot(conn.to, conn.in, 'input');
     // Full re-render for affected nodes (slot pool needs full context)
     this.#fullRerenderForNodes(new Set([conn.from, conn.to]));
   }
@@ -624,5 +627,175 @@ export class ConnectionRenderer {
     } else if (fromColor) {
       path.setAttribute('stroke', fromColor);
     }
+  }
+  /**
+   * Render persistent free dots for all ports of an SVG node.
+   * Called after SVG shape setup. Free dots are interactive drag sources.
+   * @param {string} nodeId
+   */
+  renderFreeDots(nodeId) {
+    const nodeEl = this.#nodeViews.get(nodeId);
+    const node = this.#editor.getNode(nodeId);
+    if (!nodeEl || !node) return;
+
+    const shapeName = nodeEl.getAttribute('data-svg-shape') || nodeEl.getAttribute('node-shape');
+    const shape = getShape(shapeName);
+    if (!shape?.pathData) return;
+
+    const size = { width: nodeEl.offsetWidth || 100, height: nodeEl.offsetHeight || 100 };
+    const pos = nodeEl._position;
+    if (!pos) return;
+
+    // Collect already-connected port keys
+    const connectedPorts = new Set();
+    for (const [, conn] of this.#connectionData) {
+      if (conn.from === nodeId) connectedPorts.add(`output:${conn.out}`);
+      if (conn.to === nodeId) connectedPorts.add(`input:${conn.in}`);
+    }
+
+    // Render dots for inputs
+    const inputKeys = Object.keys(node.inputs);
+    inputKeys.forEach((key, i) => {
+      if (connectedPorts.has(`input:${key}`)) return;
+      const sp = shape.getSocketPosition('input', i, inputKeys.length, size);
+      this.#createFreeDot(nodeId, key, 'input', pos.x + sp.x, pos.y + sp.y, node.inputs[key]);
+    });
+
+    // Render dots for outputs
+    const outputKeys = Object.keys(node.outputs);
+    outputKeys.forEach((key, i) => {
+      if (connectedPorts.has(`output:${key}`)) return;
+      const sp = shape.getSocketPosition('output', i, outputKeys.length, size);
+      this.#createFreeDot(nodeId, key, 'output', pos.x + sp.x, pos.y + sp.y, node.outputs[key]);
+    });
+  }
+
+  /**
+   * Create a single free dot element
+   * @param {string} nodeId
+   * @param {string} key
+   * @param {'input'|'output'} side
+   * @param {number} wx - world X
+   * @param {number} wy - world Y
+   * @param {object} portData - Input/Output instance
+   */
+  #createFreeDot(nodeId, key, side, wx, wy, portData) {
+    const dotId = `free-${nodeId}-${side}-${key}`;
+    // Skip if already exists
+    if (this.#dotLayer.querySelector(`[data-free-dot="${dotId}"]`)) return;
+
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('data-free-dot', dotId);
+    dot.setAttribute('data-node-id', nodeId);
+    dot.setAttribute('data-port-key', key);
+    dot.setAttribute('data-port-side', side);
+    dot.setAttribute('r', '4');
+    dot.setAttribute('cx', wx);
+    dot.setAttribute('cy', wy);
+    dot.style.pointerEvents = 'auto';
+    dot.style.cursor = 'crosshair';
+
+    const socketName = portData?.socket?.name || 'data';
+    let typeClass = 'sn-dot-data';
+    if (socketName === 'exec' || socketName === 'execution' || socketName === 'trigger') {
+      typeClass = 'sn-dot-exec';
+    } else if (socketName === 'ctrl' || socketName === 'control' || socketName === 'signal') {
+      typeClass = 'sn-dot-ctrl';
+    }
+    const sideClass = side === 'input' ? 'sn-dot-input' : 'sn-dot-output';
+    dot.setAttribute('class', `sn-free-dot ${sideClass} ${typeClass}`);
+
+    if (this.#onDotDrag) {
+      dot.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        this.#onDotDrag({
+          nodeId,
+          key,
+          side,
+          worldX: parseFloat(dot.getAttribute('cx')) || 0,
+          worldY: parseFloat(dot.getAttribute('cy')) || 0,
+        });
+      });
+    }
+
+    this.#dotLayer.appendChild(dot);
+  }
+
+  /**
+   * Remove free dot when a connection fills this port
+   * @param {string} nodeId
+   * @param {string} key
+   * @param {'input'|'output'} side
+   */
+  removeFreeDot(nodeId, key, side) {
+    const dotId = `free-${nodeId}-${side}-${key}`;
+    const dot = this.#dotLayer.querySelector(`[data-free-dot="${dotId}"]`);
+    if (dot) dot.remove();
+  }
+
+  /**
+   * Refresh free dot positions after node move
+   * @param {string} nodeId
+   */
+  refreshFreeDots(nodeId) {
+    // Remove all free dots for this node and re-render
+    const dots = this.#dotLayer.querySelectorAll(`[data-node-id="${nodeId}"][data-free-dot]`);
+    for (const dot of dots) dot.remove();
+    this.renderFreeDots(nodeId);
+  }
+
+  /**
+   * Find nearest SVG dot (free or connected) to world position within radius.
+   * Used as drop target for connections.
+   * @param {number} wx - world X
+   * @param {number} wy - world Y
+   * @param {number} [radius=20] - search radius in world units
+   * @returns {{ nodeId: string, key: string, side: string }|null}
+   */
+  findNearestDot(wx, wy, radius = 20) {
+    let bestDist = radius;
+    let best = null;
+
+    // Search free dots
+    const freeDots = this.#dotLayer.querySelectorAll('[data-free-dot]');
+    for (const dot of freeDots) {
+      const cx = parseFloat(dot.getAttribute('cx')) || 0;
+      const cy = parseFloat(dot.getAttribute('cy')) || 0;
+      const dist = Math.hypot(cx - wx, cy - wy);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = {
+          nodeId: dot.getAttribute('data-node-id'),
+          key: dot.getAttribute('data-port-key'),
+          side: dot.getAttribute('data-port-side'),
+        };
+      }
+    }
+
+    // Search connected SVG dots
+    const wiredDots = this.#dotLayer.querySelectorAll('[data-svg-wired=""]');
+    for (const dot of wiredDots) {
+      const cx = parseFloat(dot.getAttribute('cx')) || 0;
+      const cy = parseFloat(dot.getAttribute('cy')) || 0;
+      const dist = Math.hypot(cx - wx, cy - wy);
+      if (dist < bestDist) {
+        bestDist = dist;
+        const connDotId = dot.getAttribute('data-conn-dot');
+        // Parse connDotId: "connId-start" or "connId-end"
+        const isStart = connDotId.endsWith('-start');
+        const connId = connDotId.replace(/-(?:start|end)$/, '');
+        const conn = this.#connectionData.get(connId);
+        if (conn) {
+          best = {
+            nodeId: isStart ? conn.from : conn.to,
+            key: isStart ? conn.out : conn.in,
+            side: isStart ? 'output' : 'input',
+          };
+        }
+      }
+    }
+
+    return best;
   }
 }

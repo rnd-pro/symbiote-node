@@ -195,6 +195,7 @@ export class NodeCanvas extends Symbiote {
       onNodeClick: (id, e) => this.#handleNodeClick(id, e),
       nodesLayer: this.ref.nodesLayer,
       canvas: this,
+      onSvgShapeReady: (nodeId) => this.#connRenderer?.renderFreeDots(nodeId),
     });
 
     // ConnectFlow
@@ -237,6 +238,7 @@ export class NodeCanvas extends Symbiote {
           { label: 'Add Node', icon: 'add_box', action: () => this.#editor?.emit('contextadd', { x, y }) },
         ]);
       },
+      findNearestDot: (wx, wy) => this.#connRenderer?.findNearestDot(wx, wy),
     });
 
     // Subscribe to editor events
@@ -549,6 +551,7 @@ export class NodeCanvas extends Symbiote {
     el.style.transform = `translate(${x}px, ${y}px)`;
     el._position = { x, y };
     this.#connRenderer?.updateForNode(nodeId);
+    this.#connRenderer?.refreshFreeDots(nodeId);
 
     // Keep toolbar in sync during drag
     const toolbar = this.ref.quickToolbar;

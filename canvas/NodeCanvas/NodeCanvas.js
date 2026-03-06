@@ -872,7 +872,7 @@ export class NodeCanvas extends Symbiote {
     // Double-click detection for subgraph drill-down
     const now = Date.now();
     if (this.#lastClickNodeId === nodeId && now - this.#lastClickTime < 400) {
-      this.#handleNodeDblClick(nodeId);
+      this.drillDown(nodeId);
       this.#lastClickTime = 0;
       this.#lastClickNodeId = null;
     } else {
@@ -881,13 +881,7 @@ export class NodeCanvas extends Symbiote {
     }
   }
 
-  #handleNodeDblClick(nodeId) {
-    if (!this.#editor) return;
-    const node = this.#editor.getNode(nodeId);
-    if (node?._isSubgraph) {
-      this.drillDown(nodeId);
-    }
-  }
+
 
   #handleConnectionClick(connId, e) {
     const accumulate = e.ctrlKey || e.metaKey;

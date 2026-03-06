@@ -124,44 +124,29 @@ export class ViewportActions {
   }
 
   /**
-   * Toggle collapsed state on a node
+   * Generic toggle: flip a boolean on node, sync DOM attribute, emit event
    * @param {string} nodeId
+   * @param {string} prop - node property name (e.g. 'collapsed', 'muted')
+   * @param {string} attr - DOM attribute name (e.g. 'data-collapsed', 'data-muted')
+   * @param {string} eventName - editor event (e.g. 'nodecollapse', 'nodemute')
    */
-  collapseNode(nodeId) {
+  #toggleNodeState(nodeId, prop, attr, eventName) {
     if (!this.#editor) return;
     const node = this.#editor.getNode(nodeId);
     if (!node) return;
-    node.collapsed = !node.collapsed;
+    node[prop] = !node[prop];
     const el = this.#nodeViews.get(nodeId);
     if (el) {
-      if (node.collapsed) {
-        el.setAttribute('data-collapsed', '');
-      } else {
-        el.removeAttribute('data-collapsed');
-      }
+      node[prop] ? el.setAttribute(attr, '') : el.removeAttribute(attr);
     }
-    this.#editor.emit('nodecollapse', { nodeId, collapsed: node.collapsed });
+    this.#editor.emit(eventName, { nodeId, [prop]: node[prop] });
   }
 
-  /**
-   * Toggle muted state on a node
-   * @param {string} nodeId
-   */
-  muteNode(nodeId) {
-    if (!this.#editor) return;
-    const node = this.#editor.getNode(nodeId);
-    if (!node) return;
-    node.muted = !node.muted;
-    const el = this.#nodeViews.get(nodeId);
-    if (el) {
-      if (node.muted) {
-        el.setAttribute('data-muted', '');
-      } else {
-        el.removeAttribute('data-muted');
-      }
-    }
-    this.#editor.emit('nodemute', { nodeId, muted: node.muted });
-  }
+  /** @param {string} nodeId */
+  collapseNode(nodeId) { this.#toggleNodeState(nodeId, 'collapsed', 'data-collapsed', 'nodecollapse'); }
+
+  /** @param {string} nodeId */
+  muteNode(nodeId) { this.#toggleNodeState(nodeId, 'muted', 'data-muted', 'nodemute'); }
 
   /** Delete a single connection */
   deleteConnection(connId) {
@@ -303,45 +288,21 @@ export class ViewportActions {
   }
 
   /**
-   * Show port hints: highlight compatible ports and show them on the nearest side
+   * Show port hints: highlight compatible ports on nearest side
    * @param {number} worldX - Cursor X in graph coordinates
    * @param {number} worldY - Cursor Y in graph coordinates
    * @param {object} socketData - Picked socket data
+   * @returns {Set<string>}
    */
   updatePortHints(worldX, worldY, socketData) {
-    const pickedNode = this.#editor.getNode(socketData.nodeId);
-    if (!pickedNode) return new Set();
-
-    const isOutput = socketData.side === 'output';
-    const pickedPort = isOutput ? pickedNode.outputs[socketData.key] : pickedNode.inputs[socketData.key];
-    if (!pickedPort) return new Set();
-
-    const pickedSocket = pickedPort.socket;
-    const compatibleIds = new Set();
+    const compatibleIds = this.getCompatibleNodeIds(socketData);
 
     for (const [nodeId, el] of this.#nodeViews) {
-      if (nodeId === socketData.nodeId) continue;
-      const targetNode = this.#editor.getNode(nodeId);
-      if (!targetNode) continue;
-
-      // Check if node has any compatible ports on the opposite side
-      const ports = isOutput ? targetNode.inputs : targetNode.outputs;
-      let hasCompatible = false;
-      for (const [, port] of Object.entries(ports)) {
-        if (pickedSocket.isCompatibleWith(port.socket)) {
-          hasCompatible = true;
-          break;
-        }
-      }
-
-      if (hasCompatible) {
-        compatibleIds.add(nodeId);
-        // Determine nearest side: left or right based on cursor X vs node center X
+      if (compatibleIds.has(nodeId)) {
         const nodePos = el._position;
         const nodeW = el.offsetWidth || 180;
         const nodeCenterX = nodePos ? nodePos.x + nodeW / 2 : 0;
-        const hint = worldX < nodeCenterX ? 'left' : 'right';
-        el.setAttribute('data-port-hint', hint);
+        el.setAttribute('data-port-hint', worldX < nodeCenterX ? 'left' : 'right');
       } else {
         el.removeAttribute('data-port-hint');
       }

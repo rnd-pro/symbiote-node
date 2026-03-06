@@ -50,6 +50,8 @@ export function applyTheme(element, theme) {
   for (const [key, value] of Object.entries(theme.tokens)) {
     element.style.setProperty(key, value);
   }
+  // Set theme name as attribute for CSS selectors
+  element.setAttribute('data-sn-theme', theme.name);
   // Bridge: derive global layout tokens from --sn-* values
   for (const [layoutToken, snToken] of Object.entries(LAYOUT_TOKEN_MAP)) {
     const value = theme.tokens[snToken];

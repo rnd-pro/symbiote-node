@@ -68,8 +68,8 @@ ai-chat .chat-bubble[data-role="user"] {
 
 ai-chat .chat-bubble[data-role="ai"] {
   align-self: flex-start;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 6%, transparent);
   border-bottom-left-radius: 4px;
 }
 
@@ -84,7 +84,7 @@ ai-chat .chat-bubble[data-role="ai"] .ai-prefix {
 }
 
 ai-chat .chat-bubble code {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, currentColor 8%, transparent);
   padding: 1px 4px;
   border-radius: 3px;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -102,8 +102,8 @@ ai-chat .chat-input-area {
 
 ai-chat .chat-input-area textarea {
   flex: 1;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 8%, transparent);
   border-radius: 8px;
   color: inherit;
   font-family: inherit;
@@ -118,7 +118,7 @@ ai-chat .chat-input-area textarea {
   }
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.2);
+    color: color-mix(in srgb, currentColor 20%, transparent);
   }
 }
 
@@ -152,7 +152,7 @@ ai-chat .typing-dots span {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  background: color-mix(in srgb, currentColor 30%, transparent);
   animation: typing-bounce 1.2s ease-in-out infinite;
 
   &:nth-child(2) { animation-delay: 0.2s; }

@@ -30,7 +30,7 @@ event-log .log-title {
 }
 
 event-log .log-count {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, currentColor 8%, transparent);
   padding: 1px 6px;
   border-radius: 8px;
   font-size: 10px;
@@ -40,7 +40,7 @@ event-log .log-count {
 event-log .log-header button {
   margin-left: auto;
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
   color: inherit;
   padding: 2px 8px;
   border-radius: 4px;
@@ -51,7 +51,7 @@ event-log .log-header button {
 
   &:hover {
     opacity: 1;
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: color-mix(in srgb, currentColor 20%, transparent);
   }
 }
 
@@ -69,7 +69,7 @@ event-log .log-entry {
   transition: background 0.1s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, currentColor 3%, transparent);
   }
 
   &[data-type="flow"] { --entry-color: var(--sn-node-selected, #4a9eff); }
@@ -81,7 +81,7 @@ event-log .log-entry {
 }
 
 event-log .log-time {
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--sn-text-dim, rgba(255, 255, 255, 0.25));
   font-size: 10px;
   flex-shrink: 0;
   min-width: 52px;

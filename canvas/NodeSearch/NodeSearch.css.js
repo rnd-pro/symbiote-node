@@ -83,7 +83,7 @@ node-search {
   transition: background 0.1s;
 
   &:hover {
-    background: rgba(255,255,255,0.06);
+    background: color-mix(in srgb, currentColor 6%, transparent);
   }
 }
 
@@ -92,6 +92,6 @@ node-search {
   color: var(--sn-text-dim, #888);
   padding: 1px 6px;
   border-radius: 4px;
-  background: rgba(255,255,255,0.05);
+  background: color-mix(in srgb, currentColor 5%, transparent);
 }
 `;

@@ -36,7 +36,7 @@ export const styles = css`
     position: relative;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.04);
+      background: color-mix(in srgb, currentColor 4%, transparent);
       color: var(--sn-text, #cdd6f4);
     }
 
@@ -67,7 +67,7 @@ export const styles = css`
       border-radius: 3px;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: color-mix(in srgb, currentColor 10%, transparent);
       }
     }
 
@@ -86,7 +86,7 @@ export const styles = css`
     transition: background 0.15s ease-out, color 0.15s ease-out;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.04);
+      background: color-mix(in srgb, currentColor 4%, transparent);
       color: var(--sn-text, #cdd6f4);
     }
 

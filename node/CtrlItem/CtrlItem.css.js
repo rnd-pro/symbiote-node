@@ -20,7 +20,7 @@ ctrl-item {
 
   & .sn-ctrl-input {
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
     border-radius: 4px;
     padding: 4px 8px;
     color: var(--sn-text, #e2e8f0);

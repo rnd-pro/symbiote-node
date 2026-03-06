@@ -29,7 +29,7 @@ export const LIGHT_CLEAN = {
     // Lightness levels (inverted for light theme)
     '--sn-lit-bg': '95%',
     '--sn-lit-surface': '100%',
-    '--sn-lit-border': '83%',
+    '--sn-lit-border': '78%',
     '--sn-lit-hover': '90%',
     '--sn-lit-text': '15%',
     '--sn-lit-text-dim': '45%',
@@ -38,7 +38,7 @@ export const LIGHT_CLEAN = {
     // Alpha levels
     '--sn-alpha-overlay': '0.95',
     '--sn-alpha-subtle': '0.1',
-    '--sn-alpha-faint': '0.06',
+    '--sn-alpha-faint': '0.12',
 
     // Semantic state colors (composed from atomics)
     '--sn-danger-color': 'hsl(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent))',
@@ -57,7 +57,7 @@ export const LIGHT_CLEAN = {
     '--sn-node-border': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), var(--sn-lit-border))',
     '--sn-node-radius': '10px',
     '--sn-node-shadow': '0 2px 8px rgba(0, 0, 0, 0.08)',
-    '--sn-shadow-color': 'rgba(0, 0, 0, 0.08)',
+    '--sn-shadow-color': 'rgba(0, 0, 0, 0.12)',
     '--sn-node-selected': 'hsl(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent))',
     '--sn-node-hover': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), var(--sn-lit-hover))',
     '--sn-node-header-bg': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), 96%)',
@@ -106,7 +106,7 @@ export const LIGHT_CLEAN = {
     // Shape fill/stroke
     '--sn-shape-fill': 'var(--sn-node-bg)',
     '--sn-shape-stroke': 'var(--sn-node-border)',
-    '--sn-shape-stroke-width': '0.4',
+    '--sn-shape-stroke-width': '1.0',
   },
 };
 
@@ -125,13 +125,13 @@ export const LIGHT_PALETTE = {
     '--sn-sat-muted': '8%',
     '--sn-lit-bg': '95%',
     '--sn-lit-surface': '100%',
-    '--sn-lit-border': '83%',
+    '--sn-lit-border': '78%',
     '--sn-lit-hover': '90%',
     '--sn-lit-text': '15%',
     '--sn-lit-text-dim': '45%',
     '--sn-lit-accent': '50%',
     '--sn-alpha-overlay': '0.95',
     '--sn-alpha-subtle': '0.1',
-    '--sn-alpha-faint': '0.06',
+    '--sn-alpha-faint': '0.12',
   },
 };

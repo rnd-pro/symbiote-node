@@ -20,7 +20,7 @@ export class Frame {
    * @param {number} [options.height=300] - Height
    */
   constructor(label, options = {}) {
-    this.id = uid();
+    this.id = options.id || uid();
     this.label = label;
     this.color = options.color || '#4a9eff';
     this.x = options.x || 0;

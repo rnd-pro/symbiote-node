@@ -9,6 +9,9 @@
  */
 
 import { Connection } from './Connection.js';
+import { Node } from './Node.js';
+import { Socket, Input, Output } from './Socket.js';
+import { Frame } from './Frame.js';
 
 /**
  * @typedef {'nodecreate'|'nodecreated'|'noderemove'|'noderemoved'|
@@ -236,31 +239,158 @@ export class NodeEditor {
     return true;
   }
 
-  // --- Serialization (agi-graph compatible) ---
+  // --- Serialization (agi-graph isomorphic bridge) ---
 
   /**
-   * Serialize editor state to agi-graph JSON format
+   * Serialize editor state to agi-graph workflow JSON format.
+   * Output is directly compatible with engine/Graph.fromJSON().
    * @param {Object<string, number[]>} [positions] - Node positions {nodeId: [x, y]}
-   * @returns {object}
+   * @returns {object} Workflow JSON
    */
   toJSON(positions = {}) {
     return {
-      nodes: this.getNodes().map(n => ({
-        id: n.id,
-        type: n.type,
-        name: n.label,
-        category: n.category,
-        params: { ...n.params },
-      })),
-      connections: this.getConnections().map(c => ({
+      version: 1,
+      nodes: this.getNodes().map((n) => {
+        const obj = {
+          id: n.id,
+          type: n.type,
+          name: n.label,
+          params: { ...n.params },
+        };
+        if (n.category && n.category !== 'default') obj.category = n.category;
+        if (n.shape && n.shape !== 'rect') obj.shape = n.shape;
+        if (n.cacheMode && n.cacheMode !== 'auto') obj.cacheMode = n.cacheMode;
+
+        // Serialize port definitions for round-trip
+        const inputs = Object.entries(n.inputs);
+        if (inputs.length > 0) {
+          obj.inputs = inputs.map(([key, inp]) => ({
+            name: key,
+            type: inp.socket?.name || 'any',
+            label: inp.label || '',
+          }));
+        }
+        const outputs = Object.entries(n.outputs);
+        if (outputs.length > 0) {
+          obj.outputs = outputs.map(([key, out]) => ({
+            name: key,
+            type: out.socket?.name || 'any',
+            label: out.label || '',
+          }));
+        }
+        return obj;
+      }),
+      connections: this.getConnections().map((c) => ({
+        id: c.id,
         from: c.from,
         out: c.out,
         to: c.to,
         in: c.in,
       })),
+      frames: this.getFrames().map((f) => ({
+        id: f.id,
+        label: f.label,
+        x: f.x,
+        y: f.y,
+        width: f.width,
+        height: f.height,
+        color: f.color,
+      })),
       ui: {
         positions: { ...positions },
       },
     };
+  }
+
+  /**
+   * Reconstruct editor state from agi-graph workflow JSON.
+   * Enables round-trip: Editor → toJSON → fromJSON → Editor.
+   * Also accepts output from engine/Graph.toJSON().
+   * @param {object} data - Workflow JSON
+   * @param {Object<string, number[]>} [positionsOut] - Optional object to populate with positions
+   * @returns {NodeEditor} this
+   */
+  fromJSON(data, positionsOut) {
+    // Clear existing state (bypass events for bulk load)
+    this.nodes.clear();
+    this.connections.clear();
+    this.frames.clear();
+
+    // Restore nodes
+    for (const nd of (data.nodes || [])) {
+      const node = new Node(nd.name || nd.type, {
+        id: nd.id,
+        type: nd.type,
+        category: nd.category || 'default',
+        shape: nd.shape || 'rect',
+      });
+      node.params = { ...nd.params };
+      if (nd.cacheMode) node.cacheMode = nd.cacheMode;
+
+      // Restore ports from serialized definitions
+      if (nd.inputs) {
+        for (const inp of nd.inputs) {
+          node.addInput(inp.name, new Input(new Socket(inp.type || 'any'), inp.label || ''));
+        }
+      }
+      if (nd.outputs) {
+        for (const out of nd.outputs) {
+          node.addOutput(out.name, new Output(new Socket(out.type || 'any'), out.label || ''));
+        }
+      }
+
+      this.nodes.set(node.id, node);
+    }
+
+    // Restore connections
+    for (const cd of (data.connections || [])) {
+      const srcNode = this.nodes.get(cd.from);
+      const tgtNode = this.nodes.get(cd.to);
+      if (!srcNode || !tgtNode) continue;
+
+      // Ensure ports exist (auto-create if coming from engine format without port defs)
+      if (!srcNode.outputs[cd.out]) {
+        srcNode.addOutput(cd.out, new Output(new Socket('any'), cd.out));
+      }
+      if (!tgtNode.inputs[cd.in]) {
+        tgtNode.addInput(cd.in, new Input(new Socket('any'), cd.in));
+      }
+
+      const conn = new Connection(srcNode, cd.out, tgtNode, cd.in);
+      if (cd.id) conn.id = cd.id;
+      this.connections.set(conn.id, conn);
+    }
+
+    // Restore frames
+    for (const fd of (data.frames || [])) {
+      const frame = new Frame(fd.label, {
+        id: fd.id,
+        x: fd.x,
+        y: fd.y,
+        width: fd.width,
+        height: fd.height,
+        color: fd.color,
+      });
+      this.frames.set(frame.id, frame);
+    }
+
+    // Extract positions
+    if (positionsOut && data.ui?.positions) {
+      Object.assign(positionsOut, data.ui.positions);
+    }
+
+    return this;
+  }
+
+  /**
+   * Convert editor state to an engine Graph instance for server-side execution.
+   * The Graph can be passed directly to Executor.run().
+   * @param {Object<string, number[]>} [positions] - Node positions
+   * @returns {import('../engine/Graph.js').Graph}
+   */
+  async toGraph(positions = {}) {
+    const { Graph } = await import('../engine/Graph.js');
+    const json = this.toJSON(positions);
+    return new Graph(json);
   }
 }

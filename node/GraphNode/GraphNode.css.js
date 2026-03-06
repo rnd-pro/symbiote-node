@@ -335,6 +335,8 @@ graph-node {
       & > path {
         pointer-events: visibleFill;
         cursor: move;
+        filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.3));
+        transition: stroke 0.2s ease, filter 0.2s ease;
       }
     }
 

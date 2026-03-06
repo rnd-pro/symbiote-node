@@ -30,6 +30,9 @@ export class FlowSimulator {
   /** @type {number} ms per node step */
   speed = 800;
 
+  /** @type {boolean} follow active node with camera */
+  followActive = false;
+
   /**
    * @param {import('../core/Editor.js').NodeEditor} editor
    * @param {Object} canvas - NodeCanvas instance
@@ -62,6 +65,12 @@ export class FlowSimulator {
 
         // Mark node as processing
         this.#setNodeState(nodeId, 'processing');
+
+        // Smooth pan to active node
+        if (this.followActive) {
+          this.#canvas.panToNode?.(nodeId);
+        }
+
         await this.#wait(this.speed);
         if (this.#abort.signal.aborted) break;
 

@@ -392,11 +392,23 @@ function initDemo() {
       } else {
         flowLoop = true;
         setPlayBtn('stop', 'Stop', true);
+        // Auto-enable follow on play start
+        sim.followActive = true;
+        btnFollow?.classList.add('active');
         runLoop();
       }
     };
     if (btnPlay) btnPlay.addEventListener('click', toggleFlow);
     window.toggleFlow = toggleFlow;
+
+    // --- Follow toggle ---
+    const btnFollow = document.getElementById('btnFollow');
+    if (btnFollow) {
+      btnFollow.addEventListener('click', () => {
+        sim.followActive = !sim.followActive;
+        btnFollow.classList.toggle('active', sim.followActive);
+      });
+    }
 
     // --- Theme button ---
     const themes = [GREY_NEUTRAL, DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE];

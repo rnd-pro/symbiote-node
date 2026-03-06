@@ -52,6 +52,9 @@ export class ConnectFlow {
   /** @type {number} - last time compatible move was emitted (ms) */
   #lastMoveTime = 0;
 
+  /** @type {{ x: number, y: number }|null} - cached start position from pick */
+  #pickedStartPos = null;
+
   /** @type {Set<SocketData>} */
   #sockets = new Set();
 
@@ -126,6 +129,7 @@ export class ConnectFlow {
   #pick(data) {
     this.#picked = data;
     const pos = this.#getSocketWorldPosition(data);
+    this.#pickedStartPos = pos;
     if (this.#onPseudoStart) this.#onPseudoStart(pos.x, pos.y, data);
   }
 
@@ -133,7 +137,8 @@ export class ConnectFlow {
     if (!this.#picked) return;
     e.preventDefault();
 
-    const startPos = this.#getSocketWorldPosition(this.#picked);
+    // Use cached start position (fixed at pick time, not recalculated per frame)
+    const startPos = this.#pickedStartPos;
     const t = this.#getTransform();
     // Use clientX/Y minus container rect for accurate positioning
     const endX = (e.clientX - t.rect.left - t.x) / t.k;
@@ -166,6 +171,7 @@ export class ConnectFlow {
     }
 
     this.#picked = null;
+    this.#pickedStartPos = null;
     if (this.#onPseudoEnd) this.#onPseudoEnd();
   };
   /**

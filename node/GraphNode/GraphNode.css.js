@@ -109,7 +109,7 @@ graph-node {
     display: block;
     width: 100%;
     height: 80px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid color-mix(in srgb, currentColor 6%, transparent);
     opacity: 0.7;
   }
 
@@ -424,7 +424,7 @@ graph-node {
     gap: 6px;
     padding: 8px 12px;
     background: var(--sn-node-header-bg, color-mix(in srgb, var(--sn-node-accent) 15%, transparent));
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid color-mix(in srgb, currentColor 6%, transparent);
     border-radius: var(--sn-node-radius, 10px) var(--sn-node-radius, 10px) 0 0;
   }
 
@@ -530,7 +530,7 @@ graph-node {
 
   & .sn-control-input {
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
     border-radius: 4px;
     padding: 4px 8px;
     color: var(--sn-text, #e2e8f0);

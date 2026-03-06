@@ -90,7 +90,7 @@ node-canvas {
 .sn-conn-dot {
   display: none;
   fill: var(--sn-conn-color, #4a9eff);
-  stroke: rgba(255, 255, 255, 0.6);
+  stroke: var(--sn-node-bg, #fff);
   stroke-width: 1.5;
   opacity: 0.9;
   pointer-events: none;
@@ -105,7 +105,7 @@ node-canvas {
 /* Free dots for unconnected SVG ports */
 .sn-free-dot {
   fill: var(--sn-conn-color, #4a9eff);
-  stroke: rgba(255, 255, 255, 0.6);
+  stroke: var(--sn-node-bg, #fff);
   stroke-width: 1.5;
   opacity: 0.9;
   filter: drop-shadow(0 0 2px var(--sn-conn-color, #4a9eff));

@@ -82,7 +82,7 @@ inspector-panel {
   & .insp-value {
     font-size: 13px;
     padding: 6px 8px;
-    background: rgba(255,255,255,0.04);
+    background: color-mix(in srgb, currentColor 4%, transparent);
     border-radius: 4px;
   }
 
@@ -134,7 +134,7 @@ inspector-panel {
 }
 
 .insp-port:hover {
-  background: rgba(255,255,255,0.04);
+  background: color-mix(in srgb, currentColor 4%, transparent);
 }
 
 .insp-port-dot {
@@ -166,7 +166,7 @@ inspector-panel {
 }
 
 .insp-ctrl:hover {
-  background: rgba(255,255,255,0.04);
+  background: color-mix(in srgb, currentColor 4%, transparent);
 }
 
 .insp-ctrl-label {

@@ -346,7 +346,7 @@ graph-node {
       left: 50%;
       transform: translateX(-50%);
       background: var(--sn-node-header-bg, color-mix(in srgb, var(--sn-node-accent, #4a9eff) 20%, var(--sn-node-bg, #16213e)));
-      border: 1px solid var(--sn-node-border, #2a2a4a);
+      border: 2px solid var(--sn-node-border, #2a2a4a);
       border-radius: 20px;
       padding: 3px 12px;
       white-space: nowrap;

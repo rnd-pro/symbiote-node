@@ -855,16 +855,20 @@ export class NodeCanvas extends Symbiote {
       }
     }
 
-    // Inspector — show selected node details
+    // Inspector — show selected node details, auto-hide on deselect
     const inspector = this.ref.inspector;
     if (inspector) {
       inspector._canvas = this;
       if (selectedNodes.size === 1) {
         const nodeId = [...selectedNodes][0];
         const node = this.#editor?.getNode(nodeId);
-        if (node) inspector.inspect(node);
+        if (node) {
+          inspector.inspect(node);
+          inspector.hidden = false;
+        }
       } else {
         inspector.clear();
+        inspector.hidden = true;
       }
     }
   }

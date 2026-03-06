@@ -24,7 +24,7 @@ quick-toolbar {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--sn-toolbar-border, rgba(255, 255, 255, 0.1));
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px var(--sn-shadow-color, rgba(0, 0, 0, 0.45)), 0 0 0 1px var(--sn-shadow-color, rgba(0, 0, 0, 0.1));
     transform: translateX(-50%);
     animation: toolbar-in 0.2s ease-out;
   }
@@ -75,8 +75,8 @@ quick-toolbar {
 }
 
 .tb-btn--enter:hover {
-  background: rgba(167, 139, 250, 0.25);
-  color: #a78bfa;
+  background: color-mix(in srgb, var(--sn-cat-data, #a78bfa) 25%, transparent);
+  color: var(--sn-cat-data, #a78bfa);
 }
 
 .tb-icon {

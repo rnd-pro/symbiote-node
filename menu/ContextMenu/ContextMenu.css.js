@@ -28,7 +28,7 @@ context-menu {
     background: var(--sn-ctx-bg, #1e1e3a);
     border: 1px solid var(--sn-ctx-border, #3a3a6a);
     border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 24px var(--sn-shadow-color, rgba(0, 0, 0, 0.5));
     padding: 4px;
     overflow: hidden;
   }

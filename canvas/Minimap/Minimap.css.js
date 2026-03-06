@@ -14,7 +14,7 @@ node-minimap {
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--sn-node-border, rgba(255,255,255,0.08));
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 16px var(--sn-shadow-color, rgba(0,0,0,0.3));
   z-index: 90;
   cursor: crosshair;
 

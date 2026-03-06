@@ -72,12 +72,12 @@ event-log .log-entry {
     background: rgba(255, 255, 255, 0.03);
   }
 
-  &[data-type="flow"] { --entry-color: #4a9eff; }
-  &[data-type="node"] { --entry-color: #a78bfa; }
-  &[data-type="connection"] { --entry-color: #5cd87a; }
-  &[data-type="success"] { --entry-color: #5cd87a; }
-  &[data-type="error"] { --entry-color: #ef4444; }
-  &[data-type="info"] { --entry-color: #e2b456; }
+  &[data-type="flow"] { --entry-color: var(--sn-node-selected, #4a9eff); }
+  &[data-type="node"] { --entry-color: var(--sn-cat-data, #a78bfa); }
+  &[data-type="connection"] { --entry-color: var(--sn-success-color, #5cd87a); }
+  &[data-type="success"] { --entry-color: var(--sn-success-color, #5cd87a); }
+  &[data-type="error"] { --entry-color: var(--sn-danger-color, #ef4444); }
+  &[data-type="info"] { --entry-color: var(--sn-warning-color, #e2b456); }
 }
 
 event-log .log-time {

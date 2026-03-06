@@ -182,7 +182,7 @@ node-canvas {
 
 /* Node lift effect when dragging */
 .sn-node-lifted {
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 6px 12px var(--sn-shadow-color, rgba(0, 0, 0, 0.5)));
   border-color: var(--sn-node-active-border, rgba(74, 158, 255, 0.5)) !important;
 }
 

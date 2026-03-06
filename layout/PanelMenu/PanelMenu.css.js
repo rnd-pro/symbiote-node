@@ -11,7 +11,7 @@ panel-menu {
     background: var(--bg-popup, #2a2a2a);
     border: 1px solid var(--border-popup, #444);
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 12px var(--sn-shadow-color, rgba(0, 0, 0, 0.4));
     min-width: 160px;
     padding: 4px 0;
   }

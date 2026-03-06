@@ -757,7 +757,11 @@ export class ConnectionRenderer {
    */
   refreshFreeDots(nodeId) {
     const dots = this.#dotLayer.querySelectorAll(`[data-node-id="${nodeId}"][data-free-dot]`);
-    if (!dots.length) return;
+    if (!dots.length) {
+      // No dots yet — initial render (position was likely missing at shape setup time)
+      this.renderFreeDots(nodeId);
+      return;
+    }
 
     const nodeEl = this.#nodeViews.get(nodeId);
     const node = this.#editor.getNode(nodeId);

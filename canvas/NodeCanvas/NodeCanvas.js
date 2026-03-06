@@ -556,7 +556,10 @@ export class NodeCanvas extends Symbiote {
     el.style.transform = `translate(${x}px, ${y}px)`;
     el._position = { x, y };
     this.#connRenderer?.updateForNode(nodeId);
-    this.#connRenderer?.refreshFreeDots(nodeId);
+    // Render or refresh free dots for SVG nodes
+    if (el.hasAttribute('data-svg-shape')) {
+      this.#connRenderer?.refreshFreeDots(nodeId);
+    }
 
     // Keep toolbar in sync during drag
     const toolbar = this.ref.quickToolbar;
@@ -596,6 +599,7 @@ export class NodeCanvas extends Symbiote {
       el.style.transform = `translate(${x}px, ${y}px)`;
       el._position = { x, y };
       this.#connRenderer?.updateForNode(nodeId);
+      this.#connRenderer?.refreshFreeDots(nodeId);
 
       const toolbar = this.ref.quickToolbar;
       if (toolbar && toolbar._nodeId === nodeId) {
@@ -609,6 +613,7 @@ export class NodeCanvas extends Symbiote {
         el._position = { x: targetX, y: targetY };
         el.style.transform = `translate(${targetX}px, ${targetY}px)`;
         this.#connRenderer?.updateForNode(nodeId);
+        this.#connRenderer?.refreshFreeDots(nodeId);
       }
     };
 

@@ -663,4 +663,29 @@ node-socket {
     transition: none;
   }
 }
+
+/* === Liquid Glass theme overrides === */
+[data-sn-theme="glass"] graph-node {
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow:
+    0 4px 24px var(--sn-shadow-color, rgba(0, 0, 0, 0.35)),
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.12),
+    inset 0 -1px 0 hsla(0, 0%, 0%, 0.1);
+  border: 1px solid hsla(0, 0%, 100%, 0.15);
+}
+
+[data-sn-theme="glass"] graph-node[data-selected] {
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--sn-node-selected, #4a9eff) 35%, transparent),
+    0 4px 24px var(--sn-shadow-color, rgba(0, 0, 0, 0.35)),
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.18);
+  border-color: color-mix(in srgb, var(--sn-node-selected, #4a9eff) 60%, hsla(0, 0%, 100%, 0.2));
+}
+
+[data-sn-theme="glass"] graph-node .sn-node-header {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid hsla(0, 0%, 100%, 0.06);
+}
 `;

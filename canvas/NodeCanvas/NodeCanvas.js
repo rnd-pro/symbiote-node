@@ -1045,8 +1045,58 @@ export class NodeCanvas extends Symbiote {
 
     this.#updateTransform();
 
-    // Minimap state getter
+    // Minimap — auto-show on viewport change, toggle button
     const minimap = this.ref.minimap;
+    const minimapToggle = this.ref.minimapToggle;
+    const MINIMAP_KEY = 'sn-minimap-enabled';
+    let minimapEnabled = localStorage.getItem(MINIMAP_KEY) === 'true';
+    let fadeTimer = null;
+    const FADE_DELAY = 2000;
+
+    const showMinimap = () => {
+      if (!minimapEnabled || !minimap) return;
+      minimap.hidden = false;
+      minimap.removeAttribute('data-fading');
+      minimap.update?.();
+      clearTimeout(fadeTimer);
+      fadeTimer = setTimeout(() => {
+        minimap.setAttribute('data-fading', '');
+        // After transition ends, hide completely
+        setTimeout(() => {
+          if (minimap.hasAttribute('data-fading')) {
+            minimap.hidden = true;
+            minimap.removeAttribute('data-fading');
+          }
+        }, 400);
+      }, FADE_DELAY);
+    };
+
+    const updateToggleState = () => {
+      if (minimapToggle) {
+        minimapToggle.toggleAttribute('data-active', minimapEnabled);
+      }
+      if (!minimapEnabled && minimap) {
+        minimap.hidden = true;
+        minimap.removeAttribute('data-fading');
+        clearTimeout(fadeTimer);
+      }
+    };
+
+    updateToggleState();
+
+    if (minimapToggle) {
+      minimapToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        minimapEnabled = !minimapEnabled;
+        localStorage.setItem(MINIMAP_KEY, minimapEnabled);
+        updateToggleState();
+        if (minimapEnabled) showMinimap();
+      });
+    }
+
+    // Show minimap on viewport change (pan/zoom)
+    this.addEventListener('manualviewport', showMinimap);
+
     if (minimap) {
       minimap.setStateGetter(() => {
         const nodes = [];

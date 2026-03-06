@@ -93,7 +93,13 @@ export class FlowSimulator {
           this.#canvas.panToNode?.(nodeId);
         }
 
-        await this.#wait(this.speed);
+        // Run inner flow for subgraph nodes
+        const node = this.#editor.getNode(nodeId);
+        if (node?._isSubgraph && node.innerEditor) {
+          await this.#runInnerFlow(nodeId, node);
+        } else {
+          await this.#wait(this.speed);
+        }
         if (this.#abort.signal.aborted) break;
 
         // Mark node as completed
@@ -202,6 +208,73 @@ export class FlowSimulator {
   }
 
   /**
+   * Animate inner nodes of a subgraph sequentially in its preview canvas
+   * @param {string} nodeId - Parent subgraph node ID
+   * @param {import('../core/SubgraphNode.js').SubgraphNode} node
+   */
+  async #runInnerFlow(nodeId, node) {
+    const el = this.#canvas._getNodeView?.(nodeId);
+    if (!el) {
+      await this.#wait(this.speed);
+      return;
+    }
+
+    const innerEditor = node.innerEditor;
+    const innerNodes = innerEditor.getNodes();
+    const innerConns = innerEditor.getConnections();
+
+    if (innerNodes.length === 0) {
+      await this.#wait(this.speed);
+      return;
+    }
+
+    // Topological sort of inner nodes
+    const adj = new Map();
+    const inDeg = new Map();
+    for (const n of innerNodes) {
+      adj.set(n.id, []);
+      inDeg.set(n.id, 0);
+    }
+    for (const conn of innerConns) {
+      adj.get(conn.from)?.push(conn.to);
+      inDeg.set(conn.to, (inDeg.get(conn.to) || 0) + 1);
+    }
+    const queue = [];
+    for (const [id, deg] of inDeg) {
+      if (deg === 0) queue.push(id);
+    }
+    const innerOrder = [];
+    while (queue.length > 0) {
+      const id = queue.shift();
+      innerOrder.push(id);
+      for (const next of adj.get(id) || []) {
+        const newDeg = (inDeg.get(next) || 1) - 1;
+        inDeg.set(next, newDeg);
+        if (newDeg === 0) queue.push(next);
+      }
+    }
+
+    // Distribute speed across inner nodes
+    const stepTime = this.speed / Math.max(innerOrder.length, 1);
+    el._innerFlowStates = {};
+
+    for (const innerId of innerOrder) {
+      if (this.#abort.signal.aborted) break;
+
+      el._innerFlowStates[innerId] = 'processing';
+      el._redrawPreview?.();
+
+      await this.#wait(stepTime * 0.6);
+      if (this.#abort.signal.aborted) break;
+
+      el._innerFlowStates[innerId] = 'completed';
+      el._redrawPreview?.();
+
+      await this.#wait(stepTime * 0.4);
+    }
+  }
+
+  /**
    * Set visual state on a node element
    * @param {string} nodeId
    * @param {'processing'|'completed'} state
@@ -223,6 +296,11 @@ export class FlowSimulator {
     if (!el) return;
     el.removeAttribute('data-processing');
     el.removeAttribute('data-completed');
+    // Clear inner flow states for subgraph nodes
+    if (el._innerFlowStates) {
+      el._innerFlowStates = {};
+      el._redrawPreview?.();
+    }
   }
 
   /**

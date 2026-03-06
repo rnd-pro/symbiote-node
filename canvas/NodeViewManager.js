@@ -426,18 +426,30 @@ export class NodeViewManager {
       const offsetX = (w - graphW * scale) / 2;
       const offsetY = (h - graphH * scale) / 2;
 
+      // Flow state map: nodeId -> 'processing' | 'completed'
+      const states = el._innerFlowStates || {};
+
       // Draw connections as lines
       const conns = innerEditor.getConnections();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-      ctx.lineWidth = 1;
       for (const conn of conns) {
-        const src = nodeRects.find(r => r.id === conn.source);
-        const tgt = nodeRects.find(r => r.id === conn.target);
+        const src = nodeRects.find(r => r.id === conn.from);
+        const tgt = nodeRects.find(r => r.id === conn.to);
         if (src && tgt) {
           const sx = (src.x + src.w - minX) * scale + offsetX;
           const sy = (src.y + src.h / 2 - minY) * scale + offsetY;
           const tx = (tgt.x - minX) * scale + offsetX;
           const ty = (tgt.y + tgt.h / 2 - minY) * scale + offsetY;
+
+          // Flowing connection: source completed
+          const srcState = states[conn.from];
+          if (srcState === 'completed') {
+            ctx.strokeStyle = 'rgba(92, 216, 122, 0.5)';
+            ctx.lineWidth = 2;
+          } else {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.lineWidth = 1;
+          }
+
           ctx.beginPath();
           ctx.moveTo(sx, sy);
           ctx.lineTo(tx, ty);
@@ -445,20 +457,57 @@ export class NodeViewManager {
         }
       }
 
-      // Draw node rectangles
+      // Draw node rectangles with flow state
       for (const r of nodeRects) {
         const rx = (r.x - minX) * scale + offsetX;
         const ry = (r.y - minY) * scale + offsetY;
         const rw = r.w * scale;
         const rh = r.h * scale;
+        const state = states[r.id];
+        const radius = 4;
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.fillRect(rx, ry, rw, rh);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(rx, ry, rw, rh);
+        // Rounded rect helper
+        ctx.beginPath();
+        ctx.moveTo(rx + radius, ry);
+        ctx.lineTo(rx + rw - radius, ry);
+        ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + radius);
+        ctx.lineTo(rx + rw, ry + rh - radius);
+        ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - radius, ry + rh);
+        ctx.lineTo(rx + radius, ry + rh);
+        ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - radius);
+        ctx.lineTo(rx, ry + radius);
+        ctx.quadraticCurveTo(rx, ry, rx + radius, ry);
+        ctx.closePath();
+
+        if (state === 'processing') {
+          ctx.fillStyle = 'rgba(74, 158, 255, 0.25)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(74, 158, 255, 0.8)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          // Glow effect
+          ctx.shadowColor = 'rgba(74, 158, 255, 0.6)';
+          ctx.shadowBlur = 8;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        } else if (state === 'completed') {
+          ctx.fillStyle = 'rgba(92, 216, 122, 0.2)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(92, 216, 122, 0.7)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
       }
     };
+
+    // Expose redraw for external triggering (FlowSimulator)
+    el._redrawPreview = drawPreview;
 
     // Initial draw + periodic refresh
     drawPreview();

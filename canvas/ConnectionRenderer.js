@@ -210,6 +210,23 @@ export class ConnectionRenderer {
   }
 
   /**
+   * Clear all caches and re-render every connection + free dots.
+   * Call after initial node positioning to let SVG connectors settle.
+   */
+  refreshAll() {
+    this.#clearAllSlots();
+    for (const [, conn] of this.#connectionData) {
+      this.#render(conn);
+    }
+    // Re-render free dots for all SVG nodes
+    for (const [nodeId, el] of this.#nodeViews) {
+      if (el.getAttribute('data-svg-shape')) {
+        this.renderFreeDots(nodeId);
+      }
+    }
+  }
+
+  /**
    * Set data flow animation on a connection
    * @param {string} connId
    * @param {boolean} active

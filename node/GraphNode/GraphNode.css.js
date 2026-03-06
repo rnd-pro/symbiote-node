@@ -374,7 +374,7 @@ graph-node {
       left: 50%;
       transform: translate(-50%, -50%);
       font-size: 40px;
-      color: color-mix(in srgb, var(--sn-node-accent, var(--sn-text, #fff)) 20%, transparent);
+      color: var(--sn-node-accent, var(--sn-text-dim, #888));
       pointer-events: none;
       z-index: 0;
     }

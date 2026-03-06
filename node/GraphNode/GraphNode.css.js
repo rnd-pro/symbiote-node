@@ -408,6 +408,7 @@ graph-node {
 
   &[data-svg-shape][data-processing] > svg > path {
     stroke: var(--sn-node-accent, var(--sn-node-selected, #4a9eff));
+    filter: drop-shadow(0 0 0.5px rgba(74, 158, 255, 0.5));
     animation: sn-svg-pulse 1s ease-in-out infinite;
   }
 
@@ -646,8 +647,8 @@ node-socket {
 }
 
 @keyframes sn-svg-pulse {
-  0%, 100% { filter: drop-shadow(0 0 4px currentColor); }
-  50% { filter: drop-shadow(0 0 12px currentColor) drop-shadow(0 0 20px currentColor); }
+  0%, 100% { filter: drop-shadow(0 0 0.3px currentColor); }
+  50% { filter: drop-shadow(0 0 0.8px currentColor) drop-shadow(0 0 1.2px currentColor); }
 }
 
 

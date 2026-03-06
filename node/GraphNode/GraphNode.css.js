@@ -351,6 +351,15 @@ graph-node {
       padding: 3px 12px;
       white-space: nowrap;
       z-index: 1;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    &:hover .sn-node-header {
+      opacity: 1;
+    }
+    &[data-selected] .sn-node-header {
+      opacity: 0;
     }
     & .sn-node-body {
       padding: 4px 0;

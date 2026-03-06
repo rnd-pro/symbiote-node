@@ -54,7 +54,7 @@ function initDemo() {
   cloudSrc.addOutput('docs', new Output(arraySocket, 'Documents'));
 
   // ⚡ Event Trigger — bolt SVG node (startup signal)
-  const trigger = new Node('Trigger', { type: 'trigger', category: 'control', shape: 'star' });
+  const trigger = new Node('Trigger', { type: 'trigger', category: 'control', shape: 'pentagon' });
   trigger.addOutput('exec', new Output(execSocket, 'Exec'));
   trigger.addOutput('config', new Output(textSocket, 'Config'));
 
@@ -207,7 +207,7 @@ function initDemo() {
     { label: 'Circle', type: 'merge', category: 'control', shape: 'circle' },
     { label: 'Octagon', type: 'publish', category: 'server', shape: 'octagon' },
     { label: 'Database', type: 'database', category: 'data', shape: 'database' },
-    { label: 'Star', type: 'trigger', category: 'control', shape: 'star' },
+    { label: 'Pentagon', type: 'trigger', category: 'control', shape: 'pentagon' },
     { label: 'Diamond', type: 'decision', category: 'control', shape: 'diamond' },
   ];
 

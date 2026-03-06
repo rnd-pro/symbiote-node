@@ -502,26 +502,7 @@ export class ConnectionRenderer {
       dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       dot.setAttribute('data-conn-dot', dotId);
       dot.setAttribute('r', '5');
-      dot.style.cursor = 'crosshair';
       this.#dotLayer.appendChild(dot);
-
-      // Wire pointerdown for connection dragging from overlay dots
-      if (this.#onDotDrag) {
-        dot.addEventListener('pointerdown', (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          const conn = this.#connectionData.get(connId);
-          if (!conn) return;
-          // Read actual dot world position from SVG attributes
-          const dotX = parseFloat(dot.getAttribute('cx')) || 0;
-          const dotY = parseFloat(dot.getAttribute('cy')) || 0;
-          // Resolve socket data with world position
-          const socketData = end === 'start'
-            ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
-            : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
-          this.#onDotDrag(socketData);
-        });
-      }
     }
     dot.setAttribute('cx', x);
     dot.setAttribute('cy', y);

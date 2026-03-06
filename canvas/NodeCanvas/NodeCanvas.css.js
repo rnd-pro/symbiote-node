@@ -92,8 +92,7 @@ node-canvas {
   stroke: rgba(255, 255, 255, 0.6);
   stroke-width: 1.5;
   opacity: 0.9;
-  pointer-events: auto;
-  cursor: crosshair;
+  pointer-events: none;
   filter: drop-shadow(0 0 2px var(--sn-conn-color, #4a9eff));
   transition: r 0.15s ease, filter 0.15s ease;
 }

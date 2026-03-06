@@ -124,7 +124,13 @@ export class InspectorPanel extends Symbiote {
     });
 
     // Resize drag handle
+    const STORAGE_KEY = 'sn-inspector-width';
     const handle = this.querySelector('.insp-resize-handle');
+
+    // Restore saved width
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) this.style.width = saved + 'px';
+
     if (handle) {
       let startX = 0;
       let startW = 0;
@@ -137,6 +143,7 @@ export class InspectorPanel extends Symbiote {
 
       const onUp = () => {
         handle.classList.remove('dragging');
+        localStorage.setItem(STORAGE_KEY, this.offsetWidth);
         document.removeEventListener('pointermove', onMove);
         document.removeEventListener('pointerup', onUp);
       };

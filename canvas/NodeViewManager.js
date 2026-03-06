@@ -204,6 +204,15 @@ export class NodeViewManager {
           if (child !== svg) child.style.position = 'relative';
         }
 
+        // Watermark icon — large pale category icon centered inside shape
+        const iconEl = el.querySelector('.sn-node-icon');
+        if (iconEl) {
+          const watermark = document.createElement('span');
+          watermark.className = 'sn-shape-watermark material-symbols-outlined';
+          watermark.textContent = iconEl.textContent;
+          el.appendChild(watermark);
+        }
+
 
       } else if (shape) {
         // Standard shapes: apply border-radius

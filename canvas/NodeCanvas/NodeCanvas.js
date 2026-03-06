@@ -226,6 +226,11 @@ export class NodeCanvas extends Symbiote {
         this.#actions.clearPortHints();
         this.#connRenderer?.clearDotHighlights();
       },
+      onCompatibleMove: (worldX, worldY, socketData) => {
+        // Highlight compatible SVG dots (no port teleportation)
+        const compatibleIds = this.#actions.getCompatibleNodeIds(socketData);
+        this.#connRenderer?.highlightDotsForNodes(compatibleIds);
+      },
 
       onDropEmpty: (x, y, socketData) => {
         this.#actions.handleDropEmpty(x, y, socketData);

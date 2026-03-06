@@ -86,8 +86,9 @@ node-canvas {
   }
 }
 
-/* Connector endpoint dots */
+/* Connector endpoint dots — hidden by default, shown only for SVG nodes */
 .sn-conn-dot {
+  display: none;
   fill: var(--sn-conn-color, #4a9eff);
   stroke: rgba(255, 255, 255, 0.6);
   stroke-width: 1.5;
@@ -95,6 +96,10 @@ node-canvas {
   pointer-events: none;
   filter: drop-shadow(0 0 2px var(--sn-conn-color, #4a9eff));
   transition: r 0.15s ease, filter 0.15s ease;
+}
+
+.sn-conn-dot[data-svg-wired] {
+  display: initial;
 }
 
 /* Dot highlight during compatible connector drag */

@@ -336,20 +336,20 @@ function initDemo() {
       canvas.setNodePosition(cloudSrc.id, 580, 100);
 
       // Row 2: Processing
-      canvas.setNodePosition(httpReq.id, -153, 375);
-      canvas.setNodePosition(aiAgent.id, 127, 375);
-      canvas.setNodePosition(filter.id, 385, 497);
-      canvas.setNodePosition(merge.id, 580, 480);
-      canvas.setNodePosition(subgraph.id, 740, 420);
+      canvas.setNodePosition(httpReq.id, -180, 370);
+      canvas.setNodePosition(aiAgent.id, 100, 370);
+      canvas.setNodePosition(filter.id, 358, 492);
+      canvas.setNodePosition(merge.id, 553, 475);
+      canvas.setNodePosition(subgraph.id, 713, 415);
 
       // Row 3: Delivery
-      canvas.setNodePosition(cdn.id, 159, 813);
-      canvas.setNodePosition(db.id, 399, 813);
-      canvas.setNodePosition(debug.id, 619, 773);
+      canvas.setNodePosition(cdn.id, 146, 801);
+      canvas.setNodePosition(db.id, 346, 801);
+      canvas.setNodePosition(debug.id, 546, 781);
       canvas.setNodePosition(notify.id, 340, 1020);
 
       // Side: Health monitor
-      canvas.setNodePosition(health.id, -81, 813);
+      canvas.setNodePosition(health.id, -34, 801);
 
       // Demo features: error state, preview
       canvas.setNodeError(filter.id, 'Missing required condition');
@@ -357,9 +357,9 @@ function initDemo() {
     }, 200);
 
     // Frames
-    const sourceFrame = new Frame('Data Sources', { x: -30, y: 40, width: 780, height: 200, color: '#5cb8ff' });
-    const processFrame = new Frame('AI Processing', { x: -200, y: 320, width: 580, height: 180, color: '#a78bfa' });
-    const deliveryFrame = new Frame('Delivery', { x: -200, y: 760, width: 840, height: 180, color: '#5cd87a' });
+    const sourceFrame = new Frame('Data Sources', { x: -30, y: 40, width: 784, height: 224, color: '#5cb8ff' });
+    const processFrame = new Frame('AI Processing', { x: -227, y: 315, width: 1179, height: 371, color: '#a78bfa' });
+    const deliveryFrame = new Frame('Delivery', { x: -84, y: 752, width: 897, height: 232, color: '#5cd87a' });
     editor.addFrame(sourceFrame);
     editor.addFrame(processFrame);
     editor.addFrame(deliveryFrame);

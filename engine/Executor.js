@@ -46,7 +46,10 @@ export class Executor {
   async run(graph, options = {}) {
     const { cache = false, onNodeStart, onNodeComplete, onNodeSkipped, onNodeCached } = options;
     const nodes = graph.nodes;
-    const connections = graph.connections;
+    // Duck-typing: Editor has connections as Map, Graph has array
+    const connections = graph.connections instanceof Map
+      ? [...graph.connections.values()]
+      : graph.connections;
 
     // Topological sort
     const order = this._topologicalSort(nodes, connections);

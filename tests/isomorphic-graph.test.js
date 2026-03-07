@@ -212,3 +212,50 @@ describe('Editor → Graph interop', () => {
     console.log('Cross-format Graph → Editor: OK ✅');
   });
 });
+
+// --- Executor duck-typing: run Editor directly ---
+
+describe('Executor duck-typing', () => {
+  it('Executor.run() accepts Editor directly (no conversion)', async () => {
+    const { Executor } = await import('../engine/Executor.js');
+    const { registerNodeType } = await import('../engine/Registry.js');
+
+    // Register simple processors
+    registerNodeType({
+      type: 'test/double',
+      driver: { description: 'test', inputs: [], outputs: [{ name: 'result', type: 'any' }] },
+      process: (inputs) => ({ result: (inputs.value || 0) * 2 }),
+    });
+    registerNodeType({
+      type: 'test/add-ten',
+      driver: { description: 'test', inputs: [{ name: 'value', type: 'any' }], outputs: [{ name: 'result', type: 'any' }] },
+      process: (inputs) => ({ result: (inputs.value || 0) + 10 }),
+    });
+
+    // Build editor (browser side)
+    const editor = new NodeEditor();
+    const anySocket = new Socket('any');
+
+    const src = new Node('Source', { id: 'src', type: 'test/double' });
+    src.addOutput('result', new Output(anySocket, 'result'));
+    src.params = {};
+
+    const dst = new Node('Dest', { id: 'dst', type: 'test/add-ten' });
+    dst.addInput('value', new Input(anySocket, 'value'));
+    dst.addOutput('result', new Output(anySocket, 'result'));
+
+    editor.addNode(src);
+    editor.addNode(dst);
+    editor.addConnection(new Connection(src, 'result', dst, 'value'));
+
+    // Execute Editor DIRECTLY — no toGraph() needed
+    const executor = new Executor();
+    const result = await executor.run(editor);
+
+    // src: double(0) = 0, dst: 0 + 10 = 10
+    assert.equal(result.outputs.dst.result, 10, 'pipeline executed correctly');
+    assert.deepEqual(result.executionOrder, ['src', 'dst'], 'topological order');
+
+    console.log('Executor duck-typing: OK ✅');
+  });
+});

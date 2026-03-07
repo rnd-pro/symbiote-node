@@ -259,6 +259,7 @@ export class NodeEditor {
         };
         if (n.category && n.category !== 'default') obj.category = n.category;
         if (n.shape && n.shape !== 'rect') obj.shape = n.shape;
+        if (n.icon) obj.icon = n.icon;
         if (n.cacheMode && n.cacheMode !== 'auto') obj.cacheMode = n.cacheMode;
 
         // Serialize port definitions for round-trip
@@ -323,6 +324,7 @@ export class NodeEditor {
         type: nd.type,
         category: nd.category || 'default',
         shape: nd.shape || 'rect',
+        icon: nd.icon || '',
       });
       node.params = { ...nd.params };
       if (nd.cacheMode) node.cacheMode = nd.cacheMode;

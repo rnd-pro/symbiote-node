@@ -17,6 +17,7 @@ export class Node {
    * @param {string} [options.type] - Node type identifier (e.g. 'ai/llm')
    * @param {string} [options.category] - Category for styling (server/instance/control)
    * @param {string} [options.shape] - Shape name (rect/pill/circle/diamond/comment)
+   * @param {string} [options.icon] - Material icon name for visual rendering
    */
   constructor(label, options = {}) {
     /** @type {string} */
@@ -33,6 +34,9 @@ export class Node {
 
     /** @type {string} */
     this.shape = options.shape || 'rect';
+
+    /** @type {string} */
+    this.icon = options.icon || '';
 
     /** @type {Object<string, Input>} */
     this.inputs = {};

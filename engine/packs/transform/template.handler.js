@@ -20,6 +20,7 @@ export default {
     ],
     outputs: [
       { name: 'result', type: 'string' },
+      { name: 'data', type: 'any' },
     ],
     params: {
       template: { type: 'textarea', default: '', description: 'Message template ({{var}} syntax)' },
@@ -27,10 +28,8 @@ export default {
   },
 
   lifecycle: {
-    validate: (inputs) => {
-      if (!inputs.template) return false;
-      return true;
-    },
+    // No validate: template comes from params.template or inputs.template
+    // Execute handles both cases
 
     cacheKey: (inputs) =>
       `tpl:${inputs.template}:${JSON.stringify(inputs.data)}`,
@@ -52,7 +51,14 @@ export default {
         return String(value);
       });
 
-      return { result };
+      // Output rendered text in both formats:
+      // - result: raw string (for chaining)
+      // - data: full context with text field (for telegram/chat)
+      const outputField = params?.outputField || 'text';
+      return {
+        result,
+        data: { ...(typeof data === 'object' ? data : {}), [outputField]: result },
+      };
     },
   },
 };

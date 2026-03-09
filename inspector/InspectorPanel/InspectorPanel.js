@@ -10,6 +10,7 @@
 import Symbiote from '@symbiotejs/symbiote';
 import { template, inspPortItemTemplate, inspCtrlItemTemplate } from './InspectorPanel.tpl.js';
 import { styles } from './InspectorPanel.css.js';
+import '../TemplatePreview/TemplatePreview.js';
 
 export class InspectorPanel extends Symbiote {
   init$ = {
@@ -24,6 +25,7 @@ export class InspectorPanel extends Symbiote {
     hasSelection: false,
     isFireable: false,
     isSubgraph: false,
+    isTemplateBuilder: false,
     innerNodeCount: 0,
     onFire: () => {
       if (this._currentNodeId) {
@@ -103,8 +105,20 @@ export class InspectorPanel extends Symbiote {
       visible: true,
       isFireable,
       isSubgraph,
+      isTemplateBuilder: node.type === 'transform/template-builder' || node.type === 'transform/template',
       innerNodeCount,
     });
+
+    // Populate template-preview with current template value
+    if (node.type === 'transform/template-builder' || node.type === 'transform/template') {
+      requestAnimationFrame(() => {
+        /** @type {*} */
+        const preview = this.querySelector('template-preview');
+        if (preview && node.params?.template) {
+          preview.$.template = node.params.template;
+        }
+      });
+    }
   }
 
   /** Clear inspector */
@@ -121,6 +135,7 @@ export class InspectorPanel extends Symbiote {
       controlsList: [],
       isFireable: false,
       isSubgraph: false,
+      isTemplateBuilder: false,
       innerNodeCount: 0,
     });
   }
@@ -143,6 +158,11 @@ export class InspectorPanel extends Symbiote {
           // Also update params for serialization
           if (node && node.params) {
             node.params[key] = value;
+          }
+          // Update template-preview when template field changes
+          if (key === 'template') {
+            const preview = this.querySelector('template-preview');
+            if (preview) preview.$.template = value;
           }
         }
       }

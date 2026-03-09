@@ -348,4 +348,14 @@ inspector-panel {
     font-size: 20px;
   }
 }
+
+.insp-template-preview {
+  padding: 0 16px 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 8px;
+
+  &[hidden] {
+    display: none;
+  }
+}
 `;

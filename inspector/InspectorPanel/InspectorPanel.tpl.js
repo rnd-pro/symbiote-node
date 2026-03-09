@@ -56,6 +56,10 @@ export const template = html`
       <div ${{ itemize: 'controlsList', 'item-tag': 'insp-ctrl-item' }}></div>
     </div>
 
+    <div class="insp-template-preview" ${{ '@hidden': '!isTemplateBuilder' }}>
+      <template-preview></template-preview>
+    </div>
+
     <div class="insp-fire" ${{ '@hidden': '!isFireable' }}>
       <button class="insp-fire-btn" ${{ onclick: 'onFire' }}>
         <span class="material-symbols-outlined">play_arrow</span>

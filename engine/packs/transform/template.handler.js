@@ -46,7 +46,10 @@ export default {
           return obj[k];
         }, data);
 
-        if (value === undefined) return match;
+        if (value === undefined) {
+          console.warn(`[template] ⚠️ Missing variable "${trimmed}" in data keys: [${data ? Object.keys(data).join(', ') : 'NO DATA'}]`);
+          return match;
+        }
         if (typeof value === 'object') return JSON.stringify(value);
         return String(value);
       });

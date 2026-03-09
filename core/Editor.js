@@ -10,7 +10,7 @@
 
 import { Connection } from './Connection.js';
 import { Node } from './Node.js';
-import { Socket, Input, Output } from './Socket.js';
+import { Socket, Input, Output, InputControl } from './Socket.js';
 import { Frame } from './Frame.js';
 
 /**
@@ -328,6 +328,52 @@ export class NodeEditor {
       });
       node.params = { ...nd.params };
       if (nd.cacheMode) node.cacheMode = nd.cacheMode;
+
+      // Auto-create InputControls from params for Inspector display
+      // Merge driver defaults into params (fills missing keys from handler definitions)
+      const driverParams = nd.driver?.params;
+      if (driverParams && !nd.params) nd.params = {};
+      if (driverParams) {
+        for (const [key, def] of Object.entries(driverParams)) {
+          if (!(key in nd.params) && def.default !== undefined) {
+            nd.params[key] = def.default;
+          }
+        }
+      }
+
+      if (nd.params) {
+        for (const [key, value] of Object.entries(nd.params)) {
+          /** @type {'text'|'number'|'textarea'|'select'|'boolean'} */
+          let controlType = 'text';
+          let displayValue = value;
+          let controlOptions = [];
+
+          // Use driver metadata for richer control type detection
+          const paramMeta = driverParams?.[key];
+          if (paramMeta?.type === 'boolean' || typeof value === 'boolean') {
+            controlType = 'boolean';
+          } else if (paramMeta?.type === 'number' || typeof value === 'number') {
+            controlType = 'number';
+          } else if (typeof value === 'string' && value.includes('\n')) {
+            controlType = 'textarea';
+          } else if (typeof value === 'object') {
+            controlType = 'textarea';
+            displayValue = JSON.stringify(value, null, 2);
+          }
+
+          // Select type from driver options
+          if (paramMeta?.options) {
+            controlType = 'select';
+            controlOptions = paramMeta.options;
+          }
+
+          node.addControl(key, new InputControl(controlType, {
+            initial: displayValue,
+            label: paramMeta?.description || key,
+            options: controlOptions,
+          }));
+        }
+      }
 
       // Restore ports from serialized definitions
       if (nd.inputs) {

@@ -21,7 +21,9 @@ export default {
     outputs: [
       { name: 'result', type: 'string' },
     ],
-    params: {},
+    params: {
+      template: { type: 'textarea', default: '', description: 'Message template ({{var}} syntax)' },
+    },
   },
 
   lifecycle: {
@@ -33,8 +35,9 @@ export default {
     cacheKey: (inputs) =>
       `tpl:${inputs.template}:${JSON.stringify(inputs.data)}`,
 
-    execute: async (inputs) => {
-      const { template, data } = inputs;
+    execute: async (inputs, params) => {
+      const template = params?.template || inputs.template;
+      const { data } = inputs;
 
       const result = template.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
         const trimmed = key.trim();

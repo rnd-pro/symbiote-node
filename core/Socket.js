@@ -133,6 +133,9 @@ export class Control {
 
     /** @type {number} */
     this.index = 0;
+
+    /** @type {function|undefined} */
+    this._onChange = undefined;
   }
 }
 
@@ -141,23 +144,31 @@ export class Control {
  */
 export class InputControl extends Control {
   /**
-   * @param {'text'|'number'} type
+   * @param {'text'|'number'|'textarea'|'select'|'boolean'} type
    * @param {object} [options]
    * @param {boolean} [options.readonly=false]
-   * @param {string|number} [options.initial]
+   * @param {string|number|boolean} [options.initial]
+   * @param {string} [options.label] - Display label
+   * @param {string[]} [options.options] - Options for select type
    * @param {function} [options.change] - Callback on value change
    */
   constructor(type, options = {}) {
     super();
 
-    /** @type {'text'|'number'} */
+    /** @type {'text'|'number'|'textarea'|'select'|'boolean'} */
     this.type = type;
 
     /** @type {boolean} */
     this.readonly = options.readonly || false;
 
-    /** @type {string|number|undefined} */
+    /** @type {string|number|boolean|undefined} */
     this.value = options.initial;
+
+    /** @type {string} */
+    this.label = options.label || '';
+
+    /** @type {string[]} */
+    this.options = options.options || [];
 
     /** @type {function|undefined} */
     this._onChange = options.change;
@@ -165,7 +176,7 @@ export class InputControl extends Control {
 
   /**
    * Set control value
-   * @param {string|number} value
+   * @param {string|number|boolean} value
    */
   setValue(value) {
     this.value = value;

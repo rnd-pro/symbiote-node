@@ -172,26 +172,114 @@ inspector-panel {
 }
 
 .insp-ctrl {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-  margin-bottom: 2px;
-}
-
-.insp-ctrl:hover {
-  background: color-mix(in srgb, currentColor 4%, transparent);
+  margin-bottom: 12px;
 }
 
 .insp-ctrl-label {
-  color: var(--sn-text-dim, #aaa);
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--sn-text-dim, #888);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
 }
 
-.insp-ctrl-value {
+.insp-ctrl-input-el,
+.insp-ctrl-select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
   font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--sn-text, #d4d4d4);
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: var(--sn-node-selected, #4a9eff);
+  }
+}
+
+.insp-ctrl-textarea {
+  width: 100%;
+  padding: 6px 8px;
   font-size: 11px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--sn-text, #d4d4d4);
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box;
+  line-height: 1.4;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: var(--sn-node-selected, #4a9eff);
+  }
+}
+
+.insp-ctrl-select {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 24px;
+
+  & option {
+    background: #2a2a3e;
+    color: #d4d4d4;
+  }
+}
+
+.insp-ctrl-toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  cursor: pointer;
+
+  & input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  & .insp-ctrl-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    transition: background 0.2s;
+
+    &::before {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      left: 3px;
+      bottom: 3px;
+      background: #aaa;
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+  }
+
+  & input:checked + .insp-ctrl-slider {
+    background: var(--sn-node-selected, #4a9eff);
+
+    &::before {
+      transform: translateX(16px);
+      background: white;
+    }
+  }
 }
 
 .insp-enter-btn {

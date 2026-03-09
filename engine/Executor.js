@@ -289,13 +289,21 @@ export class Executor {
     for (const conn of connections) {
       if (conn.to !== nodeId) continue;
       const upstream = results.get(conn.from);
-      if (upstream !== undefined) {
-        if (upstream && typeof upstream === 'object' && conn.out in upstream) {
-          inputs[conn.in] = upstream[conn.out];
-        } else {
-          inputs[conn.in] = upstream;
-        }
+      if (upstream === undefined) continue;
+
+      let value;
+      if (upstream && typeof upstream === 'object' && conn.out in upstream) {
+        value = upstream[conn.out];
+      } else if (upstream && typeof upstream === 'object' && upstream.dynamicOutputs) {
+        // Dynamic routing node (switch): missing key = inactive branch
+        value = null;
+      } else {
+        value = upstream;
       }
+
+      // Multiple connections to same input: first non-null wins
+      if (inputs[conn.in] !== undefined && inputs[conn.in] !== null) continue;
+      inputs[conn.in] = value;
     }
     return inputs;
   }

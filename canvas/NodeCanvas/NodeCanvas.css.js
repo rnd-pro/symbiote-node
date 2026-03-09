@@ -213,4 +213,27 @@ node-canvas {
   opacity: 0.5;
   pointer-events: none;
 }
+
+/* Fire trace: sequential node execution highlighting */
+@keyframes sn-fire-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.6); }
+  50% { box-shadow: 0 0 16px 4px rgba(76, 175, 80, 0.4); }
+  100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+}
+
+.graph-node[data-fire-state="active"] {
+  border-color: #4caf50 !important;
+  animation: sn-fire-pulse 0.6s ease-out;
+  z-index: 50;
+}
+
+.graph-node[data-fire-state="done"] {
+  border-color: rgba(76, 175, 80, 0.4) !important;
+  transition: border-color 2s ease-out;
+}
+
+.graph-node[data-fire-state="pending"] {
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
 `;

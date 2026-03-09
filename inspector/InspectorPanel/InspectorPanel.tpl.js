@@ -56,6 +56,13 @@ export const template = html`
       <div ${{ itemize: 'controlsList', 'item-tag': 'insp-ctrl-item' }}></div>
     </div>
 
+    <div class="insp-fire" ${{ '@hidden': '!isFireable' }}>
+      <button class="insp-fire-btn" ${{ onclick: 'onFire' }}>
+        <span class="material-symbols-outlined">play_arrow</span>
+        Fire
+      </button>
+    </div>
+
     <div class="insp-subgraph" hidden>
       <div class="insp-section-title">
         <span class="material-symbols-outlined">account_tree</span> Subgraph

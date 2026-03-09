@@ -313,4 +313,39 @@ inspector-panel {
 .insp-enter-btn .material-symbols-outlined {
   font-size: 18px;
 }
+
+.insp-fire {
+  padding: 12px 16px;
+}
+
+.insp-fire-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(46, 125, 50, 0.10) 100%);
+  color: #66bb6a;
+  font-family: var(--sn-font, 'Inter', sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.25) 0%, rgba(46, 125, 50, 0.18) 100%);
+    border-color: rgba(76, 175, 80, 0.6);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
 `;

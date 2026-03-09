@@ -22,8 +22,18 @@ export class InspectorPanel extends Symbiote {
     outputsList: [],
     controlsList: [],
     hasSelection: false,
+    isFireable: false,
     isSubgraph: false,
     innerNodeCount: 0,
+    onFire: () => {
+      if (this._currentNodeId) {
+        this.dispatchEvent(new CustomEvent('node-fire', {
+          detail: { nodeId: this._currentNodeId },
+          bubbles: true,
+          composed: true,
+        }));
+      }
+    },
     onEnterSubgraph: () => {
       if (this._canvas && this._currentNodeId) {
         this._canvas.drillDown(this._currentNodeId);
@@ -75,6 +85,12 @@ export class InspectorPanel extends Symbiote {
 
     this._currentNodeId = node.id;
 
+    // Check if node is fireable (inject or trigger with testData)
+    const driver = node.driver || node._driver;
+    const isFireable = !!(driver?.fireable) ||
+      node.type === 'debug/inject' ||
+      (node.category === 'trigger' || node.category === 'queue');
+
     this.set$({
       nodeLabel: node.label,
       nodeType: node.type || 'default',
@@ -85,6 +101,7 @@ export class InspectorPanel extends Symbiote {
       controlsList: controls,
       hasSelection: true,
       visible: true,
+      isFireable,
       isSubgraph,
       innerNodeCount,
     });
@@ -102,6 +119,7 @@ export class InspectorPanel extends Symbiote {
       inputsList: [],
       outputsList: [],
       controlsList: [],
+      isFireable: false,
       isSubgraph: false,
       innerNodeCount: 0,
     });

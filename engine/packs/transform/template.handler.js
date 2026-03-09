@@ -24,6 +24,7 @@ export default {
     ],
     params: {
       template: { type: 'textarea', default: '', description: 'Message template ({{var}} syntax)' },
+      replyMarkup: { type: 'textarea', default: '', description: 'Inline keyboard JSON (Telegram reply_markup)' },
     },
   },
 
@@ -58,9 +59,20 @@ export default {
       // - result: raw string (for chaining)
       // - data: full context with text field (for telegram/chat)
       const outputField = params?.outputField || 'text';
+      const outputData = { ...(typeof data === 'object' ? data : {}), [outputField]: result };
+
+      // Attach inline keyboard if configured
+      if (params?.replyMarkup) {
+        try {
+          outputData.reply_markup = JSON.parse(params.replyMarkup);
+        } catch (e) {
+          console.warn('[template] ⚠️ Invalid replyMarkup JSON:', e.message);
+        }
+      }
+
       return {
         result,
-        data: { ...(typeof data === 'object' ? data : {}), [outputField]: result },
+        data: outputData,
       };
     },
   },

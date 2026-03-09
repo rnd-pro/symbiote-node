@@ -29,25 +29,33 @@ export default {
   lifecycle: {
     validate: (inputs) => inputs.data !== undefined,
     execute: (inputs, params) => {
-      const { value, data } = inputs;
+      const { data } = inputs;
+      // Auto-extract value from data[field] when no explicit value input
+      const value = inputs.value !== undefined
+        ? inputs.value
+        : (params.field && data ? data[params.field] : undefined);
       const cases = params.cases;
+      const hasCases = cases && Object.keys(cases).length > 0;
       const result = { default: null };
 
-      // Initialize all case outputs to null
-      for (const outputName of Object.values(cases)) {
-        result[outputName] = null;
-      }
-
-      // Match value to case
-      const stringValue = String(value);
-      const matchedOutput = cases[stringValue];
-
-      if (matchedOutput) {
-        result[matchedOutput] = data;
-        // Declare dynamic outputs
-        result.dynamicOutputs = Object.values(cases);
+      if (hasCases) {
+        // Explicit cases mode: value → mapped output name
+        for (const outputName of Object.values(cases)) {
+          result[outputName] = null;
+        }
+        const stringValue = String(value);
+        const matchedOutput = cases[stringValue];
+        if (matchedOutput) {
+          result[matchedOutput] = data;
+          result.dynamicOutputs = Object.values(cases);
+        } else {
+          result.default = data;
+        }
       } else {
-        result.default = data;
+        // Direct routing: value IS the output name (e.g. 'created' → output 'created')
+        const outputName = String(value);
+        result[outputName] = data;
+        result.dynamicOutputs = [outputName];
       }
 
       return result;

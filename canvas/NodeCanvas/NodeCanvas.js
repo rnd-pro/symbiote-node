@@ -506,6 +506,51 @@ export class NodeCanvas extends Symbiote {
   /** Alias for SubgraphManager */
   getNodeView(nodeId) { return this.#nodeViews.get(nodeId); }
 
+  /**
+   * Highlight nodes sequentially based on execution trace.
+   * Each node pulses green in order, then fades.
+   *
+   * @param {Array<{nodeId: string}>} trace - Execution trace from Fire/Run
+   * @param {number} [stepDelay=300] - Delay between node highlights (ms)
+   */
+  highlightTrace(trace, stepDelay = 300) {
+    if (!trace || !trace.length) return;
+
+    // Clear any previous fire states
+    for (const [, el] of this.#nodeViews) {
+      el.removeAttribute('data-fire-state');
+    }
+
+    // Set all traced nodes to pending first
+    for (const step of trace) {
+      const el = this.#nodeViews.get(step.nodeId);
+      if (el) el.setAttribute('data-fire-state', 'pending');
+    }
+
+    // Sequentially activate each node
+    trace.forEach((step, i) => {
+      setTimeout(() => {
+        const el = this.#nodeViews.get(step.nodeId);
+        if (!el) return;
+        el.setAttribute('data-fire-state', 'active');
+
+        // Move to done after pulse animation
+        setTimeout(() => {
+          el.setAttribute('data-fire-state', 'done');
+        }, 600);
+      }, i * stepDelay);
+    });
+
+    // Clear all states after animation completes
+    const totalDuration = trace.length * stepDelay + 3000;
+    setTimeout(() => {
+      for (const [, el] of this.#nodeViews) {
+        el.removeAttribute('data-fire-state');
+        el.style.opacity = '';
+      }
+    }, totalDuration);
+  }
+
   // --- Subgraph Navigation ---
 
   /** @type {SubgraphManager} */

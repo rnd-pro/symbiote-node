@@ -83,7 +83,7 @@ export const inspPortItemTemplate = html`
 
 export const inspCtrlItemTemplate = html`
 <div class="insp-ctrl">
-  <span class="insp-ctrl-label">{{label}}</span>
-  <span class="insp-ctrl-value">{{value}}</span>
+  <label class="insp-ctrl-label">{{label}}</label>
+  <div class="insp-ctrl-input"></div>
 </div>
 `;

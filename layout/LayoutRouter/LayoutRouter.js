@@ -72,7 +72,9 @@ export function buildHash(panel, subpath, params) {
  */
 export function navigate(panel, subpath = '', params = {}) {
   const hash = buildHash(panel, subpath, params);
-  location.hash = hash;
+  if (typeof location !== 'undefined') {
+    location.hash = hash;
+  }
   // hashchange will trigger syncFromHash
 }
 
@@ -93,7 +95,9 @@ export function updateParams(params) {
   }
   const query = buildQuery(merged);
   const hash = buildHash(routerCtx.read('panel'), routerCtx.read('subpath'), merged);
-  history.replaceState(null, '', '#' + hash);
+  if (typeof history !== 'undefined') {
+    history.replaceState(null, '', '#' + hash);
+  }
   routerCtx.pub('query', query);
 }
 
@@ -101,6 +105,7 @@ export function updateParams(params) {
  * Sync PubSub context from current URL hash
  */
 function syncFromHash() {
+  if (typeof location === 'undefined') return;
   const raw = location.hash.replace(/^#/, '') || 'default';
 
   const qIdx = raw.indexOf('?');
@@ -133,11 +138,13 @@ export function getRoute() {
  * @param {string} panel
  */
 export function setDefaultPanel(panel) {
-  if (!location.hash || location.hash === '#') {
+  if (typeof location !== 'undefined' && (!location.hash || location.hash === '#')) {
     navigate(panel);
   }
 }
 
 // Initial sync + listen to hashchange
-syncFromHash();
-window.addEventListener('hashchange', syncFromHash);
+if (typeof window !== 'undefined') {
+  syncFromHash();
+  window.addEventListener('hashchange', syncFromHash);
+}

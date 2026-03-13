@@ -13,6 +13,7 @@ import './../LayoutPreview/LayoutPreview.js';
 import './../PanelMenu/PanelMenu.js';
 
 export class Layout extends Symbiote {
+  static isoMode = true;
 
   init$ = {
     // Attributes
@@ -90,12 +91,14 @@ export class Layout extends Symbiote {
         }
       }
     };
-    document.addEventListener('pointerup', this._globalPointerFallback);
-    document.addEventListener('pointercancel', this._globalPointerFallback);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('pointerup', this._globalPointerFallback);
+      document.addEventListener('pointercancel', this._globalPointerFallback);
+    }
   }
 
   disconnectedCallback() {
-    if (this._globalPointerFallback) {
+    if (this._globalPointerFallback && typeof document !== 'undefined') {
       document.removeEventListener('pointerup', this._globalPointerFallback);
       document.removeEventListener('pointercancel', this._globalPointerFallback);
     }
@@ -108,24 +111,26 @@ export class Layout extends Symbiote {
       // Recalculate tabs if in fullscreen mode
       if (this.$.fullscreenPanelId) {
         // Wait for DOM update, then recalculate tabs
-        requestAnimationFrame(() => {
-          const allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
-          // Check if current fullscreen panel still exists
-          const panelExists = Array.from(allPanels).some(p => p.$.nodeId === this.$.fullscreenPanelId);
-          if (panelExists) {
-            this._updateTabItems(allPanels, this.$.fullscreenPanelId);
-          } else {
-            // Fullscreen panel was removed, exit fullscreen
-            this.$.fullscreenPanelId = null;
-            this.$.hasFullscreenTabs = false;
-            this.$.tabItems = [];
-            allPanels.forEach(p => {
-              p.removeAttribute('fullscreen');
-              p.$.isFullscreen = false;
-              p.style.display = '';
-            });
-          }
-        });
+        if (typeof requestAnimationFrame !== 'undefined') {
+          requestAnimationFrame(() => {
+            const allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
+            // Check if current fullscreen panel still exists
+            const panelExists = Array.from(allPanels).some(p => p.$.nodeId === this.$.fullscreenPanelId);
+            if (panelExists) {
+              this._updateTabItems(allPanels, this.$.fullscreenPanelId);
+            } else {
+              // Fullscreen panel was removed, exit fullscreen
+              this.$.fullscreenPanelId = null;
+              this.$.hasFullscreenTabs = false;
+              this.$.tabItems = [];
+              allPanels.forEach(p => {
+                p.removeAttribute('fullscreen');
+                p.$.isFullscreen = false;
+                p.style.display = '';
+              });
+            }
+          });
+        }
       }
     });
   }
@@ -134,7 +139,7 @@ export class Layout extends Symbiote {
     const storageKey = this.$['@storage-key'];
 
     // Try localStorage
-    if (storageKey) {
+    if (storageKey && typeof localStorage !== 'undefined') {
       const stored = localStorage.getItem(storageKey);
       if (stored) {
         try {
@@ -163,7 +168,7 @@ export class Layout extends Symbiote {
 
   _saveLayout() {
     const storageKey = this.$['@storage-key'];
-    if (storageKey && this.$.layoutTree) {
+    if (storageKey && this.$.layoutTree && typeof localStorage !== 'undefined') {
       localStorage.setItem(storageKey, LayoutTree.serialize(this.$.layoutTree));
     }
   }
@@ -319,31 +324,33 @@ export class Layout extends Symbiote {
 
     // Update both panels' canCollapse state
     // When one panel collapses/expands, both need to recalculate
-    requestAnimationFrame(() => {
-      const panelNode = this._findPanelNode(panelId);
-      if (panelNode) {
-        // Find parent split container
-        const container = panelNode.parentElement;
-        if (container?.classList.contains('split-first') || container?.classList.contains('split-second')) {
-          const siblingContainer = container.classList.contains('split-first')
-            ? container.parentElement?.querySelector('.split-second')
-            : container.parentElement?.querySelector('.split-first');
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(() => {
+        const panelNode = this._findPanelNode(panelId);
+        if (panelNode) {
+          // Find parent split container
+          const container = panelNode.parentElement;
+          if (container?.classList.contains('split-first') || container?.classList.contains('split-second')) {
+            const siblingContainer = container.classList.contains('split-first')
+              ? container.parentElement?.querySelector('.split-second')
+              : container.parentElement?.querySelector('.split-first');
 
-          // Update sibling panel
-          if (siblingContainer) {
-            const siblingPanel = siblingContainer.querySelector('layout-node[node-type="panel"]');
-            if (siblingPanel?._updatePanelInfo) {
-              siblingPanel._updatePanelInfo();
+            // Update sibling panel
+            if (siblingContainer) {
+              const siblingPanel = siblingContainer.querySelector('layout-node[node-type="panel"]');
+              if (siblingPanel?._updatePanelInfo) {
+                siblingPanel._updatePanelInfo();
+              }
+            }
+
+            // Also update the collapsed panel itself (for when it expands)
+            if (panelNode._updatePanelInfo) {
+              panelNode._updatePanelInfo();
             }
           }
-
-          // Also update the collapsed panel itself (for when it expands)
-          if (panelNode._updatePanelInfo) {
-            panelNode._updatePanelInfo();
-          }
         }
-      }
-    });
+      });
+    }
   }
 
   /**

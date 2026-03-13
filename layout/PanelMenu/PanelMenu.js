@@ -7,6 +7,7 @@ import { template } from './PanelMenu.tpl.js';
 import { styles } from './PanelMenu.css.js';
 
 export class PanelMenu extends Symbiote {
+  static isoMode = true;
 
   init$ = {
     visible: false,
@@ -52,14 +53,20 @@ export class PanelMenu extends Symbiote {
     this.$.visible = true;
 
     // Close on outside click
-    setTimeout(() => {
-      document.addEventListener('pointerdown', this._onOutsideClick);
-    }, 0);
+    if (typeof setTimeout !== 'undefined') {
+      setTimeout(() => {
+        if (typeof document !== 'undefined') {
+          document.addEventListener('pointerdown', this._onOutsideClick);
+        }
+      }, 0);
+    }
   }
 
   hide() {
     this.$.visible = false;
-    document.removeEventListener('pointerdown', this._onOutsideClick);
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('pointerdown', this._onOutsideClick);
+    }
   }
 
   _onOutsideClick = (e) => {
@@ -69,7 +76,9 @@ export class PanelMenu extends Symbiote {
   };
 
   disconnectedCallback() {
-    document.removeEventListener('pointerdown', this._onOutsideClick);
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('pointerdown', this._onOutsideClick);
+    }
   }
 }
 

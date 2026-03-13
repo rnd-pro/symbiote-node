@@ -283,9 +283,14 @@ export class Graph {
       this.nodes.set(n.id, node);
     }
 
-    // Load connections
+    // Load connections (handle both {out, in} and {fromSocket, toSocket} DB formats)
     this.connections = (data.connections || []).map(c => {
-      const conn = { from: c.from, out: c.out, to: c.to, in: c.in };
+      const conn = {
+        from: c.from,
+        out: c.out || c.fromSocket,
+        to: c.to,
+        in: c.in || c.toSocket,
+      };
       if (c.type) conn.type = c.type;
       if (c.label) conn.label = c.label;
       return conn;

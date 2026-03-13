@@ -8,6 +8,7 @@ import { template } from './LayoutPreview.tpl.js';
 import { styles } from './LayoutPreview.css.js';
 
 export class LayoutPreview extends Symbiote {
+  static isoMode = true;
 
   init$ = {
     // Preview type: 'split-h' | 'split-v' | 'join' | null

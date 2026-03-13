@@ -17,6 +17,7 @@ import { styles } from './ActionZone.css.js';
 const DRAG_THRESHOLD = 15;
 
 export class ActionZone extends Symbiote {
+  static isoMode = true;
 
   init$ = {
     // Position: 'tl' | 'tr' | 'bl' | 'br'
@@ -49,13 +50,17 @@ export class ActionZone extends Symbiote {
         this._onPointerUp(e);
       }
     };
-    document.addEventListener('pointerup', this._globalPointerUp);
-    document.addEventListener('pointercancel', this._globalPointerUp);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('pointerup', this._globalPointerUp);
+      document.addEventListener('pointercancel', this._globalPointerUp);
+    }
   }
 
   disconnectedCallback() {
-    document.removeEventListener('pointerup', this._globalPointerUp);
-    document.removeEventListener('pointercancel', this._globalPointerUp);
+    if (this._globalPointerUp && typeof document !== 'undefined') {
+      document.removeEventListener('pointerup', this._globalPointerUp);
+      document.removeEventListener('pointercancel', this._globalPointerUp);
+    }
   }
 
   /**

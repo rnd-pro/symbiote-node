@@ -11,6 +11,7 @@ import { styles } from './LayoutNode.css.js';
 import './../ActionZone/ActionZone.js';
 
 export class LayoutNode extends Symbiote {
+  static isoMode = true;
 
   init$ = {
     // Node data
@@ -167,6 +168,7 @@ export class LayoutNode extends Symbiote {
 
     // Check if panel can collapse (must be child of a split)
     const container = this.parentElement;
+    if (!container) return;
     const isSplitChild = container && (container.classList.contains('split-first') || container.classList.contains('split-second'));
 
     // Additional safety check: Ensure sibling exists and is not collapsed
@@ -300,7 +302,9 @@ export class LayoutNode extends Symbiote {
       child = document.createElement('layout-node');
       container.appendChild(child);
       // Wait for child to initialize then update info
-      setTimeout(() => child._updatePanelInfo && child._updatePanelInfo());
+      if (typeof setTimeout !== 'undefined') {
+        setTimeout(() => child._updatePanelInfo && child._updatePanelInfo());
+      }
     }
     // Use shallow copy to ensure subscription triggers even if only nested properties changed
     child.$.nodeData = { ...nodeData };

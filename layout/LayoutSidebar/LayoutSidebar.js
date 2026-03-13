@@ -17,6 +17,7 @@ const STORAGE_KEY_CONFIG = 'sn-sidebar-config';
 const STORAGE_KEY_WIDTH = 'sn-sidebar-width';
 
 export class LayoutSidebar extends Symbiote {
+  static isoMode = true;
 
   init$ = {
     collapsed: false,
@@ -45,28 +46,32 @@ export class LayoutSidebar extends Symbiote {
     });
 
     // Restore collapsed state (default: collapsed)
-    const stored = localStorage.getItem(STORAGE_KEY_COLLAPSED);
-    if (stored === null || stored === 'true') {
-      this.$.collapsed = true;
-    }
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_KEY_COLLAPSED);
+      if (stored === null || stored === 'true') {
+        this.$.collapsed = true;
+      }
 
-    // Restore saved width
-    const savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
-    if (savedWidth) this.style.width = savedWidth + 'px';
+      // Restore saved width
+      const savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
+      if (savedWidth) this.style.width = savedWidth + 'px';
+    }
 
     // Persist collapsed state
     this.sub('collapsed', (val) => {
-      localStorage.setItem(STORAGE_KEY_COLLAPSED, String(val));
-      // Reset inline width when collapsing (CSS handles 48px)
-      if (val) {
-        this.style.width = '';
-        this.style.minWidth = '';
-      } else {
-        // Restore saved width when expanding
-        const w = localStorage.getItem(STORAGE_KEY_WIDTH);
-        if (w) {
-          this.style.width = w + 'px';
-          this.style.minWidth = w + 'px';
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_COLLAPSED, String(val));
+        // Reset inline width when collapsing (CSS handles 48px)
+        if (val) {
+          this.style.width = '';
+          this.style.minWidth = '';
+        } else {
+          // Restore saved width when expanding
+          const w = localStorage.getItem(STORAGE_KEY_WIDTH);
+          if (w) {
+            this.style.width = w + 'px';
+            this.style.minWidth = w + 'px';
+          }
         }
       }
     });
@@ -88,9 +93,13 @@ export class LayoutSidebar extends Symbiote {
         handle.classList.remove('dragging');
         this.style.transition = '';
         const w = this.offsetWidth;
-        localStorage.setItem(STORAGE_KEY_WIDTH, w);
-        document.removeEventListener('pointermove', onMove);
-        document.removeEventListener('pointerup', onUp);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY_WIDTH, w);
+        }
+        if (typeof document !== 'undefined') {
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+        }
       };
 
       handle.addEventListener('pointerdown', (e) => {
@@ -99,8 +108,10 @@ export class LayoutSidebar extends Symbiote {
         startX = e.clientX;
         startW = this.offsetWidth;
         handle.classList.add('dragging');
-        document.addEventListener('pointermove', onMove);
-        document.addEventListener('pointerup', onUp);
+        if (typeof document !== 'undefined') {
+          document.addEventListener('pointermove', onMove);
+          document.addEventListener('pointerup', onUp);
+        }
       });
     }
   }
@@ -187,7 +198,9 @@ export class LayoutSidebar extends Symbiote {
    * Reset sections to default order and visibility
    */
   resetConfig() {
-    localStorage.removeItem(STORAGE_KEY_CONFIG);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY_CONFIG);
+    }
     this.#buildSections(this.#allSections, null);
   }
 
@@ -199,7 +212,9 @@ export class LayoutSidebar extends Symbiote {
       id: s.sectionId,
       visible: s.isVisible,
     }));
-    localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(config));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(config));
+    }
   }
 
   /**
@@ -208,11 +223,14 @@ export class LayoutSidebar extends Symbiote {
    */
   #loadConfig() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY_CONFIG);
-      return raw ? JSON.parse(raw) : null;
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem(STORAGE_KEY_CONFIG);
+        return raw ? JSON.parse(raw) : null;
+      }
     } catch {
       return null;
     }
+    return null;
   }
 
   /**

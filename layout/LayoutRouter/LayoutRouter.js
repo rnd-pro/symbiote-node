@@ -72,8 +72,10 @@ export function buildHash(panel, subpath, params) {
  */
 export function navigate(panel, subpath = '', params = {}) {
   const hash = buildHash(panel, subpath, params);
-  location.hash = hash;
-  // hashchange will trigger syncFromHash
+  // Use pushState instead of location.hash to ensure clean URL
+  // (location.hash preserves stale query strings like ?monitoring)
+  history.pushState(null, '', location.pathname + '#' + hash);
+  syncFromHash();
 }
 
 /**
@@ -133,10 +135,6 @@ export function getRoute() {
  * @param {string} panel
  */
 export function setDefaultPanel(panel) {
-  // Clean up stale query strings (e.g. from AppRouter migration)
-  if (location.search) {
-    history.replaceState(null, '', location.pathname + location.hash);
-  }
   if (!location.hash || location.hash === '#') {
     navigate(panel);
   }

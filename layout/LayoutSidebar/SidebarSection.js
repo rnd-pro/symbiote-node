@@ -19,13 +19,14 @@ export class SidebarSection extends Symbiote {
     label: '',
     isActive: false,
     isVisible: true,
+    isDisabled: false,
     eyeIcon: 'visibility',
     hasSubPanels: false,
     isExpanded: false,
     subPanels: [],
 
     onSectionClick: () => {
-      if (!this.$.isVisible) return;
+      if (!this.$.isVisible || this.$.isDisabled) return;
       navigate(this.$.sectionId);
     },
 
@@ -54,6 +55,10 @@ export class SidebarSection extends Symbiote {
     this.sub('isVisible', (val) => {
       this.toggleAttribute('data-hidden', !val);
       this.$.eyeIcon = val ? 'visibility' : 'visibility_off';
+    });
+
+    this.sub('isDisabled', (val) => {
+      this.toggleAttribute('data-disabled', val);
     });
 
     this.sub('subPanels', (panels) => {

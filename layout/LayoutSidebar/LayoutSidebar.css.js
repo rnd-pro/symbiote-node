@@ -134,6 +134,20 @@ sidebar-section {
     display: none;
   }
 
+  /* Disabled section — shown but not interactive */
+  &[data-disabled] {
+    opacity: 0.35;
+    pointer-events: none;
+    filter: grayscale(0.5);
+  }
+
+  /* In edit mode, show disabled sections normally (admin might want to toggle visibility) */
+  layout-sidebar[edit-mode] &[data-disabled] {
+    opacity: 0.5;
+    pointer-events: auto;
+    filter: none;
+  }
+
   /* In edit mode, hidden sections are dimmed */
   layout-sidebar[edit-mode] &[data-hidden] {
     display: flex;

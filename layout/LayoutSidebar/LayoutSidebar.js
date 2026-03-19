@@ -244,6 +244,18 @@ export class LayoutSidebar extends Symbiote {
       return { ...s, subPanels: panels };
     });
   }
+
+  /**
+   * Mark sections as disabled (shown but not clickable)
+   * @param {string[]} disabledIds - Section IDs to disable
+   */
+  setDisabledSections(disabledIds) {
+    const disabledSet = new Set(disabledIds);
+    this.$.sections = this.$.sections.map((s) => ({
+      ...s,
+      isDisabled: disabledSet.has(s.sectionId),
+    }));
+  }
 }
 
 LayoutSidebar.template = sidebarTemplate;

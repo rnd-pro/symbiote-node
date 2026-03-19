@@ -140,3 +140,111 @@ export function syncWithRouter(component, panelName, mapping) {
     readFromURL();
   }
 }
+
+/**
+ * setupPanelRouting — high-level panel routing setup
+ *
+ * Centralizes all routing logic for a panel:
+ * - Panel activation (onActivate callback)
+ * - List/detail switching via ROUTER/subpath
+ * - Tab sync via ?tab= query param
+ *
+ * Convention:
+ *   #panel               → list view, default tab
+ *   #panel?tab=groups    → list view, groups tab
+ *   #panel/{id}          → detail view
+ *
+ * Component requirements:
+ *   - ref="listWrap"     → container for list view (hidden when detail)
+ *   - <detail-component> → detail view element (hidden when list)
+ *   - $.activeTab        → tab state property (if tabs configured)
+ *
+ * @param {import('@symbiotejs/symbiote').default} component
+ * @param {string} panelName - Panel section ID (e.g. 'users')
+ * @param {Object} config
+ * @param {string[]} [config.tabs] - Tab names, first is default
+ * @param {{ component: string, loadMethod: string }} [config.detail] - Detail view config
+ * @param {Function} [config.onActivate] - Called when panel becomes active (list mode)
+ * @param {Object} [config.syncParams] - Additional params to sync via syncWithRouter
+ *
+ * @example
+ * renderCallback() {
+ *   setupPanelRouting(this, 'users', {
+ *     tabs: ['users', 'groups'],
+ *     detail: { component: 'user-detail-view', loadMethod: 'loadUser' },
+ *     onActivate: () => this.#loadData(),
+ *   });
+ * }
+ */
+export function setupPanelRouting(component, panelName, config = {}) {
+  const { tabs, detail, onActivate, syncParams } = config;
+
+  // --- Tab sync via ?tab= ---
+  if (tabs && tabs.length > 0) {
+    const defaultTab = tabs[0];
+    syncWithRouter(component, panelName, {
+      activeTab: { param: 'tab', default: defaultTab },
+      ...(syncParams || {}),
+    });
+  } else if (syncParams) {
+    syncWithRouter(component, panelName, syncParams);
+  }
+
+  /**
+   * Check and apply list/detail mode based on ROUTER/subpath
+   */
+  function checkDetailMode() {
+    if (component.$['ROUTER/panel'] !== panelName) return;
+
+    const subpath = component.$['ROUTER/subpath'];
+    const listWrap = component.ref?.listWrap;
+    const isDetail = !!(detail && subpath);
+
+    // Global signal — CSS can hide tabs/actions via [data-detail]
+    component.toggleAttribute('data-detail', isDetail);
+
+    if (isDetail) {
+      // --- Detail mode ---
+      if (listWrap) listWrap.hidden = true;
+
+      const detailEl = component.querySelector(detail.component);
+      if (detailEl) {
+        detailEl.hidden = false;
+        if (typeof detailEl[detail.loadMethod] === 'function') {
+          detailEl[detail.loadMethod](subpath);
+        }
+      }
+    } else {
+      // --- List mode ---
+      if (listWrap) listWrap.hidden = false;
+
+      if (detail) {
+        const detailEl = component.querySelector(detail.component);
+        if (detailEl) detailEl.hidden = true;
+      }
+
+      if (onActivate) onActivate();
+    }
+  }
+
+  // Subscribe to panel activation
+  component.sub('ROUTER/panel', (panel) => {
+    if (panel === panelName) {
+      checkDetailMode();
+    }
+  });
+
+  // Subscribe to subpath changes (list ↔ detail)
+  if (detail) {
+    component.sub('ROUTER/subpath', () => {
+      if (component.$['ROUTER/panel'] === panelName) {
+        checkDetailMode();
+      }
+    });
+  }
+
+  // Initial check if already on this panel
+  if (component.$['ROUTER/panel'] === panelName) {
+    checkDetailMode();
+  }
+}

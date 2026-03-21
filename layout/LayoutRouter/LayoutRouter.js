@@ -71,6 +71,7 @@ export function buildHash(panel, subpath, params) {
  * @param {Object} [params] - Query parameters
  */
 export function navigate(panel, subpath = '', params = {}) {
+  if (typeof location === 'undefined') return;
   const hash = buildHash(panel, subpath, params);
   // Use pushState instead of location.hash to ensure clean URL
   // (location.hash preserves stale query strings like ?monitoring)
@@ -84,6 +85,7 @@ export function navigate(panel, subpath = '', params = {}) {
  * @param {Object} params - Params to merge
  */
 export function updateParams(params) {
+  if (typeof location === 'undefined') return;
   const currentQuery = parseQuery(routerCtx.read('query'));
   const merged = { ...currentQuery };
   for (const [k, v] of Object.entries(params)) {
@@ -135,11 +137,14 @@ export function getRoute() {
  * @param {string} panel
  */
 export function setDefaultPanel(panel) {
+  if (typeof location === 'undefined') return;
   if (!location.hash || location.hash === '#') {
     navigate(panel);
   }
 }
 
-// Initial sync + listen to hashchange
-syncFromHash();
-window.addEventListener('hashchange', syncFromHash);
+// Initial sync + listen to hashchange (browser-only)
+if (typeof location !== 'undefined' && typeof window !== 'undefined') {
+  syncFromHash();
+  window.addEventListener('hashchange', syncFromHash);
+}

@@ -5,7 +5,7 @@
  * The agent bridge is injected via params.agentBridge or a global registry.
  * Without a bridge, returns a placeholder indicating agent invocation is needed.
  *
- * @module agi-graph/packs/flow/agent
+ * @module symbiote-node/packs/flow/agent
  */
 
 export default {
@@ -43,7 +43,7 @@ export default {
       const { timeout, allowedTools, model } = params;
 
       // Check if agentBridge is available (injected via params or global)
-      const bridge = params._agentBridge || globalThis.__agiGraphAgentBridge;
+      const bridge = params._agentBridge || globalThis.__symbioteNodeAgentBridge;
 
       if (!bridge) {
         // No bridge available — return pending marker

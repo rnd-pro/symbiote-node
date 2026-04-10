@@ -7,7 +7,7 @@
  *
  * Ported from Mr-Computer/automations/argentine-spanish-bot/src/utils/prompt-loader.js
  *
- * @module agi-graph/packs/data/prompt-loader
+ * @module symbiote-node/packs/data/prompt-loader
  */
 
 import { readFile, readdir } from 'node:fs/promises';

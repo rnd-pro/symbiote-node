@@ -1,7 +1,7 @@
 /**
  * Connection — link between two node ports
  *
- * Uses agi-graph naming: from/out/to/in
+ * Uses symbiote-node naming: from/out/to/in
  * Adds connection ID for selection/history support.
  *
  * @module symbiote-node/core/Connection
@@ -27,16 +27,16 @@ export class Connection {
     /** @type {string} */
     this.id = uid('conn');
 
-    /** @type {string} - Source node ID (agi-graph: 'from') */
+    /** @type {string} - Source node ID (symbiote-node: 'from') */
     this.from = sourceNode.id;
 
-    /** @type {string} - Source output key (agi-graph: 'out') */
+    /** @type {string} - Source output key (symbiote-node: 'out') */
     this.out = sourceOutput;
 
-    /** @type {string} - Target node ID (agi-graph: 'to') */
+    /** @type {string} - Target node ID (symbiote-node: 'to') */
     this.to = targetNode.id;
 
-    /** @type {string} - Target input key (agi-graph: 'in') */
+    /** @type {string} - Target input key (symbiote-node: 'in') */
     this.in = targetInput;
 
     /** @type {boolean} */

@@ -1,0 +1,8 @@
+node_modules/
+TMP/
+.DS_Store
+*.log
+.agent/
+.agents/
+demo/
+tests/

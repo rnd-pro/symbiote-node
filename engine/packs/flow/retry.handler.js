@@ -4,7 +4,7 @@
  * If input has an error, re-invokes the action up to maxRetries times.
  * Passes through successful results immediately.
  *
- * @module agi-graph/packs/flow/retry
+ * @module symbiote-node/packs/flow/retry
  */
 
 export default {

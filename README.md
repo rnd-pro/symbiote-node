@@ -1,305 +1,206 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#)
+[![Web Components](https://img.shields.io/badge/Web_Components-native-blue?logo=webcomponents.org&logoColor=white)](#)
+
 # symbiote-node
 
-**Visual Node Graph Editor** — extensible, themeable, zero-dependency graph editor built on [Symbiote.js](https://github.com/nicothin/Symbiote.js).
+A **visual node graph editor** and **execution engine** built on [Symbiote.js](https://github.com/symbiotejs/symbiote.js) — extensible, themeable, zero-dependency. Pure Web Components, works anywhere: vanilla HTML, React, Vue, Svelte, or any framework that supports custom elements.
 
-> Developed by [RND-PRO](https://rnd-pro.com)
+> [!TIP]
+> **22K lines, 150 files, zero external dependencies.** 70+ public API exports. Clone, serve, and start building node graphs in under a minute.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
-![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange.svg)
-![Status](https://img.shields.io/badge/status-alpha-red.svg)
+### Graph Editor
 
-## Why?
+The editor constructs visual node graphs from a data model. Nodes have typed input/output ports with compatibility validation, color-coded category headers, inline controls, and drag & drop with snap-to-grid. Connections render as SVG Bézier curves with gradient coloring.
 
-Node graph editors are the standard for visual programming — from Blender's Geometry Nodes to Unreal Blueprints to n8n automation workflows. But building one from scratch is hard:
+```javascript
+import { NodeEditor, Node, Socket, Input, Output, NodeCanvas } from 'symbiote-node';
 
-- **Framework lock-in** — most solutions are tied to React or Vue
-- **Heavy dependencies** — bundles balloon with D3, dagre, and rendering libraries
-- **No theme system** — dark mode is hardcoded, not a design token layer
-- **Limited shapes** — rectangular nodes only, no adaptive geometry
+const editor = new NodeEditor();
+const socket = new Socket('data', { color: '#4a9eff' });
 
-**symbiote-node solves this:**
-- 🧩 **Pure Web Components** — zero framework dependencies, works anywhere
-- 🎨 **Theme System** — separate Palette (colors) and Skin (geometry) layers
-- 💎 **5 Node Shapes** — Rect, Pill, Circle, Diamond, Comment with adaptive socket positioning
-- ⚡ **Modular Architecture** — canvas, node, menu, interactions, shapes, themes as separate modules
-- 🔌 **Plugin System** — Readonly, SnapGrid, Selector as composable plugins
+const node1 = new Node('Source', { category: 'server' });
+node1.addOutput('out', new Output(socket, 'Output'));
 
-## Features
+const node2 = new Node('Target', { category: 'control' });
+node2.addInput('in', new Input(socket, 'Input'));
 
-### 🖼️ Canvas
-- Infinite pan & zoom viewport
-- SVG Bézier connections with gradient coloring
-- Pseudo-connection line during drag
-- Context menu (right-click)
-- Keyboard shortcuts (Delete, Ctrl+A, Ctrl+Shift+A)
-- Fit View
+editor.addNode(node1);
+editor.addNode(node2);
 
-### 🧱 Nodes
-- Dynamic construction from data model
-- Color-coded category headers with Material Symbols icons
-- Input/Output ports with typed sockets
-- Inline controls (text, number, checkbox)
-- Drag & drop with snap-to-grid
-- Collapse / Mute toggle per node
+const canvas = document.querySelector('node-canvas');
+canvas.setEditor(editor);
+```
 
-### 🎨 Themes
-- **Grey Neutral** — balanced grey UI (default)
-- **Dark Default** — professional dark UI
-- **Light Clean** — light mode
-- **Synthwave** — neon aesthetic
-- Separate `Palette` (colors) and `Skin` (geometry) APIs
-- `extractTheme()` — read current tokens from live DOM
-- Full CSS custom property design token system
+### Execution Engine
 
-### 🔧 Interactions
-- Multi-select (Ctrl/Cmd + Click)
-- Group drag for selected nodes
-- Connection click-to-select & delete
-- Socket compatibility validation
-- Socket highlighting during connection drag
+Server-side graph runtime with handler packs for data flow, control flow, I/O, and transforms. Graphs serialize to JSON and execute with topological ordering, retry logic, and parallel barriers.
 
-### 📐 Node Shapes
+```javascript
+import { Graph, Executor, Registry } from 'symbiote-node/engine';
 
-symbiote-node supports two coexisting node rendering modes on the same canvas:
+const registry = new Registry();
+await registry.loadDir('./engine/packs');
 
-**HTML Nodes** (default) — CSS-styled rectangles with `border-radius`, `box-shadow`, `background`.
+const graph = Graph.fromFile('workflow.json');
+const executor = new Executor(graph, registry);
+const results = await executor.run();
+```
 
-**SVG Nodes** — arbitrary vector shapes with perimeter-aware connector positioning.
-When a node has a shape assigned, the CSS background is replaced by an inline `<svg><path>` element.
-Connectors automatically slide along the shape's mathematical perimeter.
+### Node Shapes
 
-#### Built-in SVG Shape Presets
+Two coexisting rendering modes on the same canvas — **HTML nodes** (CSS-styled rectangles) and **SVG nodes** (arbitrary vector shapes with perimeter-aware connector positioning). Built-in presets: `hexagon`, `star`, `cloud`, `shield`, `heart`, `rect`, `pill`, `circle`, `diamond`, `comment`.
 
-| Name | Description |
-|------|-------------|
-| `hexagon` | Six-sided polygon |
-| `star` | Five-pointed star |
-| `cloud` | Cloud silhouette |
-| `shield` | Shield shape |
-| `heart` | Heart shape |
-| `rect`, `pill`, `circle`, `diamond`, `comment` | Standard HTML shapes |
+```javascript
+import { createSVGShape, registerShape } from 'symbiote-node';
 
-#### Usage
-
-```js
-import { Node, createSVGShape, SVG_PRESETS, registerShape } from './index.js';
-
-// Use a built-in preset
-const node = new Node('Database', { category: 'server', shape: 'hexagon' });
-
-// Create a custom SVG shape from path data
 const myShape = createSVGShape('myshape', 'M12 2L22 8V16L12 22L2 16V8Z');
 registerShape('myshape', myShape);
 
-const node2 = new Node('Custom', { shape: 'myshape' });
+const node = new Node('Custom', { shape: 'myshape' });
 ```
 
-#### Per-Shape CSS Theming
+### Theme System
 
-SVG shapes support per-shape color overrides via CSS custom properties.
-The cascade is: **shape-specific → global shape → node bg**:
+Separate **Palette** (colors), **Skin** (geometry), and **Theme** (combined) layers — all driven by CSS custom properties. Switch at runtime without page reload.
 
-```css
-/* On the canvas element or any ancestor */
-node-canvas {
-  /* Override a specific shape */
-  --sn-shape-shield-fill: hsl(142, 40%, 18%);  /* green tint for shield */
-  --sn-shape-star-fill:   hsl(43, 60%, 18%);   /* gold tint for star */
+| Theme | Description |
+|-------|-------------|
+| `GREY_NEUTRAL` | Balanced grey UI (default) |
+| `DARK_DEFAULT` | Professional dark interface |
+| `LIGHT_CLEAN` | Light mode |
+| `SYNTHWAVE` | Neon retro aesthetic |
+| `NEON_GLOW` | Vivid glow effects |
+| `CARBON` | IBM Carbon-inspired |
+| `EBOOK` | Warm paper-like reading theme |
 
-  /* Or override all SVG shapes at once */
-  --sn-shape-fill:   var(--sn-node-bg);
-  --sn-shape-stroke: var(--sn-node-border);
-}
+```javascript
+import { applyTheme, CARBON, applyPalette, SYNTHWAVE_PALETTE } from 'symbiote-node';
+
+applyTheme(canvasElement, CARBON);           // Full theme
+applyPalette(canvasElement, SYNTHWAVE_PALETTE); // Colors only
 ```
 
+### Layout System (BSP)
 
-### ⚡ Flow Simulator
-- Topological sort-based data flow animation
-- Per-connection marching ants effect
-- Node pulse animation during traversal
-- Configurable speed, cyclic loop support
+Binary Space Partitioning layout engine for IDE-style panel workspaces. Panels resize by dragging dividers, sections split horizontally or vertically. Sidebar navigation with section switching and panel routing.
 
-### 🛠️ Quick Action Toolbar
-- Floating toolbar above selected node
-- Duplicate, Collapse, Mute, Delete actions
-- Animated appearance, follows node position
+```javascript
+import { Layout, LayoutTree, LayoutSidebar } from 'symbiote-node';
+```
 
-### 🔒 Readonly Plugin
-- Toggle readonly mode on canvas
-- Blocks all mutation operations (add/delete/drag)
+### Plugins & Interactions
 
-## Installation
+- **History** — undo/redo with keyboard bindings (Ctrl+Z / Ctrl+Shift+Z)
+- **Readonly** — toggle read-only mode, blocks all mutations
+- **FlowSimulator** — topological sort-based data flow animation with marching ants
+- **SnapGrid** — configurable grid snapping
+- **Selector** — rubber-band multi-select
+- **ConnectFlow** — socket highlighting during connection drag
+- **AutoLayout** — Sugiyama-based automatic node arrangement
+- **Minimap** — viewport minimap with live position tracking
+- **NodeSearch** — search/omnibox for quick node insertion
+- **GraphTabs** — multi-page graph management
+- **Subgraphs** — drill-down with breadcrumb navigation
+- **Portals** — named reroutes for cross-graph connections
+- **InspectorPanel** — property inspector sidebar
+- **QuickToolbar** — floating action toolbar above selected node
+
+## Quick Start
 
 ```bash
-# Clone
 git clone https://github.com/RND-PRO/symbiote-node.git
-
-# Run demo
+cd symbiote-node
 npx -y serve -l 3000 .
 # Open http://localhost:3000/demo/
 ```
 
-### As ES Module
+### As ES Module (CDN)
 
 ```html
 <script type="importmap">
 {
   "imports": {
-    "@symbiotejs/symbiote": "https://esm.sh/@symbiotejs/symbiote@3.2.1"
+    "@symbiotejs/symbiote": "https://esm.sh/@symbiotejs/symbiote@3.2.1",
+    "symbiote-node": "./index.js"
   }
 }
 </script>
 <script type="module">
-  import { NodeEditor, Node, Socket, Input, Output, NodeCanvas } from './index.js';
-  import './canvas/NodeCanvas.js';
-  import './node/GraphNode.js';
-
-  const editor = new NodeEditor();
-  const socket = new Socket('data', { color: '#4a9eff' });
-
-  const node1 = new Node('Source', { category: 'server' });
-  node1.addOutput('out', new Output(socket, 'Output'));
-
-  const node2 = new Node('Target', { category: 'control' });
-  node2.addInput('in', new Input(socket, 'Input'));
-
-  editor.addNode(node1);
-  editor.addNode(node2);
-
-  const canvas = document.querySelector('node-canvas');
-  canvas.setEditor(editor);
-  canvas.setNodePosition(node1.id, 100, 100);
-  canvas.setNodePosition(node2.id, 400, 100);
+  import { NodeEditor, Node, Socket, Input, Output, NodeCanvas } from 'symbiote-node';
+  import 'symbiote-node/canvas/NodeCanvas/NodeCanvas.js';
+  import 'symbiote-node/node/GraphNode/GraphNode.js';
+  // ...
 </script>
 ```
+
+## CLI (Engine)
+
+```bash
+node engine/cli.js run <workflow.json>       # Execute graph
+node engine/cli.js validate <workflow.json>  # Validate graph
+node engine/cli.js list                      # List available node types
+node engine/cli.js inspect <workflow.json>   # Inspect graph structure
+```
+
+## Engine Handler Packs
+
+Built-in node types organized by domain:
+
+| Pack | Handlers | Description |
+|------|----------|-------------|
+| `flow` | `if`, `switch`, `loop`, `merge`, `retry`, `wait-all`, `agent` | Control flow and branching |
+| `data` | `db-query`, `prompt-loader`, `rss-feed` | Data sources |
+| `transform` | `json-parse`, `set`, `template`, `template-builder` | Data transformation |
+| `io` | `http-request`, `read-file`, `write-file` | External I/O |
+| `util` | `delay`, `log` | Utility nodes |
+| `debug` | `inject` | Testing and debugging |
+
+Custom handler packs can be loaded from any directory via `registry.loadDir()`.
 
 ## Project Structure
 
 ```
 symbiote-node/
-├── index.js          — public API exports
+├── index.js          — public API (70+ exports)
 ├── core/             — Editor, Node, Connection, Socket, Portal
-├── canvas/           — NodeCanvas facade + extracted modules
-│   ├── NodeCanvas.js           — main viewport (facade)
-│   ├── NodeViewManager.js      — node CRUD + group drag
-│   ├── ConnectionRenderer.js   — SVG paths + gradients + flow
-│   ├── FlowSimulator.js        — data flow animation engine
-│   ├── PseudoConnection.js     — temp connection line
-│   ├── ViewportActions.js      — context menu + keyboard
-│   ├── AutoLayout.js           — Sugiyama auto layout
-│   ├── GraphTabs.js            — tab/page management
-│   ├── Minimap.js              — viewport minimap
-│   └── NodeSearch.js           — search/omnibox
-├── node/             — GraphNode + PortItem + CtrlItem + NodeSocket
+├── canvas/           — NodeCanvas, ConnectionRenderer, FlowSimulator, AutoLayout
+├── node/             — GraphNode, PortItem, CtrlItem, NodeSocket
 ├── menu/             — ContextMenu
 ├── interactions/     — Drag, Zoom, Selector, SnapGrid, ConnectFlow
-├── shapes/           — NodeShape + 5 implementations
-├── themes/           — Theme, Palette, Skin with design tokens
-├── toolbar/          — QuickToolbar (floating actions)
-├── inspector/        — InspectorPanel (side panel)
-├── palette/          — PaletteBrowser (component library)
-├── plugins/          — Readonly, History (undo/redo)
-├── demo/             — demo page
-└── tests/            — geometry & topology tests
-```
-
-## Scripting API
-
-### Graph Construction
-
-```js
-import { NodeEditor, Node, Connection, Socket, Input, Output, InputControl } from './index.js';
-
-const editor = new NodeEditor();
-const socket = new Socket('data', { color: '#4a9eff' });
-
-const node = new Node('My Node', { type: 'action', category: 'control' });
-node.addInput('in', new Input(socket, 'Input'));
-node.addOutput('out', new Output(socket, 'Output'));
-node.addControl('value', new InputControl('text', { initial: 'hello' }));
-editor.addNode(node);
-editor.addConnection(new Connection(node1, 'out', node2, 'in'));
-```
-
-### Canvas API
-
-```js
-const canvas = document.querySelector('node-canvas');
-canvas.setEditor(editor);                          // Bind editor
-canvas.setNodePosition(nodeId, x, y);               // Position node
-canvas.setTheme(DARK_DEFAULT);                      // Switch theme
-canvas.setPalette(SYNTHWAVE_PALETTE);               // Colors only
-canvas.setSkin(COMPACT_SKIN);                       // Geometry only
-canvas.setSnapGrid(true, 20);                       // Snap to grid
-canvas.setPathStyle('orthogonal');                  // Wire style
-canvas.setPreview(nodeId, 'status text', 'text');   // Node preview
-canvas.setPreview(nodeId, '/img.png', 'image');     // Image preview
-canvas.setNodeError(nodeId, 'Error message');       // Error state
-canvas.clearNodeError(nodeId);                      // Clear error
-canvas.autoLayout();                                // Auto arrange
-canvas.fitView();                                   // Fit all nodes
-```
-
-### Plugins
-
-```js
-import { History, FlowSimulator, PortalManager } from './index.js';
-
-// Undo/Redo
-const history = new History();
-history.listen(editor, { getCanvas: () => canvas, classes: { Node, Connection, ... } });
-history.bindKeyboard(canvas);
-
-// Flow animation
-const sim = new FlowSimulator(editor, canvas);
-await sim.run();
-
-// Named reroutes (portals)
-const portals = new PortalManager();
-portals.addSender('channel-a', node1.id, 'out');
-portals.addReceiver('channel-a', node2.id, 'in');
-```
-
-### Console Tools (Demo)
-
-```js
-switchTheme()    // Cycle: Grey → Dark → Light → Synthwave
-switchPalette()  // Change colors only
-switchSkin()     // Change geometry only
-toggleFlow()     // Toggle data flow animation
+├── shapes/           — SVG shape system with 10 presets
+├── themes/           — Theme, Palette, Skin (7 themes)
+├── layout/           — BSP layout engine + LayoutSidebar + LayoutRouter
+├── toolbar/          — QuickToolbar
+├── inspector/        — InspectorPanel
+├── palette/          — PaletteBrowser
+├── plugins/          — Readonly, History
+├── engine/           — Server-side graph runtime
+│   ├── packs/        — Built-in handler packs (flow, data, transform, io, util)
+│   └── cli.js        — CLI runner
+├── demo/             — Interactive demo
+└── tests/            — 45 tests (geometry, serialization, topology)
 ```
 
 ## Tests
 
 ```bash
-node --test tests/geometry.test.js
-# 34 tests: topology, Bézier paths, serialization, socket compatibility, collapse/mute
+node --test tests/*.test.js
+# 45 tests: geometry, Bézier paths, serialization, socket compatibility,
+# collapse/mute, subgraphs, execution, duck-typing
 ```
 
-## Roadmap
+## Related Projects
 
-- [x] Quick Action Toolbar
-- [x] Collapse / Mute nodes
-- [x] Flow Simulator
-- [x] Undo/Redo (History)
-- [x] Inspector Side Panel
-- [x] Node Groups / Frames
-- [x] Minimap
-- [x] Node Search (Omnibox)
-- [x] Reroute Nodes
-- [x] Viewport Culling + LOD
-- [x] Auto Layout (Sugiyama)
-- [x] Port Shapes by Type
-- [x] Debug Node
-- [x] Connection Path Styles
-- [x] Execution Wire Visual
-- [x] Preview Area on Nodes
-- [x] Named Reroutes / Portals
-- [x] Palette Browser
-- [x] Graph Tabs / Pages
-- [x] Full Subgraphs (drill-down)
+- [project-graph-mcp](https://github.com/rnd-pro/project-graph-mcp) — MCP server for AI agents: project graph, code analysis, 18 tools
+- [agent-pool-mcp](https://github.com/rnd-pro/agent-pool-mcp) — Multi-agent orchestration via Gemini CLI
+- [Symbiote.js](https://github.com/symbiotejs/symbiote.js) — Isomorphic Reactive Web Components framework
 
 ## License
 
-MIT © [RND-PRO](https://rnd-pro.com)
+MIT © [RND-PRO.com](https://rnd-pro.com)
+
+---
+
+**Made with ❤️ by the RND-PRO team**

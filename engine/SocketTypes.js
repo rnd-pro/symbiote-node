@@ -4,7 +4,7 @@
  * Defines socket types for node connections with color coding
  * and compatibility rules. Domain packs register additional types.
  *
- * @module agi-graph/SocketTypes
+ * @module symbiote-node/SocketTypes
  */
 
 /**

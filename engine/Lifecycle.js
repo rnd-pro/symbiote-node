@@ -4,7 +4,7 @@
  * Every node can define lifecycle hooks: validate, cacheKey, execute, postProcess.
  * The lifecycle runner orchestrates these steps with cache awareness.
  *
- * @module agi-graph/Lifecycle
+ * @module symbiote-node/Lifecycle
  */
 
 /**

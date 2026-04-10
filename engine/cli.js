@@ -6,12 +6,12 @@
  * Execute, validate, and inspect workflow JSON files.
  *
  * Usage:
- *   node agi-graph/cli.js run <workflow.json> [--pack video] [--secrets secrets.json] [--verbose]
- *   node agi-graph/cli.js validate <workflow.json> [--pack video]
- *   node agi-graph/cli.js list [--pack video]
- *   node agi-graph/cli.js inspect <workflow.json>
+ *   node symbiote-node/cli.js run <workflow.json> [--pack custom] [--secrets secrets.json] [--verbose]
+ *   node symbiote-node/cli.js validate <workflow.json> [--pack custom]
+ *   node symbiote-node/cli.js list [--pack custom]
+ *   node symbiote-node/cli.js inspect <workflow.json>
  *
- * @module agi-graph/cli
+ * @module symbiote-node/cli
  */
 
 import { readFile } from 'node:fs/promises';
@@ -124,7 +124,7 @@ async function loadPacks(packs) {
  */
 async function cmdRun(filePath, options) {
   const verbose = !!options.verbose;
-  console.log(`\n🚀 agi-graph run: ${filePath}\n`);
+  console.log(`\n🚀 symbiote-node run: ${filePath}\n`);
 
   // Load packs
   if (options.pack) {
@@ -214,7 +214,7 @@ async function cmdRun(filePath, options) {
  * @param {Record<string, string|boolean>} options
  */
 async function cmdValidate(filePath, options) {
-  console.log(`\n🔍 agi-graph validate: ${filePath}\n`);
+  console.log(`\n🔍 symbiote-node validate: ${filePath}\n`);
 
   if (options.pack) {
     await loadPacks(/** @type {string} */(options.pack));
@@ -290,7 +290,7 @@ async function cmdValidate(filePath, options) {
  * @param {Record<string, string|boolean>} options
  */
 async function cmdList(options) {
-  console.log(`\n📋 agi-graph node types\n`);
+  console.log(`\n📋 symbiote-node node types\n`);
 
   if (options.pack) {
     await loadPacks(/** @type {string} */(options.pack));
@@ -322,7 +322,7 @@ async function cmdList(options) {
  * @param {string} filePath
  */
 async function cmdInspect(filePath) {
-  console.log(`\n🔎 agi-graph inspect: ${filePath}\n`);
+  console.log(`\n🔎 symbiote-node inspect: ${filePath}\n`);
 
   const raw = await readFile(resolve(filePath), 'utf-8');
   const data = JSON.parse(raw);
@@ -357,7 +357,7 @@ async function cmdInspect(filePath) {
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 const HELP = `
-agi-graph CLI — Universal node-based workflow runner
+symbiote-node CLI — Universal node-based workflow runner
 
 Commands:
   run <file.workflow.json>       Execute a workflow
@@ -367,7 +367,7 @@ Commands:
   serve <file.workflow.json>     Start WebSocket + HTTP server
 
 Options:
-  --pack <name>      Load domain pack (e.g. "video")
+  --pack <name>      Load domain pack (e.g. "custom")
   --handlers <dir>   Load handler files from directory
   --secrets <path>   Path to secrets.json
   --port <number>    Server port (default: 3100)
@@ -378,12 +378,12 @@ const { command, target, options } = parseArgs(process.argv);
 
 switch (command) {
   case 'run':
-    if (!target) { console.error('Usage: agi-graph run <file.workflow.json>'); process.exit(1); }
+    if (!target) { console.error('Usage: symbiote-node run <file.workflow.json>'); process.exit(1); }
     await cmdRun(target, options);
     break;
 
   case 'validate':
-    if (!target) { console.error('Usage: agi-graph validate <file.workflow.json>'); process.exit(1); }
+    if (!target) { console.error('Usage: symbiote-node validate <file.workflow.json>'); process.exit(1); }
     await cmdValidate(target, options);
     break;
 
@@ -392,7 +392,7 @@ switch (command) {
     break;
 
   case 'inspect':
-    if (!target) { console.error('Usage: agi-graph inspect <file.workflow.json>'); process.exit(1); }
+    if (!target) { console.error('Usage: symbiote-node inspect <file.workflow.json>'); process.exit(1); }
     await cmdInspect(target);
     break;
 

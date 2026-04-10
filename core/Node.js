@@ -1,8 +1,8 @@
 /**
  * Node — graph node with typed ports and controls
  *
- * Compatible with agi-graph GraphNode structure.
- * Ports are explicit objects (unlike agi-graph where they're implicit).
+ * Compatible with symbiote-node GraphNode structure.
+ * Ports are explicit objects (unlike symbiote-node where they're implicit).
  *
  * @module symbiote-node/core/Node
  */

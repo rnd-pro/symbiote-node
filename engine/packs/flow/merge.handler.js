@@ -4,7 +4,7 @@
  * Returns the first non-null input from a and b.
  * Useful after IF branches to merge back into single path.
  *
- * @module agi-graph/packs/flow/merge
+ * @module symbiote-node/packs/flow/merge
  */
 
 export default {

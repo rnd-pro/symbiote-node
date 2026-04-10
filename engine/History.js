@@ -4,7 +4,7 @@
  * Stores deep-cloned snapshots of nodes and connections.
  * Framework-agnostic — works with any graph data.
  *
- * @module agi-graph/History
+ * @module symbiote-node/History
  */
 
 const MAX_HISTORY = 50;

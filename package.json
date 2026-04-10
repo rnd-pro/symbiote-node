@@ -26,6 +26,7 @@
     "execution-engine"
   ],
   "peerDependencies": {
+    "@symbiotejs/symbiote": ">=3.0.0",
     "ws": ">=8.0.0"
   },
   "peerDependenciesMeta": {

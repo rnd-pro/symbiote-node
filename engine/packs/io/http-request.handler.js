@@ -4,7 +4,7 @@
  * Performs HTTP requests using native fetch API.
  * Supports GET, POST, PUT, DELETE with configurable headers and timeout.
  *
- * @module agi-graph/packs/io/http-request
+ * @module symbiote-node/packs/io/http-request
  */
 
 export default {

@@ -4,7 +4,7 @@
  * Logs input value to console and passes it through unchanged.
  * Useful for debugging pipelines.
  *
- * @module agi-graph/packs/util/log
+ * @module symbiote-node/packs/util/log
  */
 
 export default {
@@ -31,7 +31,7 @@ export default {
     cacheKey: null,
 
     execute: async (inputs, params) => {
-      const label = params.label ? `[${params.label}]` : '[agi-graph]';
+      const label = params.label ? `[${params.label}]` : '[symbiote-node]';
       const method = params.level || 'info';
 
       const logFn = console[method] || console.log;

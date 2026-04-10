@@ -1,11 +1,11 @@
 {
-  "name": "agi-graph",
-  "version": "0.1.0",
-  "description": "Universal node-based execution engine. AI-first, domain-agnostic graph runtime.",
+  "name": "symbiote-node",
+  "version": "0.2.0",
+  "description": "Universal node-based execution engine. Domain-agnostic graph runtime.",
   "type": "module",
   "main": "index.js",
   "bin": {
-    "agi-graph": "./cli.js"
+    "symbiote-node": "./cli.js"
   },
   "exports": {
     ".": "./index.js",
@@ -20,9 +20,9 @@
     "graph",
     "nodes",
     "workflow",
-    "ai",
     "dag",
-    "automation"
+    "automation",
+    "execution-engine"
   ],
   "license": "MIT"
 }

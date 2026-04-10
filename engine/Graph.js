@@ -4,7 +4,7 @@
  * Stores nodes and connections. Provides CRUD operations
  * for AI agents and programmatic graph construction.
  *
- * @module agi-graph/Graph
+ * @module symbiote-node/Graph
  */
 
 import { nanoid } from './nanoid.js';

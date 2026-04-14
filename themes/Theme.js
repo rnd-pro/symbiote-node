@@ -57,6 +57,15 @@ export function applyTheme(element, theme) {
       element.style.setProperty(layoutToken, value);
     }
   }
+  // Extra CSS: inject theme-specific style overrides
+  if (theme.extraCSS) {
+    const existing = element.querySelector('style[data-theme]');
+    if (existing) existing.remove();
+    const style = document.createElement('style');
+    style.setAttribute('data-theme', theme.name || 'custom');
+    style.textContent = theme.extraCSS;
+    element.prepend(style);
+  }
 }
 
 /**

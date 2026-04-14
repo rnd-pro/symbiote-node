@@ -218,7 +218,7 @@ export class NodeViewManager {
         }
 
         // Notify canvas to render free dots for this SVG node
-        if (this.#onSvgShapeReady) this.#onSvgShapeReady(nodeId);
+        if (this.#onSvgShapeReady) this.#onSvgShapeReady(node.id);
 
 
       } else if (shape) {

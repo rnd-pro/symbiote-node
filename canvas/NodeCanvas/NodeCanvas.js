@@ -824,7 +824,6 @@ export class NodeCanvas extends Symbiote {
       },
       {
         onStart: () => {
-          if (this.#readonly) return;
           frameStartPos = { ...el._position };
           // Capture positions of nodes that are inside this frame
           const nodeIds = this.#getNodesInFrame(frame.id);
@@ -835,7 +834,6 @@ export class NodeCanvas extends Symbiote {
           }
         },
         onTranslate: (x, y) => {
-          if (this.#readonly) return;
           // Move child nodes by delta from frame start
           if (childStartPositions && frameStartPos) {
             const dx = x - frameStartPos.x;

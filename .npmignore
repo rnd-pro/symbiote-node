@@ -4,5 +4,7 @@ TMP/
 *.log
 .agent/
 .agents/
+.gemini/
+.github/
 demo/
 tests/

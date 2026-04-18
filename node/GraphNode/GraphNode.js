@@ -19,6 +19,12 @@ const CATEGORY_ICONS = {
   instance: 'memory',
   control: 'tune',
   data: 'database',
+  // Codebase-specific
+  directory: 'folder',
+  file: 'description',
+  function: 'functions',
+  class: 'class',
+  module: 'package_2',
   default: 'radio_button_checked',
 };
 

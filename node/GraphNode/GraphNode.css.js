@@ -3,18 +3,18 @@ import { css } from '@symbiotejs/symbiote';
 export const styles = css`
 graph-node {
   display: block;
-  min-width: 180px;
-  max-width: 280px;
-  border-radius: 10px;
+  min-width: var(--sn-node-min-width, 180px);
+  max-width: var(--sn-node-max-width, 280px);
+  border-radius: var(--sn-node-radius, 10px);
   background: var(--sn-node-bg, #16213e);
-  border: 2px solid var(--sn-node-border, #2a2a4a);
-  box-shadow: 0 4px 16px var(--sn-shadow-color, rgba(0, 0, 0, 0.3));
+  border: var(--sn-node-border-width, 2px) solid var(--sn-node-border, #2a2a4a);
+  box-shadow: var(--sn-node-shadow, 0 4px 16px var(--sn-shadow-color, rgba(0, 0, 0, 0.3)));
   user-select: none;
   cursor: move;
   transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0.2s ease-out;
   overflow: visible;
   font-family: var(--sn-font, 'Inter', sans-serif);
-  font-size: 13px;
+  font-size: var(--sn-node-font-size, 13px);
   backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
   will-change: transform;
@@ -50,6 +50,13 @@ graph-node {
     & .sn-node-label {
       text-decoration: line-through;
     }
+  }
+
+  /* Compact mode — hide node body (ports & controls).
+     Activated by canvas.setCompactMode(true) which sets data-compact on the canvas.
+     SubgraphNodes (node-type="subgraph") keep body visible for inner graph preview. */
+  node-canvas[data-compact] &:not([node-type="subgraph"]) .sn-node-body {
+    display: none;
   }
 
   /* LOD: medium — strip heavy rendering for performance */
@@ -198,6 +205,22 @@ graph-node {
   }
   &[node-category="default"] {
     --sn-node-accent: var(--sn-cat-default, #94a3b8);
+  }
+  /* Codebase categories */
+  &[node-category="directory"] {
+    --sn-node-accent: var(--sn-cat-directory, #f0b840);
+  }
+  &[node-category="file"] {
+    --sn-node-accent: var(--sn-cat-file, #5cb8ff);
+  }
+  &[node-category="function"] {
+    --sn-node-accent: var(--sn-cat-function, #4ade80);
+  }
+  &[node-category="class"] {
+    --sn-node-accent: var(--sn-cat-class, #a78bfa);
+  }
+  &[node-category="module"] {
+    --sn-node-accent: var(--sn-cat-module, #ff6b9d);
   }
 
   /* Shape: pill — compact horizontal capsule */
@@ -436,6 +459,7 @@ graph-node {
 
   & .sn-node-label {
     font-weight: 600;
+    font-size: var(--sn-node-label-size, inherit);
     color: var(--sn-text, #e2e8f0);
     opacity: 1;
     white-space: nowrap;

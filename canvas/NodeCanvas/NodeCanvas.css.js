@@ -11,6 +11,11 @@ node-canvas {
   background-image: radial-gradient(circle, var(--sn-grid-dot, rgba(255,255,255,0.06)) 1px, transparent 1px);
   background-size: var(--sn-grid-size, 20px) var(--sn-grid-size, 20px);
   cursor: grab;
+  /* Prevent scrollbar oscillation: canvas manages its own viewport internally.
+     - size: SVG overflow:visible children cannot influence parent sizing
+     - layout: internal layout changes don't trigger parent reflow
+     - paint: clips painting to element box */
+  contain: size layout paint;
 
   &:active {
     cursor: grabbing;
@@ -68,7 +73,9 @@ node-canvas {
 .sn-conn-path {
   fill: none;
   stroke: var(--sn-conn-color, #4a9eff);
-  stroke-width: 2;
+  stroke-width: var(--sn-conn-width, 2);
+  stroke-linecap: var(--sn-conn-linecap, round);
+  stroke-linejoin: var(--sn-conn-linejoin, round);
   opacity: 0.7;
   transition: opacity 0.15s, stroke-width 0.15s;
   pointer-events: stroke;
@@ -89,9 +96,10 @@ node-canvas {
 /* Connector endpoint dots — hidden by default, shown only for SVG nodes */
 .sn-conn-dot {
   display: none;
-  fill: var(--sn-conn-color, #4a9eff);
-  stroke: var(--sn-node-bg, #fff);
-  stroke-width: 1.5;
+  fill: var(--sn-conn-dot-fill, var(--sn-conn-color, #4a9eff));
+  stroke: var(--sn-conn-dot-stroke, var(--sn-node-bg, #fff));
+  stroke-width: var(--sn-conn-dot-stroke-width, 1.5);
+  r: var(--sn-conn-dot-r, 3);
   opacity: 0.9;
   pointer-events: none;
   filter: drop-shadow(0 0 2px var(--sn-conn-color, #4a9eff));

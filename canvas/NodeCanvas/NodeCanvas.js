@@ -97,6 +97,9 @@ export class NodeCanvas extends Symbiote {
   /** @type {number} */
   #zCounter = 0;
 
+  /** @type {'bezier'|'orthogonal'|'straight'|'pcb'} saved across setEditor calls */
+  #pathStyle = 'bezier';
+
   // --- Public API ---
 
   /**
@@ -104,12 +107,19 @@ export class NodeCanvas extends Symbiote {
    * Called before switching to a new editor to ensure clean state.
    */
   #clearViews() {
-    // Remove all node views
+    // Remove all node views and their preview timers
     for (const [id, el] of this.#nodeViews) {
+      if (el._previewRaf) { clearTimeout(el._previewRaf); el._previewRaf = null; }
       if (el._drag) el._drag.destroy();
+      el._redrawPreview = null;
       el.remove();
     }
     this.#nodeViews.clear();
+
+    // Unsubscribe from previous editor events to prevent leaks
+    if (this.#editor) {
+      this.#editor.removeAllListeners?.();
+    }
 
     // Remove all connection SVG paths
     if (this.#connRenderer) {
@@ -156,6 +166,11 @@ export class NodeCanvas extends Symbiote {
         }
       },
     });
+
+    // Re-apply saved pathStyle after creating new renderer
+    if (this.#pathStyle !== 'bezier') {
+      this.#connRenderer.setPathStyle(this.#pathStyle);
+    }
 
     this.#pseudo = new PseudoConnection(this.ref.pseudoSvg);
 
@@ -340,6 +355,20 @@ export class NodeCanvas extends Symbiote {
   }
 
   /**
+   * Enable/disable compact mode (hides node body: ports & controls).
+   * Use this for schematic/PCB views where nodes show only labels.
+   * This is a structural setting — independent of visual theme.
+   * @param {boolean} enabled
+   */
+  setCompactMode(enabled) {
+    if (enabled) {
+      this.setAttribute('data-compact', '');
+    } else {
+      this.removeAttribute('data-compact');
+    }
+  }
+
+  /**
    * Apply a theme to the canvas
    * @param {import('../themes/Theme.js').ThemeDefinition} theme
    */
@@ -377,13 +406,24 @@ export class NodeCanvas extends Symbiote {
   setAllFlowing(active) { this.#connRenderer?.setAllFlowing(active); }
 
   /**
-   * Set connection path style
-   * @param {'bezier'|'orthogonal'|'straight'} style
+   * Set connection path style (persists across setEditor/drill-down)
+   * @param {'bezier'|'orthogonal'|'straight'|'pcb'} style
    */
-  setPathStyle(style) { this.#connRenderer?.setPathStyle(style); }
+  setPathStyle(style) {
+    this.#pathStyle = style;
+    this.#connRenderer?.setPathStyle(style);
+  }
 
-  /** @returns {'bezier'|'orthogonal'|'straight'} */
-  getPathStyle() { return this.#connRenderer?.pathStyle || 'bezier'; }
+  /** @returns {'bezier'|'orthogonal'|'straight'|'pcb'} */
+  getPathStyle() { return this.#pathStyle; }
+
+  /**
+   * Programmatically select a node by ID
+   * @param {string} nodeId
+   */
+  selectNode(nodeId) {
+    this.#selector?.selectNode(nodeId);
+  }
 
   /**
    * Clear all connector caches and re-render.
@@ -454,6 +494,22 @@ export class NodeCanvas extends Symbiote {
     for (const [nodeId, pos] of Object.entries(positions)) {
       this.setNodePosition(nodeId, pos.x, pos.y);
     }
+  }
+
+  /**
+   * Measure actual DOM sizes of all rendered nodes.
+   * Returns a plain object { [nodeId]: { w, h } } suitable for AutoLayout's nodeSizes option.
+   * Call after nodes are rendered to DOM (after setEditor + requestAnimationFrame).
+   * @returns {Object<string, { w: number, h: number }>}
+   */
+  measureNodeSizes() {
+    const sizes = {};
+    for (const [nodeId, el] of this.#nodeViews) {
+      if (el && el.offsetWidth > 0) {
+        sizes[nodeId] = { w: el.offsetWidth, h: el.offsetHeight };
+      }
+    }
+    return sizes;
   }
 
   /**
@@ -603,6 +659,10 @@ export class NodeCanvas extends Symbiote {
     this.#navigating = true;
     this.#subgraphManager.drillDown(node);
     this.#navigating = false;
+    this.dispatchEvent(new CustomEvent('subgraph-enter', {
+      detail: { node, nodeId },
+      bubbles: true,
+    }));
   }
 
   /**
@@ -613,6 +673,10 @@ export class NodeCanvas extends Symbiote {
     this.#navigating = true;
     this.#subgraphManager.drillUp(level);
     this.#navigating = false;
+    this.dispatchEvent(new CustomEvent('subgraph-exit', {
+      detail: { level },
+      bubbles: true,
+    }));
   }
 
   /**
@@ -632,6 +696,16 @@ export class NodeCanvas extends Symbiote {
   }
 
   /**
+   * Enable/disable batch positioning mode.
+   * When true, setNodePosition skips connection updates.
+   * Call refreshConnections() after batch is done.
+   * @param {boolean} active
+   */
+  setBatchMode(active) {
+    this._batchMode = !!active;
+  }
+
+  /**
    * Set node position
    * @param {string} nodeId
    * @param {number} x
@@ -642,6 +716,10 @@ export class NodeCanvas extends Symbiote {
     if (!el) return;
     el.style.transform = `translate(${x}px, ${y}px)`;
     el._position = { x, y };
+
+    // Skip connection updates during batch positioning
+    if (this._batchMode) return;
+
     this.#connRenderer?.updateForNode(nodeId);
     // Render or refresh free dots for SVG nodes
     if (el.hasAttribute('data-svg-shape')) {
@@ -911,27 +989,63 @@ export class NodeCanvas extends Symbiote {
       }
     }
 
+    // Update node attributes — guard to avoid redundant DOM mutations
     for (const [id, el] of this.#nodeViews) {
-      if (selectedNodes.has(id)) {
+      const shouldSelect = selectedNodes.has(id);
+      const isSelected = el.hasAttribute('data-selected');
+      if (shouldSelect && !isSelected) {
         el.setAttribute('data-selected', '');
         el.style.zIndex = this.#zCounter;
-      } else {
+      } else if (!shouldSelect && isSelected) {
         el.removeAttribute('data-selected');
       }
 
-      if (neighbors.has(id) && !selectedNodes.has(id)) {
+      const shouldNeighbor = neighbors.has(id) && !shouldSelect;
+      const isNeighbor = el.hasAttribute('data-neighbor-focused');
+      if (shouldNeighbor && !isNeighbor) {
         el.setAttribute('data-neighbor-focused', '');
-      } else {
+      } else if (!shouldNeighbor && isNeighbor) {
         el.removeAttribute('data-neighbor-focused');
       }
     }
+
+    // 2. Mark connections touching selected nodes
+    const activeConnIds = new Set();
+    if (this.#editor && selectedNodes.size > 0) {
+      for (const conn of this.#editor.getConnections()) {
+        if (selectedNodes.has(conn.from) || selectedNodes.has(conn.to)) {
+          activeConnIds.add(conn.id);
+        }
+      }
+    }
+
+    // Use cached path map instead of querySelector per connection
+    const connSvg = this.ref.connections;
+    if (!this._connPathCache) this._connPathCache = new Map();
     for (const [id] of this.#connRenderer?.data || []) {
-      const path = this.ref.connections.querySelector(`[data-conn-id="${id}"]`);
+      let path = this._connPathCache.get(id);
+      if (!path || !path.isConnected) {
+        path = connSvg.querySelector(`[data-conn-id="${id}"]`);
+        if (path) this._connPathCache.set(id, path);
+      }
       if (!path) continue;
-      if (selectedConnections.has(id)) {
-        path.setAttribute('data-selected', '');
-      } else {
-        path.removeAttribute('data-selected');
+
+      // Selection state
+      const shouldSelectConn = selectedConnections.has(id);
+      if (shouldSelectConn !== path.hasAttribute('data-selected')) {
+        shouldSelectConn ? path.setAttribute('data-selected', '') : path.removeAttribute('data-selected');
+      }
+
+      // Active connection: touches a selected node
+      const isActive = activeConnIds.has(id);
+      if (isActive !== path.hasAttribute('data-active-conn')) {
+        isActive ? path.setAttribute('data-active-conn', '') : path.removeAttribute('data-active-conn');
+      }
+
+      // Dimming
+      const shouldDim = !isActive && selectedNodes.size > 0;
+      if (shouldDim !== path.hasAttribute('data-dimmed')) {
+        shouldDim ? path.setAttribute('data-dimmed', '') : path.removeAttribute('data-dimmed');
       }
     }
 
@@ -996,16 +1110,26 @@ export class NodeCanvas extends Symbiote {
   // --- Transform ---
 
   #updateTransform() {
-    // Sync grid dots with pan/zoom
-    const gridBase = parseInt(getComputedStyle(this).getPropertyValue('--sn-grid-size')) || 20;
+
+    // Sync grid dots with pan/zoom (cached to avoid forced reflow via getComputedStyle)
+    if (this._gridBase === undefined) {
+      this._gridBase = parseInt(getComputedStyle(this).getPropertyValue('--sn-grid-size')) || 20;
+    }
+    const gridBase = this._gridBase;
     const zoom = this.$.zoom;
     const multiplier = zoom < 0.5 ? 2 : 1;
     const gridSize = gridBase * multiplier * zoom;
     this.style.backgroundSize = `${gridSize}px ${gridSize}px`;
     this.style.backgroundPosition = `${this.$.panX}px ${this.$.panY}px`;
 
-    // Viewport culling + LOD
-    this.#applyCullingAndLOD();
+    // Viewport culling + LOD (throttled via rAF to prevent re-render cycles)
+    if (!this._cullingScheduled) {
+      this._cullingScheduled = true;
+      requestAnimationFrame(() => {
+        this._cullingScheduled = false;
+        this.#applyCullingAndLOD();
+      });
+    }
   }
 
   /** Public: force culling and LOD update (call after programmatic zoom) */
@@ -1029,30 +1153,32 @@ export class NodeCanvas extends Symbiote {
     const prevLod = this._currentLod || 'full';
     this._currentLod = lod;
 
-    // Hide connections when not full LOD (port geometry changes)
+    // LOD: dim connections at low zoom, but keep active node connections visible
     if (this.ref.connections) {
-      this.ref.connections.style.visibility = lod !== 'full' ? 'hidden' : '';
+      if (lod !== 'full') {
+        this.ref.connections.setAttribute('data-lod-dimmed', '');
+      } else {
+        this.ref.connections.removeAttribute('data-lod-dimmed');
+      }
     }
 
-    // Debounced connection refresh when returning to full LOD
-    if (prevLod !== 'full' && lod === 'full' && this.#connRenderer) {
-      clearTimeout(this._lodRefreshTimer);
-      this._lodRefreshTimer = setTimeout(() => {
-        for (const [, el] of this.#nodeViews) {
-          if (el._nodeId) this.#connRenderer.updateForNode(el._nodeId);
-        }
-      }, 300);
-    }
+    // No programmatic connection refresh is needed on LOD change, 
+    // as LOD is now handled purely via CSS 'data-lod-dimmed' scaling.
 
     for (const [, el] of this.#nodeViews) {
       const pos = el._position;
       if (!pos) continue;
 
-      // Check if node is in viewport
+      // Check if node is in viewport (use cached sizes to avoid forced reflow)
       const screenX = pos.x * zoom + panX;
       const screenY = pos.y * zoom + panY;
-      const w = (el.offsetWidth || 180) * zoom;
-      const h = (el.offsetHeight || 60) * zoom;
+      // Cache node size on first valid read to avoid layout thrashing
+      if (!el._cachedW) {
+        el._cachedW = el.offsetWidth || 180;
+        el._cachedH = el.offsetHeight || 60;
+      }
+      const w = el._cachedW * zoom;
+      const h = el._cachedH * zoom;
 
       const visible = screenX + w > -margin && screenX < cw + margin &&
         screenY + h > -margin && screenY < ch + margin;
@@ -1082,9 +1208,8 @@ export class NodeCanvas extends Symbiote {
       },
       {
         onStart: (e) => {
-          if (e?.target === container) {
-            this.#selector.unselectAll();
-          }
+          // Track start position — only unselect on click (not drag)
+          this._panStart = e ? { x: e.pageX, y: e.pageY, target: e.target } : null;
         },
         onTranslate: (x, y) => {
           if (this.#zoom?.isTranslating()) return;
@@ -1094,6 +1219,17 @@ export class NodeCanvas extends Symbiote {
           this.#updateTransform();
           this.dispatchEvent(new CustomEvent('manualviewport'));
         },
+        onDrop: (e) => {
+          // Unselect only on click (minimal movement), not after panning
+          if (this._panStart && e) {
+            const dx = Math.abs(e.pageX - this._panStart.x);
+            const dy = Math.abs(e.pageY - this._panStart.y);
+            if (dx < 5 && dy < 5 && this._panStart.target === container) {
+              this.#selector.unselectAll();
+            }
+          }
+          this._panStart = null;
+        },
       }
     );
 
@@ -1102,7 +1238,7 @@ export class NodeCanvas extends Symbiote {
     this.#zoom.initialize(container, content, (delta, ox, oy) => {
       const k = this.$.zoom;
       const newK = k * (1 + delta);
-      if (newK < 0.1 || newK > 5) return;
+      if (newK < 0.02 || newK > 5) return;
       this.$.zoom = newK;
       this.$.panX += ox;
       this.$.panY += oy;
@@ -1129,6 +1265,7 @@ export class NodeCanvas extends Symbiote {
     });
 
     // Computed transform — auto-tracks panX, panY, zoom
+    // --- Loop detector for contentTransform ---
     this.sub('+contentTransform', (val) => {
       if (this.ref.content) {
         this.ref.content.style.transform = val;
@@ -1136,6 +1273,7 @@ export class NodeCanvas extends Symbiote {
     });
 
     this.#updateTransform();
+
 
     // Minimap — auto-show on viewport change, toggle button
     const minimap = this.ref.minimap;

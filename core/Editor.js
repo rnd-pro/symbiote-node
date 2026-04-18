@@ -66,6 +66,13 @@ export class NodeEditor {
     return true;
   }
 
+  /**
+   * Remove all event listeners (for clean teardown)
+   */
+  removeAllListeners() {
+    this._listeners = {};
+  }
+
   // --- Node CRUD ---
 
   /**

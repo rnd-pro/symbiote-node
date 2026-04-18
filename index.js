@@ -70,7 +70,7 @@ export {
 export { syncWithRouter } from './layout/LayoutRouter/routerSync.js';
 
 // Auto Layout
-export { computeAutoLayout } from './canvas/AutoLayout.js';
+export { computeAutoLayout, computeTreeLayout } from './canvas/AutoLayout.js';
 
 // Portals (Named Reroutes)
 export { PortalManager } from './core/Portal.js';

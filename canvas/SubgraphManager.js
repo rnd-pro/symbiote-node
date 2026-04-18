@@ -60,7 +60,7 @@ export class SubgraphManager {
 
     // Save current state
     const current = this.#stack[this.#stack.length - 1];
-    current.positions = this.#capturePositions(current.editor);
+    current.positions = this.#capturePositions(current.editor, current.positions);
     current.transform = this.#captureTransform();
 
     // Push inner editor
@@ -91,7 +91,7 @@ export class SubgraphManager {
       if (entry.subgraphNodeId) {
         const subNode = parentEntry.editor.getNode(entry.subgraphNodeId);
         if (subNode?._isSubgraph) {
-          subNode.setInnerPositions(this.#capturePositions(entry.editor));
+          subNode.setInnerPositions(this.#capturePositions(entry.editor, entry.positions));
           subNode.setInnerTransform(entry.transform);
         }
       }
@@ -99,7 +99,7 @@ export class SubgraphManager {
 
     // Save current deep level positions before truncating
     const currentEntry = this.#stack[this.#stack.length - 1];
-    currentEntry.positions = this.#capturePositions(currentEntry.editor);
+    currentEntry.positions = this.#capturePositions(currentEntry.editor, currentEntry.positions);
     currentEntry.transform = this.#captureTransform();
 
     // Truncate stack
@@ -160,12 +160,15 @@ export class SubgraphManager {
   }
 
   /**
-   * Capture current node positions from editor
+   * Capture current node positions from editor.
+   * Falls back to existing entry positions when DOM elements
+   * have already been cleared (e.g. during setEditor transitions).
    * @param {import('../core/Editor.js').NodeEditor} editor
+   * @param {Object<string, { x: number, y: number }>} [fallback={}]
    * @returns {Object<string, { x: number, y: number }>}
    */
-  #capturePositions(editor) {
-    const positions = {};
+  #capturePositions(editor, fallback = {}) {
+    const positions = { ...fallback };
     if (!this.#canvas) return positions;
     for (const node of editor.getNodes()) {
       const el = this.#canvas.getNodeView?.(node.id);

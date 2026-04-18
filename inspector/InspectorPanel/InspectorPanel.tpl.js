@@ -6,10 +6,6 @@ import { html } from '@symbiotejs/symbiote';
 
 export const template = html`
 <div class="insp-resize-handle"></div>
-<div class="insp-header">
-  <span class="material-symbols-outlined">info</span>
-  <span>Inspector</span>
-</div>
 
 <div class="insp-body">
   <div class="insp-empty">

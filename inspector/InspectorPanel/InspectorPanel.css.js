@@ -59,7 +59,7 @@ inspector-panel {
 
   & .insp-body {
     flex: 1;
-    padding: 12px 16px;
+    padding: 44px 16px 12px;
   }
 
   & .insp-empty {

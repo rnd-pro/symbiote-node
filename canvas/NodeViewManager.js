@@ -244,7 +244,8 @@ export class NodeViewManager {
   removeView(node) {
     const el = this.#nodeViews.get(node.id);
     if (!el) return;
-    if (el._previewRaf) cancelAnimationFrame(el._previewRaf);
+    if (el._previewRaf) clearTimeout(el._previewRaf);
+    el._previewRaf = null;
     if (el._drag) el._drag.destroy();
     animateOut(el);
     this.#nodeViews.delete(node.id);
@@ -507,14 +508,7 @@ export class NodeViewManager {
     // Expose redraw for external triggering (FlowSimulator)
     el._redrawPreview = drawPreview;
 
-    // Initial draw + periodic refresh
+    // Draw once. Re-draw on demand via el._redrawPreview().
     drawPreview();
-    const loop = () => {
-      drawPreview();
-      el._previewRaf = setTimeout(() => {
-        if (el.isConnected) requestAnimationFrame(loop);
-      }, 2000);
-    };
-    el._previewRaf = setTimeout(() => requestAnimationFrame(loop), 2000);
   }
 }

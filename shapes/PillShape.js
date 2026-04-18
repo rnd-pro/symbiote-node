@@ -36,6 +36,43 @@ export class PillShape extends NodeShape {
     };
   }
 
+  /**
+   * Get pin position on a specific side of the pill.
+   * Left/right follow the rounded semicircle arc.
+   * Top/bottom follow the flat straight edge.
+   *
+   * @param {'top'|'right'|'bottom'|'left'} side
+   * @param {number} t - position along the side (0..1)
+   * @param {{ width: number, height: number }} size
+   * @returns {{ x: number, y: number, angle: number }}
+   */
+  getSidePosition(side, t, size) {
+    const NORMALS = { top: -90, right: 0, bottom: 90, left: 180 };
+    const MARGIN = 0.2;
+    const effectiveT = MARGIN + t * (1 - 2 * MARGIN);
+    const r = size.height / 2;
+
+    if (side === 'top' || side === 'bottom') {
+      // Flat edge between the two semicircles
+      const x = r + effectiveT * (size.width - 2 * r);
+      const y = side === 'top' ? 0 : size.height;
+      return { x, y, angle: NORMALS[side] };
+    }
+
+    // Rounded semicircle ends
+    const arcSpan = Math.PI * 0.8; // 144° arc
+    const cx = side === 'left' ? r : size.width - r;
+    const centerAngle = side === 'left' ? Math.PI : 0;
+    const startAngle = centerAngle - arcSpan / 2;
+    const a = startAngle + arcSpan * effectiveT;
+
+    return {
+      x: cx + r * Math.cos(a),
+      y: size.height / 2 + r * Math.sin(a),
+      angle: (a * 180) / Math.PI,
+    };
+  }
+
   getBorderRadius({ height }) {
     return `${height / 2}px`;
   }

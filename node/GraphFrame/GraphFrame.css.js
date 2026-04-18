@@ -8,8 +8,8 @@ export const styles = css`
 graph-frame {
   position: absolute;
   display: block;
-  border: 2px solid color-mix(in srgb, var(--frame-color, #4a9eff) 60%, transparent);
-  border-radius: 12px;
+  border: var(--sn-frame-border-width, 2px) var(--sn-frame-border-style, solid) color-mix(in srgb, var(--frame-color, #4a9eff) 60%, transparent);
+  border-radius: var(--sn-frame-radius, 12px);
   background: color-mix(in srgb, var(--frame-color, #4a9eff) 8%, transparent);
   z-index: -1;
   pointer-events: all;
@@ -21,7 +21,8 @@ graph-frame {
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    font-size: 13px;
+    font-family: var(--sn-frame-font, var(--sn-font, 'Inter', sans-serif));
+    font-size: var(--sn-frame-font-size, 13px);
     font-weight: 600;
     color: color-mix(in srgb, var(--frame-color, #4a9eff) 90%, white);
     user-select: none;

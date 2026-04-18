@@ -7,7 +7,7 @@
  *   - 'combine': Object.assign all non-null inputs (deep merge)
  *   - 'append': collect all non-null inputs into an array
  *
- * @module agi-graph/packs/flow/merge
+ * @module symbiote-node/packs/flow/merge
  */
 
 export default {

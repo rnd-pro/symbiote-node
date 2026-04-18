@@ -824,7 +824,6 @@ export class NodeCanvas extends Symbiote {
       },
       {
         onStart: () => {
-          if (this.#readonly) return;
           frameStartPos = { ...el._position };
           // Capture positions of nodes that are inside this frame
           const nodeIds = this.#getNodesInFrame(frame.id);
@@ -835,7 +834,6 @@ export class NodeCanvas extends Symbiote {
           }
         },
         onTranslate: (x, y) => {
-          if (this.#readonly) return;
           // Move child nodes by delta from frame start
           if (childStartPositions && frameStartPos) {
             const dx = x - frameStartPos.x;
@@ -903,12 +901,28 @@ export class NodeCanvas extends Symbiote {
 
   #onSelectionChanged(selectedNodes, selectedConnections) {
     this.#zCounter++;
+    
+    // 1. Identify neighbors of currently selected nodes for "Focus Mode" label visibility
+    const neighbors = new Set();
+    if (this.#editor && selectedNodes.size > 0) {
+      for (const conn of this.#editor.getConnections()) {
+        if (selectedNodes.has(conn.from)) neighbors.add(conn.to);
+        if (selectedNodes.has(conn.to)) neighbors.add(conn.from);
+      }
+    }
+
     for (const [id, el] of this.#nodeViews) {
       if (selectedNodes.has(id)) {
         el.setAttribute('data-selected', '');
         el.style.zIndex = this.#zCounter;
       } else {
         el.removeAttribute('data-selected');
+      }
+
+      if (neighbors.has(id) && !selectedNodes.has(id)) {
+        el.setAttribute('data-neighbor-focused', '');
+      } else {
+        el.removeAttribute('data-neighbor-focused');
       }
     }
     for (const [id] of this.#connRenderer?.data || []) {

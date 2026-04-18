@@ -135,7 +135,6 @@ export class NodeViewManager {
           return svgPath.isPointInFill(pt);
         },
         onStart: (e) => {
-          if (this.#readonly) return;
           dragStart = { x: e.pageX, y: e.pageY };
           this.#autoSelectOnDragStart(node.id, e);
           this.#captureDragStartPositions();
@@ -144,7 +143,6 @@ export class NodeViewManager {
           this.#editor.emit('nodepicked', node);
         },
         onTranslate: (x, y) => {
-          if (this.#readonly) return;
           this.#handleGroupTranslate(node.id, el, x, y);
         },
         onDrop: (e) => {
@@ -218,7 +216,7 @@ export class NodeViewManager {
         }
 
         // Notify canvas to render free dots for this SVG node
-        if (this.#onSvgShapeReady) this.#onSvgShapeReady(nodeId);
+        if (this.#onSvgShapeReady) this.#onSvgShapeReady(node.id);
 
 
       } else if (shape) {

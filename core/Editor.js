@@ -442,3 +442,7 @@ export class NodeEditor {
     return new Graph(json);
   }
 }
+const json = this.toJSON(positions);
+    return new Graph(json);
+  }
+}

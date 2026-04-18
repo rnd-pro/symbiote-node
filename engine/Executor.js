@@ -6,7 +6,7 @@
  * cache, async node processing, dynamic sockets,
  * and compound node sub-graph execution.
  *
- * @module agi-graph/Executor
+ * @module symbiote-node/Executor
  */
 
 import { getNodeType } from './Registry.js';

@@ -7,8 +7,7 @@
  * Parses {placeholder} syntax in template string, resolves values from
  * upstream data, and produces interpolated text output.
  *
- * @module agi-graph/packs/transform/template-builder
- */
+ * @module symbiote-node/packs/transform/template-builder */
 
 /**
  * Extract placeholder names from template string.

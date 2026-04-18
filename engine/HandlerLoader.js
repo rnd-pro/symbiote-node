@@ -13,8 +13,7 @@
  *     lifecycle: { validate, cacheKey, execute, postProcess },
  *   };
  *
- * @module agi-graph/HandlerLoader
- */
+ * @module symbiote-node/HandlerLoader */
 
 import { readdir, stat } from 'node:fs/promises';
 import { join, relative, extname } from 'node:path';
@@ -101,8 +100,7 @@ export async function loadHandlers(dir) {
       const type = await loadHandler(file);
       if (type) registered.push(type);
     } catch (err) {
-      console.error(`[agi-graph] Failed to load handler ${relative(dir, file)}: ${err.message}`);
-    }
+      console.error(`[symbiote-node] Failed to load handler ${relative(dir, file)}: ${err.message}`);    }
   }
 
   return registered;
@@ -138,8 +136,7 @@ export function watchHandlers(dir, options = {}) {
       if (type && onRegister) onRegister(type, filePath);
     } catch (err) {
       if (onError) onError(filePath, err);
-      else console.error(`[agi-graph] Watch error for ${filename}: ${err.message}`);
-    }
+      else console.error(`[symbiote-node] Watch error for ${filename}: ${err.message}`);    }
   });
 
   return {

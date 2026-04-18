@@ -4,8 +4,7 @@
  * Stores nodes and connections. Provides CRUD operations
  * for AI agents and programmatic graph construction.
  *
- * @module agi-graph/Graph
- */
+ * @module symbiote-node/Graph */
 
 import { nanoid } from './nanoid.js';
 import { getNodeType, registerCustomDrivers } from './Registry.js';
@@ -290,8 +289,7 @@ export class Graph {
         out: c.out || c.fromSocket,
         to: c.to,
         in: c.in || c.toSocket,
-      };
-      if (c.type) conn.type = c.type;
+      };      if (c.type) conn.type = c.type;
       if (c.label) conn.label = c.label;
       return conn;
     });

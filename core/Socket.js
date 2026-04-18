@@ -2,7 +2,7 @@
  * Socket — typed port connector
  *
  * Defines the type and visual identity of a connection endpoint.
- * Compatible with agi-graph SocketTypes system.
+ * Compatible with symbiote-node SocketTypes system.
  *
  * @module symbiote-node/core/Socket
  */

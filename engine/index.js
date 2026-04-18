@@ -1,11 +1,9 @@
 /**
- * agi-graph - Universal node-based execution engine
- *
+ * symbiote-node - Universal node-based execution engine *
  * AI-first, domain-agnostic graph runtime.
  * Zero dependencies, pure ESM.
  *
- * @module agi-graph
- */
+ * @module symbiote-node */
 
 // Core
 export { Graph } from './Graph.js';

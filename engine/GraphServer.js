@@ -1,13 +1,11 @@
 /**
- * GraphServer.js - WebSocket + HTTP server for agi-graph
- *
+ * GraphServer.js - WebSocket + HTTP server for symbiote-node *
  * Provides real-time graph synchronization between server and UI clients.
  * Supports file-based workflow watching, handler hot-reload, and server-side execution.
  *
  * Protocol messages follow SPEC.md P23 Agent Bridge specification.
  *
- * @module agi-graph/GraphServer
- */
+ * @module symbiote-node/GraphServer */
 
 import { createServer as createHttpServer } from 'node:http';
 import { readFile, writeFile, watch as fsWatch } from 'node:fs/promises';
@@ -29,8 +27,7 @@ import { loadHandlers, watchHandlers } from './HandlerLoader.js';
  */
 
 /**
- * Create an agi-graph server instance
- * @param {ServerOptions} options
+ * Create an symbiote-node server instance * @param {ServerOptions} options
  * @returns {Promise<{server: import('http').Server, wss: WebSocketServer, graph: Graph, close: () => Promise<void>}>}
  */
 export async function createServer(options = {}) {
@@ -325,8 +322,7 @@ export async function createServer(options = {}) {
   // ─── Start & Close ────────────────────────────────
 
   await new Promise((resolve) => httpServer.listen(port, resolve));
-  log(`🚀 agi-graph server on http://localhost:${port}`);
-
+  log(`🚀 symbiote-node server on http://localhost:${port}`);
   async function close() {
     for (const stop of watchers) {
       if (typeof stop === 'function') stop();

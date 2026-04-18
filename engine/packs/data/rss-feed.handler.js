@@ -6,8 +6,7 @@
  *
  * Ported from Mr-Computer/automations/argentine-spanish-bot/src/services/rss-feed.js
  *
- * @module agi-graph/packs/data/rss-feed
- */
+ * @module symbiote-node/packs/data/rss-feed */
 
 /**
  * Simple hash for dedup
@@ -153,8 +152,7 @@ export default {
           case 'fetch': {
             const response = await fetch(inputs.url, {
               signal: AbortSignal.timeout(timeout),
-              headers: { 'User-Agent': 'agi-graph/rss-feed/1.0' },
-            });
+              headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },            });
             if (!response.ok) return { error: `HTTP ${response.status}: ${response.statusText}` };
 
             const xml = await response.text();
@@ -181,8 +179,7 @@ export default {
               try {
                 const response = await fetch(url, {
                   signal: AbortSignal.timeout(timeout),
-                  headers: { 'User-Agent': 'agi-graph/rss-feed/1.0' },
-                });
+                  headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },                });
                 if (!response.ok) {
                   errors.push({ url, error: `HTTP ${response.status}` });
                   continue;

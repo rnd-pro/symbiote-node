@@ -77,6 +77,9 @@ export function navigate(panel, subpath = '', params = {}) {
   // (location.hash preserves stale query strings like ?monitoring)
   history.pushState(null, '', location.pathname + '#' + hash);
   syncFromHash();
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('hashchange'));
+  }
 }
 
 /**
@@ -99,6 +102,9 @@ export function updateParams(params) {
   const hash = buildHash(routerCtx.read('panel'), routerCtx.read('subpath'), merged);
   history.replaceState(null, '', '#' + hash);
   routerCtx.pub('query', query);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('hashchange'));
+  }
 }
 
 /**

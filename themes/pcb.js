@@ -70,6 +70,7 @@ export const PCB_DARK = {
     '--sn-cat-function': '#4ade80',    // green — function
     '--sn-cat-class': '#a78bfa',       // purple — class
     '--sn-cat-module': '#ff6b9d',      // pink — entry/index
+    '--sn-cat-asset': '#8b8b8b',        // gray — non-source asset (.css, .html, .json, .md)
 
     // Context menu — matches Carbon
     '--sn-ctx-bg': '#2a2a2a',

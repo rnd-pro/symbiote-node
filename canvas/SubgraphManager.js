@@ -82,6 +82,7 @@ export class SubgraphManager {
    * @param {number} level - 0 = root
    */
   drillUp(level) {
+    if (level === undefined) level = this.#stack.length - 2;
     if (level < 0 || level >= this.#stack.length || !this.#canvas) return;
 
     // Save state of levels being popped (persist inner positions)

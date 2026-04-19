@@ -1172,6 +1172,11 @@ export class NodeCanvas extends Symbiote {
         inspector.hidden = true;
       }
     }
+
+    // Dispatch event so consumers can react to selection changes (including deselect)
+    this.dispatchEvent(new CustomEvent('selection-changed', {
+      detail: { nodes: [...selectedNodes], connections: [...selectedConnections] },
+    }));
   }
 
   /** @type {number} */
@@ -1234,6 +1239,7 @@ export class NodeCanvas extends Symbiote {
 
   /** Apply viewport culling and LOD based on current transform */
   #applyCullingAndLOD() {
+    return; // Disabled by user request to prevent screen flicker loops
     if (!this.ref.canvasContainer || this.#nodeViews.size === 0) return;
 
     const cw = this.ref.canvasContainer.clientWidth;

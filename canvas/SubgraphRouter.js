@@ -89,57 +89,55 @@ export class SubgraphRouter {
       // Extract the path we were drilled into BEFORE modifying the URL
       const hashPath = window.location.hash.replace(`#${this.#config.hashPrefix}/`, '').split('?')[0].split('&')[0];
 
-      if (hashPath && this.#canvasDepth > 0) {
-        // Still inside a subgraph — find the parent directory to focus on
-        let focusPath = hashPath;
-        if (this.#config.fileMap.has(hashPath)) {
-          const parts = hashPath.split('/');
-          parts.pop();
-          focusPath = parts.join('/') + '/';
+      // Find the directory path we just exited from (to focus on it)
+      let exitedDirPath = hashPath;
+      if (this.#config.fileMap?.has(hashPath)) {
+        const parts = hashPath.split('/');
+        parts.pop();
+        exitedDirPath = parts.join('/') + '/';
+      }
+      // Walk up to find the nearest known directory
+      if (exitedDirPath && !this.#config.dirNodeMap?.has(exitedDirPath)) {
+        const segments = exitedDirPath.replace(/\/$/, '').split('/');
+        while (segments.length > 0) {
+          const candidate = segments.join('/') + '/';
+          if (this.#config.dirNodeMap?.has(candidate)) {
+            exitedDirPath = candidate;
+            break;
+          }
+          segments.pop();
         }
-        if (this.#config.dirNodeMap.has(focusPath)) {
-          history.replaceState(null, '', `#${this.#config.hashPrefix}/${focusPath}?in=1`);
-        } else {
-          history.replaceState(null, '', `#${this.#config.hashPrefix}/${focusPath}`);
+      }
+
+      if (this.#canvasDepth > 0) {
+        // Still inside a subgraph — update URL to parent context
+        if (this.#config.dirNodeMap?.has(exitedDirPath)) {
+          history.replaceState(null, '', `#${this.#config.hashPrefix}/${exitedDirPath}?in=1`);
+        } else if (exitedDirPath) {
+          history.replaceState(null, '', `#${this.#config.hashPrefix}/${exitedDirPath}`);
         }
       } else {
-        // Back at root — use ?focus= to highlight the exited node
-        // For deep paths (e.g. src/analysis/complexity.js), find the top-level directory
-        let exitedPath = hashPath; // e.g. 'src/analysis/complexity.js' or 'src/analysis/'
-
-        // Walk up the path until we find a known directory at root level
-        if (exitedPath && !this.#config.dirNodeMap.has(exitedPath)) {
-          const segments = exitedPath.replace(/\/$/, '').split('/');
-          while (segments.length > 0) {
-            const candidate = segments.join('/') + '/';
-            if (this.#config.dirNodeMap.has(candidate)) {
-              exitedPath = candidate;
-              break;
-            }
-            segments.pop();
-          }
-        }
-
-        if (exitedPath) {
-          history.replaceState(null, '', `#${this.#config.hashPrefix}?focus=${encodeURIComponent(exitedPath)}`);
+        // Back at root
+        if (exitedDirPath) {
+          history.replaceState(null, '', `#${this.#config.hashPrefix}?focus=${encodeURIComponent(exitedDirPath)}`);
         } else {
           history.replaceState(null, '', `#${this.#config.hashPrefix}`);
         }
+      }
 
-        // Fly to the exited node instead of fitView for spatial context
-        if (exitedPath) {
-          requestAnimationFrame(() => {
-            const nodeId = this.#config.dirNodeMap?.get(exitedPath) ||
-                           this.#config.fileMap?.get(exitedPath);
-            if (nodeId && this.#canvas.flyToNode) {
-              this.#canvas.flyToNode(nodeId, { zoom: 0.8 });
-            } else if (this.#canvas.fitView) {
-              this.#canvas.fitView();
-            }
-          });
-        } else if (this.#canvas.fitView) {
-          requestAnimationFrame(() => this.#canvas.fitView());
-        }
+      // Fly to the exited group node at ANY level
+      if (exitedDirPath) {
+        requestAnimationFrame(() => {
+          const nodeId = this.#config.dirNodeMap?.get(exitedDirPath) ||
+                         this.#config.fileMap?.get(exitedDirPath);
+          if (nodeId && this.#canvas.flyToNode) {
+            this.#canvas.flyToNode(nodeId, { zoom: 0.8 });
+          } else if (this.#canvas.fitView) {
+            this.#canvas.fitView();
+          }
+        });
+      } else if (this.#canvas.fitView) {
+        requestAnimationFrame(() => this.#canvas.fitView());
       }
     };
 
@@ -308,28 +306,43 @@ export class SubgraphRouter {
     // Auto-traversal engine: if target is not visible on current canvas layer
     if (!pos && typeof this.#canvas.drillDown === 'function') {
       if (this.#config.dirNodeMap) {
-        // Case 1: Target is a file, currently hidden inside a directory Subgraph from Root View
-        let dirPath = '';
+        // Case 1: Target is a file or directory hidden inside a deeper subgraph.
+        // Walk up the path hierarchy to find the nearest visible ancestor directory.
+        let searchPath = targetPath;
         if (isFile) {
+          // Start from the file's parent directory
           const parts = targetPath.split('/');
           parts.pop();
-          dirPath = parts.join('/') + '/';
-          if (dirPath === '/') dirPath = './';
+          searchPath = parts.join('/') + '/';
+          if (searchPath === '/') searchPath = './';
         }
 
-        if (isFile && dirPath && this.#config.dirNodeMap.has(dirPath)) {
-          const dirId = this.#config.dirNodeMap.get(dirPath);
-          // If parent directory is visible, drill into it!
-          if (positions[dirId]) {
+        // Walk UP the directory tree to find the nearest visible ancestor
+        let segments = searchPath.replace(/\/$/, '').split('/');
+        while (segments.length > 0) {
+          const candidateDir = segments.join('/') + '/';
+          const dirId = this.#config.dirNodeMap.get(candidateDir);
+          if (dirId && positions[dirId]) {
+            // Found a visible ancestor — drill into it
             this.#runAutoRouting(() => {
               this.#canvas.drillDown(dirId);
             });
             requestAnimationFrame(() => this.navigateTo(targetPath, depth + 1, autoDrill));
             return true;
           }
+          segments.pop();
+        }
+        // Also try "./" as root
+        const rootId = this.#config.dirNodeMap.get('./');
+        if (rootId && positions[rootId]) {
+          this.#runAutoRouting(() => {
+            this.#canvas.drillDown(rootId);
+          });
+          requestAnimationFrame(() => this.navigateTo(targetPath, depth + 1, autoDrill));
+          return true;
         }
 
-        // Case 2: Target is completely off-scope (we are inside wrong group). Drill UP loop to Root.
+        // Case 2: Target is completely off-scope (we are inside wrong group). Drill UP to root.
         if (this.#canvasDepth > 0) {
           this.#runAutoRouting(() => {
             this.#canvas.drillUp?.();

@@ -673,9 +673,14 @@ export function computeTreeLayout(editor, options = {}) {
     if (!parent.has(id)) roots.push(id);
   }
 
-  // Sort roots alphabetically by label for stability
+  // Sort roots: directories first, then files, alphabetically within each group
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const dirIdSet = dirPaths ? new Set(Object.keys(dirPaths)) : new Set();
   roots.sort((a, b) => {
+    const aIsDir = dirIdSet.has(a) || nodeMap.get(a)?._isSubgraph;
+    const bIsDir = dirIdSet.has(b) || nodeMap.get(b)?._isSubgraph;
+    if (aIsDir && !bIsDir) return -1;
+    if (!aIsDir && bIsDir) return 1;
     const la = nodeMap.get(a)?.label || '';
     const lb = nodeMap.get(b)?.label || '';
     return la.localeCompare(lb);

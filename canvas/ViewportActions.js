@@ -26,16 +26,21 @@ export class ViewportActions {
   /** @type {Array|null} - clipboard for copy/paste */
   #clipboard = null;
 
+  /** @type {import('./NodeCanvas/NodeCanvas.js').NodeCanvas} */
+  #canvas;
+
   /**
    * @param {object} config
    * @param {import('../core/Editor.js').NodeEditor} config.editor
    * @param {import('../interactions/Selector.js').Selector} config.selector
    * @param {Map<string, HTMLElement>} config.nodeViews
+   * @param {import('./NodeCanvas/NodeCanvas.js').NodeCanvas} config.canvas
    */
-  constructor({ editor, selector, nodeViews }) {
+  constructor({ editor, selector, nodeViews, canvas }) {
     this.#editor = editor;
     this.#selector = selector;
     this.#nodeViews = nodeViews;
+    this.#canvas = canvas;
   }
 
   /** @param {boolean} readonly */
@@ -194,44 +199,13 @@ export class ViewportActions {
         { label: 'Add Frame', icon: 'dashboard', action: () => this.#editor?.emit('contextaddframe', { x: graphX, y: graphY }) },
         { label: 'Paste', icon: 'content_paste', action: () => this.#pasteNodes(graphX, graphY) },
         { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
-        { label: 'Fit View', icon: 'fit_screen', action: () => this.fitView(container) },
+        { label: 'Fit View', icon: 'fit_screen', action: () => this.#canvas?.fitView() },
         { label: 'Auto Layout', icon: 'auto_fix_high', action: () => this.#editor?.emit('autolayout') },
       ]);
     }
   }
 
-  /**
-   * Fit all nodes into viewport
-   * @param {HTMLElement} container
-   * @returns {{ zoom: number, panX: number, panY: number }|null}
-   */
-  fitView(container) {
-    if (this.#nodeViews.size === 0) return null;
-    const cw = container.clientWidth;
-    const ch = container.clientHeight;
 
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const [, el] of this.#nodeViews) {
-      const p = el._position;
-      const w = el.offsetWidth || 180;
-      const h = el.offsetHeight || 60;
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x + w > maxX) maxX = p.x + w;
-      if (p.y + h > maxY) maxY = p.y + h;
-    }
-
-    const padding = 60;
-    const contentW = maxX - minX + padding * 2;
-    const contentH = maxY - minY + padding * 2;
-    const zoom = Math.min(cw / contentW, ch / contentH, 2);
-
-    return {
-      zoom,
-      panX: (cw - contentW * zoom) / 2 - (minX - padding) * zoom,
-      panY: (ch - contentH * zoom) / 2 - (minY - padding) * zoom,
-    };
-  }
 
   /**
    * Highlight sockets compatible with picked socket

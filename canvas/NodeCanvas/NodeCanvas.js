@@ -178,6 +178,7 @@ export class NodeCanvas extends Symbiote {
       editor,
       selector: this.#selector,
       nodeViews: this.#nodeViews,
+      canvas: this,
     });
 
     // Quick Action Toolbar
@@ -495,6 +496,102 @@ export class NodeCanvas extends Symbiote {
       this.setNodePosition(nodeId, pos.x, pos.y);
     }
   }
+
+  /**
+   * Fit all nodes into the viewport.
+   * Calculates required zoom/pan based on current node layout,
+   * accounting for the inspector panel if open.
+   */
+  fitView() {
+    if (this.#nodeViews.size === 0) return;
+    
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const [, el] of this.#nodeViews) {
+      if (!el._position) continue;
+      const x = el._position.x;
+      const y = el._position.y;
+      const w = el.offsetWidth || 150;
+      const h = el.offsetHeight || 40;
+      
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x + w > maxX) maxX = x + w;
+      if (y + h > maxY) maxY = y + h;
+    }
+    
+    if (minX === Infinity) return;
+
+    const graphW = maxX - minX;
+    const graphH = maxY - minY;
+    const canvasRect = this.ref.canvasContainer.getBoundingClientRect();
+    
+    let visibleWidth = canvasRect.width;
+    const inspector = this.ref.inspector || this.querySelector('inspector-panel');
+    if (inspector && !inspector.hasAttribute('hidden')) {
+      visibleWidth -= inspector.offsetWidth || 280;
+    }
+
+    const scaleX = (visibleWidth - 80) / graphW;
+    const scaleY = (canvasRect.height - 80) / graphH;
+    const scale = Math.max(0.02, Math.min(scaleX, scaleY, 1.5));
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    this.$.zoom = scale;
+    this.$.panX = (visibleWidth / 2) - centerX * scale;
+    this.$.panY = canvasRect.height / 2 - centerY * scale;
+  }
+
+  /**
+   * Focus viewport on a specific node by ID.
+   * Deducts inspector panel width from visibility calculation.
+   * @param {string} nodeId - Target node ID
+   * @param {Object} [opts]
+   * @param {number} [opts.zoom=0.8] - Target zoom level
+   * @returns {boolean}
+   */
+  flyToNode(nodeId, { zoom = 0.8 } = {}) {
+    const el = this.#nodeViews.get(nodeId);
+    if (!el || !el._position) return false;
+
+    const pos = el._position;
+    const canvasRect = this.ref.canvasContainer.getBoundingClientRect();
+    let visibleWidth = canvasRect.width;
+    
+    const inspector = this.ref.inspector || this.querySelector('inspector-panel');
+    const inspW = (inspector && inspector.offsetWidth > 20) ? inspector.offsetWidth : 280;
+    // Only deduct if inspector exists and is presumably open/will open
+    if (this.hasAttribute('data-compact') === false || inspector) {
+        visibleWidth -= inspW;
+    }
+
+    const elWidth = el.offsetWidth || 150;
+    const elHeight = el.offsetHeight || 40;
+
+    const nodeX = pos.x + (elWidth / 2);
+    const nodeY = pos.y + (elHeight / 2);
+
+    const newPanX = (visibleWidth / 2) - nodeX * zoom;
+    const newPanY = canvasRect.height / 2 - nodeY * zoom;
+
+    const dz = Math.abs(this.$.zoom - zoom);
+    const dx = Math.abs(this.$.panX - newPanX);
+    const dy = Math.abs(this.$.panY - newPanY);
+    
+    if (dz < 0.01 && dx < 2 && dy < 2) {
+      this.selectNode(nodeId);
+      return true;
+    }
+
+    this.$.zoom = zoom;
+    this.$.panX = newPanX;
+    this.$.panY = newPanY;
+
+    this.selectNode(nodeId);
+    return true;
+  }
+
 
   /**
    * Measure actual DOM sizes of all rendered nodes.

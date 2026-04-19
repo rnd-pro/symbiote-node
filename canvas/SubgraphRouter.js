@@ -268,46 +268,12 @@ export class SubgraphRouter {
       return true;
     }
 
-    // Attempt to parse existing canvas nodes or query active rendered elements.
-    // SubgraphRouter now delegates raw center/fly animations up to Canvas if possible,
-    // or does an inline calculation.
+    // SubgraphRouter delegates raw center/fly animations up to Canvas if possible
     if (this.#canvas.flyToNode) {
         this.#canvas.flyToNode(targetId, { zoom: 0.8 });
     } else {
-        // Fallback for Phase 1 (until flyToNode is implemented)
-        const canvasRect = this.#canvas.getBoundingClientRect();
-        let visibleWidth = canvasRect.width;
-        
-        const inspector = this.#canvas.ref?.inspector || this.#canvas.querySelector('inspector-panel');
-        const inspW = (inspector && inspector.offsetWidth > 20) ? inspector.offsetWidth : 280;
-        visibleWidth -= inspW;
-
-        let elWidth = 150;
-        let elHeight = 40;
-        const nodeView = this.#canvas.getNodeView?.(targetId) || this.#canvas.querySelector(`graph-node[node-id="${targetId}"]`);
-        if (nodeView && nodeView.offsetHeight > 0) {
-          elWidth = nodeView.offsetWidth;
-          elHeight = nodeView.offsetHeight;
-        }
-
-        const scale = 0.8;
-        const nodeX = pos[0] + (elWidth / 2);
-        const nodeY = pos[1] + (elHeight / 2);
-
-        const newPanX = (visibleWidth / 2) - nodeX * scale;
-        const newPanY = canvasRect.height / 2 - nodeY * scale;
-
-        const dz = Math.abs(this.#canvas.$.zoom - scale);
-        const dx = Math.abs(this.#canvas.$.panX - newPanX);
-        const dy = Math.abs(this.#canvas.$.panY - newPanY);
-        if (dz < 0.01 && dx < 2 && dy < 2) {
-          this.#canvas.selectNode?.(targetId);
-        } else {
-          this.#canvas.$.zoom = scale;
-          this.#canvas.$.panX = newPanX;
-          this.#canvas.$.panY = newPanY;
-          this.#canvas.selectNode?.(targetId);
-        }
+        // Safe fallback just in case
+        this.#canvas.selectNode?.(targetId);
     }
     
     this.#config.onNavigate(targetPath);

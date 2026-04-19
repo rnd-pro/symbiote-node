@@ -86,6 +86,7 @@ export class SubgraphRouter {
       this.#canvasDepth = (typeof level === 'number') ? level : Math.max(0, this.#canvasDepth - 1);
       if (this.#isAutoRouting) return; // Prevent erasing URL when popping out to find hidden nested paths
       
+      // Extract the path we were drilled into BEFORE modifying the URL
       const hashPath = window.location.hash.replace(`#${this.#config.hashPrefix}/`, '').split('?')[0].split('&')[0];
 
       if (hashPath && this.#canvasDepth > 0) {
@@ -102,10 +103,27 @@ export class SubgraphRouter {
           history.replaceState(null, '', `#${this.#config.hashPrefix}/${focusPath}`);
         }
       } else {
-        // Back at root (or no path) — clean URL and show all
-        history.replaceState(null, '', `#${this.#config.hashPrefix}`);
-        if (this.#canvas.fitView) {
-            requestAnimationFrame(() => this.#canvas.fitView());
+        // Back at root — use ?focus= to highlight the exited node
+        const exitedPath = hashPath; // e.g. 'src/analysis/'
+        if (exitedPath) {
+          history.replaceState(null, '', `#${this.#config.hashPrefix}?focus=${encodeURIComponent(exitedPath)}`);
+        } else {
+          history.replaceState(null, '', `#${this.#config.hashPrefix}`);
+        }
+
+        // Fly to the exited node instead of fitView for spatial context
+        if (exitedPath) {
+          requestAnimationFrame(() => {
+            const nodeId = this.#config.dirNodeMap?.get(exitedPath) ||
+                           this.#config.fileMap?.get(exitedPath);
+            if (nodeId && this.#canvas.flyToNode) {
+              this.#canvas.flyToNode(nodeId, { zoom: 0.8 });
+            } else if (this.#canvas.fitView) {
+              this.#canvas.fitView();
+            }
+          });
+        } else if (this.#canvas.fitView) {
+          requestAnimationFrame(() => this.#canvas.fitView());
         }
       }
     };
@@ -120,22 +138,69 @@ export class SubgraphRouter {
   }
 
   /**
-   * Reads URL hash and triggers initial drill down + focus sequence
+   * Reads URL hash and triggers initial drill down + focus sequence.
+   * 
+   * Universal URL semantics:
+   * - `#graph`                                      → root, fit view
+   * - `#graph?focus=src/analysis/`                   → root, fly to analysis node
+   * - `#graph/src/analysis/?in=1`                    → drill into analysis
+   * - `#graph/src/analysis/?in=1&focus=file.js`      → drill into analysis, focus file.js
+   * - `#graph/src/analysis/file.js?in=1`             → drill into analysis, drill into file
+   * - `#graph/src/analysis/file.js?in=1&symbol=name` → drill into file, focus symbol
+   * - `#graph/src/analysis/`                         → (legacy) focus analysis at root
+   * 
    * @param {NodeEditor} editor 
    */
   restoreFromHash(editor) {
     if (this.#destroyed || !this.#canvas) return;
 
-    if (window.location.hash.startsWith(`#${this.#config.hashPrefix}/`)) {
-      const hashStr = window.location.hash.replace(`#${this.#config.hashPrefix}/`, '');
-      const hasDrillFlag = window.location.hash.includes('?in=1');
-      const targetPath = hashStr.split('?')[0].split('&')[0];
+    const hash = window.location.hash;
+    const prefix = `#${this.#config.hashPrefix}`;
+    if (!hash.startsWith(prefix)) return;
+
+    const afterPrefix = hash.slice(prefix.length); // e.g. '/src/analysis/?in=1&focus=file.js' or '?focus=src/analysis/'
+    
+    // Parse query parameters from the hash
+    const qIdx = afterPrefix.indexOf('?');
+    const pathPart = qIdx >= 0 ? afterPrefix.slice(0, qIdx) : afterPrefix; // '/src/analysis/' or ''
+    const queryStr = qIdx >= 0 ? afterPrefix.slice(qIdx + 1) : '';
+    const params = new URLSearchParams(queryStr);
+    
+    const drillPath = pathPart.replace(/^\//, ''); // strip leading /
+    const hasDrillFlag = params.get('in') === '1';
+    const focusParam = params.get('focus');
+    const symbolParam = params.get('symbol');
+
+    // Case 1: #graph?focus=src/analysis/ (root-level focus, no path)
+    if (!drillPath && focusParam) {
+      this.navigateTo(decodeURIComponent(focusParam), 0, false);
+      return;
+    }
+
+    // Case 2: #graph/path?in=1 (drill into path)
+    if (drillPath && hasDrillFlag) {
+      const drilled = this.#restoreDrillDown(drillPath, editor, true);
       
-      // Attempt generic exact match for deep linking into files
-      if (targetPath) {
-        // If the URL has ?in=1, try to automatically drill into it if it's a directory
-        this.#restoreDrillDown(targetPath, editor, hasDrillFlag);
+      // After drilling, handle &focus= (select node inside group)
+      if (drilled && focusParam) {
+        const fullFocusPath = drillPath + decodeURIComponent(focusParam);
+        requestAnimationFrame(() => {
+          this.navigateTo(fullFocusPath, 0, false);
+        });
       }
+      
+      // Handle &symbol= (focus symbol inside file subgraph)
+      if (drilled && symbolParam) {
+        requestAnimationFrame(() => {
+          this.restoreSymbolFocus(drillPath);
+        });
+      }
+      return;
+    }
+
+    // Case 3: #graph/path (legacy — just focus the node at root)
+    if (drillPath) {
+      this.navigateTo(drillPath, 0, false);
     }
   }
 
@@ -150,11 +215,17 @@ export class SubgraphRouter {
 
       // Exact directory match (e.g. 'src/core/')
       if (nodePath === targetPath) {
-        this.#runAutoRouting(() => {
-          this.#canvas.drillDown(node.id);
-        });
-        if (this.#canvas.fitView) {
+        if (autoDrill) {
+          this.#runAutoRouting(() => {
+            this.#canvas.drillDown(node.id);
+          });
+          if (this.#canvas.fitView) {
             requestAnimationFrame(() => this.#canvas.fitView());
+          }
+        } else {
+          // Just focus on the directory node without drilling in
+          this.#canvas.flyToNode?.(node.id, { zoom: 0.8 }) ||
+            this.#canvas.selectNode?.(node.id);
         }
         return true;
       }

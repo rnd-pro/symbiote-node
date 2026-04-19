@@ -87,6 +87,7 @@ export class PinExpansion {
     if (overlay.children.length === 0) {
       const maxPins = Math.min(pins.length, 12);
       const half = Math.ceil(maxPins / 2);
+      const nodeId = el.getAttribute('node-id');
 
       const createPinEl = (pin, side, yPct) => {
         const pinEl = document.createElement('span');
@@ -110,9 +111,6 @@ export class PinExpansion {
 
         return pinEl;
       };
-
-      // Node ID extraction closure hack
-      const nodeId = el.getAttribute('node-id');
 
       // Right side: first half
       for (let i = 0; i < half; i++) {

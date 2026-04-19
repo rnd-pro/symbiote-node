@@ -11,7 +11,6 @@ export class LODManager {
   /** @type {boolean} */
   #attached = false;
 
-  #zoomSub = null;
   #listeners = [];
 
   /**
@@ -29,7 +28,9 @@ export class LODManager {
   }
 
   /**
-   * Attach LOD tracking to the canvas
+   * Attach LOD tracking to the canvas.
+   * Note: Symbiote's sub() does not return an unsubscribe handle —
+   * subscriptions are auto-cleaned when the canvas component is destroyed.
    */
   attach() {
     if (this.#attached || !this.#canvas) return;
@@ -37,11 +38,9 @@ export class LODManager {
 
     const initialZoom = this.#canvas.$.zoom || 1;
     this.#currentLod = initialZoom >= this.#threshold ? 'expanded' : 'collapsed';
-    
-    // Defer initial emission to allow listeners to bind
-    requestAnimationFrame(() => this.#emit(this.#currentLod));
 
-    this.#zoomSub = this.#canvas.sub('zoom', (zoom) => {
+    this.#canvas.sub('zoom', (zoom) => {
+      if (!this.#attached) return; // guard after destroy
       const newLod = zoom >= this.#threshold ? 'expanded' : 'collapsed';
       if (newLod === this.#currentLod) return;
       
@@ -81,10 +80,8 @@ export class LODManager {
   }
 
   destroy() {
-    if (this.#zoomSub) {
-      this.#zoomSub.remove();
-      this.#zoomSub = null;
-    }
+    // Symbiote sub() auto-cleans on component disconnect.
+    // We just disable the guard flag so the callback becomes a no-op.
     this.#listeners = [];
     this.#attached = false;
   }

@@ -560,10 +560,8 @@ export class NodeCanvas extends Symbiote {
     let visibleWidth = canvasRect.width;
     
     const inspector = this.ref.inspector || this.querySelector('inspector-panel');
-    const inspW = (inspector && inspector.offsetWidth > 20) ? inspector.offsetWidth : 280;
-    // Only deduct if inspector exists and is presumably open/will open
-    if (this.hasAttribute('data-compact') === false || inspector) {
-        visibleWidth -= inspW;
+    if (inspector && !inspector.hasAttribute('hidden') && inspector.offsetWidth > 20) {
+        visibleWidth -= inspector.offsetWidth;
     }
 
     const elWidth = el.offsetWidth || 150;

@@ -104,7 +104,22 @@ export class SubgraphRouter {
         }
       } else {
         // Back at root — use ?focus= to highlight the exited node
-        const exitedPath = hashPath; // e.g. 'src/analysis/'
+        // For deep paths (e.g. src/analysis/complexity.js), find the top-level directory
+        let exitedPath = hashPath; // e.g. 'src/analysis/complexity.js' or 'src/analysis/'
+
+        // Walk up the path until we find a known directory at root level
+        if (exitedPath && !this.#config.dirNodeMap.has(exitedPath)) {
+          const segments = exitedPath.replace(/\/$/, '').split('/');
+          while (segments.length > 0) {
+            const candidate = segments.join('/') + '/';
+            if (this.#config.dirNodeMap.has(candidate)) {
+              exitedPath = candidate;
+              break;
+            }
+            segments.pop();
+          }
+        }
+
         if (exitedPath) {
           history.replaceState(null, '', `#${this.#config.hashPrefix}?focus=${encodeURIComponent(exitedPath)}`);
         } else {

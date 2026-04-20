@@ -284,7 +284,7 @@ export class CanvasConnectionRenderer {
 
     const time = Date.now();
     let hasFlowing = false;
-    if (this.#phantomNodes?.length > 0 && !this._debugPhantomLogged) { this._debugPhantomLogged = true; console.log('[CanvasRenderer] redraw with', this.#phantomNodes.length, 'phantom nodes, canvas:', this.#canvasLayer.width, 'x', this.#canvasLayer.height); }
+
 
     // Cache node layout geometry once per frame for the router (Map for O(1) lookup)
     this._nodeRectMap = new Map();
@@ -459,33 +459,39 @@ export class CanvasConnectionRenderer {
 
     ctx.shadowBlur = 0;
     ctx.setLineDash([]);
-    const showLabels = zoom > 0.25;
-    const labelFontSize = Math.max(9, Math.min(13, 11 / zoom));
+
+    // At very low zoom, scale dot size to maintain minimum screen visibility
+    // minScreen = 8px → in world coords = 8 / zoom
+    const minWorldW = Math.max(180, 8 / zoom);
+    const minWorldH = Math.max(60, 4 / zoom);
+    const showLabels = zoom > 0.15;
+    const labelFontSize = Math.max(9, Math.min(14, 12 / zoom));
 
     for (const node of this.#phantomNodes) {
       if (!node || node.w === undefined || node.h === undefined) continue;
 
+      const w = Math.max(minWorldW, node.w);
+      const h = Math.max(minWorldH, node.h);
+      // Center the enlarged dot on the original position
+      const x = (node.x || 0) - (w - node.w) / 2;
+      const y = (node.y || 0) - (h - node.h) / 2;
+
       ctx.beginPath();
-      // Safe geometry to avoid Canvas context crash
-      const w = Math.max(1, node.w);
-      const h = Math.max(1, node.h);
-      const x = node.x || 0;
-      const y = node.y || 0;
-      
       try {
-        if (ctx.roundRect) ctx.roundRect(x, y, w, h, 6); // Match DOM border-radius
+        const r = Math.min(6, w * 0.1, h * 0.1);
+        if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
         else ctx.rect(x, y, w, h);
       } catch (e) {
-        ctx.rect(x, y, w, h); // Fallback for invalid params
+        ctx.rect(x, y, w, h);
       }
-      
+
       ctx.fillStyle = node.color || this.#colorParams.normal;
       ctx.globalAlpha = 0.85;
       ctx.fill();
 
-      // Outer highlight/stroke matching node visual style
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = this.#colorParams.outline; // background colored stroke creates gap effect
+      // Stroke — scale lineWidth for visibility
+      ctx.lineWidth = Math.max(1.5, 1 / zoom);
+      ctx.strokeStyle = this.#colorParams.outline;
       ctx.stroke();
       ctx.globalAlpha = 1.0;
 
@@ -496,8 +502,7 @@ export class CanvasConnectionRenderer {
         ctx.font = `${labelFontSize}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        
-        // Clip text to node bounds
+
         ctx.save();
         ctx.beginPath();
         ctx.rect(x + 4, y, w - 8, h);

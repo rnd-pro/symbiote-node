@@ -36,11 +36,13 @@ export class Zoom {
    * @param {HTMLElement} container - Outer container
    * @param {HTMLElement} content - Inner content element (for getBoundingClientRect)
    * @param {function} onZoom - Callback: (delta, ox, oy, source)
+   * @param {function} [getTransform] - Optional callback returning {x, y} to avoid getBoundingClientRect layout thrashing
    */
-  initialize(container, content, onZoom) {
+  initialize(container, content, onZoom, getTransform = null) {
     this.#container = container;
     this.#content = content;
     this.#onZoom = onZoom;
+    this.getTransform = getTransform;
 
     container.addEventListener('wheel', this.#wheel, { passive: false });
     container.addEventListener('pointerdown', this.#down);
@@ -50,9 +52,18 @@ export class Zoom {
     window.addEventListener('pointercancel', this.#up);
   }
 
+  #getRect() {
+    if (this.getTransform) {
+      const c = this.#container.getBoundingClientRect();
+      const t = this.getTransform();
+      return { left: c.left + t.x, top: c.top + t.y };
+    }
+    return this.#content.getBoundingClientRect();
+  }
+
   #wheel = (e) => {
     e.preventDefault();
-    const rect = this.#content.getBoundingClientRect();
+    const rect = this.#getRect();
     // Normalize delta: trackpads send small frequent deltas, mice send large ones
     const absDelta = Math.min(Math.abs(e.deltaY), 10) / 10;
     const sign = e.deltaY < 0 ? 1 : -1;
@@ -64,7 +75,7 @@ export class Zoom {
 
   #dblclick = (e) => {
     e.preventDefault();
-    const rect = this.#content.getBoundingClientRect();
+    const rect = this.#getRect();
     const delta = 4 * this.intensity;
     const ox = (rect.left - e.clientX) * delta;
     const oy = (rect.top - e.clientY) * delta;
@@ -89,7 +100,7 @@ export class Zoom {
     const cy = (p1.clientY + p2.clientY) / 2;
 
     if (this.#previous && this.#previous.distance > 0) {
-      const rect = this.#content.getBoundingClientRect();
+      const rect = this.#getRect();
       const delta = distance / this.#previous.distance - 1;
       const ox = (rect.left - cx) * delta;
       const oy = (rect.top - cy) * delta;

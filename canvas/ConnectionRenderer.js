@@ -76,6 +76,19 @@ export class ConnectionRenderer {
   }
 
   /**
+   * Bulk add connections and render them in a single batch.
+   * Greatly improves performance when inflating large graphs.
+   * @param {import('../core/Connection.js').Connection[]} conns
+   */
+  addBatch(conns) {
+    if (!conns || conns.length === 0) return;
+    for (const conn of conns) {
+      this.#connectionData.set(conn.id, conn);
+    }
+    this.refreshAll();
+  }
+
+  /**
    * Clear slot registries and caches for all known nodes
    */
   #clearAllSlots() {
@@ -227,6 +240,26 @@ export class ConnectionRenderer {
     const staleDots = this.#dotLayer.querySelectorAll('.sn-free-dot');
     for (const dot of staleDots) dot.remove();
 
+    // Detach layers from layout tree to prevent O(N²) thrashing during Read/Write mix
+    const originalSvgDisplay = this.#svgLayer.style.display;
+    const originalDotDisplay = this.#dotLayer.style.display;
+    this.#svgLayer.style.display = 'none';
+    this.#dotLayer.style.display = 'none';
+
+    // Pre-cache node rects for routing (prevents O(N^2) Layout Thrashing)
+    this._nodeRectCache = new Map();
+    for (const [nid, el] of this.#nodeViews) {
+      if (el) {
+        this._nodeRectCache.set(nid, {
+          id: nid,
+          x: el._position?.x || 0,
+          y: el._position?.y || 0,
+          w: el.offsetWidth || 180,
+          h: el.offsetHeight || 100,
+        });
+      }
+    }
+
     // ─── Three-Pass Pipeline: Side-Based Pin Assignment ───
     // Pass 1: Assign sides and distribute pins
     // Pass 2: Render connections (pins from _slotCache)
@@ -249,12 +282,12 @@ export class ConnectionRenderer {
       if (!fromPos || !toPos) continue;
 
       const toCenter = {
-        x: toPos.x + (toEl.offsetWidth || 180) / 2,
-        y: toPos.y + (toEl.offsetHeight || 100) / 2,
+        x: toPos.x + (toEl._cachedW || 180) / 2,
+        y: toPos.y + (toEl._cachedH || 100) / 2,
       };
       const fromCenter = {
-        x: fromPos.x + (fromEl.offsetWidth || 180) / 2,
-        y: fromPos.y + (fromEl.offsetHeight || 100) / 2,
+        x: fromPos.x + (fromEl._cachedW || 180) / 2,
+        y: fromPos.y + (fromEl._cachedH || 100) / 2,
       };
 
       if (!nodeJobs.has(conn.from)) nodeJobs.set(conn.from, []);
@@ -272,7 +305,7 @@ export class ConnectionRenderer {
       const shape = getShape(el.getAttribute('node-shape'));
       if (!shape?.getSidePosition) continue;
 
-      const size = { width: el.offsetWidth || 180, height: el.offsetHeight || 100 };
+      const size = { width: el._cachedW || 180, height: el._cachedH || 100 };
       const cx = el._position.x + size.width / 2;
       const cy = el._position.y + size.height / 2;
 
@@ -369,6 +402,11 @@ export class ConnectionRenderer {
       if (overlaps > 0) console.warn(`[PCB DEBUG] Found ${overlaps} inter-trace overlaps.`);
     }
     this._allSegments = null;
+    this._nodeRectCache = null;
+
+    // Restore layers
+    this.#svgLayer.style.display = originalSvgDisplay;
+    this.#dotLayer.style.display = originalDotDisplay;
 
     // ─── Performance Monitoring ───
     if (ConnectionRenderer.debug) {
@@ -443,7 +481,7 @@ export class ConnectionRenderer {
     const shape = getShape(nodeEl.getAttribute('node-shape'));
     const nodeData = nodeEl._nodeData;
     if (shape && shape.pathData && nodeData) {
-      const size = { width: nodeEl.offsetWidth || 180, height: nodeEl.offsetHeight || 100 };
+      const size = { width: nodeEl._cachedW || 180, height: nodeEl._cachedH || 100 };
 
       // Dynamic mode — side-based pin placement
       if (targetPos && shape.getSidePosition) {
@@ -547,6 +585,14 @@ export class ConnectionRenderer {
       }
     }
 
+    // Fast path: if node is culled, skip forced layout resolution
+    if (nodeEl.style.contentVisibility === 'hidden') {
+      return {
+        x: side === 'output' ? (nodeEl._cachedW || 180) : 0,
+        y: (nodeEl._cachedH || 100) / 2,
+      };
+    }
+
     // Standard shapes: read from DOM socket elements
     const container = side === 'output'
       ? nodeEl.querySelector('.outputs')
@@ -571,8 +617,8 @@ export class ConnectionRenderer {
     }
 
     return {
-      x: side === 'output' ? nodeEl.offsetWidth : 0,
-      y: nodeEl.offsetHeight / 2,
+      x: side === 'output' ? (nodeEl._cachedW || nodeEl.offsetWidth || 180) : 0,
+      y: (nodeEl._cachedH || nodeEl.offsetHeight || 100) / 2,
     };
   }
 
@@ -589,13 +635,17 @@ export class ConnectionRenderer {
     const toPos = toEl._position;
 
     // Compute centers for dynamic edge positioning on SVG shapes
+    const fromW = fromEl._cachedW || fromEl.offsetWidth || 180;
+    const fromH = fromEl._cachedH || fromEl.offsetHeight || 100;
+    const toW = toEl._cachedW || toEl.offsetWidth || 180;
+    const toH = toEl._cachedH || toEl.offsetHeight || 100;
     const fromCenter = {
-      x: fromPos.x + (fromEl.offsetWidth || 180) / 2,
-      y: fromPos.y + (fromEl.offsetHeight || 100) / 2,
+      x: fromPos.x + fromW / 2,
+      y: fromPos.y + fromH / 2,
     };
     const toCenter = {
-      x: toPos.x + (toEl.offsetWidth || 180) / 2,
-      y: toPos.y + (toEl.offsetHeight || 100) / 2,
+      x: toPos.x + toW / 2,
+      y: toPos.y + toH / 2,
     };
 
     // Always recalculate both sides (slot pool makes this cheap and deterministic)
@@ -613,8 +663,8 @@ export class ConnectionRenderer {
     const fromShape = getShape(fromNode?.shape);
     const toShape = getShape(toNode?.shape);
 
-    const fromSize = { width: fromEl.offsetWidth || 180, height: fromEl.offsetHeight || 60 };
-    const toSize = { width: toEl.offsetWidth || 180, height: toEl.offsetHeight || 60 };
+    const fromSize = { width: fromW, height: fromH };
+    const toSize = { width: toW, height: toH };
 
     // Generate path based on style
     let d;
@@ -642,8 +692,8 @@ export class ConnectionRenderer {
       const p2x = endX + tDir.dx * stubLen;
       const p2y = endY + tDir.dy * stubLen;
 
-      const fromH = fromEl.offsetHeight || 60;
-      const toH = toEl.offsetHeight || 60;
+      const fromH = fromEl._cachedH || 60;
+      const toH = toEl._cachedH || 60;
 
       let pts = [{x: startX, y: startY}, {x: p1x, y: p1y}];
 
@@ -659,8 +709,8 @@ export class ConnectionRenderer {
                   if (!node._position) continue;
                   const nx = node._position.x;
                   const ny = node._position.y;
-                  const nw = node.offsetWidth || 180;
-                  const nh = node.offsetHeight || 60;
+                  const nw = node._cachedW || 180;
+                  const nh = node._cachedH || 60;
                   if (nx > p1x && nx + nw < p2x) {
                       if (Math.min(p1y, p2y) <= ny + nh && Math.max(p1y, p2y) >= ny) {
                           nodeBetween = true; break;
@@ -687,8 +737,8 @@ export class ConnectionRenderer {
                   if (!node._position) continue;
                   const nx = node._position.x;
                   const ny = node._position.y;
-                  const nw = node.offsetWidth || 180;
-                  const nh = node.offsetHeight || 60;
+                  const nw = node._cachedW || 180;
+                  const nh = node._cachedH || 60;
                   if (midX >= nx && midX <= nx + nw) {
                       if (ny <= maxY && ny + nh >= minY) {
                           obstacleNode = {x: nx, w: nw};
@@ -789,12 +839,12 @@ export class ConnectionRenderer {
         const maxXForObstacle = Math.max(stubFromX, stubToX);
         let maxObstacleY = Math.max(fromPos.y + fromH, toPos.y + toH);
 
-        for (const [nid, node] of this.#nodeViews) {
-            if (!node._position) continue;
-            const nx = node._position.x;
-            const ny = node._position.y;
-            const nw = node.offsetWidth || 180;
-            const nh = node.offsetHeight || 60;
+        const iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
+        for (const rect of iter) {
+            const nx = rect.x;
+            const ny = rect.y;
+            const nw = rect.w;
+            const nh = rect.h;
             // Check if node is in the horizontal path of the detour
             const pad = TRACE_GRID * 2;
             if (nx + nw + pad >= minXForObstacle && nx - pad <= maxXForObstacle) {
@@ -823,11 +873,11 @@ export class ConnectionRenderer {
           const maxY = Math.max(stubFromY, stubToY);
           const pad = TRACE_GRID * 4;
 
-          for (const [nid, node] of this.#nodeViews) {
-            if (nid === conn.from || nid === conn.to) continue;
-            if (!node._position) continue;
-            const nx = node._position.x, ny = node._position.y;
-            const nw = node.offsetWidth || 180, nh = node.offsetHeight || 60;
+          const iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
+          for (const rect of iter) {
+            if (rect.id === conn.from || rect.id === conn.to) continue;
+            const nx = rect.x, ny = rect.y;
+            const nw = rect.w, nh = rect.h;
             
             if (midX >= nx - pad && midX <= nx + nw + pad) {
               if (ny - pad <= maxY && ny + nh + pad >= minY) {
@@ -858,15 +908,15 @@ export class ConnectionRenderer {
         const segX2 = Math.max(pts[i].x, pts[i + 1].x);
         const segY2 = Math.max(pts[i].y, pts[i + 1].y);
         
-        for (const [nid, node] of this.#nodeViews) {
-          if (nid === conn.from || nid === conn.to) continue; // It's fine to originate from own node
-          if (!node._position) continue;
+        const iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
+        for (const rect of iter) {
+          if (rect.id === conn.from || rect.id === conn.to) continue;
           
-          const nx = node._position.x, ny = node._position.y;
-          const nw = node.offsetWidth || 180, nh = node.offsetHeight || 60;
+          const nx = rect.x, ny = rect.y;
+          const nw = rect.w, nh = rect.h;
           
           if (segX1 < nx + nw && segX2 > nx && segY1 < ny + nh && segY2 > ny) {
-            debugCollisions.push(`Node Collision: (${pts[i].x},${pts[i].y})->(${pts[i+1].x},${pts[i+1].y}) intersects Node[${node._nodeData?.label || nid}]`);
+            debugCollisions.push(`Node Collision: (${pts[i].x},${pts[i].y})->(${pts[i+1].x},${pts[i+1].y}) intersects Node[${rect.id}]`);
           }
         }
       }

@@ -39,8 +39,6 @@ node-canvas {
     left: 0;
     transform-origin: 0 0;
     will-change: transform;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
   & .sn-connections {
@@ -51,6 +49,16 @@ node-canvas {
     overflow: visible;
     width: 1px;
     height: 1px;
+    contain: layout style;
+  }
+
+  & .sn-conn-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
   }
 
   & .sn-nodes {
@@ -77,9 +85,11 @@ node-canvas {
   stroke-linecap: var(--sn-conn-linecap, round);
   stroke-linejoin: var(--sn-conn-linejoin, round);
   opacity: 0.7;
-  transition: opacity 0.15s, stroke-width 0.15s;
   pointer-events: stroke;
   cursor: pointer;
+  /* Prevent sub-pixel anti-aliasing recalcs during parent transform */
+  shape-rendering: geometricPrecision;
+  vector-effect: non-scaling-stroke;
 
   &:hover {
     opacity: 1;
@@ -93,6 +103,13 @@ node-canvas {
   }
 }
 
+/* Kill pointer-events on SVG paths during active zoom/pan to prevent
+   CSS :hover thrashing (stroke-width transition) from causing flicker */
+node-canvas[data-interacting] .sn-conn-path {
+  pointer-events: none;
+  transition: none;
+}
+
 /* Connector endpoint dots — hidden by default, shown only for SVG nodes */
 .sn-conn-dot {
   display: none;
@@ -102,8 +119,7 @@ node-canvas {
   r: var(--sn-conn-dot-r, 3);
   opacity: 0.9;
   pointer-events: none;
-  filter: drop-shadow(0 0 2px var(--sn-conn-color, #4a9eff));
-  transition: r 0.15s ease, filter 0.15s ease;
+  /* PERF: removed filter:drop-shadow — 672 GPU layers killed Chrome renderer */
 }
 
 .sn-conn-dot[data-svg-wired] {
@@ -116,18 +132,16 @@ node-canvas {
   stroke: var(--sn-node-bg, #fff);
   stroke-width: 1.5;
   opacity: 0.9;
-  filter: drop-shadow(0 0 2px var(--sn-conn-color, #4a9eff));
-  transition: r 0.15s ease, filter 0.15s ease;
+  /* PERF: removed filter:drop-shadow — see .sn-conn-dot */
 }
 .sn-free-dot:hover {
   r: 6;
-  filter: drop-shadow(0 0 6px var(--sn-conn-color, #4a9eff));
 }
 
 /* Dot highlight during compatible connector drag */
 .sn-dot-hint {
   r: 7;
-  filter: drop-shadow(0 0 6px var(--sn-node-selected, #4a9eff));
+  /* PERF: removed filter:drop-shadow — GPU layer per dot */
   animation: sn-dot-pulse 0.6s ease-in-out infinite;
 }
 
@@ -190,7 +204,7 @@ node-canvas {
 
 /* Node lift effect when dragging */
 .sn-node-lifted {
-  filter: drop-shadow(0 6px 12px var(--sn-shadow-color, rgba(0, 0, 0, 0.5)));
+  box-shadow: 0 6px 12px var(--sn-shadow-color, rgba(0, 0, 0, 0.5));
   border-color: var(--sn-node-active-border, rgba(74, 158, 255, 0.5)) !important;
 }
 

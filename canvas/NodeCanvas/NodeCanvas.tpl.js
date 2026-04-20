@@ -2,6 +2,7 @@ import { html } from '@symbiotejs/symbiote';
 
 export const template = html`
 <div ref="canvasContainer" class="canvas-container" tabindex="0">
+  <canvas ref="connCanvas" class="sn-conn-canvas"></canvas>
   <div ref="content" class="content">
     <svg ref="connections" class="sn-connections"></svg>
     <div ref="framesLayer" class="sn-frames"></div>

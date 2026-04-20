@@ -15,9 +15,7 @@ graph-node {
   overflow: visible;
   font-family: var(--sn-font, 'Inter', sans-serif);
   font-size: var(--sn-node-font-size, 13px);
-  backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
-  will-change: transform;
 
   /* Symbiote animateOut: CSS-driven exit transition */
   &[leaving] {
@@ -358,8 +356,7 @@ graph-node {
       & > path {
         pointer-events: visibleFill;
         cursor: move;
-        filter: drop-shadow(0 1px 4px var(--sn-shadow-color, rgba(0, 0, 0, 0.3)));
-        transition: stroke 0.2s ease, filter 0.2s ease;
+        transition: stroke 0.2s ease;
       }
     }
 
@@ -413,14 +410,12 @@ graph-node {
      matching HTML nodes where border-width stays 1px on selection. */
   &[data-svg-shape][data-selected] > svg > path {
     stroke: var(--sn-node-selected, #4a9eff);
-    filter: drop-shadow(0 0 1px color-mix(in srgb, var(--sn-node-selected, #4a9eff) 50%, transparent));
-    transition: stroke 0.2s ease, filter 0.2s ease;
+    transition: stroke 0.2s ease;
   }
 
   &[data-svg-shape][data-error] > svg > path {
     stroke: var(--sn-danger-color, #ef4444);
-    filter: drop-shadow(0 0 1px color-mix(in srgb, var(--sn-danger-color, #ef4444) 50%, transparent));
-    transition: stroke 0.2s ease, filter 0.2s ease;
+    transition: stroke 0.2s ease;
   }
 
   &[data-svg-shape][data-muted] > svg > path {
@@ -431,14 +426,12 @@ graph-node {
 
   &[data-svg-shape][data-processing] > svg > path {
     stroke: var(--sn-node-accent, var(--sn-node-selected, #4a9eff));
-    filter: drop-shadow(0 0 0.5px color-mix(in srgb, var(--sn-node-selected, #4a9eff) 50%, transparent));
     animation: sn-svg-pulse 1s ease-in-out infinite;
   }
 
   &[data-svg-shape][data-completed] > svg > path {
     stroke: var(--sn-success-color, #5cd87a);
-    filter: drop-shadow(0 0 1px color-mix(in srgb, var(--sn-success-color, #5cd87a) 50%, transparent));
-    transition: stroke 0.2s ease, filter 0.2s ease;
+    transition: stroke 0.2s ease;
   }
 
   & .sn-node-header {
@@ -671,8 +664,8 @@ node-socket {
 }
 
 @keyframes sn-svg-pulse {
-  0%, 100% { filter: drop-shadow(0 0 0.3px currentColor); }
-  50% { filter: drop-shadow(0 0 0.8px currentColor) drop-shadow(0 0 1.2px currentColor); }
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
 }
 
 

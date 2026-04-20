@@ -95,10 +95,51 @@ export class NodeViewManager {
   }
 
   /**
+   * Create and append multiple node views in a single DOM batch.
+   * This prevents layout thrashing and O(N) mutation overhead during graph inflation.
+   * @param {import('../core/Node.js').Node[]} nodes
+   */
+  addViews(nodes) {
+    if (!nodes || nodes.length === 0) return;
+
+    const fragment = document.createDocumentFragment();
+    
+    // 1. Create all elements and bind them (no DOM append yet)
+    for (const node of nodes) {
+      const el = this.#createNodeElement(node);
+      fragment.appendChild(el);
+      this.#nodeViews.set(node.id, el);
+    }
+
+    // 2. Single batch insert into live DOM
+    this.#nodesLayer.appendChild(fragment);
+
+    // 3. Post-processing (SVG injection, preview canvas) requires elements to be in DOM
+    for (const node of nodes) {
+      const el = this.#nodeViews.get(node.id);
+      if (el) this.#postProcessNodeView(node, el);
+    }
+  }
+
+  /**
    * Create a graph-node element for a Node
    * @param {import('../core/Node.js').Node} node
    */
   addView(node) {
+    const el = this.#createNodeElement(node);
+    this.#nodesLayer.appendChild(el);
+    this.#nodeViews.set(node.id, el);
+    this.#postProcessNodeView(node, el);
+  }
+
+  /**
+   * Creates the HTMLElement for a node with its drag behavior initialized.
+   * Does NOT append to the live DOM layer.
+   * @private
+   * @param {import('../core/Node.js').Node} node
+   * @returns {HTMLElement}
+   */
+  #createNodeElement(node) {
     const el = document.createElement('graph-node');
     el.style.position = 'absolute';
     el.style.transform = 'translate(0px, 0px)';
@@ -152,10 +193,17 @@ export class NodeViewManager {
       }
     );
     el._drag = drag;
+    
+    return el;
+  }
 
-    this.#nodesLayer.appendChild(el);
-    this.#nodeViews.set(node.id, el);
-
+  /**
+   * Applies SVG shaping or subgraph previews after the element is in the live DOM.
+   * @private
+   * @param {import('../core/Node.js').Node} node
+   * @param {HTMLElement} el
+   */
+  #postProcessNodeView(node, el) {
     // Apply shape visuals: SVG background layer instead of clip-path
     // Clip-path clips content (labels, ports). SVG bg preserves them.
     const shape = getShape(node.shape);

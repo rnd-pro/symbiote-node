@@ -23,6 +23,7 @@ import { applyPalette } from '../../themes/Palette.js';
 import { applySkin } from '../../themes/Skin.js';
 import { NodeViewManager } from '../NodeViewManager.js';
 import { ConnectionRenderer } from '../ConnectionRenderer.js';
+import { CanvasConnectionRenderer } from '../CanvasConnectionRenderer.js';
 import { PseudoConnection } from '../PseudoConnection.js';
 import { ViewportActions } from '../ViewportActions.js';
 import { SubgraphManager } from '../SubgraphManager.js';
@@ -151,21 +152,41 @@ export class NodeCanvas extends Symbiote {
 
     this.#editor = editor;
 
-    // Initialize sub-modules
-    this.#connRenderer = new ConnectionRenderer({
-      svgLayer: this.ref.connections,
-      dotLayer: this.ref.pseudoSvg,
-      nodeViews: this.#nodeViews,
-      editor,
-      onConnectionClick: (connId, e) => this.#handleConnectionClick(connId, e),
-      getZoom: () => this.$.zoom,
-      onDotDrag: (socketData) => {
-        // Trigger ConnectFlow pick from overlay dot click
-        if (this.#connectFlow && !this.#readonly) {
-          this.#connectFlow.pickSocket(socketData);
-        }
-      },
-    });
+    const engineMode = this.getAttribute('connection-engine') || 'svg';
+
+    if (engineMode === 'canvas') {
+      this.#connRenderer = new CanvasConnectionRenderer({
+        canvasLayer: this.ref.connCanvas,
+        dotLayer: this.ref.pseudoSvg,
+        nodeViews: this.#nodeViews,
+        editor,
+        onConnectionClick: (connId, e) => this.#handleConnectionClick(connId, e),
+        getZoom: () => this.$.zoom,
+        getPan: () => ({ x: this.$.panX, y: this.$.panY }),
+        onDotDrag: (socketData) => {
+          if (this.#connectFlow && !this.#readonly) {
+            this.#connectFlow.pickSocket(socketData);
+          }
+        },
+      });
+    } else {
+      this.#connRenderer = new ConnectionRenderer({
+        svgLayer: this.ref.connections,
+        dotLayer: this.ref.pseudoSvg,
+        nodeViews: this.#nodeViews,
+        editor,
+        onConnectionClick: (connId, e) => this.#handleConnectionClick(connId, e),
+        getZoom: () => this.$.zoom,
+        onDotDrag: (socketData) => {
+          if (this.#connectFlow && !this.#readonly) {
+            this.#connectFlow.pickSocket(socketData);
+          }
+        },
+      });
+    }
+  
+    // For test automation
+    this._connRenderer = this.#connRenderer;
 
     // Re-apply saved pathStyle after creating new renderer
     if (this.#pathStyle !== 'bezier') {
@@ -289,13 +310,9 @@ export class NodeCanvas extends Symbiote {
     editor.on('nodecollapse', refreshNodeConnections);
     editor.on('nodemute', refreshNodeConnections);
 
-    // Render already-existing nodes and connections
-    for (const node of editor.getNodes()) {
-      this.#viewManager.addView(node);
-    }
-    for (const conn of editor.getConnections()) {
-      this.#connRenderer.add(conn);
-    }
+    // Render already-existing nodes in a single batch
+    this.#viewManager.addViews(editor.getNodes());
+    this.#connRenderer.addBatch(editor.getConnections());
 
     // Subscribe to frame events
     editor.on('framecreated', (frame) => this.#addFrameView(frame));
@@ -579,6 +596,13 @@ export class NodeCanvas extends Symbiote {
     
     if (dz < 0.01 && dx < 2 && dy < 2) {
       this.selectNode(nodeId);
+      if (!this._cullingScheduled) {
+        this._cullingScheduled = true;
+        requestAnimationFrame(() => {
+          this._cullingScheduled = false;
+          this.#applyCullingAndLOD();
+        });
+      }
       return true;
     }
 
@@ -798,6 +822,13 @@ export class NodeCanvas extends Symbiote {
    */
   setBatchMode(active) {
     this._batchMode = !!active;
+    if (!this._batchMode && !this._cullingScheduled) {
+      this._cullingScheduled = true;
+      requestAnimationFrame(() => {
+        this._cullingScheduled = false;
+        this.#applyCullingAndLOD();
+      });
+    }
   }
 
   /**
@@ -1144,6 +1175,11 @@ export class NodeCanvas extends Symbiote {
       }
     }
 
+    // Pass selection state to Canvas renderer for dimming implementation
+    if (this.#connRenderer && typeof this.#connRenderer.setSelectionState === 'function') {
+        this.#connRenderer.setSelectionState(selectedNodes.size > 0, activeConnIds);
+    }
+
     // Quick Action Toolbar — show for single node selection
     const toolbar = this.ref.quickToolbar;
     if (toolbar) {
@@ -1232,14 +1268,8 @@ export class NodeCanvas extends Symbiote {
     }
   }
 
-  /** Public: force culling and LOD update (call after programmatic zoom) */
-  updateLOD() {
-    this.#applyCullingAndLOD();
-  }
-
   /** Apply viewport culling and LOD based on current transform */
   #applyCullingAndLOD() {
-    return; // Disabled by user request to prevent screen flicker loops
     if (!this.ref.canvasContainer || this.#nodeViews.size === 0) return;
 
     const cw = this.ref.canvasContainer.clientWidth;
@@ -1247,24 +1277,22 @@ export class NodeCanvas extends Symbiote {
     const zoom = this.$.zoom;
     const panX = this.$.panX;
     const panY = this.$.panY;
-    const margin = 100; // px buffer for smooth scrolling
+    // Increase margin to prevent nodes from popping in right at the edge
+    const margin = 300; 
 
     // LOD thresholds (two levels: medium and full)
     const lod = zoom < 0.5 ? 'medium' : 'full';
-    const prevLod = this._currentLod || 'full';
     this._currentLod = lod;
 
     // LOD: dim connections at low zoom, but keep active node connections visible
     if (this.ref.connections) {
+      const isDimmed = this.ref.connections.hasAttribute('data-lod-dimmed');
       if (lod !== 'full') {
-        this.ref.connections.setAttribute('data-lod-dimmed', '');
+        if (!isDimmed) this.ref.connections.setAttribute('data-lod-dimmed', '');
       } else {
-        this.ref.connections.removeAttribute('data-lod-dimmed');
+        if (isDimmed) this.ref.connections.removeAttribute('data-lod-dimmed');
       }
     }
-
-    // No programmatic connection refresh is needed on LOD change, 
-    // as LOD is now handled purely via CSS 'data-lod-dimmed' scaling.
 
     for (const [, el] of this.#nodeViews) {
       const pos = el._position;
@@ -1273,7 +1301,7 @@ export class NodeCanvas extends Symbiote {
       // Check if node is in viewport (use cached sizes to avoid forced reflow)
       const screenX = pos.x * zoom + panX;
       const screenY = pos.y * zoom + panY;
-      // Cache node size on first valid read to avoid layout thrashing
+      
       if (!el._cachedW) {
         el._cachedW = el.offsetWidth || 180;
         el._cachedH = el.offsetHeight || 60;
@@ -1281,14 +1309,16 @@ export class NodeCanvas extends Symbiote {
       const w = el._cachedW * zoom;
       const h = el._cachedH * zoom;
 
-      const visible = screenX + w > -margin && screenX < cw + margin &&
-        screenY + h > -margin && screenY < ch + margin;
+      // Include margin buffer in visibility check
+      const visible = (screenX + w > -margin) && (screenX < cw + margin) &&
+                      (screenY + h > -margin) && (screenY < ch + margin);
 
       if (visible) {
-        el.style.contentVisibility = '';
-        el.setAttribute('data-lod', lod);
+        if (el.style.visibility !== '') el.style.visibility = '';
+        if (el.getAttribute('data-lod') !== lod) el.setAttribute('data-lod', lod);
       } else {
-        el.style.contentVisibility = 'hidden';
+        // Use visibility instead of contentVisibility to prevent layout collapse and ResizeObserver loops
+        if (el.style.visibility !== 'hidden') el.style.visibility = 'hidden';
       }
     }
   }
@@ -1319,6 +1349,11 @@ export class NodeCanvas extends Symbiote {
           this.$.panY = y;
           this.#updateTransform();
           this.dispatchEvent(new CustomEvent('manualviewport'));
+
+          // Suppress CSS :hover on paths during active pan
+          if (!this.hasAttribute('data-interacting')) {
+            this.setAttribute('data-interacting', '');
+          }
         },
         onDrop: (e) => {
           // Unselect only on click (minimal movement), not after panning
@@ -1330,12 +1365,14 @@ export class NodeCanvas extends Symbiote {
             }
           }
           this._panStart = null;
+          this.removeAttribute('data-interacting');
         },
       }
     );
 
     // Zoom
     this.#zoom = new Zoom(0.1);
+    let interactingTimer = null;
     this.#zoom.initialize(container, content, (delta, ox, oy) => {
       const k = this.$.zoom;
       const newK = k * (1 + delta);
@@ -1345,7 +1382,16 @@ export class NodeCanvas extends Symbiote {
       this.$.panY += oy;
       this.#updateTransform();
       this.dispatchEvent(new CustomEvent('manualviewport'));
-    });
+
+      // Suppress CSS :hover on paths during active zoom
+      if (!this.hasAttribute('data-interacting')) {
+        this.setAttribute('data-interacting', '');
+      }
+      clearTimeout(interactingTimer);
+      interactingTimer = setTimeout(() => {
+        this.removeAttribute('data-interacting');
+      }, 150);
+    }, () => ({ x: this.$.panX, y: this.$.panY }));
 
     // Context menu + keyboard
     container.addEventListener('contextmenu', (e) => {
@@ -1371,6 +1417,7 @@ export class NodeCanvas extends Symbiote {
       if (this.ref.content) {
         this.ref.content.style.transform = val;
       }
+      this.#connRenderer?.refreshAll();
     });
 
     this.#updateTransform();
@@ -1433,12 +1480,15 @@ export class NodeCanvas extends Symbiote {
         const nodes = [];
         for (const [id, el] of this.#nodeViews) {
           const pos = el._position || { x: 0, y: 0 };
-          const rect = el.getBoundingClientRect();
+          if (!el._cachedW) {
+            el._cachedW = el.offsetWidth || 180;
+            el._cachedH = el.offsetHeight || 60;
+          }
           nodes.push({
             x: pos.x,
             y: pos.y,
-            width: rect.width / this.$.zoom,
-            height: rect.height / this.$.zoom,
+            width: el._cachedW,
+            height: el._cachedH,
             bypassed: el.hasAttribute('data-bypassed'),
           });
         }

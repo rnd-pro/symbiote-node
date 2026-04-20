@@ -575,8 +575,7 @@ export class CanvasConnectionRenderer {
 
     let d;
     let arrow = { x: endX, y: endY, angle: 0 };
-    // LOD: at far zoom, skip expensive routing — straight lines only
-    const effectiveStyle = (this._frameZoom || 1) < 0.25 ? 'straight' : this.#pathStyle;
+    const effectiveStyle = this.#pathStyle;
     if (effectiveStyle === 'straight') {
       d = `M ${startX} ${startY} L ${endX} ${endY}`;
       arrow.x = (startX + endX) / 2;

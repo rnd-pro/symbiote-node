@@ -607,11 +607,17 @@ export class CanvasConnectionRenderer {
       const toH = toEl._cachedH || 60;
 
       let pts = [{ x: startX, y: startY }, { x: p1x, y: p1y }];
+      const skipObstacles = this._nodeRectMap && this._nodeRectMap.size > 200;
 
       if (endX < startX) {
         const bottomY = Math.max(fromPos.y + fromH, toPos.y + toH) + 30 + traceOffset;
         pts.push({ x: p1x, y: bottomY });
         pts.push({ x: p2x, y: bottomY });
+      } else if (skipObstacles) {
+        // Large graph: simple mid-X routing without obstacle checks
+        const midX = (p1x + p2x) / 2 + traceOffset;
+        pts.push({ x: midX, y: p1y });
+        pts.push({ x: midX, y: p2y });
       } else {
         const maxH = Math.max(fromH, toH);
         if (Math.abs(p1y - p2y) < maxH) {
@@ -751,31 +757,33 @@ export class CanvasConnectionRenderer {
         { x: startX, y: startY },
         { x: stubFromX, y: stubFromY },
       ];
+      // Skip obstacle avoidance on large graphs — O(N) per connection is too expensive
+      // and produces worse visual results at high density anyway
+      const skipObstacles = this._nodeRectMap && this._nodeRectMap.size > 200;
 
       // Very simple heuristic orthogonal router
       if (endX < startX - 20) {
         // Backwards routing: U-turn below obstacles in the path
-        const minXForObstacle = Math.min(stubFromX, stubToX);
-        const maxXForObstacle = Math.max(stubFromX, stubToX);
         let maxObstacleY = Math.max(fromPos.y + fromH, toPos.y + toH);
 
-        const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
-        for (const rect of iter) {
-          const nx = rect.x;
-          const ny = rect.y;
-          const nw = rect.w;
-          const nh = rect.h;
-          // Check if node is in the horizontal path of the detour
-          const pad = TRACE_GRID * 2;
-          if (nx + nw + pad >= minXForObstacle && nx - pad <= maxXForObstacle) {
-            if (ny + nh > maxObstacleY) {
-              maxObstacleY = ny + nh;
+        if (!skipObstacles) {
+          const minXForObstacle = Math.min(stubFromX, stubToX);
+          const maxXForObstacle = Math.max(stubFromX, stubToX);
+          const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
+          for (const rect of iter) {
+            const nx = rect.x;
+            const ny = rect.y;
+            const nw = rect.w;
+            const nh = rect.h;
+            const pad = TRACE_GRID * 2;
+            if (nx + nw + pad >= minXForObstacle && nx - pad <= maxXForObstacle) {
+              if (ny + nh > maxObstacleY) {
+                maxObstacleY = ny + nh;
+              }
             }
           }
         }
 
-        // Detour deeply below all nodes in the path to avoid overlaps
-        // We use absolute channelShift so tracks stack neatly downward
         const bottomY = snapGrid(maxObstacleY + 30) + Math.abs(channelShift);
         pts.push({ x: stubFromX, y: bottomY });
         pts.push({ x: stubToX, y: bottomY });
@@ -783,29 +791,29 @@ export class CanvasConnectionRenderer {
         // Forward routing: mid-X channel
         let midX = snapGrid((stubFromX + stubToX) / 2) + channelShift;
 
-        // Same-height shortcut: if stubs are roughly aligned (in same track cell), connect via single horizontal
+        // Same-height shortcut
         if (Math.abs(stubFromY - stubToY) < TRACE_GRID * 2) {
-          // Keep strictly horizontal
           pts.push({ x: stubToX, y: stubFromY });
         } else {
-          // Obstacle check for mid-X vertical segment
-          const minY = Math.min(stubFromY, stubToY);
-          const maxY = Math.max(stubFromY, stubToY);
-          const pad = TRACE_GRID * 4;
+          if (!skipObstacles) {
+            // Obstacle check for mid-X vertical segment
+            const minY = Math.min(stubFromY, stubToY);
+            const maxY = Math.max(stubFromY, stubToY);
+            const pad = TRACE_GRID * 4;
 
-          const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
-          for (const rect of iter) {
-            if (rect.id === conn.from || rect.id === conn.to) continue;
-            const nx = rect.x, ny = rect.y;
-            const nw = rect.w, nh = rect.h;
+            const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
+            for (const rect of iter) {
+              if (rect.id === conn.from || rect.id === conn.to) continue;
+              const nx = rect.x, ny = rect.y;
+              const nw = rect.w, nh = rect.h;
 
-            if (midX >= nx - pad && midX <= nx + nw + pad) {
-              if (ny - pad <= maxY && ny + nh + pad >= minY) {
-                // Detour around obstacle
-                const leftX = snapGrid(nx - pad) + channelShift;
-                const rightX = snapGrid(nx + nw + pad) + channelShift;
-                midX = Math.abs(midX - leftX) < Math.abs(midX - rightX) ? leftX : rightX;
-                break;
+              if (midX >= nx - pad && midX <= nx + nw + pad) {
+                if (ny - pad <= maxY && ny + nh + pad >= minY) {
+                  const leftX = snapGrid(nx - pad) + channelShift;
+                  const rightX = snapGrid(nx + nw + pad) + channelShift;
+                  midX = Math.abs(midX - leftX) < Math.abs(midX - rightX) ? leftX : rightX;
+                  break;
+                }
               }
             }
           }
@@ -819,59 +827,12 @@ export class CanvasConnectionRenderer {
       pts.push({ x: endX, y: endY });
 
       // Path building and Chamfering
-      let debugCollisions = [];
 
-      // 1. Check if line segments intersect any nodes
-      for (let i = 0; i < pts.length - 1; i++) {
-        const segX1 = Math.min(pts[i].x, pts[i + 1].x);
-        const segY1 = Math.min(pts[i].y, pts[i + 1].y);
-        const segX2 = Math.max(pts[i].x, pts[i + 1].x);
-        const segY2 = Math.max(pts[i].y, pts[i + 1].y);
-
-        const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
-        for (const rect of iter) {
-          if (rect.id === conn.from || rect.id === conn.to) continue;
-
-          const nx = rect.x, ny = rect.y;
-          const nw = rect.w, nh = rect.h;
-
-          if (segX1 < nx + nw && segX2 > nx && segY1 < ny + nh && segY2 > ny) {
-            debugCollisions.push(`Node Collision: (${pts[i].x},${pts[i].y})->(${pts[i + 1].x},${pts[i + 1].y}) intersects Node[${rect.id}]`);
-          }
-        }
-      }
-
-      // 2. Self-overlap (180 degree turn)
-      for (let i = 0; i < pts.length - 2; i++) {
-        const p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2];
-        const v1x = p2.x - p1.x, v1y = p2.y - p1.y;
-        const v2x = p3.x - p2.x, v2y = p3.y - p2.y;
-        if (v1x * v2x < 0 || v1y * v2y < 0) {
-          debugCollisions.push(`180° Fold: at (${p2.x},${p2.y}) turning back toward (${p3.x},${p3.y})`);
-        }
-      }
-
-      // Store generated segments for global overlap checks
-      if (!this._allSegments) this._allSegments = [];
-      const segments = [];
-      for (let i = 0; i < pts.length - 1; i++) {
-        segments.push({
-          p1: pts[i], p2: pts[i + 1],
-          connId: conn.id,
-          channel: connIndex
-        });
-      }
-      this._allSegments.push(...segments);
-
-      // Log route stats
+      // Log route stats (debug only)
       if (CanvasConnectionRenderer.debug) {
         const fromLabel = fromEl._nodeData?.label || conn.from;
         const toLabel = toEl._nodeData?.label || conn.to;
-        let msg = `[PCB] ${fromLabel} → ${toLabel} | waypoints=${pts.length}`;
-        if (debugCollisions.length > 0) {
-          msg += ` | ERRS: ` + debugCollisions.join(' | ');
-        }
-        console.log(msg);
+        console.log(`[PCB] ${fromLabel} → ${toLabel} | waypoints=${pts.length}`);
       }
 
       // Build SVG path with 45° chamfered corners

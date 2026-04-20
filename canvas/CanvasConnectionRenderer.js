@@ -496,7 +496,13 @@ export class CanvasConnectionRenderer {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
+        // Clip text to node bounds
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x + 4, y, w - 8, h);
+        ctx.clip();
         ctx.fillText(node.label, x + w / 2, y + h / 2);
+        ctx.restore();
       }
     }
   }

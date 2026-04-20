@@ -1422,7 +1422,7 @@ export class NodeCanvas extends Symbiote {
     // Check phantom nodes for visibility — promote if in viewport
     // Skip promotion if ALL nodes are still phantom (initial load before fitView)
     const allPhantom = this.#nodeViews.size === 0 && this.#phantomData.size > 0;
-    if (isVirtualized && !FAR_ZOOM && !allPhantom) {
+    if (isVirtualized && !FAR_ZOOM) {
       for (const [id, pd] of this.#phantomData) {
         const screenX = pd.x * zoom + panX;
         const screenY = pd.y * zoom + panY;

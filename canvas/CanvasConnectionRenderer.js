@@ -284,6 +284,7 @@ export class CanvasConnectionRenderer {
 
     const time = Date.now();
     let hasFlowing = false;
+    if (this.#phantomNodes?.length > 0 && !this._debugPhantomLogged) { this._debugPhantomLogged = true; console.log('[CanvasRenderer] redraw with', this.#phantomNodes.length, 'phantom nodes, canvas:', this.#canvasLayer.width, 'x', this.#canvasLayer.height); }
 
     // Cache node layout geometry once per frame for the router (Map for O(1) lookup)
     this._nodeRectMap = new Map();

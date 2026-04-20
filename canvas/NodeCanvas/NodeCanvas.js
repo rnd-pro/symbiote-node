@@ -1507,6 +1507,12 @@ export class NodeCanvas extends Symbiote {
     }
   }
 
+  /** Public: force sync phantom data to renderer (for use after batch setNodePosition) */
+  syncPhantom() {
+    this.#phantomDirty = false;
+    this.#syncPhantomToRenderer();
+  }
+
   // --- Lifecycle ---
 
   renderCallback() {

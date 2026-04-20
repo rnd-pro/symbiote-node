@@ -300,6 +300,26 @@ export class NodeViewManager {
     this.#selector.getSelectedNodes().delete(node.id);
   }
 
+  /**
+   * Remove a node view instantly (no animation) for virtualization demote.
+   * Returns captured position/size for phantom conversion.
+   * @param {string} nodeId
+   * @returns {{ x: number, y: number, w: number, h: number } | null}
+   */
+  removeViewInstant(nodeId) {
+    const el = this.#nodeViews.get(nodeId);
+    if (!el) return null;
+    const pos = el._position || { x: 0, y: 0 };
+    const w = el._cachedW || el.offsetWidth || 180;
+    const h = el._cachedH || el.offsetHeight || 60;
+    if (el._previewRaf) clearTimeout(el._previewRaf);
+    if (el._drag) el._drag.destroy();
+    el.remove();
+    this.#nodeViews.delete(nodeId);
+    this.#selector.getSelectedNodes().delete(nodeId);
+    return { x: pos.x, y: pos.y, w, h };
+  }
+
   // --- Private helpers ---
 
 

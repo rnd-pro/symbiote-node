@@ -19,6 +19,13 @@ export class CanvasConnectionRenderer {
   #ctx;
   #resizeObserver;
   #animationFrameId;
+  #batchMode = false;
+  #batchDirty = false;
+
+  /** @type {Array<{id:string, x:number, y:number, w:number, h:number, degree:number, color:string, label:string}>} */
+  #phantomNodes = [];
+  /** @type {Map<string, Object>} Fast lookup for phantom proxy by nodeId */
+  #phantomMap = new Map();
 
   // Computed styles matching the theme
   #colorParams = {
@@ -146,6 +153,23 @@ export class CanvasConnectionRenderer {
 
   clear() {
     this.#connectionData.clear();
+    this.#phantomNodes = [];
+    this.#phantomMap.clear();
+    this.redraw();
+  }
+
+  // #phantomMap moved to class field declarations (line 25)
+
+  /**
+   * Set phantom nodes — nodes without DOM that are rendered as Canvas dots.
+   * @param {Array<{id:string, x:number, y:number, w:number, h:number, degree:number, color:string, label:string}>} nodes
+   */
+  setPhantomNodes(nodes) {
+    this.#phantomNodes = nodes || [];
+    this.#phantomMap.clear();
+    for (const n of this.#phantomNodes) {
+      this.#phantomMap.set(n.id, n);
+    }
     this.redraw();
   }
 
@@ -227,14 +251,25 @@ export class CanvasConnectionRenderer {
     this.redraw();
   }
 
+  /** Suppress redraws during batch operations (e.g. setEditor initialization) */
+  setBatchMode(on) {
+    this.#batchMode = on;
+    if (!on && this.#batchDirty) {
+      this.#batchDirty = false;
+      this.redraw();
+    }
+  }
+
   /** Perform full synchronous redraw of all connections */
   redraw() {
+    if (this.#batchMode) { this.#batchDirty = true; return; }
     const ctx = this.#ctx;
     if (!ctx) return;
 
     // Reset and clear with devicePixelRatio
     const dpr = window.devicePixelRatio || 1;
     const zoom = this.#getZoom();
+    this._frameZoom = zoom; // cache for #plotPath LOD
     const pan = this.#getPan();
 
     // Reset transform to identity to clear the raw screen buffer
@@ -250,11 +285,11 @@ export class CanvasConnectionRenderer {
     const time = Date.now();
     let hasFlowing = false;
 
-    // Cache node layout geometry once per frame for the router
-    this._nodeRectCache = [];
+    // Cache node layout geometry once per frame for the router (Map for O(1) lookup)
+    this._nodeRectMap = new Map();
     for (const [nid, el] of this.#nodeViews) {
       if (el && el._position) {
-        this._nodeRectCache.push({
+        this._nodeRectMap.set(nid, {
           id: nid,
           x: el._position.x,
           y: el._position.y,
@@ -264,6 +299,27 @@ export class CanvasConnectionRenderer {
         });
       }
     }
+    // Include phantom nodes in geometry cache for FAR_ZOOM routing
+    for (const node of this.#phantomNodes) {
+      if (node && !this._nodeRectMap.has(node.id)) {
+        this._nodeRectMap.set(node.id, {
+          id: node.id,
+          x: node.x || 0,
+          y: node.y || 0,
+          w: node.w || 180,
+          h: node.h || 60,
+          el: null
+        });
+      }
+    }
+
+    // Pre-compute connection index once per frame (avoids O(N²) Array.from+indexOf in routing)
+    const connIndexMap = new Map();
+    let ci = 0;
+    for (const key of this.#connectionData.keys()) {
+      connIndexMap.set(key, ci++);
+    }
+    this._connIndexMap = connIndexMap;
 
     // Collect connected sockets to draw caps over them (fixes DOM/Canvas sub-pixel drift seams)
     const socketsToDraw = new Map();
@@ -286,7 +342,12 @@ export class CanvasConnectionRenderer {
       ctx.globalAlpha = 1.0;
 
       ctx.beginPath();
-      const coords = this.#plotPath(ctx, connection);
+      let coords = null;
+      try {
+        coords = this.#plotPath(ctx, connection);
+      } catch (err) {
+        console.warn('Path failed:', err);
+      }
       if (!coords) return;
 
       // Save caps for later drawing (ensures they are on top of all paths)
@@ -375,6 +436,9 @@ export class CanvasConnectionRenderer {
       ctx.stroke();
     }
 
+    // ─── Draw phantom node dots (Obsidian-style) ───
+    this.#drawPhantomDots(ctx, zoom);
+
     // Stop flow animation if none flowing to save CPU
     if (!hasFlowing && this.#animationFrameId) {
       cancelAnimationFrame(this.#animationFrameId);
@@ -384,14 +448,92 @@ export class CanvasConnectionRenderer {
     }
   }
 
+  /**
+   * Draw phantom nodes as colored dots with size proportional to degree.
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} zoom
+   */
+  #drawPhantomDots(ctx, zoom) {
+    if (this.#phantomNodes.length === 0) return;
+
+    ctx.shadowBlur = 0;
+    ctx.setLineDash([]);
+    const showLabels = zoom > 0.25;
+    const labelFontSize = Math.max(9, Math.min(13, 11 / zoom));
+
+    for (const node of this.#phantomNodes) {
+      if (!node || node.w === undefined || node.h === undefined) continue;
+
+      ctx.beginPath();
+      // Safe geometry to avoid Canvas context crash
+      const w = Math.max(1, node.w);
+      const h = Math.max(1, node.h);
+      const x = node.x || 0;
+      const y = node.y || 0;
+      
+      try {
+        if (ctx.roundRect) ctx.roundRect(x, y, w, h, 6); // Match DOM border-radius
+        else ctx.rect(x, y, w, h);
+      } catch (e) {
+        ctx.rect(x, y, w, h); // Fallback for invalid params
+      }
+      
+      ctx.fillStyle = node.color || this.#colorParams.normal;
+      ctx.globalAlpha = 0.85;
+      ctx.fill();
+
+      // Outer highlight/stroke matching node visual style
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = this.#colorParams.outline; // background colored stroke creates gap effect
+      ctx.stroke();
+      ctx.globalAlpha = 1.0;
+
+      // Label at medium+ zoom
+      if (showLabels && node.label) {
+        ctx.fillStyle = '#fff';
+        ctx.globalAlpha = 1;
+        ctx.font = `${labelFontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        ctx.fillText(node.label, x + w / 2, y + h / 2);
+      }
+    }
+  }
+
+  /**
+   * Create a minimal proxy object for a phantom node so #plotPath can work.
+   * Mimics the shape of a DOM nodeView element with _position and _cachedW/H.
+   */
+  #getPhantomProxy(nodeId) {
+    const phantom = this.#phantomMap.get(nodeId);
+    if (!phantom) return null;
+    return {
+      id: phantom.id,
+      _position: { x: phantom.x, y: phantom.y },
+      _cachedW: phantom.w,
+      _cachedH: phantom.h,
+      offsetWidth: phantom.w,
+      offsetHeight: phantom.h,
+      getAttribute: () => null,
+      querySelector: () => null,
+      querySelectorAll: () => [],
+      style: {},
+    };
+  }
+
   #renderLoop = () => {
     this.redraw();
     this.#animationFrameId = requestAnimationFrame(this.#renderLoop);
   };
 
   #plotPath(ctx, conn) {
-    const fromElNodeView = this.#nodeViews.get(conn.from);
-    const toElNodeView = this.#nodeViews.get(conn.to);
+    let fromElNodeView = this.#nodeViews.get(conn.from);
+    let toElNodeView = this.#nodeViews.get(conn.to);
+
+    // Fallback to phantom proxy for nodes without DOM
+    if (!fromElNodeView) fromElNodeView = this.#getPhantomProxy(conn.from);
+    if (!toElNodeView) toElNodeView = this.#getPhantomProxy(conn.to);
     if (!fromElNodeView || !toElNodeView) return;
 
     let fromPos = fromElNodeView._position || { x: 0, y: 0 };
@@ -400,11 +542,11 @@ export class CanvasConnectionRenderer {
     let fromEl = fromElNodeView;
     let toEl = toElNodeView;
 
-    if (this._nodeRectCache) {
-      const c1 = this._nodeRectCache.find(c => c.id === conn.from);
-      if (c1) { fromPos = { x: c1.x, y: c1.y }; fromEl = c1.el; }
-      const c2 = this._nodeRectCache.find(c => c.id === conn.to);
-      if (c2) { toPos = { x: c2.x, y: c2.y }; toEl = c2.el; }
+    if (this._nodeRectMap) {
+      const c1 = this._nodeRectMap.get(conn.from);
+      if (c1) { fromPos = { x: c1.x, y: c1.y }; if (c1.el) fromEl = c1.el; }
+      const c2 = this._nodeRectMap.get(conn.to);
+      if (c2) { toPos = { x: c2.x, y: c2.y }; if (c2.el) toEl = c2.el; }
     }
 
     const fromW = fromEl._cachedW || fromEl.offsetWidth || 180;
@@ -433,14 +575,15 @@ export class CanvasConnectionRenderer {
 
     let d;
     let arrow = { x: endX, y: endY, angle: 0 };
-    if (this.#pathStyle === 'straight') {
+    // LOD: at far zoom, skip expensive routing — straight lines only
+    const effectiveStyle = (this._frameZoom || 1) < 0.25 ? 'straight' : this.#pathStyle;
+    if (effectiveStyle === 'straight') {
       d = `M ${startX} ${startY} L ${endX} ${endY}`;
       arrow.x = (startX + endX) / 2;
       arrow.y = (startY + endY) / 2;
       arrow.angle = Math.atan2(endY - startY, endX - startX);
-    } else if (this.#pathStyle === 'orthogonal') {
-      const connKeys = Array.from(this.#connectionData.keys());
-      const connIndex = connKeys.indexOf(conn.id);
+    } else if (effectiveStyle === 'orthogonal') {
+      const connIndex = this._connIndexMap ? (this._connIndexMap.get(conn.id) ?? 0) : 0;
       const traceOffset = (connIndex > -1 ? connIndex % 10 : 0) * 4;
 
       const fromAngle = fromOffset.angle !== undefined ? fromOffset.angle : 0;
@@ -473,12 +616,12 @@ export class CanvasConnectionRenderer {
         const maxH = Math.max(fromH, toH);
         if (Math.abs(p1y - p2y) < maxH) {
           let nodeBetween = false;
-          for (const [, node] of this.#nodeViews) {
-            if (!node._position) continue;
-            const nx = node._position.x;
-            const ny = node._position.y;
-            const nw = node._cachedW || 180;
-            const nh = node._cachedH || 60;
+          const obstacleIter = this._nodeRectMap ? this._nodeRectMap.values() : [];
+          for (const rect of obstacleIter) {
+            const nx = rect.x;
+            const ny = rect.y;
+            const nw = rect.w || 180;
+            const nh = rect.h || 60;
             if (nx > p1x && nx + nw < p2x) {
               if (Math.min(p1y, p2y) <= ny + nh && Math.max(p1y, p2y) >= ny) {
                 nodeBetween = true; break;
@@ -501,12 +644,12 @@ export class CanvasConnectionRenderer {
           const minY = Math.min(p1y, p2y);
           const maxY = Math.max(p1y, p2y);
 
-          for (const [, node] of this.#nodeViews) {
-            if (!node._position) continue;
-            const nx = node._position.x;
-            const ny = node._position.y;
-            const nw = node._cachedW || 180;
-            const nh = node._cachedH || 60;
+          const obstIter = this._nodeRectMap ? this._nodeRectMap.values() : [];
+          for (const rect of obstIter) {
+            const nx = rect.x;
+            const ny = rect.y;
+            const nw = rect.w || 180;
+            const nh = rect.h || 60;
             if (midX >= nx && midX <= nx + nw) {
               if (ny <= maxY && ny + nh >= minY) {
                 obstacleNode = { x: nx, w: nw };
@@ -557,7 +700,7 @@ export class CanvasConnectionRenderer {
         }
       }
       d = path;
-    } else if (this.#pathStyle === 'pcb') {
+    } else if (effectiveStyle === 'pcb') {
       // ─── PCB Grid-Based Trace Routing ───
       // All waypoints snap to a grid. Stubs exit perpendicular to node surface
       // with a minimum length, then route on grid channels with chamfered corners.
@@ -570,8 +713,7 @@ export class CanvasConnectionRenderer {
       const snapGrid = (v) => Math.round(v / TRACE_GRID) * TRACE_GRID;
 
       // Connection channel index for parallel trace separation
-      const connKeys = Array.from(this.#connectionData.keys());
-      const connIndex = connKeys.indexOf(conn.id);
+      const connIndex = this._connIndexMap ? (this._connIndexMap.get(conn.id) ?? 0) : 0;
 
       // Determine unique channel shift to prevent parallel traces overlapping
       // Alternates: 0, +5, -5, +10, -10...
@@ -617,7 +759,7 @@ export class CanvasConnectionRenderer {
         const maxXForObstacle = Math.max(stubFromX, stubToX);
         let maxObstacleY = Math.max(fromPos.y + fromH, toPos.y + toH);
 
-        const iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
+        const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
         for (const rect of iter) {
           const nx = rect.x;
           const ny = rect.y;
@@ -651,7 +793,7 @@ export class CanvasConnectionRenderer {
           const maxY = Math.max(stubFromY, stubToY);
           const pad = TRACE_GRID * 4;
 
-          const iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
+          const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
           for (const rect of iter) {
             if (rect.id === conn.from || rect.id === conn.to) continue;
             const nx = rect.x, ny = rect.y;
@@ -686,7 +828,7 @@ export class CanvasConnectionRenderer {
         const segX2 = Math.max(pts[i].x, pts[i + 1].x);
         const segY2 = Math.max(pts[i].y, pts[i + 1].y);
 
-        const iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
+        const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
         for (const rect of iter) {
           if (rect.id === conn.from || rect.id === conn.to) continue;
 
@@ -833,7 +975,7 @@ export class CanvasConnectionRenderer {
 
 
     const p = new Path2D(d);
-    return { startX, startY, endX, endY, path2D: p, arrow, pathStyle: this.#pathStyle };
+    return { startX, startY, endX, endY, path2D: p, arrow, pathStyle: effectiveStyle };
   }
 
   destroy() {

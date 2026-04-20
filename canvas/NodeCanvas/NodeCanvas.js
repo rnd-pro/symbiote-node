@@ -101,6 +101,18 @@ export class NodeCanvas extends Symbiote {
   /** @type {'bezier'|'orthogonal'|'straight'|'pcb'} saved across setEditor calls */
   #pathStyle = 'bezier';
 
+  // ─── Virtualization (Canvas LOD) ───
+  /** All node data objects from editor — the full set regardless of DOM state */
+  #allNodes = new Map();
+  /** Position + size cache for nodes without DOM (phantom rendering on Canvas) */
+  #phantomData = new Map();
+  /** Degree (connection count) per node — for dot sizing */
+  #nodeDegrees = new Map();
+  /** Debounce timer for promote/demote batch */
+  #virtTimer = null;
+  /** Dirty flag — phantom positions changed, needs re-sync to renderer */
+  #phantomDirty = false;
+
   // --- Public API ---
 
   /**
@@ -116,6 +128,10 @@ export class NodeCanvas extends Symbiote {
       el.remove();
     }
     this.#nodeViews.clear();
+    this.#allNodes.clear();
+    this.#phantomData.clear();
+    this.#nodeDegrees.clear();
+    if (this.#virtTimer) { clearTimeout(this.#virtTimer); this.#virtTimer = null; }
 
     // Unsubscribe from previous editor events to prevent leaks
     if (this.#editor) {
@@ -287,7 +303,18 @@ export class NodeCanvas extends Symbiote {
     });
 
     // Subscribe to editor events
-    editor.on('nodecreated', (node) => this.#viewManager.addView(node));
+    editor.on('nodecreated', (node) => {
+      this.#allNodes.set(node.id, node);
+      // If virtualization is active (phantom data initialized), add as phantom; otherwise DOM
+      if (this.#phantomData.size > 0) {
+        this.#phantomData.set(node.id, {
+          id: node.id, x: 0, y: 0, w: 180, h: 60,
+          degree: 0, color: null, label: node.label || node.id,
+        });
+      } else {
+        this.#viewManager.addView(node);
+      }
+    });
     editor.on('noderemoved', (node) => {
       this.#viewManager.removeView(node);
       // Remove connections touching this node
@@ -310,9 +337,46 @@ export class NodeCanvas extends Symbiote {
     editor.on('nodecollapse', refreshNodeConnections);
     editor.on('nodemute', refreshNodeConnections);
 
-    // Render already-existing nodes in a single batch
-    this.#viewManager.addViews(editor.getNodes());
-    this.#connRenderer.addBatch(editor.getConnections());
+    // ─── Virtualized initialization ───
+    // Store all nodes as data, compute degrees from connections
+    this.#allNodes.clear();
+    this.#phantomData.clear();
+    this.#nodeDegrees.clear();
+
+    for (const node of editor.getNodes()) {
+      this.#allNodes.set(node.id, node);
+      this.#nodeDegrees.set(node.id, 0);
+    }
+
+    const allConns = editor.getConnections();
+    for (const conn of allConns) {
+      this.#nodeDegrees.set(conn.from, (this.#nodeDegrees.get(conn.from) || 0) + 1);
+      this.#nodeDegrees.set(conn.to, (this.#nodeDegrees.get(conn.to) || 0) + 1);
+    }
+
+    // Create DOM only for nodes that will be visible (or all if small graph)
+    const VIRT_THRESHOLD = 200;
+    if (this.#allNodes.size <= VIRT_THRESHOLD) {
+      // Small graph — create all DOM nodes immediately
+      this.#viewManager.addViews(editor.getNodes());
+    } else {
+      // Large graph — start all as phantom, promote visible ones after layout
+      const defaultW = 180, defaultH = 60;
+      for (const [id, node] of this.#allNodes) {
+        this.#phantomData.set(id, {
+          id, x: 0, y: 0, w: defaultW, h: defaultH,
+          degree: this.#nodeDegrees.get(id) || 0,
+          color: null,
+          label: node.label || id,
+        });
+      }
+    }
+
+    // Batch renderer operations to prevent multiple redundant redraws
+    this.#connRenderer.setBatchMode(true);
+    this.#connRenderer.addBatch(allConns);
+    this.#syncPhantomToRenderer();
+    this.#connRenderer.setBatchMode(false);
 
     // Subscribe to frame events
     editor.on('framecreated', (frame) => this.#addFrameView(frame));
@@ -520,20 +584,29 @@ export class NodeCanvas extends Symbiote {
    * accounting for the inspector panel if open.
    */
   fitView() {
-    if (this.#nodeViews.size === 0) return;
+    if (this.#nodeViews.size === 0 && this.#phantomData.size === 0) return;
     
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    // Include DOM nodes
     for (const [, el] of this.#nodeViews) {
       if (!el._position) continue;
       const x = el._position.x;
       const y = el._position.y;
-      const w = el.offsetWidth || 150;
-      const h = el.offsetHeight || 40;
-      
+      const w = el._cachedW || el.offsetWidth || 150;
+      const h = el._cachedH || el.offsetHeight || 40;
       if (x < minX) minX = x;
       if (y < minY) minY = y;
       if (x + w > maxX) maxX = x + w;
       if (y + h > maxY) maxY = y + h;
+    }
+
+    // Include phantom nodes (virtualized)
+    for (const [, pd] of this.#phantomData) {
+      if (pd.x < minX) minX = pd.x;
+      if (pd.y < minY) minY = pd.y;
+      if (pd.x + pd.w > maxX) maxX = pd.x + pd.w;
+      if (pd.y + pd.h > maxY) maxY = pd.y + pd.h;
     }
     
     if (minX === Infinity) return;
@@ -558,6 +631,7 @@ export class NodeCanvas extends Symbiote {
     this.$.zoom = scale;
     this.$.panX = (visibleWidth / 2) - centerX * scale;
     this.$.panY = canvasRect.height / 2 - centerY * scale;
+    this.#updateTransform();
   }
 
   /**
@@ -569,10 +643,21 @@ export class NodeCanvas extends Symbiote {
    * @returns {boolean}
    */
   flyToNode(nodeId, { zoom = 0.8 } = {}) {
-    const el = this.#nodeViews.get(nodeId);
-    if (!el || !el._position) return false;
+    let el = this.#nodeViews.get(nodeId);
 
-    const pos = el._position;
+    // If node is phantom (no DOM), promote it first
+    if (!el && this.#phantomData.has(nodeId)) {
+      this.#promoteNode(nodeId);
+      el = this.#nodeViews.get(nodeId);
+    }
+    if (!el) return false;
+
+    // If position not set yet, use phantom data
+    const pos = el._position || (() => {
+      const pd = this.#phantomData.get(nodeId);
+      return pd ? { x: pd.x, y: pd.y } : { x: 0, y: 0 };
+    })();
+
     const canvasRect = this.ref.canvasContainer.getBoundingClientRect();
     let visibleWidth = canvasRect.width;
     
@@ -581,8 +666,8 @@ export class NodeCanvas extends Symbiote {
         visibleWidth -= inspector.offsetWidth;
     }
 
-    const elWidth = el.offsetWidth || 150;
-    const elHeight = el.offsetHeight || 40;
+    const elWidth = el._cachedW || el.offsetWidth || 150;
+    const elHeight = el._cachedH || el.offsetHeight || 40;
 
     const nodeX = pos.x + (elWidth / 2);
     const nodeY = pos.y + (elHeight / 2);
@@ -839,7 +924,12 @@ export class NodeCanvas extends Symbiote {
    */
   setNodePosition(nodeId, x, y) {
     const el = this.#nodeViews.get(nodeId);
-    if (!el) return;
+    if (!el) {
+      // Update phantom data if node is virtualized (no DOM)
+      const pd = this.#phantomData.get(nodeId);
+      if (pd) { pd.x = x; pd.y = y; this.#phantomDirty = true; }
+      return;
+    }
     el.style.transform = `translate(${x}px, ${y}px)`;
     el._position = { x, y };
 
@@ -1270,21 +1360,20 @@ export class NodeCanvas extends Symbiote {
 
   /** Apply viewport culling and LOD based on current transform */
   #applyCullingAndLOD() {
-    if (!this.ref.canvasContainer || this.#nodeViews.size === 0) return;
+    if (!this.ref.canvasContainer) return;
+    // Allow running even with 0 DOM nodes (phantom-only mode)
+    if (this.#nodeViews.size === 0 && this.#phantomData.size === 0) return;
 
     const cw = this.ref.canvasContainer.clientWidth;
     const ch = this.ref.canvasContainer.clientHeight;
     const zoom = this.$.zoom;
     const panX = this.$.panX;
     const panY = this.$.panY;
-    // Increase margin to prevent nodes from popping in right at the edge
     const margin = 300; 
 
-    // LOD thresholds (two levels: medium and full)
     const lod = zoom < 0.5 ? 'medium' : 'full';
     this._currentLod = lod;
 
-    // LOD: dim connections at low zoom, but keep active node connections visible
     if (this.ref.connections) {
       const isDimmed = this.ref.connections.hasAttribute('data-lod-dimmed');
       if (lod !== 'full') {
@@ -1294,14 +1383,19 @@ export class NodeCanvas extends Symbiote {
       }
     }
 
-    for (const [, el] of this.#nodeViews) {
+    // ─── Virtualization: promote/demote ───
+    const isVirtualized = this.#phantomData.size > 0 || this.#allNodes.size > 200;
+    const FAR_ZOOM = zoom < 0.25;
+    const toPromote = [];
+    const toDemote = [];
+
+    // Check existing DOM nodes for visibility
+    for (const [id, el] of this.#nodeViews) {
       const pos = el._position;
       if (!pos) continue;
 
-      // Check if node is in viewport (use cached sizes to avoid forced reflow)
       const screenX = pos.x * zoom + panX;
       const screenY = pos.y * zoom + panY;
-      
       if (!el._cachedW) {
         el._cachedW = el.offsetWidth || 180;
         el._cachedH = el.offsetHeight || 60;
@@ -1309,17 +1403,107 @@ export class NodeCanvas extends Symbiote {
       const w = el._cachedW * zoom;
       const h = el._cachedH * zoom;
 
-      // Include margin buffer in visibility check
       const visible = (screenX + w > -margin) && (screenX < cw + margin) &&
                       (screenY + h > -margin) && (screenY < ch + margin);
 
-      if (visible) {
+      if (isVirtualized && FAR_ZOOM) {
+        toDemote.push(id);
+      } else if (visible) {
         if (el.style.visibility !== '') el.style.visibility = '';
         if (el.getAttribute('data-lod') !== lod) el.setAttribute('data-lod', lod);
+      } else if (isVirtualized) {
+        // Demote to phantom (only in virtualized mode)
+        toDemote.push(id);
       } else {
-        // Use visibility instead of contentVisibility to prevent layout collapse and ResizeObserver loops
         if (el.style.visibility !== 'hidden') el.style.visibility = 'hidden';
       }
+    }
+
+    // Check phantom nodes for visibility — promote if in viewport
+    // Skip promotion if ALL nodes are still phantom (initial load before fitView)
+    const allPhantom = this.#nodeViews.size === 0 && this.#phantomData.size > 0;
+    if (isVirtualized && !FAR_ZOOM && !allPhantom) {
+      for (const [id, pd] of this.#phantomData) {
+        const screenX = pd.x * zoom + panX;
+        const screenY = pd.y * zoom + panY;
+        const w = (pd.w || 180) * zoom;
+        const h = (pd.h || 60) * zoom;
+
+        const visible = (screenX + w > -margin) && (screenX < cw + margin) &&
+                        (screenY + h > -margin) && (screenY < ch + margin);
+
+        if (visible) toPromote.push(id);
+      }
+    }
+
+    // FAR_ZOOM: synchronous demote — no debounce to prevent flicker
+    if (FAR_ZOOM && toDemote.length > 0) {
+      if (this.#virtTimer) { clearTimeout(this.#virtTimer); this.#virtTimer = null; }
+      for (const id of toDemote) this.#demoteNode(id);
+      this.#syncPhantomToRenderer();
+    } else if (toPromote.length > 0 || toDemote.length > 0) {
+      // Normal viewport culling: debounce to avoid thrashing during pan/scroll
+      if (this.#virtTimer) clearTimeout(this.#virtTimer);
+      this.#virtTimer = setTimeout(() => {
+        this.#virtTimer = null;
+        for (const id of toDemote) this.#demoteNode(id);
+        for (const id of toPromote) this.#promoteNode(id);
+        this.#syncPhantomToRenderer();
+      }, 100);
+    } else if (this.#phantomDirty || allPhantom) {
+      // Phantom positions changed or initial phantom-only state — sync to renderer
+      this.#phantomDirty = false;
+      this.#syncPhantomToRenderer();
+    }
+  }
+
+  // ─── Virtualization helpers ───
+
+  /** Promote a phantom node to full DOM */
+  #promoteNode(nodeId) {
+    if (this.#nodeViews.has(nodeId)) return; // already DOM
+    const node = this.#allNodes.get(nodeId);
+    if (!node) return;
+
+    const pd = this.#phantomData.get(nodeId);
+    this.#viewManager.addView(node);
+    const el = this.#nodeViews.get(nodeId);
+    if (el && pd) {
+      el._position = { x: pd.x, y: pd.y };
+      el._cachedW = pd.w;
+      el._cachedH = pd.h;
+      el.style.transform = `translate(${pd.x}px, ${pd.y}px)`;
+    }
+    this.#phantomData.delete(nodeId);
+  }
+
+  /** Demote a DOM node to phantom (Canvas dot) */
+  #demoteNode(nodeId) {
+    if (!this.#nodeViews.has(nodeId)) return; // already phantom
+    const el = this.#nodeViews.get(nodeId);
+    // Capture color from DOM before removal (use cached or inline style — avoid getComputedStyle reflow)
+    let color = null;
+    if (el) {
+      color = el._cachedBgColor || el.style.backgroundColor || null;
+    }
+    const dims = this.#viewManager.removeViewInstant(nodeId);
+    if (dims) {
+      const node = this.#allNodes.get(nodeId);
+      this.#phantomData.set(nodeId, {
+        id: nodeId,
+        x: dims.x, y: dims.y,
+        w: dims.w, h: dims.h,
+        degree: this.#nodeDegrees.get(nodeId) || 0,
+        color,
+        label: node?.label || nodeId,
+      });
+    }
+  }
+
+  /** Push current phantom data to the Canvas renderer */
+  #syncPhantomToRenderer() {
+    if (this.#connRenderer && typeof this.#connRenderer.setPhantomNodes === 'function') {
+      this.#connRenderer.setPhantomNodes([...this.#phantomData.values()]);
     }
   }
 
@@ -1472,8 +1656,7 @@ export class NodeCanvas extends Symbiote {
       });
     }
 
-    // Show minimap on viewport change (pan/zoom)
-    this.addEventListener('manualviewport', showMinimap);
+    // Minimap only shown via toggle button (auto-show disabled)
 
     if (minimap) {
       minimap.setStateGetter(() => {

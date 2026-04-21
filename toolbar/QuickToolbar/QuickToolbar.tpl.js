@@ -9,6 +9,9 @@ export const template = html`
   <button class="tb-btn tb-btn--enter" data-action="enter" title="Enter Subgraph" hidden>
     <span class="material-symbols-outlined tb-icon">login</span>
   </button>
+  <button class="tb-btn" data-action="explore" title="Explore connections">
+    <span class="material-symbols-outlined tb-icon">hub</span>
+  </button>
   <button class="tb-btn" data-action="duplicate" title="Duplicate">
     <span class="material-symbols-outlined tb-icon">content_copy</span>
   </button>

@@ -49,6 +49,9 @@ export class QuickToolbar extends Symbiote {
   /** @type {number} Toolbar height + gap */
   static OFFSET_Y = 48;
 
+  /** @type {{ zoom: number, panX: number, panY: number }} */
+  _transform = { zoom: 1, panX: 0, panY: 0 };
+
   /**
    * Show toolbar above a node
    * @param {string} nodeId
@@ -56,12 +59,10 @@ export class QuickToolbar extends Symbiote {
    */
   show(nodeId, nodeEl) {
     this._nodeId = nodeId;
+    this._nodeEl = nodeEl;
     this.$.visible = true;
 
-    // Position centered above node
-    const w = nodeEl.offsetWidth || 180;
-    const pos = nodeEl._position || { x: 0, y: 0 };
-    this.style.transform = `translate(${pos.x + w / 2}px, ${pos.y - QuickToolbar.OFFSET_Y}px)`;
+    this.#positionAtNode(nodeEl);
 
     // Update collapse icon based on current state
     this.#updateIcons(nodeEl);
@@ -76,6 +77,7 @@ export class QuickToolbar extends Symbiote {
   /** Hide toolbar */
   hide() {
     this._nodeId = null;
+    this._nodeEl = null;
     this.$.visible = false;
   }
 
@@ -91,9 +93,24 @@ export class QuickToolbar extends Symbiote {
    */
   updatePosition(nodeEl) {
     if (!this._nodeId) return;
-    const w = nodeEl.offsetWidth || 180;
+    this.#positionAtNode(nodeEl);
+  }
+
+  /**
+   * Position toolbar centered above a node in screen-space.
+   * Converts world coordinates to screen coordinates using zoom/pan.
+   * @param {HTMLElement} nodeEl
+   */
+  #positionAtNode(nodeEl) {
+    const { zoom, panX, panY } = this._transform;
+    const w = nodeEl.offsetWidth || nodeEl._cachedW || 180;
     const pos = nodeEl._position || { x: 0, y: 0 };
-    this.style.transform = `translate(${pos.x + w / 2}px, ${pos.y - QuickToolbar.OFFSET_Y}px)`;
+
+    // World center → screen position
+    const screenX = (pos.x + w / 2) * zoom + panX;
+    const screenY = pos.y * zoom + panY - QuickToolbar.OFFSET_Y;
+
+    this.style.transform = `translate(${screenX}px, ${screenY}px)`;
   }
 
   /**

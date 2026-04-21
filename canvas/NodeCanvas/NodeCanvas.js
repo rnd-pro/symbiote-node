@@ -222,7 +222,6 @@ export class NodeCanvas extends Symbiote {
     const toolbar = this.ref.quickToolbar;
     if (toolbar) {
       toolbar._onAction = (action, nodeId) => {
-        if (this.#readonly) return;
         const nodeEl = this.#nodeViews.get(nodeId);
         switch (action) {
           case 'delete': this.#actions.deleteNode(nodeId); toolbar.hide(); break;
@@ -235,6 +234,14 @@ export class NodeCanvas extends Symbiote {
           case 'mute':
             this.#actions.muteNode(nodeId);
             if (nodeEl) toolbar.show(nodeId, nodeEl);
+            break;
+          default:
+            // Custom actions — dispatch event for consumer (e.g. dep-graph explore)
+            this.dispatchEvent(new CustomEvent('toolbar-action', {
+              detail: { action, nodeId },
+              bubbles: true,
+            }));
+            toolbar.hide();
             break;
         }
       };
@@ -623,7 +630,7 @@ export class NodeCanvas extends Symbiote {
 
     const scaleX = (visibleWidth - 80) / graphW;
     const scaleY = (canvasRect.height - 80) / graphH;
-    const scale = Math.max(0.02, Math.min(scaleX, scaleY, 1.5));
+    const scale = Math.max(0.001, Math.min(scaleX, scaleY, 1.5));
 
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
@@ -1273,7 +1280,7 @@ export class NodeCanvas extends Symbiote {
     // Quick Action Toolbar — show for single node selection
     const toolbar = this.ref.quickToolbar;
     if (toolbar) {
-      if (selectedNodes.size === 1 && !this.#readonly) {
+      if (selectedNodes.size === 1) {
         const nodeId = [...selectedNodes][0];
         const nodeEl = this.#nodeViews.get(nodeId);
         if (nodeEl) toolbar.show(nodeId, nodeEl);
@@ -1347,6 +1354,13 @@ export class NodeCanvas extends Symbiote {
     const gridSize = gridBase * multiplier * zoom;
     this.style.backgroundSize = `${gridSize}px ${gridSize}px`;
     this.style.backgroundPosition = `${this.$.panX}px ${this.$.panY}px`;
+
+    // Sync toolbar position with zoom/pan
+    const toolbar = this.ref.quickToolbar;
+    if (toolbar) {
+      toolbar._transform = { zoom, panX: this.$.panX, panY: this.$.panY };
+      if (toolbar._nodeEl) toolbar.updatePosition(toolbar._nodeEl);
+    }
 
     // Viewport culling + LOD (throttled via rAF to prevent re-render cycles)
     if (!this._cullingScheduled) {
@@ -1566,7 +1580,7 @@ export class NodeCanvas extends Symbiote {
     this.#zoom.initialize(container, content, (delta, ox, oy) => {
       const k = this.$.zoom;
       const newK = k * (1 + delta);
-      if (newK < 0.02 || newK > 5) return;
+      if (newK < 0.001 || newK > 5) return;
       this.$.zoom = newK;
       this.$.panX += ox;
       this.$.panY += oy;

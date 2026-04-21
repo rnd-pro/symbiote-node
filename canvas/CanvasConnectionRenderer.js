@@ -337,7 +337,11 @@ export class CanvasConnectionRenderer {
       const fromColor = fromNode?.outputs?.[connection.out]?.socket?.color;
       const toColor = toNode?.inputs?.[connection.in]?.socket?.color;
 
-      ctx.lineWidth = this.#colorParams.width;
+      // Scale lineWidth inversely with zoom to maintain screen visibility
+      // At zoom 0.003, a 2px world line = 0.006 screen px (invisible)
+      // minScreenWidth = 1.5 screen px → in world coords = 1.5 / zoom
+      const baseWidth = this.#colorParams.width;
+      ctx.lineWidth = Math.max(baseWidth, 1.5 / zoom);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.globalAlpha = 1.0;

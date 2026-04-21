@@ -23,8 +23,8 @@ export function computeAutoLayout(editor, options = {}) {
   const {
     nodeWidth = 180,
     nodeHeight = 140,
-    gapX = 120,
-    gapY = 100,
+    gapX = 60,
+    gapY = 30,
     startX = 60,
     startY = 60,
     crossingPasses = 4,
@@ -369,7 +369,7 @@ export function computeAutoLayout(editor, options = {}) {
   const macroPositions = new Map(); // gId -> {x, y}
   const placedRects = [];
   
-  function hitTest(r1, r2, padding = 150) {
+  function hitTest(r1, r2, padding = 40) {
     return !(r2.x >= r1.x + r1.w + padding || 
              r2.x + r2.w + padding <= r1.x || 
              r2.y >= r1.y + r1.h + padding ||
@@ -401,9 +401,9 @@ export function computeAutoLayout(editor, options = {}) {
     if (vecX !== 0 || vecY !== 0) prefAngle = Math.atan2(vecY, vecX);
 
     // Dynamic step based on group size — large groups skip faster
-    let step = Math.max(40, Math.min(res.bounds.w, res.bounds.h) * 0.25);
-    let maxR = 12000;
-    const angularStep = M_PI / 8; // 16 angles instead of 24
+    let step = Math.max(20, Math.min(res.bounds.w, res.bounds.h) * 0.2);
+    let maxR = 6000;
+    const angularStep = M_PI / 12; // 24 angles for finer placement
     for (let r = 0; r < maxR; r += step) {
       for (let delta = 0; delta <= M_PI; delta += angularStep) {
         for (const sign of [1, -1]) {
@@ -425,13 +425,13 @@ export function computeAutoLayout(editor, options = {}) {
           if (delta === 0) break;
         }
       }
-      // Increase step as we spiral outward (no point checking every 40px at radius 5000)
-      if (r > 1000) step = Math.max(step, 80);
-      if (r > 3000) step = Math.max(step, 150);
+      // Increase step as we spiral outward (no point checking every 20px at radius 2000)
+      if (r > 500) step = Math.max(step, 60);
+      if (r > 1500) step = Math.max(step, 120);
     }
     // Fallback if packed too tight, just shove it way out
-    macroPositions.set(gId, { x: placedRects.length * 1000, y: placedRects.length * 1000 });
-    placedRects.push({ x: placedRects.length*1000, y: placedRects.length*1000, w: res.bounds.w, h: res.bounds.h, id: gId });
+    macroPositions.set(gId, { x: placedRects.length * 300, y: placedRects.length * 300 });
+    placedRects.push({ x: placedRects.length*300, y: placedRects.length*300, w: res.bounds.w, h: res.bounds.h, id: gId });
   }
 
   // Place center hub first

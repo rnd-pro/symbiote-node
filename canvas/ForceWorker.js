@@ -310,11 +310,113 @@ function resolveOverlap(nodes, i, j, hw, hh, strength) {
       const push = overlapX * strength * 0.5;
       a.x -= sign * push;
       b.x += sign * push;
+      
+      // Orthogonal jitter to prevent perfect 1D horizontal stacking
+      const jitter = (Math.random() - 0.5) * 0.5;
+      a.y -= jitter;
+      b.y += jitter;
     } else {
       const sign = dy < 0 ? -1 : (dy > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
       const push = overlapY * strength * 0.5;
       a.y -= sign * push;
       b.y += sign * push;
+      
+      // Orthogonal jitter to prevent perfect 1D vertical column stacking.
+      // Wide nodes (260x40) force vertical pushing, causing dx=0 traps where
+      // the radial charge force becomes useless. Jitter allows radial expansion.
+      const jitter = (Math.random() - 0.5) * 0.5;
+      a.x -= jitter;
+      b.x += jitter;
+    }
+  }
+}
+
+/**
+ * Count overlapping node pairs using spatial hash. O(n) average.
+ * @returns {number} Number of overlapping pairs
+ */
+function countOverlaps(nodes, nodeW, nodeH) {
+  // No padding — count exact rectangle overlaps (matches test detectOverlaps)
+  const hw = nodeW / 2;
+  const hh = nodeH / 2;
+  const cellW = nodeW * 1.5;
+  const cellH = nodeH * 3;
+  const grid = new Map();
+
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    const key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
+    if (!grid.has(key)) grid.set(key, []);
+    grid.get(key).push(i);
+  }
+
+  let count = 0;
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    const gx = Math.floor(n.x / cellW);
+    const gy = Math.floor(n.y / cellH);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const neighbors = grid.get(`${gx + dx},${gy + dy}`);
+        if (!neighbors) continue;
+        for (const j of neighbors) {
+          if (j <= i) continue;
+          const b = nodes[j];
+          if (Math.abs(n.x - b.x) < hw * 2 && Math.abs(n.y - b.y) < hh * 2) count++;
+        }
+      }
+    }
+  }
+  return count;
+}
+
+/**
+ * Jitter only nodes that are actually overlapping. Uses spatial hash for O(n).
+ * Small random displacement breaks deadlocks in post-convergence cleanup.
+ */
+function jitterOverlappingNodes(nodes, nodeW, nodeH) {
+  const hw = nodeW / 2;
+  const hh = nodeH / 2;
+  const cellW = nodeW * 1.5;
+  const cellH = nodeH * 3;
+  const grid = new Map();
+
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    const key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
+    if (!grid.has(key)) grid.set(key, []);
+    grid.get(key).push(i);
+  }
+
+  for (let i = 0; i < nodes.length; i++) {
+    const a = nodes[i];
+    const gx = Math.floor(a.x / cellW);
+    const gy = Math.floor(a.y / cellH);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const neighbors = grid.get(`${gx + dx},${gy + dy}`);
+        if (!neighbors) continue;
+        for (const j of neighbors) {
+          if (j <= i) continue;
+          const b = nodes[j];
+          const ox = hw * 2 - Math.abs(a.x - b.x);
+          const oy = hh * 2 - Math.abs(a.y - b.y);
+          if (ox > 0 && oy > 0) {
+            // Push apart along minimum-overlap axis + small random to break symmetry
+            if (ox < oy) {
+              const sign = a.x < b.x ? -1 : (a.x > b.x ? 1 : (Math.random() < 0.5 ? -1 : 1));
+              const push = (ox / 2 + 5 + Math.random() * 10);
+              a.x += sign * push;
+              b.x -= sign * push;
+            } else {
+              const sign = a.y < b.y ? -1 : (a.y > b.y ? 1 : (Math.random() < 0.5 ? -1 : 1));
+              const push = (oy / 2 + 3 + Math.random() * 6);
+              a.y += sign * push;
+              b.y -= sign * push;
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -372,7 +474,7 @@ let nodeW = 260;
 let nodeH = 40;
 
 let config = {
-  chargeStrength: -500,   // Repulsion (negative = repel)
+  chargeStrength: -150,   // Repulsion (negative = repel). NOT scaled by alpha (d3 convention).
   theta: 0.8,             // Barnes-Hut accuracy (0.5=exact, 1.0=fast)
   linkDistance: 150,       // Spring rest length for edges
   linkStrength: 0.2,      // Spring stiffness for edges
@@ -380,9 +482,10 @@ let config = {
   groupStrength: 0.05,    // Stiffness for directory springs
   collideStrength: 0.8,   // Collision response (0..1)
   centerStrength: 0.01,   // Center gravity
-  velocityDecay: 0.4,     // Damping (0=no friction, 1=frozen)
-  alphaDecay: 0.0228,     // Cooling rate
+  velocityDecay: 0.4,     // Damping (d3 default)
+  alphaDecay: 0.0228,     // Cooling rate (d3 default)
   alphaMin: 0.001,        // Convergence threshold
+  alphaTarget: 0,          // Target alpha for cooling
 };
 
 function initSimulation(data) {
@@ -463,24 +566,26 @@ function initSimulation(data) {
 }
 
 function tick(alpha) {
-  // 1. Repulsion (Barnes-Hut)
-  applyChargeForce(nodes, config.chargeStrength * alpha, config.theta);
+  // 1. Repulsion (Barnes-Hut) — NOT scaled by alpha (d3 convention).
+  // Charge is a constant field, not temperature-dependent.
+  applyChargeForce(nodes, config.chargeStrength, config.theta);
 
-  // 2. Springs
+  // 2. Springs — scaled by alpha (cools down over time)
   applyLinkForce(nodes, edges, alpha);
 
   // 3. Collision (multi-pass, before integration)
   applyCollisionForce(nodes, nodeW, nodeH, config.collideStrength, 4);
 
-  // 4. Center gravity
+  // 4. Center gravity — scaled by alpha to allow early spread
   if (config.centerStrength > 0) {
-    applyCenterForce(nodes, config.centerStrength);
+    applyCenterForce(nodes, config.centerStrength * alpha);
   }
 
-  // 5. Apply velocities with damping + clamping
+  // 5. Velocity Verlet integration: decay then move (d3 order)
   let energy = 0;
   const decay = 1 - config.velocityDecay;
-  const vMax = 100; // max velocity per tick — prevents explosive divergence
+  // vMax scales with graph: large graphs need more velocity headroom
+  const vMax = Math.max(200, Math.sqrt(nodes.length) * 10);
   for (const n of nodes) {
     n.vx *= decay;
     n.vy *= decay;
@@ -517,9 +622,10 @@ self.onmessage = function (e) {
     initSimulation(e.data);
 
     const totalNodes = nodes.length;
-    if (totalNodes > 1000) config.alphaDecay = 0.03;
 
-    // Alpha schedule: starts at 1, decays by alphaDecay each tick
+    // Adaptive alpha decay: start with d3 default, adjust based on overlap feedback
+    let adaptiveAlphaDecay = config.alphaDecay;
+    // Alpha schedule: d3-style interpolation toward alphaTarget
     let alpha = 1;
     let iteration = 0;
     const maxIter = Math.ceil(Math.log(config.alphaMin) / Math.log(1 - config.alphaDecay)) + 1;
@@ -530,48 +636,123 @@ self.onmessage = function (e) {
 
       for (let i = 0; i < batchSize && alpha > config.alphaMin && iteration < maxIter; i++) {
         tick(alpha);
-        alpha *= (1 - config.alphaDecay);
+        // d3-style alpha decay
+        alpha += (config.alphaTarget - alpha) * adaptiveAlphaDecay;
         iteration++;
+      }
+
+      // Adaptive feedback: check overlaps periodically and slow cooling if needed
+      if (iteration % 20 === 0) {
+        const overlaps = countOverlaps(nodes, nodeW, nodeH);
+        if (overlaps > 0 && alpha > 0.05) {
+          adaptiveAlphaDecay = Math.max(0.005, adaptiveAlphaDecay * 0.9);
+        }
       }
 
       const isDone = alpha <= config.alphaMin || iteration >= maxIter;
 
       if (!isDone) {
-        // Only send intermediate ticks (done is sent after cleanup below)
         self.postMessage({
           type: 'tick',
           positions: getPositions(),
           energy: Math.round(alpha * 1000) / 1000,
           iteration,
+          overlaps: countOverlaps(nodes, nodeW, nodeH),
         });
-      }
+        setTimeout(runBatch, 0);
+      } else {
+        // ── Gentle Expansion Post-Convergence Phase ──
+        // Run as an async batch loop to prevent worker freezes and provide smooth UI ticks
+        let attempt = 0;
+        const maxExpansionAttempts = 2000;
+        // With O(N) spatial hash, we can afford bigger batches even on large graphs
+        const expansionBatchSize = totalNodes > 1000 ? 10 : 20;
 
-      if (isDone) {
-        // Post-convergence: pure collision cleanup (no other forces)
-        // Resolves remaining overlaps including cascade effects in long chains
-        for (let cleanup = 0; cleanup < 30; cleanup++) {
-          applyCollisionForce(nodes, nodeW, nodeH, 1.0, 5);
-          // Apply velocity and reset
-          for (const n of nodes) {
-            n.x += n.vx;
-            n.y += n.vy;
-            n.vx = 0;
-            n.vy = 0;
+        function runExpansionBatch() {
+          if (!running) return;
+          
+          let overlaps = countOverlaps(nodes, nodeW, nodeH);
+          let bIter = 0;
+          
+          while (overlaps > 0 && attempt < maxExpansionAttempts && bIter < expansionBatchSize) {
+            // Purely local collision resolution (already O(N) via spatial hash inside)
+            applyCollisionForce(nodes, nodeW, nodeH, 1.0, 4);
+
+            // Add radial velocity using spatial hash — O(N) instead of O(N²)
+            const cellW = nodeW * 1.5;
+            const cellH = nodeH * 3;
+            const grid = new Map();
+            for (let i = 0; i < nodes.length; i++) {
+              const n = nodes[i];
+              const key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
+              if (!grid.has(key)) grid.set(key, []);
+              grid.get(key).push(i);
+            }
+
+            for (let i = 0; i < nodes.length; i++) {
+              const a = nodes[i];
+              const gx = Math.floor(a.x / cellW);
+              const gy = Math.floor(a.y / cellH);
+              for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                  const neighbors = grid.get(`${gx + dx},${gy + dy}`);
+                  if (!neighbors) continue;
+                  for (const j of neighbors) {
+                    if (j <= i) continue;
+                    const b = nodes[j];
+                    let ddx = b.x - a.x;
+                    let ddy = b.y - a.y;
+                    if (Math.abs(ddx) < nodeW && Math.abs(ddy) < nodeH) {
+                      let len = Math.sqrt(ddx*ddx + ddy*ddy);
+                      if (len === 0) { ddx = Math.random()-0.5; ddy = Math.random()-0.5; len = Math.sqrt(ddx*ddx+ddy*ddy)||1; }
+                      const push = 2 / len;
+                      a.vx -= ddx * push;
+                      b.vx += ddx * push;
+                      a.vy -= ddy * push;
+                      b.vy += ddy * push;
+                    }
+                  }
+                }
+              }
+            }
+
+            // High damping integration so they ooze apart without exploding
+            const decay = 0.8;
+            for (const n of nodes) {
+              n.vx *= decay;
+              n.vy *= decay;
+              if (n.vx > 10) n.vx = 10; else if (n.vx < -10) n.vx = -10;
+              if (n.vy > 10) n.vy = 10; else if (n.vy < -10) n.vy = -10;
+              n.x += n.vx;
+              n.y += n.vy;
+            }
+
+            overlaps = countOverlaps(nodes, nodeW, nodeH);
+            attempt++;
+            bIter++;
+          }
+
+          if (overlaps > 0 && attempt < maxExpansionAttempts) {
+            self.postMessage({
+              type: 'tick',
+              positions: getPositions(),
+              energy: 0, // 0 indicates cooling is done, we are in expansion
+              iteration: iteration + attempt,
+              overlaps,
+            });
+            setTimeout(runExpansionBatch, 0);
+          } else {
+            running = false;
+            self.postMessage({
+              type: 'done',
+              positions: getPositions(),
+              iterations: iteration + attempt,
+            });
           }
         }
-        running = false;
-
-        // Final positions after cleanup
-        self.postMessage({
-          type: 'done',
-          positions: getPositions(),
-          energy: 0,
-          iteration,
-        });
-        return;
+        
+        runExpansionBatch();
       }
-
-      setTimeout(runBatch, 0);
     }
 
     runBatch();

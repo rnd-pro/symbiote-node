@@ -1009,17 +1009,37 @@ export class NodeCanvas extends Symbiote {
   }
 
   /**
-   * Get all node positions
+   * Get all node positions — includes both DOM nodes and phantom (virtualized) nodes.
+   * SubgraphRouter relies on this to decide whether a node is on the current canvas layer;
+   * phantom nodes DO have layout positions but no DOM element, so they must be included here.
    * @returns {Object<string, number[]>}
    */
   getPositions() {
     const positions = {};
+    // DOM nodes (promoted / small graph)
     for (const [id, el] of this.#nodeViews) {
       if (el._position) {
         positions[id] = [el._position.x, el._position.y];
       }
     }
+    // Phantom nodes (virtualized, laid out but no DOM yet).
+    // Include even at (0,0) — position existence means node IS on this layer.
+    for (const [id, pd] of this.#phantomData) {
+      if (!positions[id]) {
+        positions[id] = [pd.x, pd.y];
+      }
+    }
     return positions;
+  }
+
+  /**
+   * Check whether a node exists on the current canvas layer (DOM or phantom).
+   * SubgraphRouter uses this to avoid spurious drillDown when layout is still in progress.
+   * @param {string} nodeId
+   * @returns {boolean}
+   */
+  hasNode(nodeId) {
+    return this.#nodeViews.has(nodeId) || this.#phantomData.has(nodeId);
   }
 
   // --- Frame API ---

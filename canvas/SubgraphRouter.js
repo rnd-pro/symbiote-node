@@ -72,12 +72,19 @@ export class SubgraphRouter {
       }
 
       if (path) {
-        const symbolHash = window.location.hash.split('&symbol=')[1];
-        let suffix = '?in=1';
-        if (symbolHash && this.#config.drillableFiles.has(path)) {
-          suffix += `&symbol=${symbolHash}`;
+        const hash = window.location.hash;
+        const [base, queryStr] = hash.split('?');
+        const params = new URLSearchParams(queryStr || '');
+        
+        params.set('in', '1');
+        
+        // Preserve symbol if it exists and path is drillable
+        if (!params.has('symbol') || !this.#config.drillableFiles.has(path)) {
+          params.delete('symbol');
         }
-        history.replaceState(null, '', `#${this.#config.hashPrefix}/${path}${suffix}`);
+        
+        const newQuery = params.toString();
+        history.replaceState(null, '', `#${this.#config.hashPrefix}/${path}?${newQuery}`);
       }
     };
 
@@ -109,19 +116,40 @@ export class SubgraphRouter {
         }
       }
 
+      const updateUrl = (newPath, setIn = false, setFocus = null) => {
+        const hash = window.location.hash;
+        const [base, queryStr] = hash.split('?');
+        const params = new URLSearchParams(queryStr || '');
+        
+        let newBase = `#${this.#config.hashPrefix}`;
+        if (newPath) newBase += `/${newPath}`;
+        
+        if (setIn) params.set('in', '1');
+        else params.delete('in');
+        
+        if (setFocus) params.set('focus', setFocus);
+        else params.delete('focus');
+        
+        params.delete('symbol'); // always clear symbol on exit
+        
+        const newQuery = params.toString();
+        const newHash = newQuery ? `${newBase}?${newQuery}` : newBase;
+        history.replaceState(null, '', newHash);
+      };
+
       if (this.#canvasDepth > 0) {
         // Still inside a subgraph — update URL to parent context
         if (this.#config.dirNodeMap?.has(exitedDirPath)) {
-          history.replaceState(null, '', `#${this.#config.hashPrefix}/${exitedDirPath}?in=1`);
+          updateUrl(exitedDirPath, true, null);
         } else if (exitedDirPath) {
-          history.replaceState(null, '', `#${this.#config.hashPrefix}/${exitedDirPath}`);
+          updateUrl(exitedDirPath, false, null);
         }
       } else {
         // Back at root
         if (exitedDirPath) {
-          history.replaceState(null, '', `#${this.#config.hashPrefix}?focus=${encodeURIComponent(exitedDirPath)}`);
+          updateUrl(null, false, exitedDirPath);
         } else {
-          history.replaceState(null, '', `#${this.#config.hashPrefix}`);
+          updateUrl(null, false, null);
         }
       }
 
@@ -183,6 +211,32 @@ export class SubgraphRouter {
     const hasDrillFlag = params.get('in') === '1';
     const focusParam = params.get('focus');
     const symbolParam = params.get('symbol');
+
+    // Case 0: bare #graph — pop all subgraph layers and reset to root view
+    if (!drillPath && !focusParam && !hasDrillFlag && !symbolParam) {
+      // Event-driven pop: wait for each subgraph-exit before the next drillUp.
+      // rAF-polling was unreliable because canvasDepth updates only AFTER the exit
+      // event fires — which happens asynchronously during the canvas animation.
+      this.#isAutoRouting = true;
+      let safetyCounter = 10;
+      const doPopStep = () => {
+        if (this.#canvasDepth <= 0 || safetyCounter-- <= 0) {
+          this.#isAutoRouting = false;
+          this.#canvas.fitView?.();
+          return;
+        }
+        // Register exit listener FIRST, then trigger drillUp
+        const onExit = () => {
+          this.#canvas.removeEventListener('subgraph-exit', onExit);
+          // canvasDepth is now decremented by the main handler; recurse
+          requestAnimationFrame(doPopStep);
+        };
+        this.#canvas.addEventListener('subgraph-exit', onExit);
+        this.#canvas.drillUp?.();
+      };
+      doPopStep();
+      return;
+    }
 
     // Case 1: #graph?focus=src/analysis/ (root-level focus, no path)
     if (!drillPath && focusParam) {

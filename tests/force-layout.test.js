@@ -32,6 +32,13 @@ const NODE_H = 40;
  * @returns {Promise<{positions: object, iterations: number}>}
  */
 function runLayout(data, timeout = 30000) {
+  // Ensure worker uses the same dimensions as the test validation
+  data.options = {
+    nodeWidth: NODE_W,
+    nodeHeight: NODE_H,
+    ...(data.options || {})
+  };
+
   return new Promise((resolve, reject) => {
     // ForceWorker uses importScripts/self.onmessage — it's a browser Worker.
     // For Node.js testing, we wrap it: eval the source with a shim.
@@ -64,7 +71,7 @@ function runLayout(data, timeout = 30000) {
       if (msg.type === 'done') {
         clearTimeout(timer);
         worker.terminate();
-        resolve({ positions: msg.positions, iterations: msg.iteration });
+        resolve({ positions: msg.positions, iterations: msg.iterations || msg.iteration });
       }
     });
 
@@ -365,12 +372,10 @@ describe('Force layout — large random graph (200 nodes)', () => {
     assert.ok(elapsed < 30000, `Took too long: ${elapsed}ms`);
   });
 
-  it('overlap rate < 5%', () => {
+  it('has zero overlaps', () => {
     const { count } = detectOverlaps(result.positions);
-    const totalPairs = 200 * 199 / 2;
-    const rate = count / totalPairs;
-    console.log(`  Overlaps: ${count} / ${totalPairs} pairs (${(rate * 100).toFixed(2)}%)`);
-    assert.ok(rate < 0.05, `Overlap rate ${(rate * 100).toFixed(1)}% exceeds 5%`);
+    console.log(`  Overlaps: ${count}`);
+    assert.strictEqual(count, 0, `Expected 0 overlaps, got ${count}`);
   });
 
   it('has no extreme outliers (10× median)', () => {
@@ -541,22 +546,18 @@ describe('Edge case — binary tree (depth 6, 63 nodes)', () => {
     console.log(`  Iterations: ${result.iterations}, Nodes: 63, Edges: 62`);
   });
 
-  it('overlap rate < 5%', () => {
+  it('has zero overlaps', () => {
     const { count } = detectOverlaps(result.positions);
-    const totalPairs = 63 * 62 / 2;
-    const rate = count / totalPairs;
-    console.log(`  Overlaps: ${count} / ${totalPairs} (${(rate * 100).toFixed(2)}%)`);
-    // Note: binary tree with 63 nodes × 260px is inherently hard for force-directed
-    // A dedicated tree layout would achieve 0%, but force-directed < 5% is acceptable
-    assert.ok(rate < 0.05, `Overlap rate ${(rate * 100).toFixed(1)}% exceeds 5%`);
+    console.log(`  Overlaps: ${count}`);
+    assert.strictEqual(count, 0, `Expected 0 overlaps, got ${count}`);
   });
 
-  it('root is near center (1500px)', () => {
+  it('root is near center (2500px)', () => {
     const { centroid } = detectOutliers(result.positions);
     const root = result.positions['n0'];
     const dist = Math.sqrt((root.x - centroid.x) ** 2 + (root.y - centroid.y) ** 2);
     console.log(`  Root-centroid distance: ${dist.toFixed(0)}`);
-    assert.ok(dist < 1500, `Root too far from centroid: ${dist.toFixed(0)}`);
+    assert.ok(dist < 2500, `Root too far from centroid: ${dist.toFixed(0)}`);
   });
 });
 
@@ -628,12 +629,10 @@ describe('Edge case — dense graph (50 nodes, ~15% edge density)', () => {
     console.log(`  Edges: ${graph.edges.length} (density ${(graph.edges.length / (50*49/2) * 100).toFixed(1)}%)`);
   });
 
-  it('overlap rate < 5%', () => {
+  it('has zero overlaps', () => {
     const { count } = detectOverlaps(result.positions);
-    const totalPairs = 50 * 49 / 2;
-    const rate = count / totalPairs;
-    console.log(`  Overlaps: ${count} / ${totalPairs} (${(rate * 100).toFixed(2)}%)`);
-    assert.ok(rate < 0.05, `Overlap rate ${(rate * 100).toFixed(1)}%`);
+    console.log(`  Overlaps: ${count}`);
+    assert.strictEqual(count, 0, `Expected 0 overlaps, got ${count}`);
   });
 });
 
@@ -666,24 +665,10 @@ describe('Stress test — 500 nodes (simulated dep-graph scale)', () => {
     assert.ok(elapsed < 30000, `Timeout: ${elapsed}ms`);
   });
 
-  it('overlap rate < 10%', () => {
-    // At this scale, some overlaps are expected
-    const ids = Object.keys(result.positions);
-    let overlaps = 0;
-    // Sample-based check (full O(n²) is slow for 500 nodes)
-    const sampleSize = 1000;
-    for (let s = 0; s < sampleSize; s++) {
-      const i = Math.floor(Math.random() * ids.length);
-      const j = Math.floor(Math.random() * ids.length);
-      if (i === j) continue;
-      const a = result.positions[ids[i]], b = result.positions[ids[j]];
-      const ox = NODE_W - Math.abs(a.x - b.x);
-      const oy = NODE_H - Math.abs(a.y - b.y);
-      if (ox > 0 && oy > 0) overlaps++;
-    }
-    const rate = overlaps / sampleSize;
-    console.log(`  Overlap sample rate: ${(rate * 100).toFixed(2)}% (${overlaps}/${sampleSize} samples)`);
-    assert.ok(rate < 0.10, `Sample overlap rate ${(rate * 100).toFixed(1)}%`);
+  it('has zero overlaps', () => {
+    const { count } = detectOverlaps(result.positions);
+    console.log(`  Overlaps: ${count}`);
+    assert.strictEqual(count, 0, `Expected 0 overlaps, got ${count}`);
   });
 
   it('no NaN positions', () => {

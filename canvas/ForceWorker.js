@@ -246,51 +246,46 @@ function applyChargeForce(nodes, strength, theta) {
 
 /**
  * Collision force — prevents node overlap.
- * Builds quadtree, visits each node pair, pushes apart if bounding boxes overlap.
- * Uses rectangular collision (nodeW × nodeH), not circular.
+ * Uses spatial hash grid for O(n) neighbor detection.
+ * Applies POSITIONAL separation (not just velocity) for hard constraints.
+ * Multi-pass (3 iterations) to resolve chain collisions.
  */
-function applyCollisionForce(nodes, nodeW, nodeH, strength) {
-  const hw = nodeW / 2;
-  const hh = nodeH / 2;
+function applyCollisionForce(nodes, nodeW, nodeH, strength, iterations) {
+  const iters = iterations || 3;
+  // Padding: add small gap between nodes
+  const padX = 8;
+  const padY = 4;
+  const hw = nodeW / 2 + padX;
+  const hh = nodeH / 2 + padY;
 
-  // Simple spatial hash for O(n) collision detection
-  const cellW = nodeW * 2;
-  const cellH = nodeH * 2;
-  const grid = new Map();
+  for (let pass = 0; pass < iters; pass++) {
+    // Rebuild spatial hash each pass (positions shift)
+    const cellW = nodeW * 1.5;
+    const cellH = nodeH * 3;
+    const grid = new Map();
 
-  for (let i = 0; i < nodes.length; i++) {
-    const n = nodes[i];
-    const gx = Math.floor(n.x / cellW);
-    const gy = Math.floor(n.y / cellH);
-    const key = gx * 73856093 ^ gy * 19349663; // spatial hash
-    if (!grid.has(key)) grid.set(key, []);
-    grid.get(key).push(i);
-  }
-
-  for (const [key, indices] of grid) {
-    // Decode grid cell (approximate — we just need neighbors)
-    // Check this cell
-    for (let a = 0; a < indices.length; a++) {
-      for (let b = a + 1; b < indices.length; b++) {
-        resolveOverlap(nodes, indices[a], indices[b], hw, hh, strength);
-      }
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      const gx = Math.floor(n.x / cellW);
+      const gy = Math.floor(n.y / cellH);
+      const key = `${gx},${gy}`;
+      if (!grid.has(key)) grid.set(key, []);
+      grid.get(key).push(i);
     }
-  }
 
-  // Also check adjacent cells
-  for (let i = 0; i < nodes.length; i++) {
-    const n = nodes[i];
-    const gx = Math.floor(n.x / cellW);
-    const gy = Math.floor(n.y / cellH);
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        if (dx === 0 && dy === 0) continue;
-        const nk = (gx + dx) * 73856093 ^ (gy + dy) * 19349663;
-        const neighbors = grid.get(nk);
-        if (!neighbors) continue;
-        for (const j of neighbors) {
-          if (j <= i) continue;
-          resolveOverlap(nodes, i, j, hw, hh, strength);
+    // Check each node against its cell + all 8 neighbors
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      const gx = Math.floor(n.x / cellW);
+      const gy = Math.floor(n.y / cellH);
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          const neighbors = grid.get(`${gx + dx},${gy + dy}`);
+          if (!neighbors) continue;
+          for (const j of neighbors) {
+            if (j <= i) continue;
+            resolveOverlap(nodes, i, j, hw, hh, strength);
+          }
         }
       }
     }
@@ -301,21 +296,27 @@ function resolveOverlap(nodes, i, j, hw, hh, strength) {
   const a = nodes[i], b = nodes[j];
   let dx = b.x - a.x;
   let dy = b.y - a.y;
-  const overlapX = hw + hw - Math.abs(dx); // nodeW - |dx|
-  const overlapY = hh + hh - Math.abs(dy); // nodeH - |dy|
+  const overlapX = hw + hw - Math.abs(dx);
+  const overlapY = hh + hh - Math.abs(dy);
 
   if (overlapX > 0 && overlapY > 0) {
-    // Push apart along axis of least overlap
+    // Push apart: half via position (hard), half via velocity (soft)
     if (overlapX < overlapY) {
-      const push = overlapX * strength * 0.5;
       const sign = dx < 0 ? -1 : (dx > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
-      a.vx -= sign * push;
-      b.vx += sign * push;
+      const push = overlapX * strength * 0.5;
+      // Hard positional push
+      a.x -= sign * push * 0.5;
+      b.x += sign * push * 0.5;
+      // Soft velocity push
+      a.vx -= sign * push * 0.5;
+      b.vx += sign * push * 0.5;
     } else {
-      const push = overlapY * strength * 0.5;
       const sign = dy < 0 ? -1 : (dy > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
-      a.vy -= sign * push;
-      b.vy += sign * push;
+      const push = overlapY * strength * 0.5;
+      a.y -= sign * push * 0.5;
+      b.y += sign * push * 0.5;
+      a.vy -= sign * push * 0.5;
+      b.vy += sign * push * 0.5;
     }
   }
 }
@@ -373,13 +374,13 @@ let nodeW = 260;
 let nodeH = 40;
 
 let config = {
-  chargeStrength: -300,   // Repulsion (negative = repel)
-  theta: 0.9,             // Barnes-Hut accuracy (0.5=exact, 1.0=fast)
-  linkDistance: 80,        // Spring rest length for edges
-  linkStrength: 0.3,      // Spring stiffness for edges
+  chargeStrength: -500,   // Repulsion (negative = repel)
+  theta: 0.8,             // Barnes-Hut accuracy (0.5=exact, 1.0=fast)
+  linkDistance: 150,       // Spring rest length for edges
+  linkStrength: 0.2,      // Spring stiffness for edges
   groupDistance: 120,      // Rest length for directory springs
   groupStrength: 0.05,    // Stiffness for directory springs
-  collideStrength: 0.7,   // Collision response (0..1)
+  collideStrength: 0.8,   // Collision response (0..1)
   centerStrength: 0.01,   // Center gravity
   velocityDecay: 0.4,     // Damping (0=no friction, 1=frozen)
   alphaDecay: 0.0228,     // Cooling rate
@@ -470,8 +471,8 @@ function tick(alpha) {
   // 2. Springs
   applyLinkForce(nodes, edges, alpha);
 
-  // 3. Collision
-  applyCollisionForce(nodes, nodeW, nodeH, config.collideStrength);
+  // 3. Collision (multi-pass, position + velocity)
+  applyCollisionForce(nodes, nodeW, nodeH, config.collideStrength, 3);
 
   // 4. Center gravity
   if (config.centerStrength > 0) {
@@ -531,16 +532,38 @@ self.onmessage = function (e) {
 
       const isDone = alpha <= config.alphaMin || iteration >= maxIter;
 
-      // Post positions every batch or on done
-      self.postMessage({
-        type: isDone ? 'done' : 'tick',
-        positions: getPositions(),
-        energy: Math.round(alpha * 1000) / 1000,
-        iteration,
-      });
+      if (!isDone) {
+        // Only send intermediate ticks (done is sent after cleanup below)
+        self.postMessage({
+          type: 'tick',
+          positions: getPositions(),
+          energy: Math.round(alpha * 1000) / 1000,
+          iteration,
+        });
+      }
 
       if (isDone) {
+        // Post-convergence: pure collision cleanup (no other forces)
+        // Resolves remaining overlaps that spring equilibrium couldn't
+        for (let cleanup = 0; cleanup < 10; cleanup++) {
+          applyCollisionForce(nodes, nodeW, nodeH, 1.0, 3);
+          // Apply velocity and reset
+          for (const n of nodes) {
+            n.x += n.vx;
+            n.y += n.vy;
+            n.vx = 0;
+            n.vy = 0;
+          }
+        }
         running = false;
+
+        // Final positions after cleanup
+        self.postMessage({
+          type: 'done',
+          positions: getPositions(),
+          energy: 0,
+          iteration,
+        });
         return;
       }
 

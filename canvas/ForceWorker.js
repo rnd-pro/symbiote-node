@@ -534,6 +534,14 @@ function initSimulation(data) {
   const nodeIndex = {};
   nodes.forEach((n, i) => { nodeIndex[n.id] = i; });
 
+  // Compute raw degree counts to find true hubs (most connected nodes)
+  const rawDegree = new Array(nodes.length).fill(0);
+  rawEdges.forEach(e => {
+    const si = nodeIndex[e.from], ti = nodeIndex[e.to];
+    if (si !== undefined) rawDegree[si]++;
+    if (ti !== undefined) rawDegree[ti]++;
+  });
+
   // Compute degree counts for link bias
   const degree = new Array(nodes.length).fill(0);
 
@@ -554,14 +562,28 @@ function initSimulation(data) {
     })
     .filter(Boolean);
 
-  // Directory springs (star topology, capped)
+  // Directory springs (star topology)
   for (const [, memberIds] of Object.entries(groups)) {
     if (memberIds.length < 2) continue;
-    const hubIdx = nodeIndex[memberIds[0]];
+
+    // Identify the true connection center for this group
+    let bestHubId = memberIds[0];
+    let maxConnections = -1;
+    for (const mId of memberIds) {
+      const idx = nodeIndex[mId];
+      if (idx !== undefined && rawDegree[idx] > maxConnections) {
+        maxConnections = rawDegree[idx];
+        bestHubId = mId;
+      }
+    }
+
+    const hubIdx = nodeIndex[bestHubId];
     if (hubIdx === undefined) continue;
-    const limit = Math.min(memberIds.length, 12);
-    for (let i = 1; i < limit; i++) {
-      const ti = nodeIndex[memberIds[i]];
+
+    // Connect ALL members to the hub, no arbitrary limit
+    for (const mId of memberIds) {
+      if (mId === bestHubId) continue;
+      const ti = nodeIndex[mId];
       if (ti !== undefined) {
         degree[hubIdx]++;
         degree[ti]++;

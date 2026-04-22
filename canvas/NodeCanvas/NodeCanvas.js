@@ -1564,7 +1564,9 @@ export class NodeCanvas extends Symbiote {
           if (this._panStart && e) {
             const dx = Math.abs(e.pageX - this._panStart.x);
             const dy = Math.abs(e.pageY - this._panStart.y);
-            if (dx < 5 && dy < 5 && this._panStart.target === container) {
+            const t = this._panStart.target;
+            const isNode = t?.closest?.('graph-node, quick-toolbar, context-menu, inspector-panel');
+            if (dx < 5 && dy < 5 && !isNode) {
               this.#selector.unselectAll();
             }
           }

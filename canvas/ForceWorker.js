@@ -16,21 +16,20 @@
 
 class QuadNode {
   constructor(x, y, w, h) {
-    this.x = x;       // region origin X
-    this.y = y;       // region origin Y
-    this.w = w;       // region width
-    this.h = h;       // region height
-    this.mass = 0;    // total mass in this cell
-    this.cx = 0;      // center of mass X
-    this.cy = 0;      // center of mass Y
-    this.body = null;  // single body (leaf)
-    this.children = null; // [NW, NE, SW, SE] or null
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.mass = 0;
+    this.cx = 0;
+    this.cy = 0;
+    this.body = null;
+    this.children = null;
   }
 }
 
 function insertBody(node, body) {
   if (node.mass === 0) {
-    // Empty cell — place body here
     node.body = body;
     node.mass = body.mass;
     node.cx = body.x;
@@ -38,7 +37,6 @@ function insertBody(node, body) {
     return;
   }
 
-  // If leaf with existing body, subdivide
   if (node.body !== null) {
     const existing = node.body;
     node.body = null;
@@ -50,7 +48,6 @@ function insertBody(node, body) {
 
   insertIntoChild(node, body);
 
-  // Update center of mass
   const totalMass = node.mass + body.mass;
   node.cx = (node.cx * node.mass + body.x * body.mass) / totalMass;
   node.cy = (node.cy * node.mass + body.y * body.mass) / totalMass;
@@ -61,10 +58,10 @@ function subdivide(node) {
   const hw = node.w / 2;
   const hh = node.h / 2;
   node.children = [
-    new QuadNode(node.x, node.y, hw, hh),             // NW
-    new QuadNode(node.x + hw, node.y, hw, hh),         // NE
-    new QuadNode(node.x, node.y + hh, hw, hh),         // SW
-    new QuadNode(node.x + hw, node.y + hh, hw, hh),    // SE
+    new QuadNode(node.x, node.y, hw, hh),
+    new QuadNode(node.x + hw, node.y, hw, hh),
+    new QuadNode(node.x, node.y + hh, hw, hh),
+    new QuadNode(node.x + hw, node.y + hh, hw, hh),
   ];
 }
 
@@ -75,32 +72,24 @@ function insertIntoChild(node, body) {
   insertBody(node.children[idx], body);
 }
 
-/**
- * Calculate repulsion force on body using Barnes-Hut approximation.
- * θ (theta) controls accuracy: 0 = exact, 0.5 = typical, 1.0 = fast
- */
 function calcRepulsion(node, body, theta, repulsion, fx, fy) {
   if (node.mass === 0) return { fx, fy };
 
   const dx = body.x - node.cx;
   const dy = body.y - node.cy;
-  const distSq = dx * dx + dy * dy + 1; // +1 to avoid singularity
+  const distSq = dx * dx + dy * dy + 1;
   const dist = Math.sqrt(distSq);
 
-  // If leaf with the same body, skip
   if (node.body === body) return { fx, fy };
 
-  // Barnes-Hut criterion: if region is small enough relative to distance, treat as single mass
   const regionSize = Math.max(node.w, node.h);
   if (node.body !== null || regionSize / dist < theta) {
-    // Coulomb-like repulsion: F = repulsion * m1 * m2 / d²
     const force = repulsion * body.mass * node.mass / distSq;
     fx += (dx / dist) * force;
     fy += (dy / dist) * force;
     return { fx, fy };
   }
 
-  // Otherwise recurse into children
   if (node.children) {
     for (const child of node.children) {
       const result = calcRepulsion(child, body, theta, repulsion, fx, fy);
@@ -114,33 +103,35 @@ function calcRepulsion(node, body, theta, repulsion, fx, fy) {
 
 // ---- Force Simulation ----
 
-let nodes = [];         // { id, x, y, vx, vy, mass, pinned }
-let edges = [];         // { source, target, strength, restLength }
-let nodeIndex = {};     // id → index
+let nodes = [];
+let edges = [];
+let nodeIndex = {};
 let running = false;
 
-// Simulation parameters
+/** Node dimensions for overlap detection */
+const NODE_W = 260;
+const NODE_H = 40;
+
 let config = {
-  repulsion: 800,       // Coulomb constant
-  springK: 0.3,         // Spring stiffness
-  springLength: 120,    // Rest length for edges
-  dirSpringK: 0.05,     // Weak spring for same-directory
-  dirSpringLength: 200, // Rest length for directory springs
-  damping: 0.85,        // Velocity damping per tick
-  theta: 0.7,           // Barnes-Hut accuracy (0.5-1.0)
-  maxIterations: 300,   // Max simulation ticks
-  minEnergy: 0.5,       // Convergence threshold
-  tickInterval: 16,     // ms between ticks (~60fps)
-  gravity: 0.01,        // Center gravity to prevent drift
+  repulsion: 500,
+  springK: 0.4,
+  springLength: 100,
+  dirSpringK: 0.08,
+  dirSpringLength: 140,
+  damping: 0.82,
+  theta: 0.7,
+  maxIterations: 300,
+  minEnergy: 0.5,
+  tickInterval: 16,
+  gravity: 0.02,
+  overlapPush: 2.0,       // Overlap separation force multiplier
 };
 
 function initSimulation(data) {
   const { nodes: rawNodes, edges: rawEdges, groups, options = {} } = data;
 
-  // Merge config
   Object.assign(config, options);
 
-  // Initialize nodes with random positions (or use provided)
   nodes = rawNodes.map((n, i) => {
     const angle = (2 * Math.PI * i) / rawNodes.length;
     const radius = Math.sqrt(rawNodes.length) * 50;
@@ -159,7 +150,7 @@ function initSimulation(data) {
   nodeIndex = {};
   nodes.forEach((n, i) => { nodeIndex[n.id] = i; });
 
-  // Initialize edges (import springs)
+  // Import edges (strong springs)
   edges = rawEdges.map(e => ({
     source: nodeIndex[e.from],
     target: nodeIndex[e.to],
@@ -167,21 +158,24 @@ function initSimulation(data) {
     restLength: e.restLength || config.springLength,
   })).filter(e => e.source !== undefined && e.target !== undefined);
 
-  // Add directory springs (weak springs between same-group nodes)
+  // Directory springs: connect each node to a virtual group center
+  // Instead of O(n²) full mesh, use star topology: each member → first member as hub
   if (groups) {
-    for (const [groupId, memberIds] of Object.entries(groups)) {
-      for (let i = 0; i < memberIds.length; i++) {
-        for (let j = i + 1; j < memberIds.length; j++) {
-          const si = nodeIndex[memberIds[i]];
-          const ti = nodeIndex[memberIds[j]];
-          if (si !== undefined && ti !== undefined) {
-            edges.push({
-              source: si,
-              target: ti,
-              strength: config.dirSpringK,
-              restLength: config.dirSpringLength,
-            });
-          }
+    for (const [, memberIds] of Object.entries(groups)) {
+      if (memberIds.length < 2) continue;
+      // Cap at 8 springs per group to avoid O(n²)
+      const hubIdx = nodeIndex[memberIds[0]];
+      if (hubIdx === undefined) continue;
+      const limit = Math.min(memberIds.length, 8);
+      for (let i = 1; i < limit; i++) {
+        const ti = nodeIndex[memberIds[i]];
+        if (ti !== undefined) {
+          edges.push({
+            source: hubIdx,
+            target: ti,
+            strength: config.dirSpringK,
+            restLength: config.dirSpringLength,
+          });
         }
       }
     }
@@ -205,11 +199,10 @@ function tick() {
     insertBody(root, n);
   }
 
-  // 2. Calculate forces
+  // 2. Repulsion forces (Barnes-Hut)
   for (const n of nodes) {
     if (n.pinned) continue;
 
-    // Repulsion (Barnes-Hut)
     let { fx, fy } = calcRepulsion(root, n, config.theta, config.repulsion, 0, 0);
 
     // Center gravity
@@ -236,13 +229,60 @@ function tick() {
     if (!t.pinned) { t.vx -= fx; t.vy -= fy; }
   }
 
-  // 4. Apply velocities
+  // 4. Overlap resolution — push apart nodes whose bounding boxes overlap
+  // Use spatial grid for O(n) approximate neighbor checks
+  const cellW = NODE_W * 1.5;
+  const cellH = NODE_H * 1.5;
+  const grid = new Map();
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    const gx = Math.floor(n.x / cellW);
+    const gy = Math.floor(n.y / cellH);
+    const key = `${gx},${gy}`;
+    if (!grid.has(key)) grid.set(key, []);
+    grid.get(key).push(i);
+  }
+
+  for (const [key, indices] of grid) {
+    const [gx, gy] = key.split(',').map(Number);
+    // Check this cell and 8 neighbors
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const nk = `${gx + dx},${gy + dy}`;
+        const neighbors = grid.get(nk);
+        if (!neighbors) continue;
+        for (const i of indices) {
+          for (const j of neighbors) {
+            if (i >= j) continue;
+            const a = nodes[i];
+            const b = nodes[j];
+            const ox = NODE_W - Math.abs(a.x - b.x);
+            const oy = NODE_H - Math.abs(a.y - b.y);
+            if (ox > 0 && oy > 0) {
+              // Boxes overlap — push apart along axis of least overlap
+              const push = config.overlapPush;
+              if (ox < oy) {
+                const sign = a.x < b.x ? -1 : 1;
+                if (!a.pinned) a.vx += sign * ox * push * 0.5;
+                if (!b.pinned) b.vx -= sign * ox * push * 0.5;
+              } else {
+                const sign = a.y < b.y ? -1 : 1;
+                if (!a.pinned) a.vy += sign * oy * push * 0.5;
+                if (!b.pinned) b.vy -= sign * oy * push * 0.5;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 5. Apply velocities
   let energy = 0;
   for (const n of nodes) {
     if (n.pinned) continue;
-    // Clamp velocity to prevent explosions
     const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
-    const maxSpeed = 50;
+    const maxSpeed = 40;
     if (speed > maxSpeed) {
       n.vx = (n.vx / speed) * maxSpeed;
       n.vy = (n.vy / speed) * maxSpeed;
@@ -284,7 +324,6 @@ self.onmessage = function (e) {
       const energy = tick();
       iteration++;
 
-      // Send positions every 4 ticks to reduce message overhead
       if (iteration % 4 === 0 || energy < minEnergy || iteration >= maxIter) {
         self.postMessage({
           type: energy < minEnergy || iteration >= maxIter ? 'done' : 'tick',

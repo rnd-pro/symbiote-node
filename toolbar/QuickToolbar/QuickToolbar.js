@@ -97,20 +97,18 @@ export class QuickToolbar extends Symbiote {
   }
 
   /**
-   * Position toolbar centered above a node in screen-space.
-   * Converts world coordinates to screen coordinates using zoom/pan.
+   * Position toolbar centered above a node in world-space.
+   * Since toolbar is inside .content, it inherits zoom/pan transform.
    * @param {HTMLElement} nodeEl
    */
   #positionAtNode(nodeEl) {
-    const { zoom, panX, panY } = this._transform;
     const w = nodeEl.offsetWidth || nodeEl._cachedW || 180;
     const pos = nodeEl._position || { x: 0, y: 0 };
 
-    // World center → screen position
-    const screenX = (pos.x + w / 2) * zoom + panX;
-    const screenY = pos.y * zoom + panY - QuickToolbar.OFFSET_Y;
+    const x = pos.x + w / 2;
+    const y = pos.y - QuickToolbar.OFFSET_Y;
 
-    this.style.transform = `translate(${screenX}px, ${screenY}px)`;
+    this.style.transform = `translate(${x}px, ${y}px)`;
   }
 
   /**

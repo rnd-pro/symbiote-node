@@ -253,18 +253,23 @@ function applyChargeForce(nodes, strength, theta) {
  * Applies POSITIONAL separation (not just velocity) for hard constraints.
  * Multi-pass (3 iterations) to resolve chain collisions.
  */
-function applyCollisionForce(nodes, nodeW, nodeH, strength, iterations) {
+function applyCollisionForce(nodes, strength, iterations) {
   const iters = iterations || 3;
   // Padding: add small gap between nodes
   const padX = 8;
   const padY = 4;
-  const hw = nodeW / 2 + padX;
-  const hh = nodeH / 2 + padY;
+  
+  let maxW = 260;
+  let maxH = 40;
+  for (const n of nodes) {
+    if (n.w > maxW) maxW = n.w;
+    if (n.h > maxH) maxH = n.h;
+  }
 
   for (let pass = 0; pass < iters; pass++) {
     // Rebuild spatial hash each pass (positions shift)
-    const cellW = nodeW * 1.5;
-    const cellH = nodeH * 3;
+    const cellW = maxW * 1.5;
+    const cellH = maxH * 3;
     const grid = new Map();
 
     for (let i = 0; i < nodes.length; i++) {
@@ -287,7 +292,7 @@ function applyCollisionForce(nodes, nodeW, nodeH, strength, iterations) {
           if (!neighbors) continue;
           for (const j of neighbors) {
             if (j <= i) continue;
-            resolveOverlap(nodes, i, j, hw, hh, strength);
+            resolveOverlap(nodes, i, j, padX, padY, strength);
           }
         }
       }
@@ -295,12 +300,16 @@ function applyCollisionForce(nodes, nodeW, nodeH, strength, iterations) {
   }
 }
 
-function resolveOverlap(nodes, i, j, hw, hh, strength) {
+function resolveOverlap(nodes, i, j, padX, padY, strength) {
   const a = nodes[i], b = nodes[j];
   let dx = b.x - a.x;
   let dy = b.y - a.y;
-  const overlapX = hw + hw - Math.abs(dx);
-  const overlapY = hh + hh - Math.abs(dy);
+  const hwA = a.w / 2 + padX;
+  const hhA = a.h / 2 + padY;
+  const hwB = b.w / 2 + padX;
+  const hhB = b.h / 2 + padY;
+  const overlapX = (hwA + hwB) - Math.abs(dx);
+  const overlapY = (hhA + hhB) - Math.abs(dy);
 
   if (overlapX > 0 && overlapY > 0) {
     // Constraint-based: 100% positional push (Verlet-style)
@@ -335,12 +344,14 @@ function resolveOverlap(nodes, i, j, hw, hh, strength) {
  * Count overlapping node pairs using spatial hash. O(n) average.
  * @returns {number} Number of overlapping pairs
  */
-function countOverlaps(nodes, nodeW, nodeH) {
-  // No padding — count exact rectangle overlaps (matches test detectOverlaps)
-  const hw = nodeW / 2;
-  const hh = nodeH / 2;
-  const cellW = nodeW * 1.5;
-  const cellH = nodeH * 3;
+function countOverlaps(nodes) {
+  let maxW = 260, maxH = 40;
+  for (const n of nodes) {
+    if (n.w > maxW) maxW = n.w;
+    if (n.h > maxH) maxH = n.h;
+  }
+  const cellW = maxW * 1.5;
+  const cellH = maxH * 3;
   const grid = new Map();
 
   for (let i = 0; i < nodes.length; i++) {
@@ -362,7 +373,9 @@ function countOverlaps(nodes, nodeW, nodeH) {
         for (const j of neighbors) {
           if (j <= i) continue;
           const b = nodes[j];
-          if (Math.abs(n.x - b.x) < hw * 2 && Math.abs(n.y - b.y) < hh * 2) count++;
+          const hwA = n.w / 2, hhA = n.h / 2;
+          const hwB = b.w / 2, hhB = b.h / 2;
+          if (Math.abs(n.x - b.x) < hwA + hwB && Math.abs(n.y - b.y) < hhA + hhB) count++;
         }
       }
     }
@@ -374,11 +387,14 @@ function countOverlaps(nodes, nodeW, nodeH) {
  * Jitter only nodes that are actually overlapping. Uses spatial hash for O(n).
  * Small random displacement breaks deadlocks in post-convergence cleanup.
  */
-function jitterOverlappingNodes(nodes, nodeW, nodeH) {
-  const hw = nodeW / 2;
-  const hh = nodeH / 2;
-  const cellW = nodeW * 1.5;
-  const cellH = nodeH * 3;
+function jitterOverlappingNodes(nodes) {
+  let maxW = 260, maxH = 40;
+  for (const n of nodes) {
+    if (n.w > maxW) maxW = n.w;
+    if (n.h > maxH) maxH = n.h;
+  }
+  const cellW = maxW * 1.5;
+  const cellH = maxH * 3;
   const grid = new Map();
 
   for (let i = 0; i < nodes.length; i++) {
@@ -399,8 +415,10 @@ function jitterOverlappingNodes(nodes, nodeW, nodeH) {
         for (const j of neighbors) {
           if (j <= i) continue;
           const b = nodes[j];
-          const ox = hw * 2 - Math.abs(a.x - b.x);
-          const oy = hh * 2 - Math.abs(a.y - b.y);
+          const hwA = a.w / 2, hhA = a.h / 2;
+          const hwB = b.w / 2, hhB = b.h / 2;
+          const ox = (hwA + hwB) - Math.abs(a.x - b.x);
+          const oy = (hhA + hhB) - Math.abs(a.y - b.y);
           if (ox > 0 && oy > 0) {
             // Push apart along minimum-overlap axis + small random to break symmetry
             if (ox < oy) {
@@ -508,6 +526,8 @@ function initSimulation(data) {
       vy: 0,
       group: n.group || null,
       index: i,
+      w: n.w || options.nodeWidth || 260,
+      h: n.h || options.nodeHeight || 40,
     };
   });
 
@@ -574,7 +594,7 @@ function tick(alpha) {
   applyLinkForce(nodes, edges, alpha);
 
   // 3. Collision (multi-pass, before integration)
-  applyCollisionForce(nodes, nodeW, nodeH, config.collideStrength, 4);
+  applyCollisionForce(nodes, config.collideStrength, 4);
 
   // 4. Center gravity — scaled by alpha to allow early spread
   if (config.centerStrength > 0) {
@@ -643,7 +663,7 @@ self.onmessage = function (e) {
 
       // Adaptive feedback: check overlaps periodically and slow cooling if needed
       if (iteration % 20 === 0) {
-        const overlaps = countOverlaps(nodes, nodeW, nodeH);
+        const overlaps = countOverlaps(nodes);
         if (overlaps > 0 && alpha > 0.05) {
           adaptiveAlphaDecay = Math.max(0.005, adaptiveAlphaDecay * 0.9);
         }
@@ -657,7 +677,7 @@ self.onmessage = function (e) {
           positions: getPositions(),
           energy: Math.round(alpha * 1000) / 1000,
           iteration,
-          overlaps: countOverlaps(nodes, nodeW, nodeH),
+          overlaps: countOverlaps(nodes),
         });
         setTimeout(runBatch, 0);
       } else {
@@ -671,16 +691,21 @@ self.onmessage = function (e) {
         function runExpansionBatch() {
           if (!running) return;
           
-          let overlaps = countOverlaps(nodes, nodeW, nodeH);
+          let overlaps = countOverlaps(nodes);
           let bIter = 0;
           
           while (overlaps > 0 && attempt < maxExpansionAttempts && bIter < expansionBatchSize) {
             // Purely local collision resolution (already O(N) via spatial hash inside)
-            applyCollisionForce(nodes, nodeW, nodeH, 1.0, 4);
+            applyCollisionForce(nodes, 1.0, 4);
 
             // Add radial velocity using spatial hash — O(N) instead of O(N²)
-            const cellW = nodeW * 1.5;
-            const cellH = nodeH * 3;
+            let maxW = 260, maxH = 40;
+            for (const n of nodes) {
+              if (n.w > maxW) maxW = n.w;
+              if (n.h > maxH) maxH = n.h;
+            }
+            const cellW = maxW * 1.5;
+            const cellH = maxH * 3;
             const grid = new Map();
             for (let i = 0; i < nodes.length; i++) {
               const n = nodes[i];
@@ -702,7 +727,9 @@ self.onmessage = function (e) {
                     const b = nodes[j];
                     let ddx = b.x - a.x;
                     let ddy = b.y - a.y;
-                    if (Math.abs(ddx) < nodeW && Math.abs(ddy) < nodeH) {
+                    const limitX = (a.w + b.w) / 2;
+                    const limitY = (a.h + b.h) / 2;
+                    if (Math.abs(ddx) < limitX && Math.abs(ddy) < limitY) {
                       let len = Math.sqrt(ddx*ddx + ddy*ddy);
                       if (len === 0) { ddx = Math.random()-0.5; ddy = Math.random()-0.5; len = Math.sqrt(ddx*ddx+ddy*ddy)||1; }
                       const push = 2 / len;
@@ -727,7 +754,7 @@ self.onmessage = function (e) {
               n.y += n.vy;
             }
 
-            overlaps = countOverlaps(nodes, nodeW, nodeH);
+            overlaps = countOverlaps(nodes);
             attempt++;
             bIter++;
           }

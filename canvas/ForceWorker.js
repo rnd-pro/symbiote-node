@@ -204,6 +204,7 @@ function applyChargeForce(nodes, strength, theta) {
 
   // Apply forces using Barnes-Hut approximation
   const thetaSq = theta * theta;
+  const distMin2 = 100; // min distance² = 10px — prevents explosive forces from coincident nodes
   for (const body of nodes) {
     qtVisit(tree, (node, x0, y0, x1, y1) => {
       if (!node.value) return true; // skip empty
@@ -212,15 +213,18 @@ function applyChargeForce(nodes, strength, theta) {
       let dy = node.y - body.y;
       let w = x1 - x0;
 
-      // Jitter coincident points
-      if (dx === 0 && dy === 0) { dx = (Math.random() - 0.5) * 1e-6; dy = (Math.random() - 0.5) * 1e-6; }
+      // Jitter coincident points (meaningful distance, not infinitesimal)
+      if (dx === 0 && dy === 0) {
+        dx = (Math.random() - 0.5) * 20;
+        dy = (Math.random() - 0.5) * 20;
+      }
 
-      const distSq = dx * dx + dy * dy;
+      let distSq = dx * dx + dy * dy;
+      if (distSq < distMin2) distSq = distMin2; // clamp
 
       // Barnes-Hut criterion: if region width² / distance² < θ² → approximate
       if (w * w / distSq < thetaSq) {
         if (distSq < 1000 * 1000) { // distanceMax = 1000
-          const dist = Math.sqrt(distSq);
           const force = node.value / distSq;
           body.vx -= dx * force;
           body.vy -= dy * force;
@@ -231,7 +235,6 @@ function applyChargeForce(nodes, strength, theta) {
       // If leaf and not self
       if (!node.length) {
         if (node.data !== body) {
-          const dist = Math.sqrt(distSq) || 1;
           const force = strength / distSq;
           body.vx -= dx * force;
           body.vy -= dy * force;
@@ -300,23 +303,18 @@ function resolveOverlap(nodes, i, j, hw, hh, strength) {
   const overlapY = hh + hh - Math.abs(dy);
 
   if (overlapX > 0 && overlapY > 0) {
-    // Push apart: half via position (hard), half via velocity (soft)
+    // Constraint-based: 100% positional push (Verlet-style)
+    // This ensures overlaps are resolved immediately, not damped away
     if (overlapX < overlapY) {
       const sign = dx < 0 ? -1 : (dx > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
       const push = overlapX * strength * 0.5;
-      // Hard positional push
-      a.x -= sign * push * 0.5;
-      b.x += sign * push * 0.5;
-      // Soft velocity push
-      a.vx -= sign * push * 0.5;
-      b.vx += sign * push * 0.5;
+      a.x -= sign * push;
+      b.x += sign * push;
     } else {
       const sign = dy < 0 ? -1 : (dy > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
       const push = overlapY * strength * 0.5;
-      a.y -= sign * push * 0.5;
-      b.y += sign * push * 0.5;
-      a.vy -= sign * push * 0.5;
-      b.vy += sign * push * 0.5;
+      a.y -= sign * push;
+      b.y += sign * push;
     }
   }
 }
@@ -471,20 +469,26 @@ function tick(alpha) {
   // 2. Springs
   applyLinkForce(nodes, edges, alpha);
 
-  // 3. Collision (multi-pass, position + velocity)
-  applyCollisionForce(nodes, nodeW, nodeH, config.collideStrength, 3);
+  // 3. Collision (multi-pass, before integration)
+  applyCollisionForce(nodes, nodeW, nodeH, config.collideStrength, 4);
 
   // 4. Center gravity
   if (config.centerStrength > 0) {
     applyCenterForce(nodes, config.centerStrength);
   }
 
-  // 5. Apply velocities with damping
+  // 5. Apply velocities with damping + clamping
   let energy = 0;
   const decay = 1 - config.velocityDecay;
+  const vMax = 100; // max velocity per tick — prevents explosive divergence
   for (const n of nodes) {
     n.vx *= decay;
     n.vy *= decay;
+    // Clamp velocity
+    if (n.vx > vMax) n.vx = vMax;
+    else if (n.vx < -vMax) n.vx = -vMax;
+    if (n.vy > vMax) n.vy = vMax;
+    else if (n.vy < -vMax) n.vy = -vMax;
     n.x += n.vx;
     n.y += n.vy;
     energy += n.vx * n.vx + n.vy * n.vy;
@@ -544,9 +548,9 @@ self.onmessage = function (e) {
 
       if (isDone) {
         // Post-convergence: pure collision cleanup (no other forces)
-        // Resolves remaining overlaps that spring equilibrium couldn't
-        for (let cleanup = 0; cleanup < 10; cleanup++) {
-          applyCollisionForce(nodes, nodeW, nodeH, 1.0, 3);
+        // Resolves remaining overlaps including cascade effects in long chains
+        for (let cleanup = 0; cleanup < 30; cleanup++) {
+          applyCollisionForce(nodes, nodeW, nodeH, 1.0, 5);
           // Apply velocity and reset
           for (const n of nodes) {
             n.x += n.vx;

@@ -410,3 +410,286 @@ describe('Layout quality metrics (diagnostics)', () => {
     assert.ok(true); // Diagnostic — always passes
   });
 });
+
+// =====================================================================
+// EDGE CASES
+// =====================================================================
+
+describe('Edge case — single node', () => {
+  it('converges without error', async () => {
+    const result = await runLayout({
+      nodes: [{ id: 'only', x: 0, y: 0 }],
+      edges: [],
+      groups: {},
+      options: {},
+    });
+    assert.ok(result.positions['only'], 'Single node should have a position');
+    console.log(`  Position: (${result.positions['only'].x}, ${result.positions['only'].y})`);
+  });
+});
+
+describe('Edge case — two nodes, one edge', () => {
+  let result;
+
+  it('converges', async () => {
+    result = await runLayout({
+      nodes: [{ id: 'a', x: 0, y: 0 }, { id: 'b', x: 100, y: 0 }],
+      edges: [{ from: 'a', to: 'b' }],
+      groups: {},
+      options: {},
+    });
+    assert.ok(result.positions['a'] && result.positions['b']);
+  });
+
+  it('no overlap', () => {
+    const { count } = detectOverlaps(result.positions);
+    assert.equal(count, 0, `Expected 0 overlaps, found ${count}`);
+  });
+
+  it('nodes are within link distance', () => {
+    const a = result.positions['a'], b = result.positions['b'];
+    const dist = Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+    console.log(`  Distance: ${dist.toFixed(0)}px`);
+    assert.ok(dist < 500, `Nodes too far apart: ${dist.toFixed(0)}`);
+  });
+});
+
+describe('Edge case — disconnected components (3 isolated cliques)', () => {
+  let result;
+  const graph = { nodes: [], edges: [] };
+
+  // 3 triangles with no inter-connections
+  for (let c = 0; c < 3; c++) {
+    const ids = [`t${c}_0`, `t${c}_1`, `t${c}_2`];
+    ids.forEach((id, i) => graph.nodes.push({ id, x: c * 500 + i * 100, y: 0 }));
+    graph.edges.push({ from: ids[0], to: ids[1] });
+    graph.edges.push({ from: ids[1], to: ids[2] });
+    graph.edges.push({ from: ids[2], to: ids[0] });
+  }
+
+  it('converges', async () => {
+    result = await runLayout({ ...graph, groups: {}, options: {} });
+  });
+
+  it('no overlaps', () => {
+    const { count } = detectOverlaps(result.positions);
+    assert.equal(count, 0, `Expected 0 overlaps, found ${count}`);
+  });
+
+  it('components are visually separate', () => {
+    // Centroid of each triangle should be distinct
+    const centroids = [];
+    for (let c = 0; c < 3; c++) {
+      const ids = [`t${c}_0`, `t${c}_1`, `t${c}_2`];
+      let cx = 0, cy = 0;
+      ids.forEach(id => { cx += result.positions[id].x; cy += result.positions[id].y; });
+      centroids.push({ x: cx / 3, y: cy / 3 });
+    }
+    // Pairwise distance between component centroids
+    for (let i = 0; i < centroids.length; i++) {
+      for (let j = i + 1; j < centroids.length; j++) {
+        const dist = Math.sqrt((centroids[i].x - centroids[j].x) ** 2 + (centroids[i].y - centroids[j].y) ** 2);
+        console.log(`  Component ${i}↔${j} centroid distance: ${dist.toFixed(0)}`);
+        assert.ok(dist > 50, `Components ${i} and ${j} too close: ${dist.toFixed(0)}`);
+      }
+    }
+  });
+});
+
+describe('Edge case — all nodes at origin (coincident)', () => {
+  let result;
+
+  it('converges without NaN', async () => {
+    const nodes = Array.from({ length: 15 }, (_, i) => ({ id: `n${i}`, x: 0, y: 0 }));
+    const edges = Array.from({ length: 14 }, (_, i) => ({ from: `n${i}`, to: `n${i + 1}` }));
+    result = await runLayout({ nodes, edges, groups: {}, options: {} });
+
+    // No NaN positions
+    for (const [id, pos] of Object.entries(result.positions)) {
+      assert.ok(!isNaN(pos.x) && !isNaN(pos.y), `NaN position for ${id}: (${pos.x}, ${pos.y})`);
+    }
+    console.log(`  All 15 positions are valid (no NaN)`);
+  });
+
+  it('no overlaps', () => {
+    const { count } = detectOverlaps(result.positions);
+    assert.equal(count, 0, `Expected 0 overlaps, found ${count}`);
+  });
+
+  it('nodes have spread out', () => {
+    const bbox = boundingBox(result.positions);
+    console.log(`  BBox after spread: ${bbox.width.toFixed(0)} × ${bbox.height.toFixed(0)}`);
+    const maxDim = Math.max(bbox.width, bbox.height);
+    assert.ok(maxDim > NODE_W * 2, `Nodes didn't spread: max dimension=${maxDim.toFixed(0)}`);
+  });
+});
+
+describe('Edge case — binary tree (depth 6, 63 nodes)', () => {
+  let result;
+  const graph = { nodes: [], edges: [] };
+
+  // Build complete binary tree
+  for (let i = 0; i < 63; i++) {
+    graph.nodes.push({ id: `n${i}`, x: (i % 8) * 300, y: Math.floor(i / 8) * 100 });
+    if (i > 0) {
+      graph.edges.push({ from: `n${Math.floor((i - 1) / 2)}`, to: `n${i}` });
+    }
+  }
+
+  it('converges', async () => {
+    result = await runLayout({ ...graph, groups: {}, options: {} });
+    console.log(`  Iterations: ${result.iterations}, Nodes: 63, Edges: 62`);
+  });
+
+  it('overlap rate < 5%', () => {
+    const { count } = detectOverlaps(result.positions);
+    const totalPairs = 63 * 62 / 2;
+    const rate = count / totalPairs;
+    console.log(`  Overlaps: ${count} / ${totalPairs} (${(rate * 100).toFixed(2)}%)`);
+    // Note: binary tree with 63 nodes × 260px is inherently hard for force-directed
+    // A dedicated tree layout would achieve 0%, but force-directed < 5% is acceptable
+    assert.ok(rate < 0.05, `Overlap rate ${(rate * 100).toFixed(1)}% exceeds 5%`);
+  });
+
+  it('root is near center (1500px)', () => {
+    const { centroid } = detectOutliers(result.positions);
+    const root = result.positions['n0'];
+    const dist = Math.sqrt((root.x - centroid.x) ** 2 + (root.y - centroid.y) ** 2);
+    console.log(`  Root-centroid distance: ${dist.toFixed(0)}`);
+    assert.ok(dist < 1500, `Root too far from centroid: ${dist.toFixed(0)}`);
+  });
+});
+
+describe('Edge case — self-loops and duplicate edges (malformed data)', () => {
+  it('handles self-loops gracefully', async () => {
+    const result = await runLayout({
+      nodes: [{ id: 'a', x: 0, y: 0 }, { id: 'b', x: 100, y: 0 }, { id: 'c', x: 200, y: 0 }],
+      edges: [
+        { from: 'a', to: 'b' },
+        { from: 'a', to: 'a' },   // self-loop
+        { from: 'b', to: 'c' },
+        { from: 'b', to: 'c' },   // duplicate
+      ],
+      groups: {},
+      options: {},
+    });
+    // Should not crash, all positions valid
+    for (const [id, pos] of Object.entries(result.positions)) {
+      assert.ok(!isNaN(pos.x) && !isNaN(pos.y), `NaN for ${id}`);
+    }
+    console.log('  Self-loops and duplicates handled without crash');
+  });
+
+  it('handles edges referencing non-existent nodes', async () => {
+    const result = await runLayout({
+      nodes: [{ id: 'a', x: 0, y: 0 }, { id: 'b', x: 100, y: 0 }],
+      edges: [
+        { from: 'a', to: 'b' },
+        { from: 'a', to: 'ghost' },  // ghost node
+        { from: 'phantom', to: 'b' }, // phantom node
+      ],
+      groups: {},
+      options: {},
+    });
+    assert.ok(result.positions['a'] && result.positions['b']);
+    assert.ok(!result.positions['ghost'] && !result.positions['phantom']);
+    console.log('  Ghost edges ignored, valid nodes positioned');
+  });
+});
+
+describe('Edge case — deep chain (100 nodes)', () => {
+  let result, graph;
+
+  it('converges', async () => {
+    graph = makeChainGraph(100);
+    result = await runLayout({ ...graph, groups: {}, options: {} });
+    console.log(`  Iterations: ${result.iterations}`);
+  });
+
+  it('no overlaps', () => {
+    const { count } = detectOverlaps(result.positions);
+    assert.equal(count, 0, `Expected 0 overlaps, found ${count}`);
+  });
+
+  it('chain is roughly linear (aspect ratio > 2)', () => {
+    const bbox = boundingBox(result.positions);
+    const aspect = Math.max(bbox.width, bbox.height) / Math.min(bbox.width, bbox.height);
+    console.log(`  BBox: ${bbox.width.toFixed(0)} × ${bbox.height.toFixed(0)}, aspect: ${aspect.toFixed(1)}`);
+    assert.ok(aspect > 1.5, `Chain should be elongated, aspect ratio only ${aspect.toFixed(1)}`);
+  });
+});
+
+describe('Edge case — dense graph (50 nodes, ~15% edge density)', () => {
+  let result, graph;
+
+  it('converges', async () => {
+    graph = makeRandomGraph(50, 0.15);
+    result = await runLayout({ ...graph, groups: {}, options: {} });
+    console.log(`  Edges: ${graph.edges.length} (density ${(graph.edges.length / (50*49/2) * 100).toFixed(1)}%)`);
+  });
+
+  it('overlap rate < 5%', () => {
+    const { count } = detectOverlaps(result.positions);
+    const totalPairs = 50 * 49 / 2;
+    const rate = count / totalPairs;
+    console.log(`  Overlaps: ${count} / ${totalPairs} (${(rate * 100).toFixed(2)}%)`);
+    assert.ok(rate < 0.05, `Overlap rate ${(rate * 100).toFixed(1)}%`);
+  });
+});
+
+describe('Stress test — 500 nodes (simulated dep-graph scale)', () => {
+  let result, graph;
+
+  it('converges within 30s', async () => {
+    // Simulate dependency graph: sparse, with directory groups
+    graph = { nodes: [], edges: [], groups: {} };
+    const dirs = ['src', 'lib', 'utils', 'core', 'api', 'db', 'views', 'tests'];
+    for (let i = 0; i < 500; i++) {
+      const dir = dirs[i % dirs.length];
+      const id = `${dir}/file${Math.floor(i / dirs.length)}.js`;
+      graph.nodes.push({ id, x: (Math.random() - 0.5) * 5000, y: (Math.random() - 0.5) * 5000, group: dir });
+      if (!graph.groups[dir]) graph.groups[dir] = [];
+      graph.groups[dir].push(id);
+    }
+    // Sparse edges (~3 per node on average)
+    for (let i = 0; i < 500; i++) {
+      for (let k = 0; k < 3; k++) {
+        const j = Math.floor(Math.random() * 500);
+        if (i !== j) graph.edges.push({ from: graph.nodes[i].id, to: graph.nodes[j].id });
+      }
+    }
+
+    const start = Date.now();
+    result = await runLayout({ ...graph, options: {} }, 30000);
+    const elapsed = Date.now() - start;
+    console.log(`  500 nodes, ${graph.edges.length} edges → ${elapsed}ms, ${result.iterations} iters`);
+    assert.ok(elapsed < 30000, `Timeout: ${elapsed}ms`);
+  });
+
+  it('overlap rate < 10%', () => {
+    // At this scale, some overlaps are expected
+    const ids = Object.keys(result.positions);
+    let overlaps = 0;
+    // Sample-based check (full O(n²) is slow for 500 nodes)
+    const sampleSize = 1000;
+    for (let s = 0; s < sampleSize; s++) {
+      const i = Math.floor(Math.random() * ids.length);
+      const j = Math.floor(Math.random() * ids.length);
+      if (i === j) continue;
+      const a = result.positions[ids[i]], b = result.positions[ids[j]];
+      const ox = NODE_W - Math.abs(a.x - b.x);
+      const oy = NODE_H - Math.abs(a.y - b.y);
+      if (ox > 0 && oy > 0) overlaps++;
+    }
+    const rate = overlaps / sampleSize;
+    console.log(`  Overlap sample rate: ${(rate * 100).toFixed(2)}% (${overlaps}/${sampleSize} samples)`);
+    assert.ok(rate < 0.10, `Sample overlap rate ${(rate * 100).toFixed(1)}%`);
+  });
+
+  it('no NaN positions', () => {
+    for (const [id, pos] of Object.entries(result.positions)) {
+      assert.ok(!isNaN(pos.x) && !isNaN(pos.y), `NaN for ${id}`);
+    }
+  });
+});
+

@@ -789,6 +789,13 @@ self.onmessage = function (e) {
     if (node) {
       delete node.fx;
       delete node.fy;
+      if (simMode === 'continuous') {
+        continuousAlpha = Math.min(continuousAlpha + config.pinReheat, config.pinCap);
+        if (paused) {
+          paused = false;
+          startContinuousLoop();
+        }
+      }
     }
   }
 
@@ -995,10 +1002,10 @@ function startContinuousLoop() {
     if (!running || paused) { continuousTimer = null; return; }
 
     // Physics tick
-    tick(continuousAlpha);
+    const energy = tick(continuousAlpha);
 
     // Gentle Brownian motion: random impulses keep graph "breathing"
-    if (continuousAlpha < config.brownianThresh) {
+    if (config.brownian > 0 && continuousAlpha < config.brownianThresh) {
       const bStr = config.brownian;
       for (const n of nodes) {
         if (n.fx === undefined) n.vx += (Math.random() - 0.5) * bStr;
@@ -1018,9 +1025,17 @@ function startContinuousLoop() {
       type: 'tick',
       packed: packed.buffer,
       alpha: continuousAlpha,
-      energy: 0,
+      energy: energy,
       iteration: continuousIteration,
     }, [packed.buffer]);
+
+    // Auto-sleep: if nodes are completely settled and brownian is disabled, stop the loop.
+    // It will wake up on 'pin', 'resume', or 'updateConfig' with reheat.
+    if (continuousAlpha <= config.contAlphaFloor && energy < 0.05 && config.brownian === 0) {
+      paused = true;
+      continuousTimer = null;
+      return;
+    }
 
     continuousTimer = setTimeout(runTick, 16);
   }

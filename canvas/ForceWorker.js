@@ -1031,7 +1031,8 @@ function startContinuousLoop() {
 
     // Auto-sleep: if nodes are completely settled and brownian is disabled, stop the loop.
     // It will wake up on 'pin', 'resume', or 'updateConfig' with reheat.
-    if (continuousAlpha <= config.contAlphaFloor && energy < 0.05 && config.brownian === 0) {
+    // Use an epsilon for alpha asymptote, and scale energy by node count (e.g., avg velocity < 0.1px/tick)
+    if (Math.abs(continuousAlpha - config.contAlphaTarget) < 1e-4 && energy < nodes.length * 0.01 && config.brownian === 0) {
       paused = true;
       continuousTimer = null;
       return;

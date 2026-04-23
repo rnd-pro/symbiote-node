@@ -21,6 +21,13 @@
  *   Worker → Main: { type: 'done', positions, iterations }
  *   Main → Worker: { type: 'stop' }
  *
+ * Continuous mode (options.mode = 'continuous'):
+ *   Main → Worker: { type: 'pause' }           — freeze simulation, keep state
+ *   Main → Worker: { type: 'resume' }          — unfreeze with gentle reheat
+ *   Main → Worker: { type: 'pin', id, x, y }   — fix node at position (drag)
+ *   Main → Worker: { type: 'unpin', id }        — release pinned node
+ *   Worker → Main: { type: 'tick', packed: Float32Array } — packed positions
+ *
  * @module symbiote-node/canvas/ForceWorker
  */
 
@@ -179,11 +186,16 @@ function applyChargeForce(nodes, strength, theta) {
   // Aggregate: compute total charge and center-of-mass for each internal node
   qtVisitAfter(tree, (node) => {
     if (!node.length) {
-      // Leaf: charge = strength
-      const d = node.data;
-      node.value = strength;
-      node.x = d.x;
-      node.y = d.y;
+      // Leaf: sum charge of all coincident points
+      let current = node.data;
+      let count = 0;
+      while (current) {
+        count++;
+        current = current._qtNext;
+      }
+      node.value = strength * count;
+      node.x = node.data.x;
+      node.y = node.data.y;
       return;
     }
     // Internal: sum children
@@ -204,7 +216,12 @@ function applyChargeForce(nodes, strength, theta) {
 
   // Apply forces using Barnes-Hut approximation
   const thetaSq = theta * theta;
-  const distMin2 = 100; // min distance² = 10px — prevents explosive forces from coincident nodes
+  // Adaptive min distance: scale to largest side of node to prevent identical forces on small nodes
+  let avgSize = 20;
+  if (nodes.length > 0) {
+    avgSize = nodes.reduce((s, n) => s + Math.max(n.w, n.h), 0) / nodes.length;
+  }
+  const distMin2 = Math.max(1, avgSize * avgSize * 0.25);
   for (const body of nodes) {
     qtVisit(tree, (node, x0, y0, x1, y1) => {
       if (!node.value) return true; // skip empty
@@ -232,12 +249,24 @@ function applyChargeForce(nodes, strength, theta) {
         return true; // don't recurse
       }
 
-      // If leaf and not self
+      // If leaf, iterate all coincident points
       if (!node.length) {
-        if (node.data !== body) {
-          const force = strength / distSq;
-          body.vx -= dx * force;
-          body.vy -= dy * force;
+        let current = node.data;
+        while (current) {
+          if (current !== body) {
+            let dxLeaf = current.x - body.x;
+            let dyLeaf = current.y - body.y;
+            if (dxLeaf === 0 && dyLeaf === 0) {
+              dxLeaf = (Math.random() - 0.5) * 20;
+              dyLeaf = (Math.random() - 0.5) * 20;
+            }
+            let distSqLeaf = dxLeaf * dxLeaf + dyLeaf * dyLeaf;
+            if (distSqLeaf < distMin2) distSqLeaf = distMin2;
+            const force = strength / distSqLeaf;
+            body.vx -= dxLeaf * force;
+            body.vy -= dyLeaf * force;
+          }
+          current = current._qtNext;
         }
         return true;
       }
@@ -259,12 +288,15 @@ function applyCollisionForce(nodes, strength, iterations) {
   const padX = 8;
   const padY = 4;
   
-  let maxW = 260;
-  let maxH = 40;
+  let maxW = 0;
+  let maxH = 0;
   for (const n of nodes) {
     if (n.w > maxW) maxW = n.w;
     if (n.h > maxH) maxH = n.h;
   }
+  // Ensure minimums for grid cell sizing
+  if (maxW < 20) maxW = 20;
+  if (maxH < 20) maxH = 20;
 
   for (let pass = 0; pass < iters; pass++) {
     // Rebuild spatial hash each pass (positions shift)
@@ -302,37 +334,48 @@ function applyCollisionForce(nodes, strength, iterations) {
 
 function resolveOverlap(nodes, i, j, padX, padY, strength) {
   const a = nodes[i], b = nodes[j];
+  // Calculate overlap using current positions
   let dx = b.x - a.x;
   let dy = b.y - a.y;
+  
   const hwA = a.w / 2 + padX;
   const hhA = a.h / 2 + padY;
   const hwB = b.w / 2 + padX;
   const hhB = b.h / 2 + padY;
+  
   const overlapX = (hwA + hwB) - Math.abs(dx);
   const overlapY = (hhA + hhB) - Math.abs(dy);
 
   if (overlapX > 0 && overlapY > 0) {
-    // Constraint-based: 100% positional push (Verlet-style)
-    // This ensures overlaps are resolved immediately, not damped away
+    // HARD CONSTRAINT: 100% impermeable space. Modifying positions directly.
+    // Also clearing velocities in the push direction to stop momentum.
     if (overlapX < overlapY) {
       const sign = dx < 0 ? -1 : (dx > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
       const push = overlapX * strength * 0.5;
+      
       a.x -= sign * push;
       b.x += sign * push;
       
-      // Orthogonal jitter to prevent perfect 1D horizontal stacking
+      // Stop velocity pushing them together horizontally
+      if (Math.sign(a.vx) === sign) a.vx = 0;
+      if (Math.sign(b.vx) === -sign) b.vx = 0;
+      
+      // Orthogonal jitter to prevent perfect 1D stacking
       const jitter = (Math.random() - 0.5) * 0.5;
       a.y -= jitter;
       b.y += jitter;
     } else {
       const sign = dy < 0 ? -1 : (dy > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
       const push = overlapY * strength * 0.5;
+      
       a.y -= sign * push;
       b.y += sign * push;
       
-      // Orthogonal jitter to prevent perfect 1D vertical column stacking.
-      // Wide nodes (260x40) force vertical pushing, causing dx=0 traps where
-      // the radial charge force becomes useless. Jitter allows radial expansion.
+      // Stop velocity pushing them together vertically
+      if (Math.sign(a.vy) === sign) a.vy = 0;
+      if (Math.sign(b.vy) === -sign) b.vy = 0;
+      
+      // Orthogonal jitter to prevent perfect 1D stacking
       const jitter = (Math.random() - 0.5) * 0.5;
       a.x -= jitter;
       b.x += jitter;
@@ -488,22 +531,32 @@ function applyCenterForce(nodes, strength) {
 let nodes = [];
 let edges = [];
 let running = false;
-let nodeW = 260;
-let nodeH = 40;
+let paused = false;
+let simMode = 'converge'; // 'converge' | 'continuous'
+let continuousTimer = null;
 
 let config = {
-  chargeStrength: -150,   // Repulsion (negative = repel). NOT scaled by alpha (d3 convention).
-  theta: 0.8,             // Barnes-Hut accuracy (0.5=exact, 1.0=fast)
-  linkDistance: 150,       // Spring rest length for edges
-  linkStrength: 0.2,      // Spring stiffness for edges
+  chargeStrength: -250,   // Repulsion (negative = repel). NOT scaled by alpha (d3 convention).
+  theta: 0.7,             // Barnes-Hut accuracy (0.5=exact, 1.0=fast)
+  linkDistance: 180,       // Spring rest length for edges
+  linkStrength: 0.15,     // Spring stiffness for edges
   groupDistance: 120,      // Rest length for directory springs
   groupStrength: 0.05,    // Stiffness for directory springs
-  collideStrength: 0.8,   // Collision response (0..1)
+  collideStrength: 0.95,  // Collision response (0..1)
   centerStrength: 0.01,   // Center gravity
-  velocityDecay: 0.4,     // Damping (d3 default)
-  alphaDecay: 0.0228,     // Cooling rate (d3 default)
+  velocityDecay: 0.92,    // Damping — higher = calmer (Ultra-Calm tuned)
+  alphaDecay: 0.015,      // Cooling rate — slower than d3 default for smoother settling
   alphaMin: 0.001,        // Convergence threshold
   alphaTarget: 0,          // Target alpha for cooling
+  // Continuous mode params (Ultra-Calm tuned)
+  contAlphaFloor: 0.001,   // Minimum alpha floor in continuous mode
+  contAlphaTarget: 0.001,  // Alpha target for steady-state drift
+  brownian: 0.005,         // Brownian motion impulse strength — very subtle
+  brownianThresh: 0.005,   // Alpha threshold to start Brownian
+  pinReheat: 0.03,         // Alpha bump on pin
+  pinCap: 0.1,             // Max alpha from pin reheat
+  resumeReheat: 0.05,      // Alpha bump on resume
+  resumeCap: 0.1,          // Max alpha from resume
 };
 
 function initSimulation(data) {
@@ -511,23 +564,24 @@ function initSimulation(data) {
 
   // Merge config
   Object.assign(config, options);
-  nodeW = options.nodeWidth || 260;
-  nodeH = options.nodeHeight || 40;
+  simMode = options.mode || 'converge';
 
   // Initialize nodes
   nodes = rawNodes.map((n, i) => {
     const angle = (2 * Math.PI * i) / rawNodes.length;
     const radius = Math.sqrt(rawNodes.length) * 50;
+    const w = n.w || options.nodeWidth || 260;
+    const h = n.h || options.nodeHeight || 40;
     return {
       id: n.id,
-      x: n.x ?? Math.cos(angle) * radius + (Math.random() - 0.5) * 100,
-      y: n.y ?? Math.sin(angle) * radius + (Math.random() - 0.5) * 100,
+      x: n.x !== undefined ? n.x + w / 2 : Math.cos(angle) * radius + (Math.random() - 0.5) * 100,
+      y: n.y !== undefined ? n.y + h / 2 : Math.sin(angle) * radius + (Math.random() - 0.5) * 100,
       vx: 0,
       vy: 0,
       group: n.group || null,
       index: i,
-      w: n.w || options.nodeWidth || 260,
-      h: n.h || options.nodeHeight || 40,
+      w,
+      h,
     };
   });
 
@@ -608,9 +662,8 @@ function initSimulation(data) {
 }
 
 function tick(alpha) {
-  // 1. Repulsion (Barnes-Hut) — NOT scaled by alpha (d3 convention).
-  // Charge is a constant field, not temperature-dependent.
-  applyChargeForce(nodes, config.chargeStrength, config.theta);
+  // 1. Repulsion (Barnes-Hut) — scale by alpha so it cools down together with springs
+  applyChargeForce(nodes, config.chargeStrength * alpha, config.theta);
 
   // 2. Springs — scaled by alpha (cools down over time)
   applyLinkForce(nodes, edges, alpha);
@@ -629,15 +682,21 @@ function tick(alpha) {
   // vMax scales with graph: large graphs need more velocity headroom
   const vMax = Math.max(200, Math.sqrt(nodes.length) * 10);
   for (const n of nodes) {
-    n.vx *= decay;
-    n.vy *= decay;
-    // Clamp velocity
-    if (n.vx > vMax) n.vx = vMax;
-    else if (n.vx < -vMax) n.vx = -vMax;
-    if (n.vy > vMax) n.vy = vMax;
-    else if (n.vy < -vMax) n.vy = -vMax;
-    n.x += n.vx;
-    n.y += n.vy;
+    // Pinned nodes: override position, zero velocity
+    if (n.fx !== undefined) { n.x = n.fx; n.vx = 0; }
+    else {
+      n.vx *= decay;
+      if (n.vx > vMax) n.vx = vMax;
+      else if (n.vx < -vMax) n.vx = -vMax;
+      n.x += n.vx;
+    }
+    if (n.fy !== undefined) { n.y = n.fy; n.vy = 0; }
+    else {
+      n.vy *= decay;
+      if (n.vy > vMax) n.vy = vMax;
+      else if (n.vy < -vMax) n.vy = -vMax;
+      n.y += n.vy;
+    }
     energy += n.vx * n.vx + n.vy * n.vy;
   }
 
@@ -647,9 +706,28 @@ function tick(alpha) {
 function getPositions() {
   const positions = {};
   for (const n of nodes) {
-    positions[n.id] = { x: Math.round(n.x), y: Math.round(n.y) };
+    positions[n.id] = { x: Math.round(n.x - n.w / 2), y: Math.round(n.y - n.h / 2) };
   }
   return positions;
+}
+
+/**
+ * Pack positions into a Float32Array for efficient transfer.
+ * Layout: [x0, y0, x1, y1, ...] in node index order.
+ * The ID-to-index mapping is stable from initSimulation.
+ */
+function getPositionsPacked() {
+  const buf = new Float32Array(nodes.length * 2);
+  for (let i = 0; i < nodes.length; i++) {
+    buf[i * 2] = nodes[i].x - nodes[i].w / 2;
+    buf[i * 2 + 1] = nodes[i].y - nodes[i].h / 2;
+  }
+  return buf;
+}
+
+/** Get ordered node IDs (sent once at init, used to unpack Float32Array). */
+function getNodeIds() {
+  return nodes.map(n => n.id);
 }
 
 // =====================================================================
@@ -661,154 +739,90 @@ self.onmessage = function (e) {
 
   if (type === 'init') {
     running = true;
+    paused = false;
     initSimulation(e.data);
 
-    const totalNodes = nodes.length;
+    if (simMode === 'continuous') {
+      startContinuous();
+    } else {
+      startConverge();
+    }
+  }
 
-    // Adaptive alpha decay: start with d3 default, adjust based on overlap feedback
-    let adaptiveAlphaDecay = config.alphaDecay;
-    // Alpha schedule: d3-style interpolation toward alphaTarget
-    let alpha = 1;
-    let iteration = 0;
-    const maxIter = Math.ceil(Math.log(config.alphaMin) / Math.log(1 - config.alphaDecay)) + 1;
-    const batchSize = totalNodes > 1000 ? 8 : 4;
+  if (type === 'pause') {
+    paused = true;
+    if (continuousTimer !== null) {
+      clearTimeout(continuousTimer);
+      continuousTimer = null;
+    }
+  }
 
-    function runBatch() {
-      if (!running) return;
+  if (type === 'resume') {
+    if (!running || !paused) return;
+    paused = false;
+    // Gentle reheat — enough to settle neighbors, not enough to explode
+    continuousAlpha = Math.min(continuousAlpha + config.resumeReheat, config.resumeCap);
+    startContinuousLoop();
+  }
 
-      for (let i = 0; i < batchSize && alpha > config.alphaMin && iteration < maxIter; i++) {
-        tick(alpha);
-        // d3-style alpha decay
-        alpha += (config.alphaTarget - alpha) * adaptiveAlphaDecay;
-        iteration++;
-      }
-
-      // Adaptive feedback: check overlaps periodically and slow cooling if needed
-      if (iteration % 20 === 0) {
-        const overlaps = countOverlaps(nodes);
-        if (overlaps > 0 && alpha > 0.05) {
-          adaptiveAlphaDecay = Math.max(0.005, adaptiveAlphaDecay * 0.9);
+  if (type === 'pin') {
+    const { id, x, y } = e.data;
+    const node = nodes.find(n => n.id === id);
+    if (node) {
+      // GUI sends top-left coordinate, physics needs center coordinate
+      node.fx = x + node.w / 2;
+      node.fy = y + node.h / 2;
+      // Local reheat so neighbors react
+      if (simMode === 'continuous') {
+        continuousAlpha = Math.min(continuousAlpha + config.pinReheat, config.pinCap);
+        if (paused) {
+          paused = false;
+          startContinuousLoop();
         }
-      }
-
-      const isDone = alpha <= config.alphaMin || iteration >= maxIter;
-
-      if (!isDone) {
-        self.postMessage({
-          type: 'tick',
-          positions: getPositions(),
-          energy: Math.round(alpha * 1000) / 1000,
-          iteration,
-          overlaps: countOverlaps(nodes),
-        });
-        setTimeout(runBatch, 0);
-      } else {
-        // ── Gentle Expansion Post-Convergence Phase ──
-        // Run as an async batch loop to prevent worker freezes and provide smooth UI ticks
-        let attempt = 0;
-        const maxExpansionAttempts = 2000;
-        // With O(N) spatial hash, we can afford bigger batches even on large graphs
-        const expansionBatchSize = totalNodes > 1000 ? 10 : 20;
-
-        function runExpansionBatch() {
-          if (!running) return;
-          
-          let overlaps = countOverlaps(nodes);
-          let bIter = 0;
-          
-          while (overlaps > 0 && attempt < maxExpansionAttempts && bIter < expansionBatchSize) {
-            // Purely local collision resolution (already O(N) via spatial hash inside)
-            applyCollisionForce(nodes, 1.0, 4);
-
-            // Add radial velocity using spatial hash — O(N) instead of O(N²)
-            let maxW = 260, maxH = 40;
-            for (const n of nodes) {
-              if (n.w > maxW) maxW = n.w;
-              if (n.h > maxH) maxH = n.h;
-            }
-            const cellW = maxW * 1.5;
-            const cellH = maxH * 3;
-            const grid = new Map();
-            for (let i = 0; i < nodes.length; i++) {
-              const n = nodes[i];
-              const key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
-              if (!grid.has(key)) grid.set(key, []);
-              grid.get(key).push(i);
-            }
-
-            for (let i = 0; i < nodes.length; i++) {
-              const a = nodes[i];
-              const gx = Math.floor(a.x / cellW);
-              const gy = Math.floor(a.y / cellH);
-              for (let dx = -1; dx <= 1; dx++) {
-                for (let dy = -1; dy <= 1; dy++) {
-                  const neighbors = grid.get(`${gx + dx},${gy + dy}`);
-                  if (!neighbors) continue;
-                  for (const j of neighbors) {
-                    if (j <= i) continue;
-                    const b = nodes[j];
-                    let ddx = b.x - a.x;
-                    let ddy = b.y - a.y;
-                    const limitX = (a.w + b.w) / 2;
-                    const limitY = (a.h + b.h) / 2;
-                    if (Math.abs(ddx) < limitX && Math.abs(ddy) < limitY) {
-                      let len = Math.sqrt(ddx*ddx + ddy*ddy);
-                      if (len === 0) { ddx = Math.random()-0.5; ddy = Math.random()-0.5; len = Math.sqrt(ddx*ddx+ddy*ddy)||1; }
-                      const push = 2 / len;
-                      a.vx -= ddx * push;
-                      b.vx += ddx * push;
-                      a.vy -= ddy * push;
-                      b.vy += ddy * push;
-                    }
-                  }
-                }
-              }
-            }
-
-            // High damping integration so they ooze apart without exploding
-            const decay = 0.8;
-            for (const n of nodes) {
-              n.vx *= decay;
-              n.vy *= decay;
-              if (n.vx > 10) n.vx = 10; else if (n.vx < -10) n.vx = -10;
-              if (n.vy > 10) n.vy = 10; else if (n.vy < -10) n.vy = -10;
-              n.x += n.vx;
-              n.y += n.vy;
-            }
-
-            overlaps = countOverlaps(nodes);
-            attempt++;
-            bIter++;
-          }
-
-          if (overlaps > 0 && attempt < maxExpansionAttempts) {
-            self.postMessage({
-              type: 'tick',
-              positions: getPositions(),
-              energy: 0, // 0 indicates cooling is done, we are in expansion
-              iteration: iteration + attempt,
-              overlaps,
-            });
-            setTimeout(runExpansionBatch, 0);
-          } else {
-            running = false;
-            self.postMessage({
-              type: 'done',
-              positions: getPositions(),
-              iterations: iteration + attempt,
-            });
-          }
-        }
-        
-        runExpansionBatch();
       }
     }
+  }
 
-    runBatch();
+  if (type === 'unpin') {
+    const { id } = e.data;
+    const node = nodes.find(n => n.id === id);
+    if (node) {
+      delete node.fx;
+      delete node.fy;
+    }
+  }
+
+  if (type === 'updateConfig') {
+    const updates = e.data.config;
+    if (updates) {
+      Object.assign(config, updates);
+      // Propagate link params to existing edges (skip group edges)
+      if (updates.linkDistance !== undefined || updates.linkStrength !== undefined) {
+        for (const edge of edges) {
+          if (edge.restLength === config.groupDistance && edge.strength === config.groupStrength) continue;
+          if (updates.linkDistance !== undefined) edge.restLength = config.linkDistance;
+          if (updates.linkStrength !== undefined) edge.strength = config.linkStrength;
+        }
+      }
+      if (updates.groupDistance !== undefined || updates.groupStrength !== undefined) {
+        for (const edge of edges) {
+          // Heuristic: group edges have old groupDistance/groupStrength
+          if (edge.restLength !== config.linkDistance || edge.strength !== config.linkStrength) {
+            if (updates.groupDistance !== undefined) edge.restLength = config.groupDistance;
+            if (updates.groupStrength !== undefined) edge.strength = config.groupStrength;
+          }
+        }
+      }
+    }
   }
 
   if (type === 'stop') {
     running = false;
+    paused = false;
+    if (continuousTimer !== null) {
+      clearTimeout(continuousTimer);
+      continuousTimer = null;
+    }
     self.postMessage({
       type: 'done',
       positions: getPositions(),
@@ -817,3 +831,199 @@ self.onmessage = function (e) {
     });
   }
 };
+
+// =====================================================================
+// 5. CONVERGE MODE (original behavior — runs once, then stops)
+// =====================================================================
+
+function startConverge() {
+  const totalNodes = nodes.length;
+  let adaptiveAlphaDecay = config.alphaDecay;
+  let alpha = 1;
+  let iteration = 0;
+  const maxIter = Math.ceil(Math.log(config.alphaMin) / Math.log(1 - config.alphaDecay)) + 1;
+  const batchSize = totalNodes > 1000 ? 8 : 4;
+
+  function runBatch() {
+    if (!running) return;
+
+    for (let i = 0; i < batchSize && alpha > config.alphaMin && iteration < maxIter; i++) {
+      tick(alpha);
+      alpha += (config.alphaTarget - alpha) * adaptiveAlphaDecay;
+      iteration++;
+    }
+
+    if (iteration % 20 === 0) {
+      const overlaps = countOverlaps(nodes);
+      if (overlaps > 0 && alpha > 0.05) {
+        adaptiveAlphaDecay = Math.max(0.005, adaptiveAlphaDecay * 0.9);
+      }
+    }
+
+    const isDone = alpha <= config.alphaMin || iteration >= maxIter;
+
+    if (!isDone) {
+      self.postMessage({
+        type: 'tick',
+        positions: getPositions(),
+        energy: Math.round(alpha * 1000) / 1000,
+        iteration,
+        overlaps: countOverlaps(nodes),
+      });
+      setTimeout(runBatch, 0);
+    } else {
+      // ── Gentle Expansion Post-Convergence Phase ──
+      let attempt = 0;
+      const maxExpansionAttempts = 2000;
+      const expansionBatchSize = totalNodes > 1000 ? 10 : 20;
+
+      function runExpansionBatch() {
+        if (!running) return;
+        
+        let overlaps = countOverlaps(nodes);
+        let bIter = 0;
+        
+        while (overlaps > 0 && attempt < maxExpansionAttempts && bIter < expansionBatchSize) {
+          applyCollisionForce(nodes, 1.0, 4);
+
+          let maxW = 260, maxH = 40;
+          for (const n of nodes) {
+            if (n.w > maxW) maxW = n.w;
+            if (n.h > maxH) maxH = n.h;
+          }
+          const cellW = maxW * 1.5;
+          const cellH = maxH * 3;
+          const grid = new Map();
+          for (let i = 0; i < nodes.length; i++) {
+            const n = nodes[i];
+            const key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
+            if (!grid.has(key)) grid.set(key, []);
+            grid.get(key).push(i);
+          }
+
+          for (let i = 0; i < nodes.length; i++) {
+            const a = nodes[i];
+            const gx = Math.floor(a.x / cellW);
+            const gy = Math.floor(a.y / cellH);
+            for (let dx = -1; dx <= 1; dx++) {
+              for (let dy = -1; dy <= 1; dy++) {
+                const neighbors = grid.get(`${gx + dx},${gy + dy}`);
+                if (!neighbors) continue;
+                for (const j of neighbors) {
+                  if (j <= i) continue;
+                  const b = nodes[j];
+                  let ddx = b.x - a.x;
+                  let ddy = b.y - a.y;
+                  const limitX = (a.w + b.w) / 2;
+                  const limitY = (a.h + b.h) / 2;
+                  if (Math.abs(ddx) < limitX && Math.abs(ddy) < limitY) {
+                    let len = Math.sqrt(ddx*ddx + ddy*ddy);
+                    if (len === 0) { ddx = Math.random()-0.5; ddy = Math.random()-0.5; len = Math.sqrt(ddx*ddx+ddy*ddy)||1; }
+                    const push = 2 / len;
+                    a.vx -= ddx * push;
+                    b.vx += ddx * push;
+                    a.vy -= ddy * push;
+                    b.vy += ddy * push;
+                  }
+                }
+              }
+            }
+          }
+
+          const decay = 0.8;
+          for (const n of nodes) {
+            n.vx *= decay;
+            n.vy *= decay;
+            if (n.vx > 10) n.vx = 10; else if (n.vx < -10) n.vx = -10;
+            if (n.vy > 10) n.vy = 10; else if (n.vy < -10) n.vy = -10;
+            n.x += n.vx;
+            n.y += n.vy;
+          }
+
+          overlaps = countOverlaps(nodes);
+          attempt++;
+          bIter++;
+        }
+
+        if (overlaps > 0 && attempt < maxExpansionAttempts) {
+          self.postMessage({
+            type: 'tick',
+            positions: getPositions(),
+            energy: 0,
+            iteration: iteration + attempt,
+            overlaps,
+          });
+          setTimeout(runExpansionBatch, 0);
+        } else {
+          running = false;
+          self.postMessage({
+            type: 'done',
+            positions: getPositions(),
+            iterations: iteration + attempt,
+          });
+        }
+      }
+      
+      runExpansionBatch();
+    }
+  }
+
+  runBatch();
+}
+
+// =====================================================================
+// 6. CONTINUOUS MODE (alive simulation — never stops until 'stop')
+// =====================================================================
+
+let continuousAlpha = 1;
+let continuousIteration = 0;
+
+function startContinuous() {
+  continuousAlpha = 1;
+  continuousIteration = 0;
+
+  // Send node ID order once so main thread can unpack Float32Array
+  self.postMessage({ type: 'nodeIds', ids: getNodeIds() });
+
+  startContinuousLoop();
+}
+
+function startContinuousLoop() {
+  if (continuousTimer !== null) return; // already running
+
+  function runTick() {
+    if (!running || paused) { continuousTimer = null; return; }
+
+    // Physics tick
+    tick(continuousAlpha);
+
+    // Gentle Brownian motion: random impulses keep graph "breathing"
+    if (continuousAlpha < config.brownianThresh) {
+      const bStr = config.brownian;
+      for (const n of nodes) {
+        if (n.fx === undefined) n.vx += (Math.random() - 0.5) * bStr;
+        if (n.fy === undefined) n.vy += (Math.random() - 0.5) * bStr;
+      }
+    }
+
+    // Alpha decay toward a low floor
+    continuousAlpha += (config.contAlphaTarget - continuousAlpha) * config.alphaDecay;
+    if (continuousAlpha < config.contAlphaFloor) continuousAlpha = config.contAlphaFloor;
+
+    continuousIteration++;
+
+    // Send packed positions every tick for smooth 60fps
+    const packed = getPositionsPacked();
+    self.postMessage({
+      type: 'tick',
+      packed: packed.buffer,
+      alpha: continuousAlpha,
+      energy: 0,
+      iteration: continuousIteration,
+    }, [packed.buffer]);
+
+    continuousTimer = setTimeout(runTick, 16);
+  }
+
+  runTick();
+}

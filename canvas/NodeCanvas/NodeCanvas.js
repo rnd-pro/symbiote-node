@@ -227,10 +227,6 @@ export class NodeCanvas extends Symbiote {
           case 'delete': this.#actions.deleteNode(nodeId); toolbar.hide(); break;
           case 'duplicate': this.#actions.cloneNode(nodeId); break;
           case 'enter': this.drillDown(nodeId); toolbar.hide(); break;
-          case 'collapse':
-            this.#actions.collapseNode(nodeId);
-            if (nodeEl) toolbar.show(nodeId, nodeEl);
-            break;
           case 'mute':
             this.#actions.muteNode(nodeId);
             if (nodeEl) toolbar.show(nodeId, nodeEl);

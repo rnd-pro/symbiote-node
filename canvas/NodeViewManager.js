@@ -277,11 +277,22 @@ export class NodeViewManager {
       }
     });
 
-    // Subgraph preview canvas
+    // Subgraph preview canvas — inject DOM element synchronously so
+    // measureNodeSizes() includes the 80px canvas in offsetHeight.
+    // Only the drawing is deferred to rAF (needs inner editor data).
     if (node._isSubgraph) {
-      requestAnimationFrame(() => {
-        this.#initSubgraphPreview(el, node);
-      });
+      const body = el.querySelector('.sn-node-body');
+      if (body) {
+        const canvas = document.createElement('canvas');
+        canvas.className = 'sn-subgraph-preview';
+        canvas.width = 200;
+        canvas.height = 80;
+        body.appendChild(canvas);
+        el._previewCanvas = canvas;
+        requestAnimationFrame(() => {
+          this.#initSubgraphPreview(el, node, canvas);
+        });
+      }
     }
   }
 
@@ -436,19 +447,10 @@ export class NodeViewManager {
    * Initialize subgraph preview canvas inside a graph-node
    * @param {HTMLElement} el - graph-node element
    * @param {import('../core/SubgraphNode.js').SubgraphNode} node
+   * @param {HTMLCanvasElement} canvas - pre-created canvas element (already in DOM)
    */
-  #initSubgraphPreview(el, node) {
-    const body = el.querySelector('.sn-node-body');
-    if (!body) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.className = 'sn-subgraph-preview';
-    canvas.width = 200;
-    canvas.height = 80;
-    body.appendChild(canvas);
-
+  #initSubgraphPreview(el, node, canvas) {
     const ctx = canvas.getContext('2d');
-    el._previewCanvas = canvas;
 
     const drawPreview = () => {
       if (!el.isConnected) return;

@@ -18,9 +18,7 @@ export const template = html`
   <button class="tb-btn" data-action="duplicate" title="Duplicate">
     <span class="material-symbols-outlined tb-icon">content_copy</span>
   </button>
-  <button class="tb-btn" data-action="collapse" title="Collapse">
-    <span class="material-symbols-outlined tb-icon">unfold_less</span>
-  </button>
+
   <button class="tb-btn" data-action="mute" title="Mute">
     <span class="material-symbols-outlined tb-icon">visibility_off</span>
   </button>

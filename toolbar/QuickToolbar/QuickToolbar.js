@@ -2,7 +2,7 @@
  * QuickToolbar — floating action bar above selected node
  *
  * Shows contextual SVG buttons when a single node is selected:
- * Delete, Duplicate, Collapse, Mute.
+ * Delete, Duplicate, Mute.
  * Positioned above the node and follows zoom/pan transform.
  *
  * @module symbiote-node/toolbar/QuickToolbar
@@ -22,7 +22,6 @@ import { styles } from './QuickToolbar.css.js';
 /** @type {ToolbarAction[]} */
 const ACTIONS = [
   { id: 'duplicate', icon: 'content_copy', label: 'Duplicate' },
-  { id: 'collapse', icon: 'unfold_less', label: 'Collapse' },
   { id: 'mute', icon: 'visibility_off', label: 'Mute' },
   { id: 'delete', icon: 'delete', label: 'Delete' },
 ];
@@ -116,13 +115,10 @@ export class QuickToolbar extends Symbiote {
    * @param {HTMLElement} nodeEl
    */
   #updateIcons(nodeEl) {
-    const isCollapsed = nodeEl.hasAttribute('data-collapsed');
     const isMuted = nodeEl.hasAttribute('data-muted');
 
-    const collapseBtn = this.querySelector('[data-action="collapse"] .tb-icon');
     const muteBtn = this.querySelector('[data-action="mute"] .tb-icon');
 
-    if (collapseBtn) collapseBtn.textContent = isCollapsed ? 'unfold_more' : 'unfold_less';
     if (muteBtn) muteBtn.textContent = isMuted ? 'visibility' : 'visibility_off';
   }
 }

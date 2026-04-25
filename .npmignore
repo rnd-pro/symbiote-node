@@ -8,3 +8,5 @@ TMP/
 .github/
 demo/
 tests/
+test-ssr.js
+engine/extensions/

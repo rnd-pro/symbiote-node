@@ -1,6 +1,6 @@
 {
   "name": "symbiote-node",
-  "version": "0.3.0-alpha.0",
+  "version": "0.3.0-alpha.1",
   "type": "module",
   "description": "Visual Node Graph Editor + Execution Engine — extensible, themeable graph editor and runtime built on Symbiote.js",
   "main": "index.js",

@@ -7,7 +7,14 @@
   "exports": {
     ".": "./index.js",
     "./engine": "./engine/index.js",
-    "./engine/*": "./engine/*"
+    "./engine/*": "./engine/*",
+    "./themes/*": "./themes/*",
+    "./canvas/*": "./canvas/*",
+    "./layout/*": "./layout/*",
+    "./interactions/*": "./interactions/*",
+    "./node/*": "./node/*",
+    "./shapes/*": "./shapes/*",
+    "./plugins/*": "./plugins/*"
   },
   "publishConfig": {
     "access": "public"

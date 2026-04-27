@@ -777,12 +777,8 @@ export class NodeCanvas extends Symbiote {
    */
   setBatchMode(active) {
     this._batchMode = !!active;
-    if (!this._batchMode && !this._cullingScheduled) {
-      this._cullingScheduled = true;
-      requestAnimationFrame(() => {
-        this._cullingScheduled = false;
-        this.#applyCullingAndLOD();
-      });
+    if (!this._batchMode) {
+      this.#viewport?.updateTransform();
     }
   }
 

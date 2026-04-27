@@ -49,68 +49,68 @@ export class NodeCanvas extends Symbiote {
   };
 
   /** @type {import('../core/Editor.js').NodeEditor|null} */
-  _ditor = null;
+  #editor = null;
 
   /** @type {Drag|null} */
-  _rag = null;
+  #drag = null;
 
   /** @type {Zoom|null} */
-  _oom = null;
+  #zoom = null;
 
   /** @type {ConnectFlow|null} */
-  _onnectFlow = null;
+  #connectFlow = null;
 
   /** @type {SelectionSync} */
-  _electionSync = new SelectionSync({
+  #selectionSync = new SelectionSync({
     canvas: this,
-    getEditor: () => this._ditor,
-    nodeViews: this._odeViews,
-    getConnRenderer: () => this._onnRenderer,
+    getEditor: () => this.#editor,
+    nodeViews: this.#nodeViews,
+    getConnRenderer: () => this.#connRenderer,
   });
 
   /** @type {Selector} */
-  _elector = new Selector({
-    onChange: (nodes, connections) => this._electionSync.sync(nodes, connections),
+  #selector = new Selector({
+    onChange: (nodes, connections) => this.#selectionSync.sync(nodes, connections),
   });
 
   /** @type {SnapGrid} */
-  _napGrid = new SnapGrid({ size: 16, dynamic: false });
+  #snapGrid = new SnapGrid({ size: 16, dynamic: false });
 
   /** @type {Map<string, HTMLElement>} */
-  _odeViews = new Map();
+  #nodeViews = new Map();
 
   /** @type {FrameManager|null} */
-  _rameManager = null;
+  #frameManager = null;
 
   /** @type {boolean} */
-  _eadonly = false;
+  #readonly = false;
 
   /** @type {boolean} */
-  _napEnabled = false;
+  #snapEnabled = false;
 
   /** @type {number|null} */
-  _anAnimFrame = null;
+  #panAnimFrame = null;
 
   /** @type {string} */
-  _hemeName = 'dark-default';
+  #themeName = 'dark-default';
 
   /** @type {NodeViewManager|null} */
-  _iewManager = null;
+  #viewManager = null;
 
   /** @type {ConnectionRenderer|null} */
-  _onnRenderer = null;
+  #connRenderer = null;
 
   /** @type {PseudoConnection|null} */
-  _seudo = null;
+  #pseudo = null;
 
   /** @type {ViewportActions|null} */
-  _ctions = null;
+  #actions = null;
 
   /** @type {'bezier'|'orthogonal'|'straight'|'pcb'} saved across setEditor calls */
-  _athStyle = 'bezier';
+  #pathStyle = 'bezier';
 
   /** @type {CanvasViewport|null} */
-  _iewport = null;
+  #viewport = null;
 
   // --- Public API ---
 
@@ -118,37 +118,37 @@ export class NodeCanvas extends Symbiote {
    * Clear all existing node, connection, and frame views from the DOM.
    * Called before switching to a new editor to ensure clean state.
    */
-  _learViews() {
+  #clearViews() {
     // Remove all node views and their preview timers
-    for (const [id, el] of this._odeViews) {
+    for (const [id, el] of this.#nodeViews) {
       if (el._previewRaf) { clearTimeout(el._previewRaf); el._previewRaf = null; }
       if (el._drag) el._drag.destroy();
       el._redrawPreview = null;
       el.remove();
     }
-    this._odeViews.clear();
-    if (this._iewport) this._iewport.clear();
+    this.#nodeViews.clear();
+    if (this.#viewport) this.#viewport.clear();
 
     // Unsubscribe from previous editor events to prevent leaks
-    if (this._ditor) {
-      this._ditor.removeAllListeners?.();
+    if (this.#editor) {
+      this.#editor.removeAllListeners?.();
     }
 
     // Remove all connection SVG paths
-    if (this._onnRenderer) {
-      let conns = [...this._onnRenderer.data.values()];
+    if (this.#connRenderer) {
+      let conns = [...this.#connRenderer.data.values()];
       for (const conn of conns) {
-        this._onnRenderer.remove(conn);
+        this.#connRenderer.remove(conn);
       }
     }
 
     // Remove all frame views
-    if (this._rameManager) {
-      this._rameManager.clear();
+    if (this.#frameManager) {
+      this.#frameManager.clear();
     }
 
     // Clear selection state
-    if (this._elector) this._elector.unselectAll();
+    if (this.#selector) this.#selector.unselectAll();
   }
 
   /**
@@ -157,57 +157,57 @@ export class NodeCanvas extends Symbiote {
    */
   setEditor(editor) {
     // Clear previous views before switching
-    this._learViews();
+    this.#clearViews();
 
-    this._ditor = editor;
+    this.#editor = editor;
 
     let engineMode = this.getAttribute('connection-engine') || 'svg';
 
     if (engineMode === 'canvas') {
-      this._onnRenderer = new CanvasConnectionRenderer({
+      this.#connRenderer = new CanvasConnectionRenderer({
         canvasLayer: this.ref.connCanvas,
         dotLayer: this.ref.pseudoSvg,
-        nodeViews: this._odeViews,
+        nodeViews: this.#nodeViews,
         editor,
-        onConnectionClick: (connId, e) => this._andleConnectionClick(connId, e),
+        onConnectionClick: (connId, e) => this.#handleConnectionClick(connId, e),
         getZoom: () => this.$.zoom,
         getPan: () => ({ x: this.$.panX, y: this.$.panY }),
         onDotDrag: (socketData) => {
-          if (this._onnectFlow && !this._eadonly) {
-            this._onnectFlow.pickSocket(socketData);
+          if (this.#connectFlow && !this.#readonly) {
+            this.#connectFlow.pickSocket(socketData);
           }
         },
       });
     } else {
-      this._onnRenderer = new ConnectionRenderer({
+      this.#connRenderer = new ConnectionRenderer({
         svgLayer: this.ref.connections,
         dotLayer: this.ref.pseudoSvg,
-        nodeViews: this._odeViews,
+        nodeViews: this.#nodeViews,
         editor,
-        onConnectionClick: (connId, e) => this._andleConnectionClick(connId, e),
+        onConnectionClick: (connId, e) => this.#handleConnectionClick(connId, e),
         getZoom: () => this.$.zoom,
         onDotDrag: (socketData) => {
-          if (this._onnectFlow && !this._eadonly) {
-            this._onnectFlow.pickSocket(socketData);
+          if (this.#connectFlow && !this.#readonly) {
+            this.#connectFlow.pickSocket(socketData);
           }
         },
       });
     }
   
     // For test automation
-    this._connRenderer = this._onnRenderer;
+    this._connRenderer = this.#connRenderer;
 
     // Re-apply saved pathStyle after creating new renderer
-    if (this._athStyle !== 'bezier') {
-      this._onnRenderer.setPathStyle(this._athStyle);
+    if (this.#pathStyle !== 'bezier') {
+      this.#connRenderer.setPathStyle(this.#pathStyle);
     }
 
-    this._seudo = new PseudoConnection(this.ref.pseudoSvg);
+    this.#pseudo = new PseudoConnection(this.ref.pseudoSvg);
 
-    this._ctions = new ViewportActions({
+    this.#actions = new ViewportActions({
       editor,
-      selector: this._elector,
-      nodeViews: this._odeViews,
+      selector: this.#selector,
+      nodeViews: this.#nodeViews,
       canvas: this,
     });
 
@@ -215,12 +215,12 @@ export class NodeCanvas extends Symbiote {
     let toolbar = this.ref.quickToolbar;
     if (toolbar) {
       let actionMap = {
-        delete: (nodeId) => { this._ctions.deleteNode(nodeId); toolbar.hide(); },
-        duplicate: (nodeId) => { this._ctions.cloneNode(nodeId); },
+        delete: (nodeId) => { this.#actions.deleteNode(nodeId); toolbar.hide(); },
+        duplicate: (nodeId) => { this.#actions.cloneNode(nodeId); },
         enter: (nodeId) => { this.drillDown(nodeId); toolbar.hide(); },
         mute: (nodeId) => {
-          this._ctions.muteNode(nodeId);
-          let nodeEl = this._odeViews.get(nodeId);
+          this.#actions.muteNode(nodeId);
+          let nodeEl = this.#nodeViews.get(nodeId);
           if (nodeEl) toolbar.show(nodeId, nodeEl);
         },
       };
@@ -239,42 +239,42 @@ export class NodeCanvas extends Symbiote {
       };
     }
 
-    this._iewManager = new NodeViewManager({
-      nodeViews: this._odeViews,
+    this.#viewManager = new NodeViewManager({
+      nodeViews: this.#nodeViews,
       editor,
-      selector: this._elector,
-      snapGrid: this._napGrid,
+      selector: this.#selector,
+      snapGrid: this.#snapGrid,
       getZoom: () => this.$.zoom,
       setNodePosition: (id, x, y) => this.setNodePosition(id, x, y),
       animateNodeToPosition: (id, x, y) => this.animateNodeToPosition(id, x, y),
-      onNodeClick: (id, e) => this._andleNodeClick(id, e),
+      onNodeClick: (id, e) => this.#handleNodeClick(id, e),
       nodesLayer: this.ref.nodesLayer,
       canvas: this,
-      onSvgShapeReady: (nodeId) => this._onnRenderer?.renderFreeDots(nodeId),
+      onSvgShapeReady: (nodeId) => this.#connRenderer?.renderFreeDots(nodeId),
     });
 
-    this._rameManager = new FrameManager({
-      nodeViews: this._odeViews,
+    this.#frameManager = new FrameManager({
+      nodeViews: this.#nodeViews,
       editor,
       canvas: this,
       setNodePosition: (id, x, y) => this.setNodePosition(id, x, y),
     });
 
-    this._iewport = new CanvasViewport({
+    this.#viewport = new CanvasViewport({
       canvas: this,
-      nodeViews: this._odeViews,
-      viewManager: this._iewManager,
-      getConnRenderer: () => this._onnRenderer,
+      nodeViews: this.#nodeViews,
+      viewManager: this.#viewManager,
+      getConnRenderer: () => this.#connRenderer,
     });
 
     // ConnectFlow
-    this._onnectFlow = new ConnectFlow(editor, {
+    this.#connectFlow = new ConnectFlow(editor, {
       getNodePosition: (id) => {
-        let el = this._odeViews.get(id);
+        let el = this.#nodeViews.get(id);
         return el?._position || { x: 0, y: 0 };
       },
       getNodeSize: (id) => {
-        let el = this._odeViews.get(id);
+        let el = this.#nodeViews.get(id);
         return { width: el?.offsetWidth || 180, height: el?.offsetHeight || 60 };
       },
       getTransform: () => ({
@@ -284,73 +284,73 @@ export class NodeCanvas extends Symbiote {
         rect: this.ref.canvasContainer.getBoundingClientRect(),
       }),
       onPseudoStart: (sx, sy, socketData) => {
-        this._ctions.highlightCompatibleSockets(socketData, this.ref.nodesLayer);
+        this.#actions.highlightCompatibleSockets(socketData, this.ref.nodesLayer);
       },
       onPseudoMove: (sx, sy, ex, ey) => {
-        this._seudo.show(sx, sy, ex, ey);
+        this.#pseudo.show(sx, sy, ex, ey);
       },
       onPseudoEnd: () => {
-        this._seudo.hide();
-        this._ctions.clearSocketHighlights(this.ref.nodesLayer);
-        this._ctions.clearPortHints();
-        this._onnRenderer?.clearDotHighlights();
+        this.#pseudo.hide();
+        this.#actions.clearSocketHighlights(this.ref.nodesLayer);
+        this.#actions.clearPortHints();
+        this.#connRenderer?.clearDotHighlights();
       },
       onCompatibleMove: (worldX, worldY, socketData) => {
         // Highlight compatible SVG dots (no port teleportation)
-        let compatibleIds = this._ctions.getCompatibleNodeIds(socketData);
-        this._onnRenderer?.highlightDotsForNodes(compatibleIds);
+        let compatibleIds = this.#actions.getCompatibleNodeIds(socketData);
+        this.#connRenderer?.highlightDotsForNodes(compatibleIds);
       },
 
       onDropEmpty: (x, y, socketData) => {
-        this._ctions.handleDropEmpty(x, y, socketData);
+        this.#actions.handleDropEmpty(x, y, socketData);
         // Show context menu at drop position
         let container = this.ref.canvasContainer;
         let rect = container.getBoundingClientRect();
         let menuX = x * this.$.zoom + this.$.panX;
         let menuY = y * this.$.zoom + this.$.panY;
         this.ref.contextMenu?.show(menuX, menuY, [
-          { label: 'Add Node', icon: 'add_box', action: () => this._ditor?.emit('contextadd', { x, y }) },
+          { label: 'Add Node', icon: 'add_box', action: () => this.#editor?.emit('contextadd', { x, y }) },
         ]);
       },
-      findNearestDot: (wx, wy) => this._onnRenderer?.findNearestDot(wx, wy),
+      findNearestDot: (wx, wy) => this.#connRenderer?.findNearestDot(wx, wy),
     });
 
     // Subscribe to editor events
-    editor.on('nodecreated', (node) => this._iewport.handleNodeCreated(node));
+    editor.on('nodecreated', (node) => this.#viewport.handleNodeCreated(node));
     editor.on('noderemoved', (node) => {
-      this._iewManager.removeView(node);
+      this.#viewManager.removeView(node);
       // Remove connections touching this node
-      for (const [, conn] of this._onnRenderer.data) {
+      for (const [, conn] of this.#connRenderer.data) {
         if (conn.from === node.id || conn.to === node.id) {
-          this._onnRenderer.remove(conn);
+          this.#connRenderer.remove(conn);
         }
       }
     });
-    editor.on('connectioncreated', (conn) => this._onnRenderer.add(conn));
+    editor.on('connectioncreated', (conn) => this.#connRenderer.add(conn));
     editor.on('connectionremoved', (conn) => {
-      this._onnRenderer.remove(conn);
-      this._elector.getSelectedConnections().delete(conn.id);
+      this.#connRenderer.remove(conn);
+      this.#selector.getSelectedConnections().delete(conn.id);
     });
 
     // Re-render connections after node layout changes (collapse/mute)
     let refreshNodeConnections = ({ nodeId }) => {
-      requestAnimationFrame(() => this._onnRenderer?.updateForNode(nodeId));
+      requestAnimationFrame(() => this.#connRenderer?.updateForNode(nodeId));
     };
     editor.on('nodecollapse', refreshNodeConnections);
     editor.on('nodemute', refreshNodeConnections);
 
     // ─── Virtualized initialization ───
-    this._iewport.initializeData(editor);
+    this.#viewport.initializeData(editor);
 
     // Batch renderer operations to prevent multiple redundant redraws
-    this._onnRenderer.setBatchMode(true);
-    this._onnRenderer.addBatch(allConns);
-    this._iewport.syncPhantom();
-    this._onnRenderer.setBatchMode(false);
+    this.#connRenderer.setBatchMode(true);
+    this.#connRenderer.addBatch(allConns);
+    this.#viewport.syncPhantom();
+    this.#connRenderer.setBatchMode(false);
 
     // Subscribe to frame events
-    editor.on('framecreated', (frame) => this._rameManager.addView(frame));
-    editor.on('frameremoved', (frame) => this._rameManager.removeView(frame));
+    editor.on('framecreated', (frame) => this.#frameManager.addView(frame));
+    editor.on('frameremoved', (frame) => this.#frameManager.removeView(frame));
 
     // Align tools emit nodemovetopos
     editor.on('nodemovetopos', ({ nodeId, x, y }) => {
@@ -359,15 +359,15 @@ export class NodeCanvas extends Symbiote {
 
     // Render existing frames
     for (const frame of editor.getFrames()) {
-      this._rameManager.addView(frame);
+      this.#frameManager.addView(frame);
     }
 
     // Initialize subgraph navigation (skip during drill-down/drillUp)
-    if (!this._avigating) {
-      this._ubgraphManager.initialize(this, editor);
+    if (!this.#navigating) {
+      this.#subgraphManager.initialize(this, editor);
       let breadcrumb = this.ref.breadcrumb;
       if (breadcrumb) {
-        this._ubgraphManager.onNavigate((path) => {
+        this.#subgraphManager.onNavigate((path) => {
           breadcrumb.setPath(path);
         });
         breadcrumb.onNavigate((level) => {
@@ -378,7 +378,7 @@ export class NodeCanvas extends Symbiote {
   }
 
   /** @returns {ConnectFlow|null} */
-  getConnectFlow() { return this._onnectFlow; }
+  getConnectFlow() { return this.#connectFlow; }
 
   /**
    * Enable/disable snap to grid
@@ -386,9 +386,9 @@ export class NodeCanvas extends Symbiote {
    * @param {number} [size]
    */
   setSnapGrid(enabled, size) {
-    this._napEnabled = enabled;
-    if (size) this._napGrid.setSize(size);
-    this._iewManager?.setSnapEnabled(enabled);
+    this.#snapEnabled = enabled;
+    if (size) this.#snapGrid.setSize(size);
+    this.#viewManager?.setSnapEnabled(enabled);
   }
 
   /**
@@ -396,14 +396,14 @@ export class NodeCanvas extends Symbiote {
    * @param {boolean} enabled
    */
   setReadonly(enabled) {
-    this._eadonly = enabled;
+    this.#readonly = enabled;
     if (enabled) {
       this.setAttribute('data-readonly', '');
     } else {
       this.removeAttribute('data-readonly');
     }
-    this._iewManager?.setReadonly(enabled);
-    this._ctions?.setReadonly(enabled);
+    this.#viewManager?.setReadonly(enabled);
+    this.#actions?.setReadonly(enabled);
   }
 
   /**
@@ -426,7 +426,7 @@ export class NodeCanvas extends Symbiote {
    */
   setTheme(theme) {
     applyTheme(this, theme);
-    this._hemeName = theme.name;
+    this.#themeName = theme.name;
   }
 
   /**
@@ -442,46 +442,46 @@ export class NodeCanvas extends Symbiote {
   setSkin(skin) { applySkin(this, skin); }
 
   /** @returns {string} */
-  getThemeName() { return this._hemeName; }
+  getThemeName() { return this.#themeName; }
 
   /**
    * Set data flow animation on a connection
    * @param {string} connId
    * @param {boolean} active
    */
-  setFlowing(connId, active) { this._onnRenderer?.setFlowing(connId, active); }
+  setFlowing(connId, active) { this.#connRenderer?.setFlowing(connId, active); }
 
   /**
    * Set data flow animation on all connections
    * @param {boolean} active
    */
-  setAllFlowing(active) { this._onnRenderer?.setAllFlowing(active); }
+  setAllFlowing(active) { this.#connRenderer?.setAllFlowing(active); }
 
   /**
    * Set connection path style (persists across setEditor/drill-down)
    * @param {'bezier'|'orthogonal'|'straight'|'pcb'} style
    */
   setPathStyle(style) {
-    this._athStyle = style;
-    this._onnRenderer?.setPathStyle(style);
+    this.#pathStyle = style;
+    this.#connRenderer?.setPathStyle(style);
   }
 
   /** @returns {'bezier'|'orthogonal'|'straight'|'pcb'} */
-  getPathStyle() { return this._athStyle; }
+  getPathStyle() { return this.#pathStyle; }
 
   /**
    * Programmatically select a node by ID
    * @param {string} nodeId
    */
   selectNode(nodeId) {
-    this._elector?.selectNode(nodeId);
+    this.#selector?.selectNode(nodeId);
   }
 
   /**
    * Clear all connector caches and re-render.
    * Call after initial node positioning to settle SVG connectors.
    */
-  refreshConnections() { this._onnRenderer?.refreshAll(); }
+  refreshConnections() { this.#connRenderer?.refreshAll(); }
 
   /**
    * Set error state on a node with frame-style error display
@@ -489,7 +489,7 @@ export class NodeCanvas extends Symbiote {
    * @param {string} message - Error message to display
    */
   setNodeError(nodeId, message) {
-    let el = this._odeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
 
     // Remove existing error frame if any
@@ -521,7 +521,7 @@ export class NodeCanvas extends Symbiote {
    * @param {string} nodeId
    */
   clearNodeError(nodeId) {
-    let el = this._odeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
     el.removeAttribute('data-error');
     let frame = el.querySelector('.error-frame');
@@ -532,7 +532,7 @@ export class NodeCanvas extends Symbiote {
    * Clear all error states
    */
   clearAllErrors() {
-    for (const [id] of this._odeViews) {
+    for (const [id] of this.#nodeViews) {
       this.clearNodeError(id);
     }
   }
@@ -541,8 +541,8 @@ export class NodeCanvas extends Symbiote {
    * Apply auto layout to all nodes
    */
   autoLayout() {
-    if (!this._ditor) return;
-    let positions = computeAutoLayout(this._ditor);
+    if (!this.#editor) return;
+    let positions = computeAutoLayout(this.#editor);
     for (const [nodeId, pos] of Object.entries(positions)) {
       this.setNodePosition(nodeId, pos.x, pos.y);
     }
@@ -554,7 +554,7 @@ export class NodeCanvas extends Symbiote {
    * accounting for the inspector panel if open.
    */
   fitView() {
-    this._iewport?.fitView();
+    this.#viewport?.fitView();
   }
 
   /**
@@ -566,7 +566,7 @@ export class NodeCanvas extends Symbiote {
    * @returns {boolean}
    */
   flyToNode(nodeId, opts) {
-    return this._iewport?.flyToNode(nodeId, opts) || false;
+    return this.#viewport?.flyToNode(nodeId, opts) || false;
   }
 
 
@@ -578,7 +578,7 @@ export class NodeCanvas extends Symbiote {
    */
   measureNodeSizes() {
     let sizes = {};
-    for (const [nodeId, el] of this._odeViews) {
+    for (const [nodeId, el] of this.#nodeViews) {
       if (el && el.offsetWidth > 0) {
         sizes[nodeId] = { w: el.offsetWidth, h: el.offsetHeight };
       }
@@ -593,7 +593,7 @@ export class NodeCanvas extends Symbiote {
    * @param {'image'|'text'} [type='text']
    */
   setPreview(nodeId, content, type = 'text') {
-    let el = this._odeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
     let preview = el.ref?.previewArea;
     if (!preview) return;
@@ -618,7 +618,7 @@ export class NodeCanvas extends Symbiote {
    * @param {string} nodeId
    */
   clearPreview(nodeId) {
-    let el = this._odeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
     let preview = el.ref?.previewArea;
     if (!preview) return;
@@ -631,10 +631,10 @@ export class NodeCanvas extends Symbiote {
    * @param {string} nodeId
    * @returns {HTMLElement|undefined}
    */
-  _getNodeView(nodeId) { return this._odeViews.get(nodeId); }
+  _getNodeView(nodeId) { return this.#nodeViews.get(nodeId); }
 
   /** Alias for SubgraphManager */
-  getNodeView(nodeId) { return this._odeViews.get(nodeId); }
+  getNodeView(nodeId) { return this.#nodeViews.get(nodeId); }
 
   /**
    * Highlight nodes sequentially based on execution trace.
@@ -662,7 +662,7 @@ export class NodeCanvas extends Symbiote {
     }
 
     // Clear any previous fire states
-    for (const [, el] of this._odeViews) {
+    for (const [, el] of this.#nodeViews) {
       el.removeAttribute('data-fire-state');
       el.style.opacity = '';
       el.style.borderColor = '';
@@ -673,7 +673,7 @@ export class NodeCanvas extends Symbiote {
 
     // Set all traced nodes to pending (dimmed)
     for (const step of trace) {
-      let el = this._odeViews.get(step.nodeId);
+      let el = this.#nodeViews.get(step.nodeId);
       if (el) {
         el.style.opacity = '0.4';
         el.style.transition = 'opacity 0.15s';
@@ -683,7 +683,7 @@ export class NodeCanvas extends Symbiote {
     // Sequentially activate each node
     trace.forEach((step, i) => {
       setTimeout(() => {
-        let el = this._odeViews.get(step.nodeId);
+        let el = this.#nodeViews.get(step.nodeId);
         if (!el) return;
 
         // Active: green pulse
@@ -704,7 +704,7 @@ export class NodeCanvas extends Symbiote {
     // Clear all states after animation completes
     let totalDuration = trace.length * stepDelay + 3500;
     setTimeout(() => {
-      for (const [, el] of this._odeViews) {
+      for (const [, el] of this.#nodeViews) {
         el.style.opacity = '';
         el.style.borderColor = '';
         el.style.animation = '';
@@ -717,22 +717,22 @@ export class NodeCanvas extends Symbiote {
   // --- Subgraph Navigation ---
 
   /** @type {SubgraphManager} */
-  _ubgraphManager = new SubgraphManager();
+  #subgraphManager = new SubgraphManager();
 
   /** @type {boolean} - guard to prevent setEditor re-init during navigation */
-  _avigating = false;
+  #navigating = false;
 
   /**
    * Drill down into a subgraph node
    * @param {string} nodeId - SubgraphNode ID
    */
   drillDown(nodeId) {
-    if (!this._ditor) return;
-    let node = this._ditor.getNode(nodeId);
+    if (!this.#editor) return;
+    let node = this.#editor.getNode(nodeId);
     if (!node?._isSubgraph) return;
-    this._avigating = true;
-    this._ubgraphManager.drillDown(node);
-    this._avigating = false;
+    this.#navigating = true;
+    this.#subgraphManager.drillDown(node);
+    this.#navigating = false;
     this.dispatchEvent(new CustomEvent('subgraph-enter', {
       detail: { node, nodeId },
       bubbles: true,
@@ -744,9 +744,9 @@ export class NodeCanvas extends Symbiote {
    * @param {number} level - 0 = root
    */
   drillUp(level) {
-    this._avigating = true;
-    this._ubgraphManager.drillUp(level);
-    this._avigating = false;
+    this.#navigating = true;
+    this.#subgraphManager.drillUp(level);
+    this.#navigating = false;
     this.dispatchEvent(new CustomEvent('subgraph-exit', {
       detail: { level },
       bubbles: true,
@@ -758,7 +758,7 @@ export class NodeCanvas extends Symbiote {
    * @returns {number}
    */
   getSubgraphDepth() {
-    return this._ubgraphManager.depth;
+    return this.#subgraphManager.depth;
   }
 
   /**
@@ -766,7 +766,7 @@ export class NodeCanvas extends Symbiote {
    * @returns {Array<{ label: string, level: number }>}
    */
   getSubgraphPath() {
-    return this._ubgraphManager.getPath();
+    return this.#subgraphManager.getPath();
   }
 
   /**
@@ -778,7 +778,7 @@ export class NodeCanvas extends Symbiote {
   setBatchMode(active) {
     this._batchMode = !!active;
     if (!this._batchMode) {
-      this._iewport?.updateTransform();
+      this.#viewport?.updateTransform();
     }
   }
 
@@ -789,9 +789,9 @@ export class NodeCanvas extends Symbiote {
    * @param {number} y
    */
   setNodePosition(nodeId, x, y) {
-    let el = this._odeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) {
-      this._iewport?.updatePhantomPosition(nodeId, x, y);
+      this.#viewport?.updatePhantomPosition(nodeId, x, y);
       return;
     }
     el.style.transform = `translate(${x}px, ${y}px)`;
@@ -800,10 +800,10 @@ export class NodeCanvas extends Symbiote {
     // Skip connection updates during batch positioning
     if (this._batchMode) return;
 
-    this._onnRenderer?.updateForNode(nodeId);
+    this.#connRenderer?.updateForNode(nodeId);
     // Render or refresh free dots for SVG nodes
     if (el.hasAttribute('data-svg-shape')) {
-      this._onnRenderer?.refreshFreeDots(nodeId);
+      this.#connRenderer?.refreshFreeDots(nodeId);
     }
 
     // Keep toolbar in sync during drag
@@ -821,7 +821,7 @@ export class NodeCanvas extends Symbiote {
    * @param {number} [duration=200] - Animation duration in ms
    */
   animateNodeToPosition(nodeId, targetX, targetY, duration = 200) {
-    let el = this._odeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
 
     let startX = el._position.x;
@@ -843,8 +843,8 @@ export class NodeCanvas extends Symbiote {
 
       el.style.transform = `translate(${x}px, ${y}px)`;
       el._position = { x, y };
-      this._onnRenderer?.updateForNode(nodeId);
-      this._onnRenderer?.refreshFreeDots(nodeId);
+      this.#connRenderer?.updateForNode(nodeId);
+      this.#connRenderer?.refreshFreeDots(nodeId);
 
       let toolbar = this.ref.quickToolbar;
       if (toolbar && toolbar._nodeId === nodeId) {
@@ -857,8 +857,8 @@ export class NodeCanvas extends Symbiote {
         // Ensure final position is exact
         el._position = { x: targetX, y: targetY };
         el.style.transform = `translate(${targetX}px, ${targetY}px)`;
-        this._onnRenderer?.updateForNode(nodeId);
-        this._onnRenderer?.refreshFreeDots(nodeId);
+        this.#connRenderer?.updateForNode(nodeId);
+        this.#connRenderer?.refreshFreeDots(nodeId);
       }
     };
 
@@ -872,7 +872,7 @@ export class NodeCanvas extends Symbiote {
    * @returns {Object<string, number[]>}
    */
   getPositions() {
-    return this._iewport?.getPositions() || {};
+    return this.#viewport?.getPositions() || {};
   }
 
   /**
@@ -882,7 +882,7 @@ export class NodeCanvas extends Symbiote {
    * @returns {boolean}
    */
   hasNode(nodeId) {
-    return this._iewport?.hasNode(nodeId) || false;
+    return this.#viewport?.hasNode(nodeId) || false;
   }
 
   // --- Frame API ---
@@ -892,7 +892,7 @@ export class NodeCanvas extends Symbiote {
    * @param {import('../core/Frame.js').Frame} frame
    */
   addFrame(frame) {
-    this._ditor?.addFrame(frame);
+    this.#editor?.addFrame(frame);
   }
 
   /**
@@ -902,7 +902,7 @@ export class NodeCanvas extends Symbiote {
    * @param {number} y
    */
   setFramePosition(frameId, x, y) {
-    this._rameManager?.setPosition(frameId, x, y);
+    this.#frameManager?.setPosition(frameId, x, y);
   }
 
   /**
@@ -912,48 +912,48 @@ export class NodeCanvas extends Symbiote {
    * @param {number} h
    */
   setFrameSize(frameId, w, h) {
-    this._rameManager?.setSize(frameId, w, h);
+    this.#frameManager?.setSize(frameId, w, h);
   }
 
   // --- Selection ---
 
   /** @type {number} */
-  _astClickTime = 0;
+  #lastClickTime = 0;
   /** @type {string|null} */
-  _astClickNodeId = null;
+  #lastClickNodeId = null;
 
-  _andleNodeClick(nodeId, e) {
+  #handleNodeClick(nodeId, e) {
     let accumulate = e.ctrlKey || e.metaKey;
-    this._elector.selectNode(nodeId, accumulate);
+    this.#selector.selectNode(nodeId, accumulate);
 
     // Double-click detection for subgraph drill-down
     let now = Date.now();
-    if (this._astClickNodeId === nodeId && now - this._astClickTime < 400) {
+    if (this.#lastClickNodeId === nodeId && now - this.#lastClickTime < 400) {
       this.drillDown(nodeId);
-      this._astClickTime = 0;
-      this._astClickNodeId = null;
+      this.#lastClickTime = 0;
+      this.#lastClickNodeId = null;
     } else {
-      this._astClickTime = now;
-      this._astClickNodeId = nodeId;
+      this.#lastClickTime = now;
+      this.#lastClickNodeId = nodeId;
     }
   }
 
 
 
-  _andleConnectionClick(connId, e) {
+  #handleConnectionClick(connId, e) {
     let accumulate = e.ctrlKey || e.metaKey;
-    this._elector.selectConnection(connId, accumulate);
+    this.#selector.selectConnection(connId, accumulate);
   }
 
   // --- Transform ---
 
-  _pdateTransform() {
-    this._iewport?.updateTransform();
+  #updateTransform() {
+    this.#viewport?.updateTransform();
   }
 
   /** Public: force sync phantom data to renderer (for use after batch setNodePosition) */
   syncPhantom() {
-    this._iewport?.syncPhantom();
+    this.#viewport?.syncPhantom();
   }
 
   // --- Lifecycle ---
@@ -963,8 +963,8 @@ export class NodeCanvas extends Symbiote {
     let content = this.ref.content;
 
     // Canvas pan
-    this._rag = new Drag();
-    this._rag.initialize(
+    this.#drag = new Drag();
+    this.#drag.initialize(
       container,
       {
         getPosition: () => ({ x: this.$.panX, y: this.$.panY }),
@@ -976,11 +976,11 @@ export class NodeCanvas extends Symbiote {
           this._panStart = e ? { x: e.pageX, y: e.pageY, target: e.target } : null;
         },
         onTranslate: (x, y) => {
-          if (this._oom?.isTranslating()) return;
-          if (this._onnectFlow?.isPicking()) return;
+          if (this.#zoom?.isTranslating()) return;
+          if (this.#connectFlow?.isPicking()) return;
           this.$.panX = x;
           this.$.panY = y;
-          this._pdateTransform();
+          this.#updateTransform();
           this.dispatchEvent(new CustomEvent('manualviewport'));
 
           // Suppress CSS :hover on paths during active pan
@@ -996,7 +996,7 @@ export class NodeCanvas extends Symbiote {
             let t = this._panStart.target;
             let isNode = t?.closest?.('graph-node, quick-toolbar, context-menu, inspector-panel');
             if (dx < 5 && dy < 5 && !isNode) {
-              this._elector.unselectAll();
+              this.#selector.unselectAll();
             }
           }
           this._panStart = null;
@@ -1006,16 +1006,16 @@ export class NodeCanvas extends Symbiote {
     );
 
     // Zoom
-    this._oom = new Zoom(0.1);
+    this.#zoom = new Zoom(0.1);
     let interactingTimer = null;
-    this._oom.initialize(container, content, (delta, ox, oy) => {
+    this.#zoom.initialize(container, content, (delta, ox, oy) => {
       let k = this.$.zoom;
       let newK = k * (1 + delta);
       if (newK < 0.001 || newK > 5) return;
       this.$.zoom = newK;
       this.$.panX += ox;
       this.$.panY += oy;
-      this._pdateTransform();
+      this.#updateTransform();
       this.dispatchEvent(new CustomEvent('manualviewport'));
 
       // Suppress CSS :hover on paths during active zoom
@@ -1030,13 +1030,13 @@ export class NodeCanvas extends Symbiote {
 
     // Context menu + keyboard
     container.addEventListener('contextmenu', (e) => {
-      this._ctions?.showContextMenu(e, this.ref.contextMenu, container, {
+      this.#actions?.showContextMenu(e, this.ref.contextMenu, container, {
         panX: this.$.panX,
         panY: this.$.panY,
         zoom: this.$.zoom,
       });
     });
-    container.addEventListener('keydown', (e) => this._ctions?.handleKeydown(e));
+    container.addEventListener('keydown', (e) => this.#actions?.handleKeydown(e));
 
     // Ctrl+F to open node search
     container.addEventListener('keydown', (e) => {
@@ -1052,10 +1052,10 @@ export class NodeCanvas extends Symbiote {
       if (this.ref.content) {
         this.ref.content.style.transform = val;
       }
-      this._onnRenderer?.refreshAll();
+      this.#connRenderer?.refreshAll();
     });
 
-    this._pdateTransform();
+    this.#updateTransform();
 
 
     // Minimap — auto-show on viewport change, toggle button
@@ -1112,7 +1112,7 @@ export class NodeCanvas extends Symbiote {
     if (minimap) {
       minimap.setStateGetter(() => {
         let nodes = [];
-        for (const [id, el] of this._odeViews) {
+        for (const [id, el] of this.#nodeViews) {
           let pos = el._position || { x: 0, y: 0 };
           if (!el._cachedW) {
             el._cachedW = el.offsetWidth || 180;
@@ -1140,7 +1140,7 @@ export class NodeCanvas extends Symbiote {
       minimap.addEventListener('minimap-navigate', (e) => {
         this.$.panX = e.detail.x;
         this.$.panY = e.detail.y;
-        this._pdateTransform();
+        this.#updateTransform();
       });
     }
 
@@ -1150,8 +1150,8 @@ export class NodeCanvas extends Symbiote {
       nodeSearch.configure({
         getNodes: () => {
           let result = [];
-          if (this._ditor) {
-            for (const node of this._ditor.getNodes()) {
+          if (this.#editor) {
+            for (const node of this.#editor.getNodes()) {
               result.push({ id: node.id, label: node.label, type: node.type, category: node.category });
             }
           }
@@ -1159,15 +1159,15 @@ export class NodeCanvas extends Symbiote {
         },
         onSelect: (nodeId) => {
           // Select node
-          this._elector.selectNode(nodeId);
+          this.#selector.selectNode(nodeId);
           // Center viewport on node
-          let el = this._odeViews.get(nodeId);
+          let el = this.#nodeViews.get(nodeId);
           if (el?._position) {
             let cx = container.clientWidth / 2;
             let cy = container.clientHeight / 2;
             this.$.panX = -el._position.x * this.$.zoom + cx;
             this.$.panY = -el._position.y * this.$.zoom + cy;
-            this._pdateTransform();
+            this.#updateTransform();
           }
         },
       });
@@ -1180,15 +1180,15 @@ export class NodeCanvas extends Symbiote {
    * @param {number} [duration=400] - Animation duration in ms
    */
   panToNode(nodeId, duration = 400) {
-    this._iewport?.panToNode(nodeId, duration);
+    this.#viewport?.panToNode(nodeId, duration);
   }
 
   destroyCallback() {
-    if (this._iewport) this._iewport.clear();
-    if (this._rag) this._rag.destroy();
-    if (this._oom) this._oom.destroy();
-    if (this._onnectFlow) this._onnectFlow.destroy();
-    for (const [, el] of this._odeViews) {
+    if (this.#viewport) this.#viewport.clear();
+    if (this.#drag) this.#drag.destroy();
+    if (this.#zoom) this.#zoom.destroy();
+    if (this.#connectFlow) this.#connectFlow.destroy();
+    for (const [, el] of this.#nodeViews) {
       if (el._drag) el._drag.destroy();
     }
   }

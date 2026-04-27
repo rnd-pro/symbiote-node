@@ -15,7 +15,7 @@
  */
 
 /** @type {Map<string, SocketTypeDef>} */
-const _types = new Map();
+let _types = new Map();
 
 /**
  * Register a socket type
@@ -62,7 +62,7 @@ export function getAllSocketTypes() {
 export function areSocketsCompatible(from, to) {
   if (from === 'any' || to === 'any') return true;
   if (from === to) return true;
-  const fromDef = _types.get(from);
+  let fromDef = _types.get(from);
   if (!fromDef) return false;
   return fromDef.compatible.includes(to);
 }

@@ -1,6 +1,6 @@
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div class="panel-view" ${{ '@hidden': '!isPanel' }}>
   <div class="panel-header">
     <button class="header-btn type-btn" ${{ onclick: 'onTypeClick' }}>

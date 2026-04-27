@@ -1,6 +1,6 @@
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div ref="canvasContainer" class="canvas-container" tabindex="0">
   <canvas ref="connCanvas" class="sn-conn-canvas"></canvas>
   <div ref="content" class="content">

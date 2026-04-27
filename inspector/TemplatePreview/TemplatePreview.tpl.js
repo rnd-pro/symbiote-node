@@ -4,7 +4,7 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div class="tpl-preview-section">
   <div class="tpl-chips-label">
     <span class="material-symbols-outlined">sell</span> Placeholders

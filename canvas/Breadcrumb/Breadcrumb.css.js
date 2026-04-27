@@ -4,7 +4,7 @@
  */
 import { css } from '@symbiotejs/symbiote';
 
-export const styles = css`
+export let styles = css`
   graph-breadcrumb {
     display: flex;
     align-items: center;

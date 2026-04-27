@@ -141,3 +141,5 @@ export class Node {
     delete this.controls[key];
   }
 }
+
+export { Node as default };

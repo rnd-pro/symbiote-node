@@ -1,9 +1,9 @@
 // Sidepanel v4 - Event log display
 
 const SERVER_URL = 'http://localhost:3333'
-const eventsDiv = document.getElementById('events')
-const statusDot = document.getElementById('statusDot')
-const statusText = document.getElementById('statusText')
+let eventsDiv = document.getElementById('events')
+let statusDot = document.getElementById('statusDot')
+let statusText = document.getElementById('statusText')
 
 let events = []
 
@@ -12,8 +12,8 @@ let events = []
  */
 async function checkStatus() {
   try {
-    const res = await fetch(`${SERVER_URL}/health`)
-    const data = await res.json()
+    let res = await fetch(`${SERVER_URL}/health`)
+    let data = await res.json()
     statusDot.className = 'status-dot connected'
     statusText.textContent = `Bridge connected (${data.pendingCommands || 0} pending)`
   } catch {
@@ -41,7 +41,7 @@ function renderEvents() {
   }
 
   eventsDiv.innerHTML = events.map(e => {
-    const time = new Date(e.time).toLocaleTimeString()
+    let time = new Date(e.time).toLocaleTimeString()
     return `
       <div class="event">
         <span class="event-time">${time}</span>
@@ -63,7 +63,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Fetch existing events from content script
 async function fetchExistingEvents() {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
     if (tab?.id) {
       chrome.tabs.sendMessage(tab.id, { action: 'getEventLog' }, (response) => {
         if (response?.events) {
@@ -81,8 +81,8 @@ fetchExistingEvents()
 setInterval(checkStatus, 3000)
 
 // Export Cookies button handler
-const exportBtn = document.getElementById('exportCookies')
-const cookieStatus = document.getElementById('cookieStatus')
+let exportBtn = document.getElementById('exportCookies')
+let cookieStatus = document.getElementById('cookieStatus')
 
 exportBtn.addEventListener('click', async () => {
   exportBtn.disabled = true
@@ -90,7 +90,7 @@ exportBtn.addEventListener('click', async () => {
   cookieStatus.textContent = ''
 
   try {
-    const response = await new Promise((resolve, reject) => {
+    let response = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ action: 'exportCookies' }, (res) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message))
@@ -118,16 +118,16 @@ exportBtn.addEventListener('click', async () => {
 })
 
 // Generate Image button handler
-const generateBtn = document.getElementById('generateBtn')
-const promptInput = document.getElementById('promptInput')
-const aspectRatio = document.getElementById('aspectRatio')
-const generateStatus = document.getElementById('generateStatus')
-const resultContainer = document.getElementById('resultContainer')
-const resultImage = document.getElementById('resultImage')
-const resultLink = document.getElementById('resultLink')
+let generateBtn = document.getElementById('generateBtn')
+let promptInput = document.getElementById('promptInput')
+let aspectRatio = document.getElementById('aspectRatio')
+let generateStatus = document.getElementById('generateStatus')
+let resultContainer = document.getElementById('resultContainer')
+let resultImage = document.getElementById('resultImage')
+let resultLink = document.getElementById('resultLink')
 
 generateBtn.addEventListener('click', async () => {
-  const prompt = promptInput.value.trim()
+  let prompt = promptInput.value.trim()
   if (!prompt) {
     generateStatus.style.color = '#ff4757'
     generateStatus.textContent = 'Please enter a prompt'
@@ -142,7 +142,7 @@ generateBtn.addEventListener('click', async () => {
 
   try {
     // Send command to server
-    const res = await fetch(`${SERVER_URL}/command`, {
+    let res = await fetch(`${SERVER_URL}/command`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -155,22 +155,22 @@ generateBtn.addEventListener('click', async () => {
     })
 
     if (!res.ok) throw new Error('Failed to send command')
-    const { id } = await res.json()
+    let { id } = await res.json()
 
     generateStatus.textContent = `Command sent (${id}), waiting...`
     addEvent({ time: new Date().toISOString(), type: 'command', data: `Generate: ${prompt}` })
 
     // Poll for result
-    const startTime = Date.now()
-    const timeout = 70000
+    let startTime = Date.now()
+    let timeout = 70000
 
     while (Date.now() - startTime < timeout) {
       await new Promise(r => setTimeout(r, 1000))
 
-      const resultRes = await fetch(`${SERVER_URL}/result/${id}`)
+      let resultRes = await fetch(`${SERVER_URL}/result/${id}`)
       if (!resultRes.ok) continue
 
-      const data = await resultRes.json()
+      let data = await resultRes.json()
 
       if (data.result) {
         // Success!
@@ -216,7 +216,7 @@ promptInput.addEventListener('keypress', (e) => {
 })
 
 // Show Zones button handler
-const showZonesBtn = document.getElementById('showZonesBtn')
+let showZonesBtn = document.getElementById('showZonesBtn')
 let zonesVisible = false
 
 showZonesBtn.addEventListener('click', async () => {
@@ -225,7 +225,7 @@ showZonesBtn.addEventListener('click', async () => {
   try {
     if (zonesVisible) {
       // Hide zones
-      const res = await fetch(`${SERVER_URL}/command`, {
+      let res = await fetch(`${SERVER_URL}/command`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'hideZones', params: {} })
@@ -238,18 +238,18 @@ showZonesBtn.addEventListener('click', async () => {
       }
     } else {
       // Show zones
-      const res = await fetch(`${SERVER_URL}/command`, {
+      let res = await fetch(`${SERVER_URL}/command`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'showClickableZones', params: {} })
       })
       if (res.ok) {
-        const { id } = await res.json()
+        let { id } = await res.json()
 
         // Wait for result
         await new Promise(r => setTimeout(r, 1000))
-        const resultRes = await fetch(`${SERVER_URL}/result/${id}`)
-        const data = await resultRes.json()
+        let resultRes = await fetch(`${SERVER_URL}/result/${id}`)
+        let data = await resultRes.json()
 
         if (data.result?.zones) {
           showZonesBtn.textContent = '🚫 Hide Zones'
@@ -276,18 +276,18 @@ showZonesBtn.addEventListener('click', async () => {
 // Layer toggle buttons handler
 document.querySelectorAll('.layer-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
-    const layer = btn.dataset.layer
+    let layer = btn.dataset.layer
     try {
-      const res = await fetch(`${SERVER_URL}/command`, {
+      let res = await fetch(`${SERVER_URL}/command`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'showClickableZones', params: { layer } })
       })
       if (res.ok) {
-        const { id } = await res.json()
+        let { id } = await res.json()
         await new Promise(r => setTimeout(r, 1000))
-        const resultRes = await fetch(`${SERVER_URL}/result/${id}`)
-        const data = await resultRes.json()
+        let resultRes = await fetch(`${SERVER_URL}/result/${id}`)
+        let data = await resultRes.json()
         if (data.result?.zones) {
           addEvent({
             time: new Date().toISOString(),

@@ -4,7 +4,7 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div class="insp-resize-handle"></div>
 
 <div class="insp-body">
@@ -80,7 +80,7 @@ export const template = html`
 </div>
 `;
 
-export const inspPortItemTemplate = html`
+export let inspPortItemTemplate = html`
 <div class="insp-port">
   <span class="insp-port-dot"></span>
   <span class="insp-port-label">{{label}}</span>
@@ -88,7 +88,7 @@ export const inspPortItemTemplate = html`
 </div>
 `;
 
-export const inspCtrlItemTemplate = html`
+export let inspCtrlItemTemplate = html`
 <div class="insp-ctrl">
   <label class="insp-ctrl-label">{{label}}</label>
   <div class="insp-ctrl-input"></div>

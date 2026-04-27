@@ -62,7 +62,7 @@ export class ForceLayout {
     this.#nodeIds = null;
 
     this.#worker.onmessage = (e) => {
-      const msg = e.data;
+      let msg = e.data;
 
       // Continuous mode: receive node ID order once for Float32Array unpacking
       if (msg.type === 'nodeIds') {
@@ -73,8 +73,8 @@ export class ForceLayout {
       if (msg.type === 'tick') {
         // Unpack Float32Array if present (continuous mode)
         if (msg.packed && this.#nodeIds) {
-          const buf = new Float32Array(msg.packed);
-          const positions = {};
+          let buf = new Float32Array(msg.packed);
+          let positions = {};
           for (let i = 0; i < this.#nodeIds.length; i++) {
             positions[this.#nodeIds[i]] = {
               x: Math.round(buf[i * 2]),
@@ -100,7 +100,7 @@ export class ForceLayout {
     };
 
     this.#worker.onerror = (err) => {
-      console.error('[ForceLayout] Worker error:', err);
+      console.error('🔴 [ForceLayout] Worker error:', err);
       this.#running = false;
       this.#paused = false;
       this.#cleanup();

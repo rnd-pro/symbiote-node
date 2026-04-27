@@ -38,11 +38,11 @@ export default {
     cacheKey: (inputs) => `agent:${inputs.prompt}:${JSON.stringify(inputs.context)}`,
 
     execute: async (inputs, params) => {
-      const { prompt, context } = inputs;
-      const { timeout, allowedTools, model } = params;
+      let { prompt, context } = inputs;
+      let { timeout, allowedTools, model } = params;
 
       // Check if agentBridge is available (injected via params or global)
-      const bridge = params._agentBridge || globalThis.__symbioteNodeAgentBridge;
+      let bridge = params._agentBridge || globalThis.__symbioteNodeAgentBridge;
       if (!bridge) {
         // No bridge available — return pending marker
         return {
@@ -57,7 +57,7 @@ export default {
       }
 
       try {
-        const response = await Promise.race([
+        let response = await Promise.race([
           bridge.run({ prompt, context, tools: allowedTools, model }),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Agent timeout')), timeout)

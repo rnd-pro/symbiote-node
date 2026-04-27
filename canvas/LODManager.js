@@ -36,12 +36,12 @@ export class LODManager {
     if (this.#attached || !this.#canvas) return;
     this.#attached = true;
 
-    const initialZoom = this.#canvas.$.zoom || 1;
+    let initialZoom = this.#canvas.$.zoom || 1;
     this.#currentLod = initialZoom >= this.#threshold ? 'expanded' : 'collapsed';
 
     this.#canvas.sub('zoom', (zoom) => {
       if (!this.#attached) return; // guard after destroy
-      const newLod = zoom >= this.#threshold ? 'expanded' : 'collapsed';
+      let newLod = zoom >= this.#threshold ? 'expanded' : 'collapsed';
       if (newLod === this.#currentLod) return;
       
       this.#currentLod = newLod;
@@ -54,8 +54,8 @@ export class LODManager {
    */
   update() {
     if (!this.#canvas || !this.#attached) return;
-    const zoom = this.#canvas.$.zoom || 1;
-    const newLod = zoom >= this.#threshold ? 'expanded' : 'collapsed';
+    let zoom = this.#canvas.$.zoom || 1;
+    let newLod = zoom >= this.#threshold ? 'expanded' : 'collapsed';
     if (newLod !== this.#currentLod) {
       this.#currentLod = newLod;
       this.#emit(newLod);

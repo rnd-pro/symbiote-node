@@ -30,25 +30,25 @@ export default {
   lifecycle: {
     validate: (inputs) => Array.isArray(inputs.items),
     execute: async (inputs, params) => {
-      const { items } = inputs;
-      const { bodyType } = params;
-      const results = [];
+      let { items } = inputs;
+      let { bodyType } = params;
+      let results = [];
 
       if (!bodyType) {
         // No body type: return items as-is
         return { results: items };
       }
 
-      const typeDef = getNodeType(bodyType);
-      const executeFn = typeDef?.lifecycle?.execute || typeDef?.process;
+      let typeDef = getNodeType(bodyType);
+      let executeFn = typeDef?.lifecycle?.execute || typeDef?.process;
 
       if (!executeFn) {
         return { results: items };
       }
 
       for (let i = 0; i < items.length; i++) {
-        const itemInput = { value: items[i], index: i, total: items.length };
-        const itemResult = await executeFn(itemInput, params);
+        let itemInput = { value: items[i], index: i, total: items.length };
+        let itemResult = await executeFn(itemInput, params);
         results.push(itemResult);
       }
 

@@ -19,7 +19,7 @@ export class NodeSearch extends Symbiote {
     results: [],
     isOpen: false,
     onResultClick: (e) => {
-      const item = e.target.closest('.search-result');
+      let item = e.target.closest('.search-result');
       if (item?.dataset?.nodeId) {
         this.#handleResultClick(item.dataset.nodeId);
       }
@@ -47,7 +47,7 @@ export class NodeSearch extends Symbiote {
   open() {
     this.$.isOpen = true;
     requestAnimationFrame(() => {
-      const input = this.querySelector('.search-input');
+      let input = this.querySelector('.search-input');
       if (input) input.focus();
     });
   }
@@ -56,7 +56,7 @@ export class NodeSearch extends Symbiote {
     this.$.isOpen = false;
     this.$.query = '';
     this.$.results = [];
-    const input = this.querySelector('.search-input');
+    let input = this.querySelector('.search-input');
     if (input) input.value = '';
   }
 
@@ -68,9 +68,9 @@ export class NodeSearch extends Symbiote {
 
   #search(query) {
     if (!this.#getNodes) return;
-    const nodes = this.#getNodes();
-    const q = query.toLowerCase();
-    const results = nodes.filter(n =>
+    let nodes = this.#getNodes();
+    let q = query.toLowerCase();
+    let results = nodes.filter(n =>
       n.label.toLowerCase().includes(q) ||
       (n.type && n.type.toLowerCase().includes(q)) ||
       (n.category && n.category.toLowerCase().includes(q))

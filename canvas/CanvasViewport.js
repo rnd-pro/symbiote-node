@@ -53,7 +53,7 @@ export class CanvasViewport {
       this.#nodeDegrees.set(node.id, 0);
     }
 
-    const allConns = editor.getConnections();
+    let allConns = editor.getConnections();
     for (const conn of allConns) {
       this.#nodeDegrees.set(conn.from, (this.#nodeDegrees.get(conn.from) || 0) + 1);
       this.#nodeDegrees.set(conn.to, (this.#nodeDegrees.get(conn.to) || 0) + 1);
@@ -65,7 +65,7 @@ export class CanvasViewport {
       this.#viewManager.addViews(editor.getNodes());
     } else {
       // Large graph — start all as phantom, promote visible ones after layout
-      const defaultW = 180, defaultH = 60;
+      let defaultW = 180, defaultH = 60;
       for (const [id, node] of this.#allNodes) {
         this.#phantomData.set(id, {
           id, x: 0, y: 0, w: defaultW, h: defaultH,
@@ -98,7 +98,7 @@ export class CanvasViewport {
   }
 
   updatePhantomPosition(nodeId, x, y) {
-    const pd = this.#phantomData.get(nodeId);
+    let pd = this.#phantomData.get(nodeId);
     if (pd) {
       pd.x = x;
       pd.y = y;
@@ -111,15 +111,15 @@ export class CanvasViewport {
     if (this.#canvas._gridBase === undefined) {
       this.#canvas._gridBase = parseInt(getComputedStyle(this.#canvas).getPropertyValue('--sn-grid-size')) || 20;
     }
-    const gridBase = this.#canvas._gridBase;
-    const zoom = this.#canvas.$.zoom;
-    const multiplier = zoom < 0.5 ? 2 : 1;
-    const gridSize = gridBase * multiplier * zoom;
+    let gridBase = this.#canvas._gridBase;
+    let zoom = this.#canvas.$.zoom;
+    let multiplier = zoom < 0.5 ? 2 : 1;
+    let gridSize = gridBase * multiplier * zoom;
     this.#canvas.style.backgroundSize = `${gridSize}px ${gridSize}px`;
     this.#canvas.style.backgroundPosition = `${this.#canvas.$.panX}px ${this.#canvas.$.panY}px`;
 
     // Sync toolbar position
-    const toolbar = this.#canvas.ref.quickToolbar;
+    let toolbar = this.#canvas.ref.quickToolbar;
     if (toolbar) {
       toolbar._transform = { zoom, panX: this.#canvas.$.panX, panY: this.#canvas.$.panY };
       if (toolbar._nodeEl) toolbar.updatePosition(toolbar._nodeEl);
@@ -139,18 +139,18 @@ export class CanvasViewport {
     if (!this.#canvas.ref.canvasContainer) return;
     if (this.#nodeViews.size === 0 && this.#phantomData.size === 0) return;
 
-    const cw = this.#canvas.ref.canvasContainer.clientWidth;
-    const ch = this.#canvas.ref.canvasContainer.clientHeight;
-    const zoom = this.#canvas.$.zoom;
-    const panX = this.#canvas.$.panX;
-    const panY = this.#canvas.$.panY;
-    const margin = 300; 
+    let cw = this.#canvas.ref.canvasContainer.clientWidth;
+    let ch = this.#canvas.ref.canvasContainer.clientHeight;
+    let zoom = this.#canvas.$.zoom;
+    let panX = this.#canvas.$.panX;
+    let panY = this.#canvas.$.panY;
+    let margin = 300; 
 
-    const lod = zoom < 0.5 ? 'medium' : 'full';
+    let lod = zoom < 0.5 ? 'medium' : 'full';
     this.#canvas._currentLod = lod;
 
     if (this.#canvas.ref.connections) {
-      const isDimmed = this.#canvas.ref.connections.hasAttribute('data-lod-dimmed');
+      let isDimmed = this.#canvas.ref.connections.hasAttribute('data-lod-dimmed');
       if (lod !== 'full') {
         if (!isDimmed) this.#canvas.ref.connections.setAttribute('data-lod-dimmed', '');
       } else {
@@ -158,25 +158,25 @@ export class CanvasViewport {
       }
     }
 
-    const isVirtualized = this.#phantomData.size > 0 || this.#allNodes.size > 200;
+    let isVirtualized = this.#phantomData.size > 0 || this.#allNodes.size > 200;
     const FAR_ZOOM = zoom < 0.25;
-    const toPromote = [];
-    const toDemote = [];
+    let toPromote = [];
+    let toDemote = [];
 
     for (const [id, el] of this.#nodeViews) {
-      const pos = el._position;
+      let pos = el._position;
       if (!pos) continue;
 
-      const screenX = pos.x * zoom + panX;
-      const screenY = pos.y * zoom + panY;
+      let screenX = pos.x * zoom + panX;
+      let screenY = pos.y * zoom + panY;
       if (!el._cachedW) {
         el._cachedW = el.offsetWidth || 180;
         el._cachedH = el.offsetHeight || 60;
       }
-      const w = el._cachedW * zoom;
-      const h = el._cachedH * zoom;
+      let w = el._cachedW * zoom;
+      let h = el._cachedH * zoom;
 
-      const visible = (screenX + w > -margin) && (screenX < cw + margin) &&
+      let visible = (screenX + w > -margin) && (screenX < cw + margin) &&
                       (screenY + h > -margin) && (screenY < ch + margin);
 
       if (isVirtualized && FAR_ZOOM) {
@@ -191,15 +191,15 @@ export class CanvasViewport {
       }
     }
 
-    const allPhantom = this.#nodeViews.size === 0 && this.#phantomData.size > 0;
+    let allPhantom = this.#nodeViews.size === 0 && this.#phantomData.size > 0;
     if (isVirtualized && !FAR_ZOOM) {
       for (const [id, pd] of this.#phantomData) {
-        const screenX = pd.x * zoom + panX;
-        const screenY = pd.y * zoom + panY;
-        const w = (pd.w || 180) * zoom;
-        const h = (pd.h || 60) * zoom;
+        let screenX = pd.x * zoom + panX;
+        let screenY = pd.y * zoom + panY;
+        let w = (pd.w || 180) * zoom;
+        let h = (pd.h || 60) * zoom;
 
-        const visible = (screenX + w > -margin) && (screenX < cw + margin) &&
+        let visible = (screenX + w > -margin) && (screenX < cw + margin) &&
                         (screenY + h > -margin) && (screenY < ch + margin);
 
         if (visible) toPromote.push(id);
@@ -226,12 +226,12 @@ export class CanvasViewport {
 
   #promoteNode(nodeId) {
     if (this.#nodeViews.has(nodeId)) return;
-    const node = this.#allNodes.get(nodeId);
+    let node = this.#allNodes.get(nodeId);
     if (!node) return;
 
-    const pd = this.#phantomData.get(nodeId);
+    let pd = this.#phantomData.get(nodeId);
     this.#viewManager.addView(node);
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (el && pd) {
       el._position = { x: pd.x, y: pd.y };
       el._cachedW = pd.w;
@@ -243,14 +243,14 @@ export class CanvasViewport {
 
   #demoteNode(nodeId) {
     if (!this.#nodeViews.has(nodeId)) return;
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     let color = null;
     if (el) {
       color = el._cachedBgColor || el.style.backgroundColor || null;
     }
-    const dims = this.#viewManager.removeViewInstant(nodeId);
+    let dims = this.#viewManager.removeViewInstant(nodeId);
     if (dims) {
-      const node = this.#allNodes.get(nodeId);
+      let node = this.#allNodes.get(nodeId);
       this.#phantomData.set(nodeId, {
         id: nodeId,
         x: dims.x, y: dims.y,
@@ -263,7 +263,7 @@ export class CanvasViewport {
   }
 
   #syncPhantomToRenderer() {
-    const connRenderer = this.#getConnRenderer();
+    let connRenderer = this.#getConnRenderer();
     if (connRenderer && typeof connRenderer.setPhantomNodes === 'function') {
       connRenderer.setPhantomNodes([...this.#phantomData.values()]);
     }
@@ -281,10 +281,10 @@ export class CanvasViewport {
 
     for (const [, el] of this.#nodeViews) {
       if (!el._position) continue;
-      const x = el._position.x;
-      const y = el._position.y;
-      const w = el._cachedW || el.offsetWidth || 150;
-      const h = el._cachedH || el.offsetHeight || 40;
+      let x = el._position.x;
+      let y = el._position.y;
+      let w = el._cachedW || el.offsetWidth || 150;
+      let h = el._cachedH || el.offsetHeight || 40;
       if (x < minX) minX = x;
       if (y < minY) minY = y;
       if (x + w > maxX) maxX = x + w;
@@ -300,22 +300,22 @@ export class CanvasViewport {
     
     if (minX === Infinity) return;
 
-    const graphW = maxX - minX;
-    const graphH = maxY - minY;
-    const canvasRect = this.#canvas.ref.canvasContainer.getBoundingClientRect();
+    let graphW = maxX - minX;
+    let graphH = maxY - minY;
+    let canvasRect = this.#canvas.ref.canvasContainer.getBoundingClientRect();
     
     let visibleWidth = canvasRect.width;
-    const inspector = this.#canvas.ref.inspector || this.#canvas.querySelector('inspector-panel');
+    let inspector = this.#canvas.ref.inspector || this.#canvas.querySelector('inspector-panel');
     if (inspector && !inspector.hasAttribute('hidden')) {
       visibleWidth -= inspector.offsetWidth || 280;
     }
 
-    const scaleX = (visibleWidth - 80) / graphW;
-    const scaleY = (canvasRect.height - 80) / graphH;
-    const scale = Math.max(0.001, Math.min(scaleX, scaleY, 1.5));
+    let scaleX = (visibleWidth - 80) / graphW;
+    let scaleY = (canvasRect.height - 80) / graphH;
+    let scale = Math.max(0.001, Math.min(scaleX, scaleY, 1.5));
 
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
+    let centerX = (minX + maxX) / 2;
+    let centerY = (minY + maxY) / 2;
 
     this.#canvas.$.zoom = scale;
     this.#canvas.$.panX = (visibleWidth / 2) - centerX * scale;
@@ -332,31 +332,31 @@ export class CanvasViewport {
     }
     if (!el) return false;
 
-    const pos = el._position || (() => {
-      const pd = this.#phantomData.get(nodeId);
+    let pos = el._position || (() => {
+      let pd = this.#phantomData.get(nodeId);
       return pd ? { x: pd.x, y: pd.y } : { x: 0, y: 0 };
     })();
 
-    const canvasRect = this.#canvas.ref.canvasContainer.getBoundingClientRect();
+    let canvasRect = this.#canvas.ref.canvasContainer.getBoundingClientRect();
     let visibleWidth = canvasRect.width;
     
-    const inspector = this.#canvas.ref.inspector || this.#canvas.querySelector('inspector-panel');
+    let inspector = this.#canvas.ref.inspector || this.#canvas.querySelector('inspector-panel');
     if (inspector && !inspector.hasAttribute('hidden') && inspector.offsetWidth > 20) {
         visibleWidth -= inspector.offsetWidth;
     }
 
-    const elWidth = el._cachedW || el.offsetWidth || 150;
-    const elHeight = el._cachedH || el.offsetHeight || 40;
+    let elWidth = el._cachedW || el.offsetWidth || 150;
+    let elHeight = el._cachedH || el.offsetHeight || 40;
 
-    const nodeX = pos.x + (elWidth / 2);
-    const nodeY = pos.y + (elHeight / 2);
+    let nodeX = pos.x + (elWidth / 2);
+    let nodeY = pos.y + (elHeight / 2);
 
-    const newPanX = (visibleWidth / 2) - nodeX * zoom;
-    const newPanY = canvasRect.height / 2 - nodeY * zoom;
+    let newPanX = (visibleWidth / 2) - nodeX * zoom;
+    let newPanY = canvasRect.height / 2 - nodeY * zoom;
 
-    const dz = Math.abs(this.#canvas.$.zoom - zoom);
-    const dx = Math.abs(this.#canvas.$.panX - newPanX);
-    const dy = Math.abs(this.#canvas.$.panY - newPanY);
+    let dz = Math.abs(this.#canvas.$.zoom - zoom);
+    let dx = Math.abs(this.#canvas.$.panX - newPanX);
+    let dy = Math.abs(this.#canvas.$.panY - newPanY);
     
     if (dz < 0.01 && dx < 2 && dy < 2) {
       this.#canvas.selectNode(nodeId);
@@ -379,17 +379,17 @@ export class CanvasViewport {
   }
 
   panToNode(nodeId, duration = 400) {
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el?._position) return;
-    const container = this.#canvas.ref.canvasContainer;
+    let container = this.#canvas.ref.canvasContainer;
     if (!container) return;
 
-    const cx = container.clientWidth / 2;
-    const cy = container.clientHeight / 2;
-    const nodeW = (el.offsetWidth || 180) / 2;
-    const nodeH = (el.offsetHeight || 60) / 2;
-    const targetX = -(el._position.x + nodeW) * this.#canvas.$.zoom + cx;
-    const targetY = -(el._position.y + nodeH) * this.#canvas.$.zoom + cy;
+    let cx = container.clientWidth / 2;
+    let cy = container.clientHeight / 2;
+    let nodeW = (el.offsetWidth || 180) / 2;
+    let nodeH = (el.offsetHeight || 60) / 2;
+    let targetX = -(el._position.x + nodeW) * this.#canvas.$.zoom + cx;
+    let targetY = -(el._position.y + nodeH) * this.#canvas.$.zoom + cy;
 
     this.animatePan(targetX, targetY, duration);
   }
@@ -400,19 +400,19 @@ export class CanvasViewport {
       this.#panAnimFrame = null;
     }
 
-    const startX = this.#canvas.$.panX;
-    const startY = this.#canvas.$.panY;
-    const dx = targetX - startX;
-    const dy = targetY - startY;
+    let startX = this.#canvas.$.panX;
+    let startY = this.#canvas.$.panY;
+    let dx = targetX - startX;
+    let dy = targetY - startY;
 
     if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
 
-    const startTime = performance.now();
+    let startTime = performance.now();
 
-    const step = (now) => {
-      const elapsed = now - startTime;
-      const t = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
+    let step = (now) => {
+      let elapsed = now - startTime;
+      let t = Math.min(elapsed / duration, 1);
+      let ease = 1 - Math.pow(1 - t, 3);
 
       this.#canvas.$.panX = startX + dx * ease;
       this.#canvas.$.panY = startY + dy * ease;
@@ -429,7 +429,7 @@ export class CanvasViewport {
   }
 
   getPositions() {
-    const positions = {};
+    let positions = {};
     for (const [id, el] of this.#nodeViews) {
       if (el._position) {
         positions[id] = [el._position.x, el._position.y];
@@ -447,3 +447,5 @@ export class CanvasViewport {
     return this.#nodeViews.has(nodeId) || this.#phantomData.has(nodeId);
   }
 }
+
+export { CanvasViewport as default };

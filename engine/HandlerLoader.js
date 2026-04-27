@@ -27,7 +27,7 @@ import { registerNodeType } from './Registry.js';
  * @returns {Promise<string[]>} Absolute file paths
  */
 async function findHandlerFiles(dir) {
-  const results = [];
+  let results = [];
   let entries;
   try {
     entries = await readdir(dir, { withFileTypes: true });
@@ -36,9 +36,9 @@ async function findHandlerFiles(dir) {
   }
 
   for (const entry of entries) {
-    const fullPath = join(dir, entry.name);
+    let fullPath = join(dir, entry.name);
     if (entry.isDirectory()) {
-      const nested = await findHandlerFiles(fullPath);
+      let nested = await findHandlerFiles(fullPath);
       results.push(...nested);
     } else if (entry.name.endsWith('.handler.js')) {
       results.push(fullPath);
@@ -53,19 +53,19 @@ async function findHandlerFiles(dir) {
  * @returns {Promise<string|null>} Registered type name or null on error
  */
 async function loadHandler(filePath) {
-  const fileUrl = pathToFileURL(filePath).href;
+  let fileUrl = pathToFileURL(filePath).href;
   // Cache-bust for hot reload
-  const url = `${fileUrl}?t=${Date.now()}`;
+  let url = `${fileUrl}?t=${Date.now()}`;
 
-  const module = await import(url);
-  const handler = module.default;
+  let module = await import(url);
+  let handler = module.default;
 
   if (!handler?.type) {
     throw new Error(`Handler file ${filePath} missing 'type' field in default export`);
   }
 
   // Build node type definition from handler
-  const nodeDef = {
+  let nodeDef = {
     type: handler.type,
     category: handler.category || handler.type.split('/')[0],
     icon: handler.icon,
@@ -92,12 +92,12 @@ async function loadHandler(filePath) {
  * @returns {Promise<string[]>} List of registered type names
  */
 export async function loadHandlers(dir) {
-  const files = await findHandlerFiles(dir);
-  const registered = [];
+  let files = await findHandlerFiles(dir);
+  let registered = [];
 
   for (const file of files) {
     try {
-      const type = await loadHandler(file);
+      let type = await loadHandler(file);
       if (type) registered.push(type);
     } catch (err) {
       console.error(`🔴 [symbiote-node] Failed to load handler ${relative(dir, file)}: ${err.message}`);    }
@@ -117,12 +117,12 @@ export async function loadHandlers(dir) {
  * @returns {{close: function}} Watcher handle
  */
 export function watchHandlers(dir, options = {}) {
-  const { onRegister, onError } = options;
+  let { onRegister, onError } = options;
 
-  const watcher = watch(dir, { recursive: true }, async (eventType, filename) => {
+  let watcher = watch(dir, { recursive: true }, async (eventType, filename) => {
     if (!filename?.endsWith('.handler.js')) return;
 
-    const filePath = join(dir, filename);
+    let filePath = join(dir, filename);
 
     // Verify file exists (could be a delete event)
     try {
@@ -132,7 +132,7 @@ export function watchHandlers(dir, options = {}) {
     }
 
     try {
-      const type = await loadHandler(filePath);
+      let type = await loadHandler(filePath);
       if (type && onRegister) onRegister(type, filePath);
     } catch (err) {
       if (onError) onError(filePath, err);

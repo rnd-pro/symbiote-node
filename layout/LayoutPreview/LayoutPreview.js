@@ -47,7 +47,7 @@ export class LayoutPreview extends Symbiote {
 
     if (direction === 'split-h') {
       // Horizontal split - vertical line
-      const x = panelRect.left + panelRect.width * ratio;
+      let x = panelRect.left + panelRect.width * ratio;
       this.$.lineStyle = `
         left: ${x}px;
         top: ${panelRect.top}px;
@@ -57,7 +57,7 @@ export class LayoutPreview extends Symbiote {
       this.$.overlayStyle = '';
     } else {
       // Vertical split - horizontal line
-      const y = panelRect.top + panelRect.height * ratio;
+      let y = panelRect.top + panelRect.height * ratio;
       this.$.lineStyle = `
         left: ${panelRect.left}px;
         top: ${y}px;

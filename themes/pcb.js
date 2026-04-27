@@ -13,7 +13,7 @@
  */
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export const PCB_DARK = {
+export let PCB_DARK = {
   name: 'pcb-dark',
   tokens: {
     // === Base: Carbon dark palette ===

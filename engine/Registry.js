@@ -49,10 +49,10 @@ import { areSocketsCompatible, registerSocketTypes } from './SocketTypes.js';
  */
 
 /** @type {Map<string, NodeTypeDef>} */
-const _nodeTypes = new Map();
+let _nodeTypes = new Map();
 
 /** @type {Map<string, object>} */
-const _packs = new Map();
+let _packs = new Map();
 
 /**
  * Register a single node type
@@ -113,7 +113,7 @@ export function listDrivers() {
  * @returns {Array<{type: string, inputSocket: string, driver: Driver}>}
  */
 export function findCompatible(outputType) {
-  const results = [];
+  let results = [];
   for (const [type, def] of _nodeTypes) {
     for (const input of def.driver.inputs) {
       if (areSocketsCompatible(outputType, input.type)) {
@@ -140,9 +140,9 @@ export function findByCapability(capability) {
  * @returns {Array<{category: string, nodes: Array<{type: string, icon: string, description: string}>}>}
  */
 export function getNodeMenu() {
-  const grouped = {};
+  let grouped = {};
   for (const [type, def] of _nodeTypes) {
-    const cat = def.category || type.split('/')[0];
+    let cat = def.category || type.split('/')[0];
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push({
       type,
@@ -176,14 +176,14 @@ export function registerCustomDrivers(customDrivers) {
  * @returns {{valid: boolean, errors: string[]}}
  */
 export function validateParams(type, params) {
-  const def = _nodeTypes.get(type);
+  let def = _nodeTypes.get(type);
   if (!def) return { valid: false, errors: [`Unknown node type: ${type}`] };
 
-  const validationErrors = [];
-  const schema = def.driver.params || {};
+  let validationErrors = [];
+  let schema = def.driver.params || {};
 
   for (const [key, paramDef] of Object.entries(schema)) {
-    const val = params[key];
+    let val = params[key];
 
     if (paramDef.required && (val === undefined || val === null)) {
       validationErrors.push(`Missing required param: ${key}`);

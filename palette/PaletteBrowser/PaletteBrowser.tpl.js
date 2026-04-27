@@ -4,7 +4,7 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
   <div class="pal-header">
     <span class="material-symbols-outlined">widgets</span>
     Components

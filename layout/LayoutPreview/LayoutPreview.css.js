@@ -1,6 +1,6 @@
 import { css } from '@symbiotejs/symbiote';
 
-export const styles = css`
+export let styles = css`
 layout-preview {
   position: fixed;
   top: 0;

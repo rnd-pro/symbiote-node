@@ -67,8 +67,8 @@ export default {
       `tts:${params.mode}:${params.speaker}:${params.language}:${inputs.text}`,
 
     execute: async (inputs, params) => {
-      const { text } = inputs;
-      const mode = params.mode || 'http';
+      let { text } = inputs;
+      let mode = params.mode || 'http';
 
       if (mode === 'ssh') {
         return executeSSH(text, params);
@@ -94,21 +94,21 @@ const SPEAKERS = new Set([
  * @returns {Promise<Object>}
  */
 async function executeSSH(text, params) {
-  const host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  const remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
-  const venv = params.remoteVenv || process.env.TTS_VENV_PATH || `${remotePath}/venv`;
-  const device = params.device || process.env.PODCAST_TTS_DEVICE || 'cuda';
+  let host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
+  let remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
+  let venv = params.remoteVenv || process.env.TTS_VENV_PATH || `${remotePath}/venv`;
+  let device = params.device || process.env.PODCAST_TTS_DEVICE || 'cuda';
 
-  const outDir = params.outputDir || path.join(os.tmpdir(), 'agi-graph-tts');
-  const taskId = `tts_${Date.now()}`;
-  const localWav = path.join(outDir, `${taskId}.wav`);
-  const remoteTmpDir = '/tmp/agi-graph-tts';
+  let outDir = params.outputDir || path.join(os.tmpdir(), 'agi-graph-tts');
+  let taskId = `tts_${Date.now()}`;
+  let localWav = path.join(outDir, `${taskId}.wav`);
+  let remoteTmpDir = '/tmp/agi-graph-tts';
 
   try {
     await fs.mkdir(outDir, { recursive: true });
 
     // Build batch task
-    const batchTask = [{
+    let batchTask = [{
       id: taskId,
       text,
       lang: params.language || 'es',
@@ -124,7 +124,7 @@ async function executeSSH(text, params) {
     }
 
     // Write local batch file
-    const batchFile = path.join(outDir, `${taskId}_batch.json`);
+    let batchFile = path.join(outDir, `${taskId}_batch.json`);
     await fs.writeFile(batchFile, JSON.stringify(batchTask, null, 2));
 
     // Ensure remote dir + upload batch
@@ -132,16 +132,16 @@ async function executeSSH(text, params) {
       encoding: 'utf-8', stdio: 'pipe', timeout: 10000,
     });
 
-    const remoteBatch = `${remoteTmpDir}/${taskId}_batch.json`;
+    let remoteBatch = `${remoteTmpDir}/${taskId}_batch.json`;
     execSync(`scp "${batchFile}" "${host}:${remoteBatch}"`, {
       encoding: 'utf-8', stdio: 'pipe', timeout: 30000,
     });
 
     try {
       // Run batch script
-      const pythonCmd = `${venv}/bin/python`;
-      const scriptPath = `${remotePath}/utils/generate_qwen3tts_batch.py`;
-      const cmd = `source "${venv}/bin/activate" && "${pythonCmd}" "${scriptPath}" --batch "${remoteBatch}" --device "${device}"`;
+      let pythonCmd = `${venv}/bin/python`;
+      let scriptPath = `${remotePath}/utils/generate_qwen3tts_batch.py`;
+      let cmd = `source "${venv}/bin/activate" && "${pythonCmd}" "${scriptPath}" --batch "${remoteBatch}" --device "${device}"`;
 
       execSync(`ssh ${host} '${cmd}'`, {
         encoding: 'utf-8',
@@ -150,7 +150,7 @@ async function executeSSH(text, params) {
       });
 
       // Download result
-      const remoteOut = `${remoteTmpDir}/${taskId}.wav`;
+      let remoteOut = `${remoteTmpDir}/${taskId}.wav`;
       execSync(`scp "${host}:${remoteOut}" "${localWav}"`, {
         encoding: 'utf-8', stdio: 'pipe', timeout: 30000,
       });
@@ -180,15 +180,15 @@ async function executeSSH(text, params) {
  * @returns {Promise<Object>}
  */
 async function executeHTTP(text, params) {
-  const endpoint = params.endpoint || process.env.TTS_SERVER_URL || 'http://localhost:5008';
-  const outDir = params.outputDir || path.join(os.tmpdir(), 'agi-graph-tts');
-  const taskId = `tts_${Date.now()}`;
-  const outputPath = path.join(outDir, `${taskId}.wav`);
+  let endpoint = params.endpoint || process.env.TTS_SERVER_URL || 'http://localhost:5008';
+  let outDir = params.outputDir || path.join(os.tmpdir(), 'agi-graph-tts');
+  let taskId = `tts_${Date.now()}`;
+  let outputPath = path.join(outDir, `${taskId}.wav`);
 
   try {
     await fs.mkdir(outDir, { recursive: true });
 
-    const body = {
+    let body = {
       text,
       language: params.language || 'es',
       speaker: params.speaker || 'vivian',
@@ -198,11 +198,11 @@ async function executeHTTP(text, params) {
 
     // Add ref_audio for voice cloning
     if (params.refAudio) {
-      const refBuffer = await fs.readFile(params.refAudio);
+      let refBuffer = await fs.readFile(params.refAudio);
       body.ref_audio = refBuffer.toString('base64');
     }
 
-    const response = await fetch(`${endpoint}/synthesize`, {
+    let response = await fetch(`${endpoint}/synthesize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -214,21 +214,21 @@ async function executeHTTP(text, params) {
     }
 
     // Response is audio binary
-    const contentType = response.headers.get('content-type') || '';
+    let contentType = response.headers.get('content-type') || '';
 
     if (contentType.includes('audio') || contentType.includes('octet-stream')) {
-      const buffer = Buffer.from(await response.arrayBuffer());
+      let buffer = Buffer.from(await response.arrayBuffer());
       await fs.writeFile(outputPath, buffer);
       return { audioPath: outputPath, error: null };
     }
 
     // JSON response with file path
-    const result = await response.json();
+    let result = await response.json();
     if (result.audio_path) {
       return { audioPath: result.audio_path, error: null };
     }
     if (result.audio) {
-      const buffer = Buffer.from(result.audio, 'base64');
+      let buffer = Buffer.from(result.audio, 'base64');
       await fs.writeFile(outputPath, buffer);
       return { audioPath: outputPath, error: null };
     }

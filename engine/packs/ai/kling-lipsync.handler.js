@@ -60,7 +60,7 @@ export default {
     validate: (inputs, params) => {
       if (!params.accessKey || !params.secretKey) return false;
 
-      const op = params.operation;
+      let op = params.operation;
       if (op === 'identify-face' && !inputs.videoUrl) return false;
       if (op === 'poll' && !params.taskId) return false;
       if (op === 'lipsync' && (!inputs.videoUrl || !inputs.audioPath)) return false;
@@ -75,26 +75,26 @@ export default {
 
     execute: async (inputs, params) => {
       try {
-        const op = params.operation;
-        const token = generateJWT(params.accessKey, params.secretKey);
+        let op = params.operation;
+        let token = generateJWT(params.accessKey, params.secretKey);
 
         if (op === 'identify-face') {
-          const data = await identifyFace(inputs.videoUrl, token, params.baseUrl);
+          let data = await identifyFace(inputs.videoUrl, token, params.baseUrl);
           return { result: data, error: null };
         }
 
         if (op === 'poll') {
-          const data = await pollTaskCompletion(params.taskId, token, params);
+          let data = await pollTaskCompletion(params.taskId, token, params);
           return { result: data, error: null };
         }
 
         if (op === 'lipsync') {
-          const result = await processSegment(inputs, params);
+          let result = await processSegment(inputs, params);
           return { result, error: null };
         }
 
         if (op === 'batch') {
-          const results = await processBatch(inputs, params);
+          let results = await processBatch(inputs, params);
           return { result: { processed: results.size, results: Object.fromEntries(results) }, error: null };
         }
 
@@ -115,18 +115,18 @@ export default {
  * @returns {string}
  */
 function generateJWT(accessKey, secretKey) {
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
+  let header = { alg: 'HS256', typ: 'JWT' };
+  let now = Math.floor(Date.now() / 1000);
+  let payload = {
     iss: accessKey,
     exp: now + 1800,
     nbf: now - 5,
   };
 
-  const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
-  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  let base64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
+  let base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
 
-  const signature = createHmac('sha256', secretKey)
+  let signature = createHmac('sha256', secretKey)
     .update(`${base64Header}.${base64Payload}`)
     .digest('base64url');
 
@@ -143,7 +143,7 @@ function generateJWT(accessKey, secretKey) {
  * @returns {Promise<Object>}
  */
 async function identifyFace(videoUrl, token, baseUrl) {
-  const response = await fetch(`${baseUrl}/v1/videos/identify-face`, {
+  let response = await fetch(`${baseUrl}/v1/videos/identify-face`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -153,11 +153,11 @@ async function identifyFace(videoUrl, token, baseUrl) {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    let errorText = await response.text();
     throw new Error(`Kling identify-face error: ${response.status} - ${errorText}`);
   }
 
-  const result = await response.json();
+  let result = await response.json();
   if (result.code !== 0) {
     throw new Error(`Kling API error: ${result.code} - ${result.message}`);
   }
@@ -177,7 +177,7 @@ async function identifyFace(videoUrl, token, baseUrl) {
  * @returns {Promise<Object>}
  */
 async function createLipsyncTask(sessionId, faceId, soundFile, soundDurationMs, faceStartMs, token, baseUrl) {
-  const response = await fetch(`${baseUrl}/v1/videos/advanced-lip-sync`, {
+  let response = await fetch(`${baseUrl}/v1/videos/advanced-lip-sync`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -198,11 +198,11 @@ async function createLipsyncTask(sessionId, faceId, soundFile, soundDurationMs, 
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    let errorText = await response.text();
     throw new Error(`Kling advanced-lip-sync error: ${response.status} - ${errorText}`);
   }
 
-  const result = await response.json();
+  let result = await response.json();
   if (result.code !== 0) {
     throw new Error(`Kling API error: ${result.code} - ${result.message}`);
   }
@@ -218,30 +218,30 @@ async function createLipsyncTask(sessionId, faceId, soundFile, soundDurationMs, 
  * @returns {Promise<Object>}
  */
 async function pollTaskCompletion(taskId, token, params) {
-  const startTime = Date.now();
-  const maxWaitMs = params.maxWaitMs;
-  const pollInterval = 5000;
+  let startTime = Date.now();
+  let maxWaitMs = params.maxWaitMs;
+  let pollInterval = 5000;
 
   while (Date.now() - startTime < maxWaitMs) {
     // Refresh token for each poll
-    const freshToken = generateJWT(params.accessKey, params.secretKey);
+    let freshToken = generateJWT(params.accessKey, params.secretKey);
 
-    const response = await fetch(`${params.baseUrl}/v1/videos/advanced-lip-sync/${taskId}`, {
+    let response = await fetch(`${params.baseUrl}/v1/videos/advanced-lip-sync/${taskId}`, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${freshToken}` },
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText = await response.text();
       throw new Error(`Kling poll error: ${response.status} - ${errorText}`);
     }
 
-    const result = await response.json();
+    let result = await response.json();
     if (result.code !== 0) {
       throw new Error(`Kling API error: ${result.code} - ${result.message}`);
     }
 
-    const status = result.data?.task_status;
+    let status = result.data?.task_status;
 
     if (status === 'succeed') {
       return result.data;
@@ -263,12 +263,12 @@ async function pollTaskCompletion(taskId, token, params) {
  * @returns {Promise<string>}
  */
 async function downloadResult(videoUrl, outputPath) {
-  const response = await fetch(videoUrl);
+  let response = await fetch(videoUrl);
   if (!response.ok) {
     throw new Error(`Failed to download video: ${response.status}`);
   }
 
-  const buffer = await response.arrayBuffer();
+  let buffer = await response.arrayBuffer();
   await writeFile(outputPath, Buffer.from(buffer));
   return outputPath;
 }
@@ -286,8 +286,8 @@ async function downloadResult(videoUrl, outputPath) {
 function extractAudioClip(audioPath, startTime, endTime, outputPath) {
   if (existsSync(outputPath)) return outputPath;
 
-  const duration = endTime - startTime;
-  const cmd = `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
+  let duration = endTime - startTime;
+  let cmd = `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
     `-c:a libmp3lame -q:a 2 "${outputPath}" 2>/dev/null`;
 
   execSync(cmd, { stdio: 'pipe' });
@@ -300,7 +300,7 @@ function extractAudioClip(audioPath, startTime, endTime, outputPath) {
  * @returns {Promise<string>}
  */
 async function audioToBase64(audioPath) {
-  const buffer = await readFile(path.resolve(audioPath));
+  let buffer = await readFile(path.resolve(audioPath));
   return `data:audio/mpeg;base64,${buffer.toString('base64')}`;
 }
 
@@ -313,39 +313,39 @@ async function audioToBase64(audioPath) {
  * @returns {Promise<Object>}
  */
 async function processSegment(inputs, params) {
-  const { startTime, endTime, segmentId, outputDir, accessKey, secretKey, baseUrl } = params;
+  let { startTime, endTime, segmentId, outputDir, accessKey, secretKey, baseUrl } = params;
 
-  const lipsyncDir = path.join(outputDir, 'lipsync-videos');
-  const clipsDir = path.join(outputDir, 'audio-clips');
+  let lipsyncDir = path.join(outputDir, 'lipsync-videos');
+  let clipsDir = path.join(outputDir, 'audio-clips');
   await mkdir(lipsyncDir, { recursive: true });
   await mkdir(clipsDir, { recursive: true });
 
-  const outputPath = path.join(lipsyncDir, `${segmentId}.mp4`);
+  let outputPath = path.join(lipsyncDir, `${segmentId}.mp4`);
   if (existsSync(outputPath)) {
     return { videoPath: outputPath, cached: true };
   }
 
   // 1. Extract audio clip
-  const clipPath = path.join(clipsDir, `${segmentId}.mp3`);
+  let clipPath = path.join(clipsDir, `${segmentId}.mp3`);
   extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
-  const audioDurationMs = Math.round((endTime - startTime) * 1000);
+  let audioDurationMs = Math.round((endTime - startTime) * 1000);
 
   // 2. Convert to base64
-  const audioBase64 = await audioToBase64(clipPath);
+  let audioBase64 = await audioToBase64(clipPath);
 
   // 3. Identify face
   let token = generateJWT(accessKey, secretKey);
-  const faceData = await identifyFace(inputs.videoUrl, token, baseUrl);
+  let faceData = await identifyFace(inputs.videoUrl, token, baseUrl);
 
   if (!faceData.face_data || faceData.face_data.length === 0) {
     throw new Error('No face detected in video');
   }
 
-  const face = faceData.face_data[0];
+  let face = faceData.face_data[0];
 
   // 4. Create task
   token = generateJWT(accessKey, secretKey);
-  const task = await createLipsyncTask(
+  let task = await createLipsyncTask(
     faceData.session_id,
     face.face_id,
     audioBase64,
@@ -356,10 +356,10 @@ async function processSegment(inputs, params) {
   );
 
   // 5. Poll
-  const result = await pollTaskCompletion(task.task_id, token, params);
+  let result = await pollTaskCompletion(task.task_id, token, params);
 
   // 6. Download
-  const resultVideoUrl = result.task_result?.videos?.[0]?.url;
+  let resultVideoUrl = result.task_result?.videos?.[0]?.url;
   if (!resultVideoUrl) {
     throw new Error('No video URL in task result');
   }
@@ -375,27 +375,27 @@ async function processSegment(inputs, params) {
  * @returns {Promise<Map>}
  */
 async function processBatch(inputs, params) {
-  const segments = params.segments;
-  const videoMap = params.videoMap || {};
-  const concurrency = params.concurrency;
-  const results = new Map();
+  let segments = params.segments;
+  let videoMap = params.videoMap || {};
+  let concurrency = params.concurrency;
+  let results = new Map();
 
   for (let i = 0; i < segments.length; i += concurrency) {
-    const batch = segments.slice(i, i + concurrency);
+    let batch = segments.slice(i, i + concurrency);
 
-    const batchResults = await Promise.allSettled(
+    let batchResults = await Promise.allSettled(
       batch.map(async (segment) => {
-        const videoUrl = videoMap[segment.promptId];
+        let videoUrl = videoMap[segment.promptId];
         if (!videoUrl) return null;
 
-        const segParams = {
+        let segParams = {
           ...params,
           segmentId: segment.promptId,
           startTime: segment.start,
           endTime: segment.end,
         };
 
-        const result = await processSegment(
+        let result = await processSegment(
           { videoUrl, audioPath: inputs.audioPath },
           segParams,
         );

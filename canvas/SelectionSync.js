@@ -41,10 +41,10 @@ export class SelectionSync {
    */
   sync(selectedNodes, selectedConnections) {
     this.#zCounter++;
-    const editor = this.#getEditor();
+    let editor = this.#getEditor();
     
     // 1. Identify neighbors of currently selected nodes for "Focus Mode" label visibility
-    const neighbors = new Set();
+    let neighbors = new Set();
     if (editor && selectedNodes.size > 0) {
       for (const conn of editor.getConnections()) {
         if (selectedNodes.has(conn.from)) neighbors.add(conn.to);
@@ -54,8 +54,8 @@ export class SelectionSync {
 
     // Update node attributes — guard to avoid redundant DOM mutations
     for (const [id, el] of this.#nodeViews) {
-      const shouldSelect = selectedNodes.has(id);
-      const isSelected = el.hasAttribute('data-selected');
+      let shouldSelect = selectedNodes.has(id);
+      let isSelected = el.hasAttribute('data-selected');
       if (shouldSelect && !isSelected) {
         el.setAttribute('data-selected', '');
         el.style.zIndex = this.#zCounter;
@@ -63,8 +63,8 @@ export class SelectionSync {
         el.removeAttribute('data-selected');
       }
 
-      const shouldNeighbor = neighbors.has(id) && !shouldSelect;
-      const isNeighbor = el.hasAttribute('data-neighbor-focused');
+      let shouldNeighbor = neighbors.has(id) && !shouldSelect;
+      let isNeighbor = el.hasAttribute('data-neighbor-focused');
       if (shouldNeighbor && !isNeighbor) {
         el.setAttribute('data-neighbor-focused', '');
       } else if (!shouldNeighbor && isNeighbor) {
@@ -73,7 +73,7 @@ export class SelectionSync {
     }
 
     // 2. Mark connections touching selected nodes
-    const activeConnIds = new Set();
+    let activeConnIds = new Set();
     if (editor && selectedNodes.size > 0) {
       for (const conn of editor.getConnections()) {
         if (selectedNodes.has(conn.from) || selectedNodes.has(conn.to)) {
@@ -83,8 +83,8 @@ export class SelectionSync {
     }
 
     // Use cached path map instead of querySelector per connection
-    const connSvg = this.#canvas.ref.connections;
-    const connRenderer = this.#getConnRenderer();
+    let connSvg = this.#canvas.ref.connections;
+    let connRenderer = this.#getConnRenderer();
     if (!this.#connPathCache) this.#connPathCache = new Map();
     for (const [id] of connRenderer?.data || []) {
       let path = this.#connPathCache.get(id);
@@ -95,19 +95,19 @@ export class SelectionSync {
       if (!path) continue;
 
       // Selection state
-      const shouldSelectConn = selectedConnections.has(id);
+      let shouldSelectConn = selectedConnections.has(id);
       if (shouldSelectConn !== path.hasAttribute('data-selected')) {
         shouldSelectConn ? path.setAttribute('data-selected', '') : path.removeAttribute('data-selected');
       }
 
       // Active connection: touches a selected node
-      const isActive = activeConnIds.has(id);
+      let isActive = activeConnIds.has(id);
       if (isActive !== path.hasAttribute('data-active-conn')) {
         isActive ? path.setAttribute('data-active-conn', '') : path.removeAttribute('data-active-conn');
       }
 
       // Dimming
-      const shouldDim = !isActive && selectedNodes.size > 0;
+      let shouldDim = !isActive && selectedNodes.size > 0;
       if (shouldDim !== path.hasAttribute('data-dimmed')) {
         shouldDim ? path.setAttribute('data-dimmed', '') : path.removeAttribute('data-dimmed');
       }
@@ -119,11 +119,11 @@ export class SelectionSync {
     }
 
     // Quick Action Toolbar — show for single node selection
-    const toolbar = this.#canvas.ref.quickToolbar;
+    let toolbar = this.#canvas.ref.quickToolbar;
     if (toolbar) {
       if (selectedNodes.size === 1) {
-        const nodeId = [...selectedNodes][0];
-        const nodeEl = this.#nodeViews.get(nodeId);
+        let nodeId = [...selectedNodes][0];
+        let nodeEl = this.#nodeViews.get(nodeId);
         if (nodeEl) toolbar.show(nodeId, nodeEl);
       } else {
         toolbar.hide();
@@ -131,12 +131,12 @@ export class SelectionSync {
     }
 
     // Inspector — show selected node details, auto-hide on deselect
-    const inspector = this.#canvas.ref.inspector;
+    let inspector = this.#canvas.ref.inspector;
     if (inspector) {
       inspector._canvas = this.#canvas;
       if (selectedNodes.size === 1) {
-        const nodeId = [...selectedNodes][0];
-        const node = editor?.getNode(nodeId);
+        let nodeId = [...selectedNodes][0];
+        let node = editor?.getNode(nodeId);
         if (node) {
           inspector.inspect(node);
           inspector.hidden = false;
@@ -153,3 +153,5 @@ export class SelectionSync {
     }));
   }
 }
+
+export { SelectionSync as default };

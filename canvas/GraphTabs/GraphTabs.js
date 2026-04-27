@@ -106,7 +106,7 @@ export class GraphTabs extends Symbiote {
    * @param {string} id
    */
   removeTab(id) {
-    const idx = this.#tabs.findIndex(t => t.id === id);
+    let idx = this.#tabs.findIndex(t => t.id === id);
     if (idx === -1) return;
     this.#tabs.splice(idx, 1);
     if (this.#activeTabId === id && this.#tabs.length > 0) {
@@ -128,7 +128,7 @@ export class GraphTabs extends Symbiote {
    * @param {Object} state
    */
   setTabState(id, state) {
-    const tab = this.#tabs.find(t => t.id === id);
+    let tab = this.#tabs.find(t => t.id === id);
     if (tab) tab.state = state;
   }
 
@@ -142,7 +142,7 @@ export class GraphTabs extends Symbiote {
   }
 
   #syncItems() {
-    const showClose = this.#tabs.length > 1;
+    let showClose = this.#tabs.length > 1;
     this.$.tabItems = this.#tabs.map(t => ({
       id: t.id,
       name: t.name,
@@ -152,20 +152,20 @@ export class GraphTabs extends Symbiote {
   }
 
   onTabClick(e) {
-    const item = e.target.closest('tab-item');
+    let item = e.target.closest('tab-item');
     if (!item) return;
     this.switchTo(item.$.id);
   }
 
   onCloseTab(e) {
     e.stopPropagation();
-    const item = e.target.closest('tab-item');
+    let item = e.target.closest('tab-item');
     if (item) this.removeTab(item.$.id);
   }
 
   onAddTab() {
     if (this.#onAdd) {
-      const newTab = this.#onAdd();
+      let newTab = this.#onAdd();
       if (newTab) this.addTab(newTab.id, newTab.name, newTab.state);
     }
   }

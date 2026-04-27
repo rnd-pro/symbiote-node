@@ -4,7 +4,7 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div class="search-bar" ${{ onkeydown: 'onSearchKeydown' }}>
   <span class="material-symbols-outlined search-icon">search</span>
   <input class="search-input" type="text" placeholder="Search nodes..." ${{ oninput: 'onSearchInput' }} />
@@ -13,7 +13,7 @@ export const template = html`
 <div class="search-results" ${{ itemize: 'results', 'item-tag': 'search-result-item' }}></div>
 `;
 
-export const searchResultTemplate = html`
+export let searchResultTemplate = html`
 <div class="search-result" data-node-id="{{id}}" ${{ onclick: '^onResultClick' }}>
   <span class="search-result-label">{{label}}</span>
   <span class="search-result-type">{{type}}</span>

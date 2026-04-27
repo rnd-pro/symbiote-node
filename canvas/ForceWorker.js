@@ -57,11 +57,11 @@ function quadtreeCreate(nodes) {
     if (n.y > y1) y1 = n.y;
   }
   // Make square and add padding
-  const dx = x1 - x0, dy = y1 - y0;
-  const size = Math.max(dx, dy, 1) + 200;
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  let dx = x1 - x0, dy = y1 - y0;
+  let size = Math.max(dx, dy, 1) + 200;
+  let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
 
-  const tree = {
+  let tree = {
     x0: cx - size / 2, y0: cy - size / 2,
     x1: cx + size / 2, y1: cy + size / 2,
     root: null,
@@ -82,7 +82,7 @@ function qtInsert(tree, body) {
 
   // Navigate to leaf
   while (node.length) { // internal node (array of 4 children)
-    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
     i = (body.x >= mx ? 1 : 0) | (body.y >= my ? 2 : 0);
     parent = node;
     if (body.x >= mx) x0 = mx; else x1 = mx;
@@ -92,7 +92,7 @@ function qtInsert(tree, body) {
   }
 
   // Leaf node — check for coincident point
-  const existing = node.data;
+  let existing = node.data;
   if (Math.abs(existing.x - body.x) < 0.01 && Math.abs(existing.y - body.y) < 0.01) {
     // Coincident: append to linked list
     body._qtNext = node.data;
@@ -104,11 +104,11 @@ function qtInsert(tree, body) {
   // Walk up to find parent and replace
   let leaf = node;
   while (true) {
-    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
-    const iNew = (body.x >= mx ? 1 : 0) | (body.y >= my ? 2 : 0);
-    const iOld = (existing.x >= mx ? 1 : 0) | (existing.y >= my ? 2 : 0);
+    let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    let iNew = (body.x >= mx ? 1 : 0) | (body.y >= my ? 2 : 0);
+    let iOld = (existing.x >= mx ? 1 : 0) | (existing.y >= my ? 2 : 0);
 
-    const internal = [null, null, null, null];
+    let internal = [null, null, null, null];
     internal.length = 4; // mark as internal
     if (parent) parent[i] = internal; else tree.root = internal;
 
@@ -131,16 +131,16 @@ function qtInsert(tree, body) {
  * callback(node, x0, y0, x1, y1) → return true to skip children.
  */
 function qtVisitAfter(tree, callback) {
-  const quads = [];
+  let quads = [];
   if (tree.root) quads.push({ node: tree.root, x0: tree.x0, y0: tree.y0, x1: tree.x1, y1: tree.y1 });
 
-  const stack = [];
+  let stack = [];
   while (quads.length) {
-    const q = quads.pop();
+    let q = quads.pop();
     stack.push(q);
     if (q.node.length) {
-      const { x0, y0, x1, y1 } = q;
-      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+      let { x0, y0, x1, y1 } = q;
+      let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
       if (q.node[0]) quads.push({ node: q.node[0], x0, y0, x1: mx, y1: my });
       if (q.node[1]) quads.push({ node: q.node[1], x0: mx, y0, x1, y1: my });
       if (q.node[2]) quads.push({ node: q.node[2], x0, y0: my, x1: mx, y1 });
@@ -149,20 +149,20 @@ function qtVisitAfter(tree, callback) {
   }
   // Post-order: process children before parents
   while (stack.length) {
-    const q = stack.pop();
+    let q = stack.pop();
     callback(q.node, q.x0, q.y0, q.x1, q.y1);
   }
 }
 
 function qtVisit(tree, callback) {
-  const quads = [];
+  let quads = [];
   if (tree.root) quads.push({ node: tree.root, x0: tree.x0, y0: tree.y0, x1: tree.x1, y1: tree.y1 });
   while (quads.length) {
-    const q = quads.pop();
+    let q = quads.pop();
     if (callback(q.node, q.x0, q.y0, q.x1, q.y1)) continue; // skip children
     if (q.node.length) {
-      const { x0, y0, x1, y1 } = q;
-      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+      let { x0, y0, x1, y1 } = q;
+      let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
       if (q.node[3]) quads.push({ node: q.node[3], x0: mx, y0: my, x1, y1 });
       if (q.node[2]) quads.push({ node: q.node[2], x0, y0: my, x1: mx, y1 });
       if (q.node[1]) quads.push({ node: q.node[1], x0: mx, y0, x1, y1: my });
@@ -181,7 +181,7 @@ function qtVisit(tree, callback) {
  * θ (theta) controls accuracy vs speed: region_size/distance < θ → treat as point mass.
  */
 function applyChargeForce(nodes, strength, theta) {
-  const tree = quadtreeCreate(nodes);
+  let tree = quadtreeCreate(nodes);
 
   // Aggregate: compute total charge and center-of-mass for each internal node
   qtVisitAfter(tree, (node) => {
@@ -201,9 +201,9 @@ function applyChargeForce(nodes, strength, theta) {
     // Internal: sum children
     let value = 0, x = 0, y = 0, weight = 0;
     for (let i = 0; i < 4; i++) {
-      const child = node[i];
+      let child = node[i];
       if (!child || !child.value) continue;
-      const w = Math.abs(child.value);
+      let w = Math.abs(child.value);
       value += child.value;
       x += child.x * w;
       y += child.y * w;
@@ -215,13 +215,13 @@ function applyChargeForce(nodes, strength, theta) {
   });
 
   // Apply forces using Barnes-Hut approximation
-  const thetaSq = theta * theta;
+  let thetaSq = theta * theta;
   // Adaptive min distance: scale to largest side of node to prevent identical forces on small nodes
   let avgSize = 20;
   if (nodes.length > 0) {
     avgSize = nodes.reduce((s, n) => s + Math.max(n.w, n.h), 0) / nodes.length;
   }
-  const distMin2 = Math.max(1, avgSize * avgSize * 0.25);
+  let distMin2 = Math.max(1, avgSize * avgSize * 0.25);
   for (const body of nodes) {
     qtVisit(tree, (node, x0, y0, x1, y1) => {
       if (!node.value) return true; // skip empty
@@ -242,7 +242,7 @@ function applyChargeForce(nodes, strength, theta) {
       // Barnes-Hut criterion: if region width² / distance² < θ² → approximate
       if (w * w / distSq < thetaSq) {
         if (distSq < 1000 * 1000) { // distanceMax = 1000
-          const force = node.value / distSq;
+          let force = node.value / distSq;
           body.vx -= dx * force;
           body.vy -= dy * force;
         }
@@ -262,7 +262,7 @@ function applyChargeForce(nodes, strength, theta) {
             }
             let distSqLeaf = dxLeaf * dxLeaf + dyLeaf * dyLeaf;
             if (distSqLeaf < distMin2) distSqLeaf = distMin2;
-            const force = strength / distSqLeaf;
+            let force = strength / distSqLeaf;
             body.vx -= dxLeaf * force;
             body.vy -= dyLeaf * force;
           }
@@ -283,10 +283,10 @@ function applyChargeForce(nodes, strength, theta) {
  * Multi-pass (3 iterations) to resolve chain collisions.
  */
 function applyCollisionForce(nodes, strength, iterations) {
-  const iters = iterations || 3;
+  let iters = iterations || 3;
   // Padding: add small gap between nodes
-  const padX = 8;
-  const padY = 4;
+  let padX = 8;
+  let padY = 4;
   
   let maxW = 0;
   let maxH = 0;
@@ -300,27 +300,27 @@ function applyCollisionForce(nodes, strength, iterations) {
 
   for (let pass = 0; pass < iters; pass++) {
     // Rebuild spatial hash each pass (positions shift)
-    const cellW = maxW * 1.5;
-    const cellH = maxH * 3;
-    const grid = new Map();
+    let cellW = maxW * 1.5;
+    let cellH = maxH * 3;
+    let grid = new Map();
 
     for (let i = 0; i < nodes.length; i++) {
-      const n = nodes[i];
-      const gx = Math.floor(n.x / cellW);
-      const gy = Math.floor(n.y / cellH);
-      const key = `${gx},${gy}`;
+      let n = nodes[i];
+      let gx = Math.floor(n.x / cellW);
+      let gy = Math.floor(n.y / cellH);
+      let key = `${gx},${gy}`;
       if (!grid.has(key)) grid.set(key, []);
       grid.get(key).push(i);
     }
 
     // Check each node against its cell + all 8 neighbors
     for (let i = 0; i < nodes.length; i++) {
-      const n = nodes[i];
-      const gx = Math.floor(n.x / cellW);
-      const gy = Math.floor(n.y / cellH);
+      let n = nodes[i];
+      let gx = Math.floor(n.x / cellW);
+      let gy = Math.floor(n.y / cellH);
       for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
-          const neighbors = grid.get(`${gx + dx},${gy + dy}`);
+          let neighbors = grid.get(`${gx + dx},${gy + dy}`);
           if (!neighbors) continue;
           for (const j of neighbors) {
             if (j <= i) continue;
@@ -333,7 +333,7 @@ function applyCollisionForce(nodes, strength, iterations) {
 }
 
 function resolveOverlap(nodes, i, j, padX, padY, strength) {
-  const a = nodes[i], b = nodes[j];
+  let a = nodes[i], b = nodes[j];
   
   // Unified physics constraints:
   // 1. Same parent (or both null) -> collide
@@ -353,20 +353,20 @@ function resolveOverlap(nodes, i, j, padX, padY, strength) {
   let dx = b.x - a.x;
   let dy = b.y - a.y;
   
-  const hwA = a.w / 2 + padX;
-  const hhA = a.h / 2 + padY;
-  const hwB = b.w / 2 + padX;
-  const hhB = b.h / 2 + padY;
+  let hwA = a.w / 2 + padX;
+  let hhA = a.h / 2 + padY;
+  let hwB = b.w / 2 + padX;
+  let hhB = b.h / 2 + padY;
   
-  const overlapX = (hwA + hwB) - Math.abs(dx);
-  const overlapY = (hhA + hhB) - Math.abs(dy);
+  let overlapX = (hwA + hwB) - Math.abs(dx);
+  let overlapY = (hhA + hhB) - Math.abs(dy);
 
   if (overlapX > 0 && overlapY > 0) {
     // HARD CONSTRAINT: 100% impermeable space. Modifying positions directly.
     // Also clearing velocities in the push direction to stop momentum.
     if (overlapX < overlapY) {
-      const sign = dx < 0 ? -1 : (dx > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
-      const push = overlapX * strength * 0.5;
+      let sign = dx < 0 ? -1 : (dx > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
+      let push = overlapX * strength * 0.5;
       
       a.x -= sign * push;
       b.x += sign * push;
@@ -376,12 +376,12 @@ function resolveOverlap(nodes, i, j, padX, padY, strength) {
       if (Math.sign(b.vx) === -sign) b.vx = 0;
       
       // Orthogonal jitter to prevent perfect 1D stacking
-      const jitter = (Math.random() - 0.5) * 0.5;
+      let jitter = (Math.random() - 0.5) * 0.5;
       a.y -= jitter;
       b.y += jitter;
     } else {
-      const sign = dy < 0 ? -1 : (dy > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
-      const push = overlapY * strength * 0.5;
+      let sign = dy < 0 ? -1 : (dy > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
+      let push = overlapY * strength * 0.5;
       
       a.y -= sign * push;
       b.y += sign * push;
@@ -391,7 +391,7 @@ function resolveOverlap(nodes, i, j, padX, padY, strength) {
       if (Math.sign(b.vy) === -sign) b.vy = 0;
       
       // Orthogonal jitter to prevent perfect 1D stacking
-      const jitter = (Math.random() - 0.5) * 0.5;
+      let jitter = (Math.random() - 0.5) * 0.5;
       a.x -= jitter;
       b.x += jitter;
     }
@@ -408,31 +408,31 @@ function countOverlaps(nodes) {
     if (n.w > maxW) maxW = n.w;
     if (n.h > maxH) maxH = n.h;
   }
-  const cellW = maxW * 1.5;
-  const cellH = maxH * 3;
-  const grid = new Map();
+  let cellW = maxW * 1.5;
+  let cellH = maxH * 3;
+  let grid = new Map();
 
   for (let i = 0; i < nodes.length; i++) {
-    const n = nodes[i];
-    const key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
+    let n = nodes[i];
+    let key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
     if (!grid.has(key)) grid.set(key, []);
     grid.get(key).push(i);
   }
 
   let count = 0;
   for (let i = 0; i < nodes.length; i++) {
-    const n = nodes[i];
-    const gx = Math.floor(n.x / cellW);
-    const gy = Math.floor(n.y / cellH);
+    let n = nodes[i];
+    let gx = Math.floor(n.x / cellW);
+    let gy = Math.floor(n.y / cellH);
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
-        const neighbors = grid.get(`${gx + dx},${gy + dy}`);
+        let neighbors = grid.get(`${gx + dx},${gy + dy}`);
         if (!neighbors) continue;
         for (const j of neighbors) {
           if (j <= i) continue;
-          const b = nodes[j];
-          const hwA = n.w / 2, hhA = n.h / 2;
-          const hwB = b.w / 2, hhB = b.h / 2;
+          let b = nodes[j];
+          let hwA = n.w / 2, hhA = n.h / 2;
+          let hwB = b.w / 2, hhB = b.h / 2;
           if (Math.abs(n.x - b.x) < hwA + hwB && Math.abs(n.y - b.y) < hhA + hhB) count++;
         }
       }
@@ -451,42 +451,42 @@ function jitterOverlappingNodes(nodes) {
     if (n.w > maxW) maxW = n.w;
     if (n.h > maxH) maxH = n.h;
   }
-  const cellW = maxW * 1.5;
-  const cellH = maxH * 3;
-  const grid = new Map();
+  let cellW = maxW * 1.5;
+  let cellH = maxH * 3;
+  let grid = new Map();
 
   for (let i = 0; i < nodes.length; i++) {
-    const n = nodes[i];
-    const key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
+    let n = nodes[i];
+    let key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
     if (!grid.has(key)) grid.set(key, []);
     grid.get(key).push(i);
   }
 
   for (let i = 0; i < nodes.length; i++) {
-    const a = nodes[i];
-    const gx = Math.floor(a.x / cellW);
-    const gy = Math.floor(a.y / cellH);
+    let a = nodes[i];
+    let gx = Math.floor(a.x / cellW);
+    let gy = Math.floor(a.y / cellH);
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
-        const neighbors = grid.get(`${gx + dx},${gy + dy}`);
+        let neighbors = grid.get(`${gx + dx},${gy + dy}`);
         if (!neighbors) continue;
         for (const j of neighbors) {
           if (j <= i) continue;
-          const b = nodes[j];
-          const hwA = a.w / 2, hhA = a.h / 2;
-          const hwB = b.w / 2, hhB = b.h / 2;
-          const ox = (hwA + hwB) - Math.abs(a.x - b.x);
-          const oy = (hhA + hhB) - Math.abs(a.y - b.y);
+          let b = nodes[j];
+          let hwA = a.w / 2, hhA = a.h / 2;
+          let hwB = b.w / 2, hhB = b.h / 2;
+          let ox = (hwA + hwB) - Math.abs(a.x - b.x);
+          let oy = (hhA + hhB) - Math.abs(a.y - b.y);
           if (ox > 0 && oy > 0) {
             // Push apart along minimum-overlap axis + small random to break symmetry
             if (ox < oy) {
-              const sign = a.x < b.x ? -1 : (a.x > b.x ? 1 : (Math.random() < 0.5 ? -1 : 1));
-              const push = (ox / 2 + 5 + Math.random() * 10);
+              let sign = a.x < b.x ? -1 : (a.x > b.x ? 1 : (Math.random() < 0.5 ? -1 : 1));
+              let push = (ox / 2 + 5 + Math.random() * 10);
               a.x += sign * push;
               b.x -= sign * push;
             } else {
-              const sign = a.y < b.y ? -1 : (a.y > b.y ? 1 : (Math.random() < 0.5 ? -1 : 1));
-              const push = (oy / 2 + 3 + Math.random() * 6);
+              let sign = a.y < b.y ? -1 : (a.y > b.y ? 1 : (Math.random() < 0.5 ? -1 : 1));
+              let push = (oy / 2 + 3 + Math.random() * 6);
               a.y += sign * push;
               b.y -= sign * push;
             }
@@ -503,21 +503,21 @@ function jitterOverlappingNodes(nodes) {
  */
 function applyLinkForce(nodes, edges, alpha) {
   for (const e of edges) {
-    const s = nodes[e.source];
-    const t = nodes[e.target];
+    let s = nodes[e.source];
+    let t = nodes[e.target];
     if (!s || !t) continue;
 
     let dx = t.x + t.vx - s.x - s.vx;
     let dy = t.y + t.vy - s.y - s.vy;
     if (dx === 0 && dy === 0) { dx = (Math.random() - 0.5) * 1e-6; dy = dx; }
 
-    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    const force = (dist - e.restLength) / dist * alpha * e.strength;
-    const fx = dx * force;
-    const fy = dy * force;
+    let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    let force = (dist - e.restLength) / dist * alpha * e.strength;
+    let fx = dx * force;
+    let fy = dy * force;
 
     // Bias: split force based on link count (nodes with more links move less)
-    const bias = e.bias;
+    let bias = e.bias;
     t.vx -= fx * bias;
     t.vy -= fy * bias;
     s.vx += fx * (1 - bias);
@@ -558,17 +558,17 @@ function applyCenterForce(nodes, strength, attractors, bx = 0, by = 0) {
  */
 function applyBoundaryForce(nodes, radius, strength, bx, by, activeGroupId) {
   if (!radius) return;
-  const rSq = radius * radius;
+  let rSq = radius * radius;
   for (const n of nodes) {
     if (n.parentId !== activeGroupId) continue; // Only constrain internal nodes
-    const dx = n.x - bx;
-    const dy = n.y - by;
-    const distSq = dx * dx + dy * dy;
+    let dx = n.x - bx;
+    let dy = n.y - by;
+    let distSq = dx * dx + dy * dy;
     if (distSq > rSq) {
-      const dist = Math.sqrt(distSq);
-      const overlap = dist - radius;
-      const nx = dx / dist;
-      const ny = dy / dist;
+      let dist = Math.sqrt(distSq);
+      let overlap = dist - radius;
+      let nx = dx / dist;
+      let ny = dy / dist;
       n.vx -= nx * overlap * strength;
       n.vy -= ny * overlap * strength;
     }
@@ -627,7 +627,7 @@ let config = {
 };
 
 function initSimulation(data) {
-  const { nodes: rawNodes, edges: rawEdges, groups = {}, options = {} } = data;
+  let { nodes: rawNodes, edges: rawEdges, groups = {}, options = {} } = data;
 
   // Merge config
   Object.assign(config, options);
@@ -638,14 +638,14 @@ function initSimulation(data) {
 
   // Initialize nodes — two-pass for hierarchy
   nodes = rawNodes.map((n, i) => {
-    const angle = (2 * Math.PI * i) / rawNodes.length;
-    const radius = Math.sqrt(rawNodes.length) * 50;
-    const w = n.w || options.nodeWidth || 260;
-    const h = n.h || options.nodeHeight || 40;
+    let angle = (2 * Math.PI * i) / rawNodes.length;
+    let radius = Math.sqrt(rawNodes.length) * 50;
+    let w = n.w || options.nodeWidth || 260;
+    let h = n.h || options.nodeHeight || 40;
     
     // If position was provided (from smoothPositions), use it directly
     // Otherwise fall back to circular layout
-    const hasPos = n.x !== undefined && n.y !== undefined;
+    let hasPos = n.x !== undefined && n.y !== undefined;
     return {
       id: n.id,
       x: hasPos ? n.x : Math.cos(angle) * radius + (Math.random() - 0.5) * 100,
@@ -666,15 +666,15 @@ function initSimulation(data) {
 
   // Pass 2: relocate NEW children (no prior position) to parent center in a small circle
   if (options.activeGroupId) {
-    const parentNode = nodes.find(n => n.id === options.activeGroupId);
+    let parentNode = nodes.find(n => n.id === options.activeGroupId);
     if (parentNode) {
       // Collect new children
-      const newChildren = nodes.filter(n => n.parentId === options.activeGroupId && !n._hadPos);
+      let newChildren = nodes.filter(n => n.parentId === options.activeGroupId && !n._hadPos);
       for (let i = 0; i < newChildren.length; i++) {
-        const n = newChildren[i];
+        let n = newChildren[i];
         // Spread in circle at ~30% of bubble radius
-        const angle = (2 * Math.PI * i) / newChildren.length + (Math.random() - 0.5) * 0.5;
-        const spread = parentNode.w * 0.3;
+        let angle = (2 * Math.PI * i) / newChildren.length + (Math.random() - 0.5) * 0.5;
+        let spread = parentNode.w * 0.3;
         n.x = parentNode.x + Math.cos(angle) * spread;
         n.y = parentNode.y + Math.sin(angle) * spread;
         // Outward kick — burst from center
@@ -684,24 +684,24 @@ function initSimulation(data) {
     }
   }
 
-  const nodeIndex = {};
+  let nodeIndex = {};
   nodes.forEach((n, i) => { nodeIndex[n.id] = i; });
 
   // Compute raw degree counts to find true hubs (most connected nodes)
-  const rawDegree = new Array(nodes.length).fill(0);
+  let rawDegree = new Array(nodes.length).fill(0);
   rawEdges.forEach(e => {
-    const si = nodeIndex[e.from], ti = nodeIndex[e.to];
+    let si = nodeIndex[e.from], ti = nodeIndex[e.to];
     if (si !== undefined) rawDegree[si]++;
     if (ti !== undefined) rawDegree[ti]++;
   });
 
   // Compute degree counts for link bias
-  const degree = new Array(nodes.length).fill(0);
+  let degree = new Array(nodes.length).fill(0);
 
   // Initialize edges
   edges = rawEdges
     .map(e => {
-      const si = nodeIndex[e.from], ti = nodeIndex[e.to];
+      let si = nodeIndex[e.from], ti = nodeIndex[e.to];
       if (si === undefined || ti === undefined) return null;
       degree[si]++;
       degree[ti]++;
@@ -723,20 +723,20 @@ function initSimulation(data) {
     let bestHubId = memberIds[0];
     let maxConnections = -1;
     for (const mId of memberIds) {
-      const idx = nodeIndex[mId];
+      let idx = nodeIndex[mId];
       if (idx !== undefined && rawDegree[idx] > maxConnections) {
         maxConnections = rawDegree[idx];
         bestHubId = mId;
       }
     }
 
-    const hubIdx = nodeIndex[bestHubId];
+    let hubIdx = nodeIndex[bestHubId];
     if (hubIdx === undefined) continue;
 
     // Connect ALL members to the hub, no arbitrary limit
     for (const mId of memberIds) {
       if (mId === bestHubId) continue;
-      const ti = nodeIndex[mId];
+      let ti = nodeIndex[mId];
       if (ti !== undefined) {
         degree[hubIdx]++;
         degree[ti]++;
@@ -753,8 +753,8 @@ function initSimulation(data) {
 
   // Compute link bias: nodes with more links are harder to move
   for (const e of edges) {
-    const ds = degree[e.source] || 1;
-    const dt = degree[e.target] || 1;
+    let ds = degree[e.source] || 1;
+    let dt = degree[e.target] || 1;
     e.bias = ds / (ds + dt);
   }
   
@@ -781,12 +781,12 @@ function computeGravityWells(degree) {
   for (const n of nodes) { n.isSun = false; n.mySun = null; }
   
   // 1. Identify "Suns" (Hubs) — nodes with many connections or explicit groups
-  const medianDeg = degree.length > 0 ? [...degree].sort((a, b) => a - b)[Math.floor(degree.length / 2)] : 1;
-  const hubThreshold = Math.max(3, medianDeg * 1.5);
+  let medianDeg = degree.length > 0 ? [...degree].sort((a, b) => a - b)[Math.floor(degree.length / 2)] : 1;
+  let hubThreshold = Math.max(3, medianDeg * 1.5);
 
   for (let i = 0; i < nodes.length; i++) {
-    const n = nodes[i];
-    const deg = degree[i] || 0;
+    let n = nodes[i];
+    let deg = degree[i] || 0;
     // A node is a Sun if it's a group, or highly connected
     if (n.parentId && n.parentId === config.activeGroupId) continue; // internal children are planets
     if (n.id === config.activeGroupId) continue; // active group is invisible
@@ -803,7 +803,7 @@ function computeGravityWells(degree) {
 
   // 2. Assign Planets to the nearest Sun
   for (const e of edges) {
-    const s = nodes[e.source], t = nodes[e.target];
+    let s = nodes[e.source], t = nodes[e.target];
     if (s.isSun && !t.isSun && !t.mySun) t.mySun = s;
     else if (t.isSun && !s.isSun && !s.mySun) s.mySun = t;
   }
@@ -824,7 +824,7 @@ function computeGravityWells(degree) {
 
   // 3. Weaken Inter-Galactic links
   for (const e of edges) {
-    const s = nodes[e.source], t = nodes[e.target];
+    let s = nodes[e.source], t = nodes[e.target];
     if (!s || !t) continue;
     
     // Save original properties once
@@ -871,9 +871,9 @@ function tick(alpha) {
   }
   for (const p of planets) {
     if (p.mySun) {
-      const dx = p.x - p.mySun.x;
-      const dy = p.y - p.mySun.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      let dx = p.x - p.mySun.x;
+      let dy = p.y - p.mySun.y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
       if (dist > p.mySun.dynamicRadius) {
         p.mySun.dynamicRadius = dist;
       }
@@ -893,18 +893,18 @@ function tick(alpha) {
   // c. Inter-Sun Repulsion (Keep galaxies separated)
   for (let i = 0; i < galacticSuns.length; i++) {
     for (let j = i + 1; j < galacticSuns.length; j++) {
-      const si = galacticSuns[i], sj = galacticSuns[j];
-      const dx = sj.x - si.x;
-      const dy = sj.y - si.y;
-      const dist = Math.sqrt(dx * dx + dy * dy) + 1;
-      const combinedRadius = si.smoothRadius + sj.smoothRadius;
+      let si = galacticSuns[i], sj = galacticSuns[j];
+      let dx = sj.x - si.x;
+      let dy = sj.y - si.y;
+      let dist = Math.sqrt(dx * dx + dy * dy) + 1;
+      let combinedRadius = si.smoothRadius + sj.smoothRadius;
       if (dist < combinedRadius) {
         // Proportional overlap (0..1) prevents explosive forces when suns are co-located
-        const overlapRatio = (combinedRadius - dist) / combinedRadius;
-        const rawForce = overlapRatio * config.wellRepulsion * alpha;
+        let overlapRatio = (combinedRadius - dist) / combinedRadius;
+        let rawForce = overlapRatio * config.wellRepulsion * alpha;
         // Cap maximum force to prevent runaway at start
-        const force = Math.min(rawForce, 50);
-        const nx = dx / dist, ny = dy / dist;
+        let force = Math.min(rawForce, 50);
+        let nx = dx / dist, ny = dy / dist;
         si.vx -= nx * force;
         si.vy -= ny * force;
         sj.vx += nx * force;
@@ -915,16 +915,16 @@ function tick(alpha) {
 
   // d. Planets are pulled gently towards their Sun
   for (const p of planets) {
-    const dx = p.x - p.mySun.x;
-    const dy = p.y - p.mySun.y;
+    let dx = p.x - p.mySun.x;
+    let dy = p.y - p.mySun.y;
     p.vx -= dx * config.wellStrength * alpha;
     p.vy -= dy * config.wellStrength * alpha;
   }
 
   // ═══ 5. Velocity Verlet integration ═══
   let energy = 0;
-  const decay = 1 - config.velocityDecay;
-  const vMax = Math.max(200, Math.sqrt(nodes.length) * 10);
+  let decay = 1 - config.velocityDecay;
+  let vMax = Math.max(200, Math.sqrt(nodes.length) * 10);
   for (const n of nodes) {
     if (n.fx !== undefined) { n.x = n.fx; n.vx = 0; }
     else {
@@ -947,7 +947,7 @@ function tick(alpha) {
 }
 
 function getPositions() {
-  const positions = {};
+  let positions = {};
   for (const n of nodes) {
     positions[n.id] = { x: Math.round(n.x - n.w / 2), y: Math.round(n.y - n.h / 2) };
   }
@@ -960,7 +960,7 @@ function getPositions() {
  * The ID-to-index mapping is stable from initSimulation.
  */
 function getPositionsPacked() {
-  const buf = new Float32Array(nodes.length * 2);
+  let buf = new Float32Array(nodes.length * 2);
   for (let i = 0; i < nodes.length; i++) {
     buf[i * 2] = nodes[i].x - nodes[i].w / 2;
     buf[i * 2 + 1] = nodes[i].y - nodes[i].h / 2;
@@ -978,7 +978,7 @@ function getNodeIds() {
 // =====================================================================
 
 self.onmessage = function (e) {
-  const { type } = e.data;
+  let { type } = e.data;
 
   if (type === 'init') {
     running = true;
@@ -1009,8 +1009,8 @@ self.onmessage = function (e) {
   }
 
   if (type === 'pin') {
-    const { id, x, y } = e.data;
-    const node = nodes.find(n => n.id === id);
+    let { id, x, y } = e.data;
+    let node = nodes.find(n => n.id === id);
     if (node) {
       // GUI sends top-left coordinate, physics needs center coordinate
       node.fx = x + node.w / 2;
@@ -1027,8 +1027,8 @@ self.onmessage = function (e) {
   }
 
   if (type === 'unpin') {
-    const { id } = e.data;
-    const node = nodes.find(n => n.id === id);
+    let { id } = e.data;
+    let node = nodes.find(n => n.id === id);
     if (node) {
       delete node.fx;
       delete node.fy;
@@ -1043,7 +1043,7 @@ self.onmessage = function (e) {
   }
 
   if (type === 'updateConfig') {
-    const updates = e.data.config;
+    let updates = e.data.config;
     if (updates) {
       Object.assign(config, updates);
       // Propagate link params to existing edges (skip group edges)
@@ -1104,12 +1104,12 @@ self.onmessage = function (e) {
 // =====================================================================
 
 function startConverge() {
-  const totalNodes = nodes.length;
+  let totalNodes = nodes.length;
   let adaptiveAlphaDecay = config.alphaDecay;
   let alpha = 1;
   let iteration = 0;
-  const maxIter = Math.ceil(Math.log(config.alphaMin) / Math.log(1 - config.alphaDecay)) + 1;
-  const batchSize = totalNodes > 1000 ? 8 : 4;
+  let maxIter = Math.ceil(Math.log(config.alphaMin) / Math.log(1 - config.alphaDecay)) + 1;
+  let batchSize = totalNodes > 1000 ? 8 : 4;
 
   function runBatch() {
     if (!running) return;
@@ -1121,13 +1121,13 @@ function startConverge() {
     }
 
     if (iteration % 20 === 0) {
-      const overlaps = countOverlaps(nodes);
+      let overlaps = countOverlaps(nodes);
       if (overlaps > 0 && alpha > 0.05) {
         adaptiveAlphaDecay = Math.max(0.005, adaptiveAlphaDecay * 0.9);
       }
     }
 
-    const isDone = alpha <= config.alphaMin || iteration >= maxIter;
+    let isDone = alpha <= config.alphaMin || iteration >= maxIter;
 
     if (!isDone) {
       self.postMessage({
@@ -1141,8 +1141,8 @@ function startConverge() {
     } else {
       // ── Gentle Expansion Post-Convergence Phase ──
       let attempt = 0;
-      const maxExpansionAttempts = 2000;
-      const expansionBatchSize = totalNodes > 1000 ? 10 : 20;
+      let maxExpansionAttempts = 2000;
+      let expansionBatchSize = totalNodes > 1000 ? 10 : 20;
 
       function runExpansionBatch() {
         if (!running) return;
@@ -1158,35 +1158,35 @@ function startConverge() {
             if (n.w > maxW) maxW = n.w;
             if (n.h > maxH) maxH = n.h;
           }
-          const cellW = maxW * 1.5;
-          const cellH = maxH * 3;
-          const grid = new Map();
+          let cellW = maxW * 1.5;
+          let cellH = maxH * 3;
+          let grid = new Map();
           for (let i = 0; i < nodes.length; i++) {
-            const n = nodes[i];
-            const key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
+            let n = nodes[i];
+            let key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
             if (!grid.has(key)) grid.set(key, []);
             grid.get(key).push(i);
           }
 
           for (let i = 0; i < nodes.length; i++) {
-            const a = nodes[i];
-            const gx = Math.floor(a.x / cellW);
-            const gy = Math.floor(a.y / cellH);
+            let a = nodes[i];
+            let gx = Math.floor(a.x / cellW);
+            let gy = Math.floor(a.y / cellH);
             for (let dx = -1; dx <= 1; dx++) {
               for (let dy = -1; dy <= 1; dy++) {
-                const neighbors = grid.get(`${gx + dx},${gy + dy}`);
+                let neighbors = grid.get(`${gx + dx},${gy + dy}`);
                 if (!neighbors) continue;
                 for (const j of neighbors) {
                   if (j <= i) continue;
-                  const b = nodes[j];
+                  let b = nodes[j];
                   let ddx = b.x - a.x;
                   let ddy = b.y - a.y;
-                  const limitX = (a.w + b.w) / 2;
-                  const limitY = (a.h + b.h) / 2;
+                  let limitX = (a.w + b.w) / 2;
+                  let limitY = (a.h + b.h) / 2;
                   if (Math.abs(ddx) < limitX && Math.abs(ddy) < limitY) {
                     let len = Math.sqrt(ddx*ddx + ddy*ddy);
                     if (len === 0) { ddx = Math.random()-0.5; ddy = Math.random()-0.5; len = Math.sqrt(ddx*ddx+ddy*ddy)||1; }
-                    const push = 2 / len;
+                    let push = 2 / len;
                     a.vx -= ddx * push;
                     b.vx += ddx * push;
                     a.vy -= ddy * push;
@@ -1197,7 +1197,7 @@ function startConverge() {
             }
           }
 
-          const decay = 0.8;
+          let decay = 0.8;
           for (const n of nodes) {
             n.vx *= decay;
             n.vy *= decay;
@@ -1263,11 +1263,11 @@ function startContinuousLoop() {
     if (!running || paused) { continuousTimer = null; return; }
 
     // Physics tick
-    const energy = tick(continuousAlpha);
+    let energy = tick(continuousAlpha);
 
     // Gentle Brownian motion: random impulses keep graph "breathing"
     if (config.brownian > 0 && continuousAlpha < config.brownianThresh) {
-      const bStr = config.brownian;
+      let bStr = config.brownian;
       for (const n of nodes) {
         if (n.fx === undefined) n.vx += (Math.random() - 0.5) * bStr;
         if (n.fy === undefined) n.vy += (Math.random() - 0.5) * bStr;
@@ -1289,7 +1289,7 @@ function startContinuousLoop() {
     continuousIteration++;
 
     // Send packed positions every tick for smooth 60fps
-    const packed = getPositionsPacked();
+    let packed = getPositionsPacked();
     self.postMessage({
       type: 'tick',
       packed: packed.buffer,
@@ -1314,7 +1314,7 @@ function startContinuousLoop() {
     if (Math.abs(continuousAlpha - config.contAlphaTarget) < 1e-4 && energy < nodes.length * 0.01 && config.brownian === 0) {
       paused = true;
       continuousTimer = null;
-      console.log('[ForceWorker] Auto-sleep triggered (energy:', energy.toFixed(4), ')');
+      console.log('🔄 [ForceWorker] Auto-sleep triggered (energy:', energy.toFixed(4), ')');
       return;
     }
 

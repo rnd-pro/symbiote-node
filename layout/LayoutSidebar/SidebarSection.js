@@ -38,7 +38,7 @@ export class SidebarSection extends Symbiote {
 
     onToggleVisibility: (e) => {
       e.stopPropagation();
-      const sidebar = this.closest('layout-sidebar');
+      let sidebar = this.closest('layout-sidebar');
       if (sidebar) sidebar.toggleVisibility(this.$.sectionId);
     },
   };
@@ -62,7 +62,7 @@ export class SidebarSection extends Symbiote {
     });
 
     this.sub('subPanels', (panels) => {
-      const has = panels && panels.length > 0;
+      let has = panels && panels.length > 0;
       this.$.hasSubPanels = has;
       this.toggleAttribute('data-has-sub', has);
       // Collapse if no sub-panels
@@ -73,13 +73,13 @@ export class SidebarSection extends Symbiote {
     this.setAttribute('draggable', 'true');
 
     this.addEventListener('dragstart', (e) => {
-      const sidebar = this.closest('layout-sidebar');
+      let sidebar = this.closest('layout-sidebar');
       if (!sidebar?.hasAttribute('edit-mode')) {
         e.preventDefault();
         return;
       }
-      const sections = Array.from(this.parentElement.children);
-      const idx = sections.indexOf(this);
+      let sections = Array.from(this.parentElement.children);
+      let idx = sections.indexOf(this);
       e.dataTransfer.setData('text/plain', String(idx));
       e.dataTransfer.effectAllowed = 'move';
       this.setAttribute('data-dragging', '');
@@ -90,7 +90,7 @@ export class SidebarSection extends Symbiote {
     });
 
     this.addEventListener('dragover', (e) => {
-      const sidebar = this.closest('layout-sidebar');
+      let sidebar = this.closest('layout-sidebar');
       if (!sidebar?.hasAttribute('edit-mode')) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
@@ -104,12 +104,12 @@ export class SidebarSection extends Symbiote {
     this.addEventListener('drop', (e) => {
       e.preventDefault();
       this.removeAttribute('data-dragover');
-      const sidebar = this.closest('layout-sidebar');
+      let sidebar = this.closest('layout-sidebar');
       if (!sidebar?.hasAttribute('edit-mode')) return;
 
-      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-      const sections = Array.from(this.parentElement.children);
-      const toIdx = sections.indexOf(this);
+      let fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      let sections = Array.from(this.parentElement.children);
+      let toIdx = sections.indexOf(this);
       if (fromIdx !== toIdx) {
         sidebar.moveSection(fromIdx, toIdx);
       }
@@ -149,11 +149,11 @@ export class SidebarSubItem extends Symbiote {
 
     onClose: (e) => {
       e.stopPropagation();
-      const panelId = this.$.panelId;
+      let panelId = this.$.panelId;
       if (!panelId) return;
 
       // Find the panel-layout and call joinPanels
-      const sidebar = this.closest('layout-sidebar');
+      let sidebar = this.closest('layout-sidebar');
       if (sidebar) {
         sidebar.dispatchEvent(new CustomEvent('panel-close', {
           bubbles: true,

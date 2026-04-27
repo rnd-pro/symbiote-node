@@ -37,7 +37,7 @@ export default {
 
       // If error but no actionFn to retry, propagate error
       if (inputs.action?._retryFn) {
-        const { maxRetries, delay } = params;
+        let { maxRetries, delay } = params;
         let lastError = inputs.error;
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -45,7 +45,7 @@ export default {
             await new Promise(r => setTimeout(r, delay));
           }
           try {
-            const result = await inputs.action._retryFn();
+            let result = await inputs.action._retryFn();
             return { result, error: null };
           } catch (err) {
             lastError = err.message;

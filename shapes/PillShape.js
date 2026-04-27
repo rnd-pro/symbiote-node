@@ -13,7 +13,7 @@ export class PillShape extends NodeShape {
   name = 'pill';
 
   getSocketPosition(side, index, total, { width, height }) {
-    const r = height / 2;
+    let r = height / 2;
     if (total <= 1) {
       return {
         x: side === 'input' ? 0 : width,
@@ -23,12 +23,12 @@ export class PillShape extends NodeShape {
     }
 
     // Multiple sockets: distribute along the rounded end
-    const arcAngle = Math.PI * 0.6; // 108 degrees arc
-    const startAngle = side === 'input' ? Math.PI - arcAngle / 2 : -arcAngle / 2;
-    const step = arcAngle / (total - 1);
-    const a = startAngle + step * index;
+    let arcAngle = Math.PI * 0.6; // 108 degrees arc
+    let startAngle = side === 'input' ? Math.PI - arcAngle / 2 : -arcAngle / 2;
+    let step = arcAngle / (total - 1);
+    let a = startAngle + step * index;
 
-    const cx = side === 'input' ? r : width - r;
+    let cx = side === 'input' ? r : width - r;
     return {
       x: cx + r * Math.cos(a),
       y: height / 2 + r * Math.sin(a),
@@ -49,22 +49,22 @@ export class PillShape extends NodeShape {
   getSidePosition(side, t, size) {
     const NORMALS = { top: -90, right: 0, bottom: 90, left: 180 };
     const MARGIN = 0.2;
-    const effectiveT = MARGIN + t * (1 - 2 * MARGIN);
-    const r = size.height / 2;
+    let effectiveT = MARGIN + t * (1 - 2 * MARGIN);
+    let r = size.height / 2;
 
     if (side === 'top' || side === 'bottom') {
       // Flat edge between the two semicircles
-      const x = r + effectiveT * (size.width - 2 * r);
-      const y = side === 'top' ? 0 : size.height;
+      let x = r + effectiveT * (size.width - 2 * r);
+      let y = side === 'top' ? 0 : size.height;
       return { x, y, angle: NORMALS[side] };
     }
 
     // Rounded semicircle ends
-    const arcSpan = Math.PI * 0.8; // 144° arc
-    const cx = side === 'left' ? r : size.width - r;
-    const centerAngle = side === 'left' ? Math.PI : 0;
-    const startAngle = centerAngle - arcSpan / 2;
-    const a = startAngle + arcSpan * effectiveT;
+    let arcSpan = Math.PI * 0.8; // 144° arc
+    let cx = side === 'left' ? r : size.width - r;
+    let centerAngle = side === 'left' ? Math.PI : 0;
+    let startAngle = centerAngle - arcSpan / 2;
+    let a = startAngle + arcSpan * effectiveT;
 
     return {
       x: cx + r * Math.cos(a),

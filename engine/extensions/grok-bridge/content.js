@@ -14,7 +14,7 @@ const WORKER_ID = workerId
 console.log(`[GrokBridge] v${VERSION} loaded (Worker: ${WORKER_ID})`)
 
 // Event log for sidepanel (stores last N events)
-const eventLog = []
+let eventLog = []
 const MAX_LOG_ENTRIES = 50
 
 /**
@@ -23,7 +23,7 @@ const MAX_LOG_ENTRIES = 50
  * @param {any} data - Event data
  */
 function logEvent(type, data) {
-  const entry = {
+  let entry = {
     time: new Date().toISOString(),
     type,
     data: typeof data === 'string' ? data : JSON.stringify(data).substring(0, 200)
@@ -43,15 +43,15 @@ function logEvent(type, data) {
  */
 function performCoordinateClick(el) {
   // Get element center coordinates
-  const rect = el.getBoundingClientRect()
-  const centerX = rect.left + rect.width / 2
-  const centerY = rect.top + rect.height / 2
+  let rect = el.getBoundingClientRect()
+  let centerX = rect.left + rect.width / 2
+  let centerY = rect.top + rect.height / 2
 
   // Focus first
   el.focus()
 
   // Create events with coordinates
-  const eventInit = {
+  let eventInit = {
     bubbles: true,
     cancelable: true,
     view: window,
@@ -79,10 +79,10 @@ function performCoordinateClick(el) {
  */
 async function pollForCommands() {
   try {
-    const res = await fetch(`${SERVER_URL}/commands/pending?workerId=${WORKER_ID}`)
+    let res = await fetch(`${SERVER_URL}/commands/pending?workerId=${WORKER_ID}`)
     if (!res.ok) return
 
-    const { commands } = await res.json()
+    let { commands } = await res.json()
 
     for (const cmd of commands) {
       console.log(`[GrokBridge] Executing: ${cmd.action} (${cmd.id})`)
@@ -91,7 +91,7 @@ async function pollForCommands() {
       try {
         let result
 
-        const action = (cmd.action || "").trim()
+        let action = (cmd.action || "").trim()
         console.log(`[GrokBridge] Executing trimmed action: "${action}" (len: ${action.length}) v${VERSION}`)
 
         switch (action) {
@@ -99,27 +99,27 @@ async function pollForCommands() {
 
           case 'click':
             // Click element by selector using coordinate-based click
-            const clickEl = document.querySelector(cmd.params.selector)
+            let clickEl = document.querySelector(cmd.params.selector)
             if (!clickEl) throw new Error(`Element not found: ${cmd.params.selector}`)
-            const coords = performCoordinateClick(clickEl)
+            let coords = performCoordinateClick(clickEl)
             result = { clicked: true, selector: cmd.params.selector, ...coords }
             break
 
           case 'clickByText':
             // Click element containing text (more robust search)
-            const searchText = cmd.params.text.toLowerCase().trim()
+            let searchText = cmd.params.text.toLowerCase().trim()
             // Search almost everything that could be a button or menu item
-            const candidates = document.querySelectorAll('button, [role="button"], [role="menuitem"], span, a, div, li')
+            let candidates = document.querySelectorAll('button, [role="button"], [role="menuitem"], span, a, div, li')
             let foundEl = null
 
             for (const el of candidates) {
-              const elText = el.textContent?.toLowerCase().trim() || ''
+              let elText = el.textContent?.toLowerCase().trim() || ''
               if (elText.includes(searchText)) {
                 // If it's a small element (like span or div inside a button), 
                 // we might want the parent if the parent is a button
                 let target = el
                 // Simple heuristic: if we hit a span/div inside a button-like thing, use the button-like thing
-                const parentButton = el.closest('button, [role="button"], [role="menuitem"]')
+                let parentButton = el.closest('button, [role="button"], [role="menuitem"]')
                 if (parentButton) target = parentButton
 
                 foundEl = target
@@ -128,7 +128,7 @@ async function pollForCommands() {
             }
 
             if (foundEl) {
-              const textCoords = performCoordinateClick(foundEl)
+              let textCoords = performCoordinateClick(foundEl)
               result = { clicked: true, text: cmd.params.text, tag: foundEl.tagName, ...textCoords }
             } else {
               throw new Error(`Element with text not found: ${cmd.params.text}`)
@@ -137,13 +137,13 @@ async function pollForCommands() {
 
           case 'clickAtCoords':
             // Click at arbitrary screen coordinates
-            const x = cmd.params.x
-            const y = cmd.params.y
+            let x = cmd.params.x
+            let y = cmd.params.y
 
             // Find element at coordinates
-            const targetEl = document.elementFromPoint(x, y)
+            let targetEl = document.elementFromPoint(x, y)
 
-            const coordEventInit = {
+            let coordEventInit = {
               bubbles: true,
               cancelable: true,
               view: window,
@@ -156,7 +156,7 @@ async function pollForCommands() {
             }
 
             // Dispatch to document if no element found
-            const dispatchTarget = targetEl || document.body
+            let dispatchTarget = targetEl || document.body
             dispatchTarget.dispatchEvent(new PointerEvent('pointerdown', { ...coordEventInit, pointerType: 'mouse' }))
             dispatchTarget.dispatchEvent(new MouseEvent('mousedown', coordEventInit))
             dispatchTarget.dispatchEvent(new PointerEvent('pointerup', { ...coordEventInit, pointerType: 'mouse' }))
@@ -170,20 +170,20 @@ async function pollForCommands() {
           case 'clickNear':
             // Click near an anchor element with offset
             // Useful when button is next to known element (like submit button next to textarea)
-            const anchorEl = document.querySelector(cmd.params.anchor)
+            let anchorEl = document.querySelector(cmd.params.anchor)
             if (!anchorEl) throw new Error(`Anchor not found: ${cmd.params.anchor}`)
 
-            const anchorRect = anchorEl.getBoundingClientRect()
-            const offsetX = cmd.params.offsetX || 0
-            const offsetY = cmd.params.offsetY || 0
+            let anchorRect = anchorEl.getBoundingClientRect()
+            let offsetX = cmd.params.offsetX || 0
+            let offsetY = cmd.params.offsetY || 0
 
             // Calculate target point (default: right edge center + offset)
-            const nearX = anchorRect.right + offsetX
-            const nearY = anchorRect.top + anchorRect.height / 2 + offsetY
+            let nearX = anchorRect.right + offsetX
+            let nearY = anchorRect.top + anchorRect.height / 2 + offsetY
 
-            const nearTarget = document.elementFromPoint(nearX, nearY)
+            let nearTarget = document.elementFromPoint(nearX, nearY)
             if (nearTarget) {
-              const nearCoords = performCoordinateClick(nearTarget)
+              let nearCoords = performCoordinateClick(nearTarget)
               result = { clicked: true, anchor: cmd.params.anchor, targetTag: nearTarget.tagName, ...nearCoords }
             } else {
               throw new Error(`No element at offset from anchor`)
@@ -193,7 +193,7 @@ async function pollForCommands() {
           case 'clickSibling':
             // Click a sibling/nearby button relative to an anchor element
             // Finds anchor, goes up to container, finds button in same container
-            const sibAnchor = document.querySelector(cmd.params.anchor)
+            let sibAnchor = document.querySelector(cmd.params.anchor)
             if (!sibAnchor) throw new Error(`Anchor not found: ${cmd.params.anchor}`)
 
             // Try multiple container levels
@@ -205,7 +205,7 @@ async function pollForCommands() {
             }
 
             if (sibBtn) {
-              const sibCoords = performCoordinateClick(sibBtn)
+              let sibCoords = performCoordinateClick(sibBtn)
               result = { clicked: true, anchor: cmd.params.anchor, buttonTag: sibBtn.tagName, ...sibCoords }
             } else {
               throw new Error(`Sibling button not found near: ${cmd.params.anchor}`)
@@ -215,24 +215,24 @@ async function pollForCommands() {
           case 'findButtonNear':
             // Smart visual element matching - finds button by position/size/content
             // Much more reliable than CSS selectors!
-            const visualAnchor = document.querySelector(cmd.params.anchor)
+            let visualAnchor = document.querySelector(cmd.params.anchor)
             if (!visualAnchor) throw new Error(`Anchor not found: ${cmd.params.anchor}`)
 
-            const anchorBox = visualAnchor.getBoundingClientRect()
-            const position = cmd.params.position || 'right' // right/left/above/below
-            const maxDistance = cmd.params.maxDistance || 100
-            const minSize = cmd.params.minSize || 20
-            const maxSize = cmd.params.maxSize || 60
-            const excludeText = cmd.params.excludeText || []
-            const requireIcon = cmd.params.requireIcon ?? true
+            let anchorBox = visualAnchor.getBoundingClientRect()
+            let position = cmd.params.position || 'right' // right/left/above/below
+            let maxDistance = cmd.params.maxDistance || 100
+            let minSize = cmd.params.minSize || 20
+            let maxSize = cmd.params.maxSize || 60
+            let excludeText = cmd.params.excludeText || []
+            let requireIcon = cmd.params.requireIcon ?? true
 
             // Collect all potential buttons
-            const allButtons = document.querySelectorAll('button, [role="button"]')
+            let allButtons = document.querySelectorAll('button, [role="button"]')
             let bestMatch = null
             let bestScore = -1
 
             for (const btn of allButtons) {
-              const btnRect = btn.getBoundingClientRect()
+              let btnRect = btn.getBoundingClientRect()
               if (btnRect.width < 1 || btnRect.height < 1) continue // invisible
 
               // Check position relative to anchor
@@ -253,10 +253,10 @@ async function pollForCommands() {
                 distance = anchorBox.top - btnRect.bottom
               } else if (position === 'any') {
                 // Any direction - calculate euclidean distance from anchor center
-                const anchorCenterX = anchorBox.left + anchorBox.width / 2
-                const anchorCenterY = anchorBox.top + anchorBox.height / 2
-                const btnCenterX = btnRect.left + btnRect.width / 2
-                const btnCenterY = btnRect.top + btnRect.height / 2
+                let anchorCenterX = anchorBox.left + anchorBox.width / 2
+                let anchorCenterY = anchorBox.top + anchorBox.height / 2
+                let btnCenterX = btnRect.left + btnRect.width / 2
+                let btnCenterY = btnRect.top + btnRect.height / 2
                 distance = Math.sqrt(Math.pow(btnCenterX - anchorCenterX, 2) + Math.pow(btnCenterY - anchorCenterY, 2))
                 positionOk = true // Allow any position
               }
@@ -264,21 +264,21 @@ async function pollForCommands() {
               if (!positionOk || distance < 0 || distance > maxDistance) continue
 
               // Check size
-              const size = Math.max(btnRect.width, btnRect.height)
+              let size = Math.max(btnRect.width, btnRect.height)
               if (size < minSize || size > maxSize) continue
 
               // Check for excluded text
-              const btnText = btn.textContent?.toLowerCase() || ''
+              let btnText = btn.textContent?.toLowerCase() || ''
               if (excludeText.some(t => btnText.includes(t.toLowerCase()))) continue
 
               // Check for icon
-              const hasIcon = btn.querySelector('svg') !== null
+              let hasIcon = btn.querySelector('svg') !== null
               if (requireIcon && !hasIcon) continue
 
               // Score: prefer closer buttons with matching size
-              const sizeScore = 1 - Math.abs(40 - size) / 40 // prefer ~40px
-              const distScore = 1 - distance / maxDistance
-              const score = sizeScore * 0.4 + distScore * 0.6
+              let sizeScore = 1 - Math.abs(40 - size) / 40 // prefer ~40px
+              let distScore = 1 - distance / maxDistance
+              let score = sizeScore * 0.4 + distScore * 0.6
 
               if (score > bestScore) {
                 bestScore = score
@@ -287,8 +287,8 @@ async function pollForCommands() {
             }
 
             if (bestMatch) {
-              const matchCoords = performCoordinateClick(bestMatch)
-              const matchRect = bestMatch.getBoundingClientRect()
+              let matchCoords = performCoordinateClick(bestMatch)
+              let matchRect = bestMatch.getBoundingClientRect()
               result = {
                 clicked: true,
                 anchor: cmd.params.anchor,
@@ -305,7 +305,7 @@ async function pollForCommands() {
 
           case 'type':
             // Type text into element (supports input/textarea and contenteditable)
-            const typeEl = document.querySelector(cmd.params.selector)
+            let typeEl = document.querySelector(cmd.params.selector)
             if (!typeEl) throw new Error(`Element not found: ${cmd.params.selector}`)
             typeEl.focus()
             if (typeEl.contentEditable === 'true') {
@@ -321,14 +321,14 @@ async function pollForCommands() {
 
           case 'getAttribute':
             // Get attribute from element
-            const attrEl = document.querySelector(cmd.params.selector)
+            let attrEl = document.querySelector(cmd.params.selector)
             if (!attrEl) throw new Error(`Element not found: ${cmd.params.selector}`)
             result = { value: attrEl.getAttribute(cmd.params.attribute) || attrEl[cmd.params.attribute] }
             break
 
           case 'querySelector':
             // Query selector and return element info
-            const qEl = document.querySelector(cmd.params.selector)
+            let qEl = document.querySelector(cmd.params.selector)
             result = qEl ? {
               found: true,
               tag: qEl.tagName,
@@ -343,7 +343,7 @@ async function pollForCommands() {
 
           case 'querySelectorAll':
             // Query all matching elements
-            const qEls = document.querySelectorAll(cmd.params.selector)
+            let qEls = document.querySelectorAll(cmd.params.selector)
             result = {
               count: qEls.length,
               elements: Array.from(qEls).slice(0, 20).map(el => ({
@@ -359,8 +359,8 @@ async function pollForCommands() {
 
           case 'navigate':
             // Check if already on the target URL (ignoring hash/fragments)
-            const targetUrl = new URL(cmd.params.url).href.replace(/#.*$/, '')
-            const currentUrl = window.location.href.replace(/#.*$/, '')
+            let targetUrl = new URL(cmd.params.url).href.replace(/#.*$/, '')
+            let currentUrl = window.location.href.replace(/#.*$/, '')
 
             if (currentUrl === targetUrl) {
               console.log(`[GrokBridge] Already on target URL: ${targetUrl}`)
@@ -412,25 +412,25 @@ async function pollForCommands() {
 
           case 'uploadFile':
             // Upload file via base64 data
-            const base64 = cmd.params.base64
-            const mimeType = cmd.params.mimeType || 'image/jpeg'
-            const filename = cmd.params.filename || 'image.jpg'
+            let base64 = cmd.params.base64
+            let mimeType = cmd.params.mimeType || 'image/jpeg'
+            let filename = cmd.params.filename || 'image.jpg'
 
             // Convert base64 to Blob
-            const byteChars = atob(base64)
-            const bytes = new Uint8Array(byteChars.length)
+            let byteChars = atob(base64)
+            let bytes = new Uint8Array(byteChars.length)
             for (let i = 0; i < byteChars.length; i++) {
               bytes[i] = byteChars.charCodeAt(i)
             }
-            const blob = new Blob([bytes], { type: mimeType })
-            const file = new File([blob], filename, { type: mimeType })
+            let blob = new Blob([bytes], { type: mimeType })
+            let file = new File([blob], filename, { type: mimeType })
 
             // Find file input
-            const fileInput = document.querySelector('input[type="file"]')
+            let fileInput = document.querySelector('input[type="file"]')
             if (!fileInput) throw new Error('File input not found')
 
             // Create DataTransfer and set files
-            const dt = new DataTransfer()
+            let dt = new DataTransfer()
             dt.items.add(file)
             fileInput.files = dt.files
 
@@ -442,10 +442,10 @@ async function pollForCommands() {
           case 'waitForSelector':
             // Wait for element to appear
             result = await new Promise((resolve, reject) => {
-              const timeout = cmd.params.timeout || 30000
-              const start = Date.now()
-              const check = () => {
-                const el = document.querySelector(cmd.params.selector)
+              let timeout = cmd.params.timeout || 30000
+              let start = Date.now()
+              let check = () => {
+                let el = document.querySelector(cmd.params.selector)
                 if (el) return resolve({ found: true, selector: cmd.params.selector })
                 if (Date.now() - start > timeout) return resolve({ found: false, timeout: true })
                 setTimeout(check, 500)
@@ -468,7 +468,7 @@ async function pollForCommands() {
             break
 
           case 'getMenuContent':
-            const menuContent = Array.from(document.querySelectorAll('[role="menu"], [role="menuitem"], [data-radix-menu-content], .radix-popover-content'))
+            let menuContent = Array.from(document.querySelectorAll('[role="menu"], [role="menuitem"], [data-radix-menu-content], .radix-popover-content'))
               .map(el => ({
                 tag: el.tagName,
                 role: el.getAttribute('role'),
@@ -479,9 +479,9 @@ async function pollForCommands() {
             break
 
           case 'clickByIndex': {
-            const index = parseInt(cmd.params.index)
-            const all = document.querySelectorAll('*')
-            const el = all[index]
+            let index = parseInt(cmd.params.index)
+            let all = document.querySelectorAll('*')
+            let el = all[index]
             if (!el) throw new Error(`Element at index ${index} not found. Total elements: ${all.length}`)
             el.click()
             result = { clicked: true, index, tag: el.tagName }
@@ -489,9 +489,9 @@ async function pollForCommands() {
           }
 
           case 'queryActions': {
-            const all = document.querySelectorAll('button, [role="button"], [role="menuitem"], a, input, [onclick]')
-            const allElements = document.querySelectorAll('*')
-            const list = []
+            let all = document.querySelectorAll('button, [role="button"], [role="menuitem"], a, input, [onclick]')
+            let allElements = document.querySelectorAll('*')
+            let list = []
             for (const el of all) {
               // Find index in allElements
               let index = -1
@@ -515,14 +515,14 @@ async function pollForCommands() {
           }
 
           case 'getElementsAroundIndex': {
-            const index = parseInt(cmd.params.index)
-            const range = cmd.params.range || 10
-            const all = document.querySelectorAll('*')
-            const start = Math.max(0, index - range)
-            const end = Math.min(all.length, index + range)
-            const resultList = []
+            let index = parseInt(cmd.params.index)
+            let range = cmd.params.range || 10
+            let all = document.querySelectorAll('*')
+            let start = Math.max(0, index - range)
+            let end = Math.min(all.length, index + range)
+            let resultList = []
             for (let i = start; i < end; i++) {
-              const el = all[i]
+              let el = all[i]
               resultList.push({
                 index: i,
                 tag: el.tagName,
@@ -536,12 +536,12 @@ async function pollForCommands() {
           }
 
           case 'findElementsByText': {
-            const search = (cmd.params.text || "").toLowerCase().trim()
-            const all = document.querySelectorAll('*')
-            const matches = []
+            let search = (cmd.params.text || "").toLowerCase().trim()
+            let all = document.querySelectorAll('*')
+            let matches = []
             for (let i = 0; i < all.length; i++) {
-              const el = all[i]
-              const text = el.textContent?.toLowerCase() || ""
+              let el = all[i]
+              let text = el.textContent?.toLowerCase() || ""
               if (text.includes(search)) {
                 matches.push({
                   index: i,
@@ -563,11 +563,11 @@ async function pollForCommands() {
 
           case 'getImageUrls':
             // Extract CDN URLs from visible images (generated images)
-            const allImgs = document.querySelectorAll('img')
-            const imgUrls = []
-            const debugUrls = [] // For debugging
+            let allImgs = document.querySelectorAll('img')
+            let imgUrls = []
+            let debugUrls = [] // For debugging
             for (const img of allImgs) {
-              const src = img.src || ''
+              let src = img.src || ''
               // Log first 5 image srcs for debugging
               if (debugUrls.length < 5 && src.length > 10) {
                 debugUrls.push(src.substring(0, 80))
@@ -585,8 +585,8 @@ async function pollForCommands() {
           case 'generateImage':
             // Generate image via WebSocket (uses injected WS interceptor)
             result = await new Promise((resolve, reject) => {
-              const commandId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-              const timeout = setTimeout(() => {
+              let commandId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+              let timeout = setTimeout(() => {
                 window.removeEventListener('grok-generate-result', handler)
                 reject(new Error('Generation timeout (60s)'))
               }, 60000)
@@ -618,16 +618,16 @@ async function pollForCommands() {
 
           case 'fetchImage':
             // Download image via browser (with authenticated cookies)
-            const imgRes = await fetch(cmd.params.url, {
+            let imgRes = await fetch(cmd.params.url, {
               credentials: 'include',
               headers: {
                 'Referer': 'https://grok.com/imagine'
               }
             })
             if (!imgRes.ok) throw new Error(`Fetch failed: ${imgRes.status}`)
-            const imgBlob = await imgRes.blob()
-            const imgArrayBuffer = await imgBlob.arrayBuffer()
-            const imgBase64 = btoa(String.fromCharCode(...new Uint8Array(imgArrayBuffer)))
+            let imgBlob = await imgRes.blob()
+            let imgArrayBuffer = await imgBlob.arrayBuffer()
+            let imgBase64 = btoa(String.fromCharCode(...new Uint8Array(imgArrayBuffer)))
             result = {
               success: true,
               base64: imgBase64,
@@ -640,10 +640,10 @@ async function pollForCommands() {
             // Wait for image generation to complete via WebSocket
             // Uses event-based communication with injected script
             result = await new Promise((resolve, reject) => {
-              const commandId = `wait_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-              const timeout = cmd.params.timeout || 120000
+              let commandId = `wait_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+              let timeout = cmd.params.timeout || 120000
 
-              const timeoutId = setTimeout(() => {
+              let timeoutId = setTimeout(() => {
                 window.removeEventListener('grok-wait-image-result', handler)
                 reject(new Error('Timeout waiting for image completion'))
               }, timeout + 5000) // Extra buffer for WS timeout
@@ -672,7 +672,7 @@ async function pollForCommands() {
           case 'uploadImage':
             // Upload image to Grok and get asset ID
             // params: { base64, fileName, mimeType }
-            const uploadRes = await fetch('https://grok.com/rest/app-chat/upload-file', {
+            let uploadRes = await fetch('https://grok.com/rest/app-chat/upload-file', {
               method: 'POST',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
@@ -683,10 +683,10 @@ async function pollForCommands() {
               })
             })
             if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`)
-            const uploadData = await uploadRes.json()
+            let uploadData = await uploadRes.json()
             // Response has fileMetadataId, not fileId
-            const assetId = uploadData.fileMetadataId
-            const userId = uploadData.fileUri?.split('/')[1]
+            let assetId = uploadData.fileMetadataId
+            let userId = uploadData.fileUri?.split('/')[1]
             result = {
               success: true,
               assetId,
@@ -699,8 +699,8 @@ async function pollForCommands() {
           case 'createMediaPost':
             // Create media post from uploaded asset
             // params: { assetId, mediaType }
-            const assetUrl = `https://assets.grok.com/users/${cmd.params.userId}/${cmd.params.assetId}/content`
-            const postRes = await fetch('https://grok.com/rest/media/post/create', {
+            let assetUrl = `https://assets.grok.com/users/${cmd.params.userId}/${cmd.params.assetId}/content`
+            let postRes = await fetch('https://grok.com/rest/media/post/create', {
               method: 'POST',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
@@ -717,9 +717,9 @@ async function pollForCommands() {
             // Generate video from uploaded image (via page context to bypass anti-bot)
             // params: { assetId, assetUrl, prompt, aspectRatio, videoLength, mode }
             result = await new Promise((resolve, reject) => {
-              const videoCommandId = `video_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              let videoCommandId = `video_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-              const handler = (event) => {
+              let handler = (event) => {
                 if (event.detail.commandId !== videoCommandId) return;
                 window.removeEventListener('grok-video-result', handler);
 
@@ -753,9 +753,9 @@ async function pollForCommands() {
             // Upscale a generated video (via page context to bypass anti-bot)
             // params: { videoId }
             result = await new Promise((resolve, reject) => {
-              const upscaleCommandId = `upscale_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              let upscaleCommandId = `upscale_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-              const handler = (event) => {
+              let handler = (event) => {
                 if (event.detail.commandId !== upscaleCommandId) return;
                 window.removeEventListener('grok-video-result', handler);
 
@@ -788,21 +788,21 @@ async function pollForCommands() {
             // Show numbered overlay on all clickable elements
             // Helps identify which zone to click
             // layer param: 'all' (default), 'buttons', 'inputs', 'images'
-            const layer = cmd.params?.layer || 'all'
-            const existingOverlay = document.getElementById('grok-zones-overlay')
+            let layer = cmd.params?.layer || 'all'
+            let existingOverlay = document.getElementById('grok-zones-overlay')
             if (existingOverlay) existingOverlay.remove()
 
-            const overlay = document.createElement('div')
+            let overlay = document.createElement('div')
             overlay.id = 'grok-zones-overlay'
             overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99999'
 
-            const showButtons = layer === 'all' || layer === 'buttons'
-            const showInputs = layer === 'all' || layer === 'inputs'
-            const showImages = layer === 'all' || layer === 'images'
+            let showButtons = layer === 'all' || layer === 'buttons'
+            let showInputs = layer === 'all' || layer === 'inputs'
+            let showImages = layer === 'all' || layer === 'images'
 
-            const clickables = showButtons ? document.querySelectorAll('button, [role="button"], a, input[type="submit"], [onclick], .cursor-pointer') : []
-            const inputEls = showInputs ? document.querySelectorAll('input:not([type="submit"]):not([type="hidden"]), textarea, [contenteditable="true"]') : []
-            const zones = []
+            let clickables = showButtons ? document.querySelectorAll('button, [role="button"], a, input[type="submit"], [onclick], .cursor-pointer') : []
+            let inputEls = showInputs ? document.querySelectorAll('input:not([type="submit"]):not([type="hidden"]), textarea, [contenteditable="true"]') : []
+            let zones = []
 
             // Separate counters for each type
             let btnNum = 1
@@ -811,12 +811,12 @@ async function pollForCommands() {
 
             // Add clickable elements (red) - B1, B2, B3...
             clickables.forEach(el => {
-              const rect = el.getBoundingClientRect()
+              let rect = el.getBoundingClientRect()
               if (rect.width < 10 || rect.height < 10) return
               if (rect.top < -50 || rect.left < -50) return
 
-              const zoneId = `B${btnNum}`
-              const label = document.createElement('div')
+              let zoneId = `B${btnNum}`
+              let label = document.createElement('div')
               label.style.cssText = `
                 position:fixed;
                 left:${rect.left}px;
@@ -852,12 +852,12 @@ async function pollForCommands() {
 
             // Add input elements (green) - I1, I2, I3...
             inputEls.forEach(el => {
-              const rect = el.getBoundingClientRect()
+              let rect = el.getBoundingClientRect()
               if (rect.width < 10 || rect.height < 10) return
               if (rect.top < -50 || rect.left < -50) return
 
-              const zoneId = `I${inputNum}`
-              const label = document.createElement('div')
+              let zoneId = `I${inputNum}`
+              let label = document.createElement('div')
               label.style.cssText = `
                 position:fixed;
                 left:${rect.left}px;
@@ -892,14 +892,14 @@ async function pollForCommands() {
             })
 
             // Add image elements (blue - clickable images in galleries)
-            const images = showImages ? document.querySelectorAll('img[src*="imagine"], img[src*="grok"], img[alt*="image"], div.group\\/media-post-masonry-card img') : []
+            let images = showImages ? document.querySelectorAll('img[src*="imagine"], img[src*="grok"], img[alt*="image"], div.group\\/media-post-masonry-card img') : []
             images.forEach(el => {
-              const rect = el.getBoundingClientRect()
+              let rect = el.getBoundingClientRect()
               if (rect.width < 20 || rect.height < 20) return
               if (rect.top < -50 || rect.left < -50) return
 
-              const zoneId = `M${imgNum}`
-              const label = document.createElement('div')
+              let zoneId = `M${imgNum}`
+              let label = document.createElement('div')
               label.style.cssText = `
                 position:fixed;
                 left:${rect.left}px;
@@ -947,19 +947,19 @@ async function pollForCommands() {
           case 'clickZone':
             // Click element by zone ID from showClickableZones
             // Supports both string IDs (B13, I2, M1) and legacy number format
-            const clickZoneId = cmd.params.zone
+            let clickZoneId = cmd.params.zone
             if (!window._grokClickZones) throw new Error('Run showClickableZones first')
 
             // Find by id (string like 'B13') or num (number like 13 for legacy)
-            const clickZone = window._grokClickZones.find(z =>
+            let clickZone = window._grokClickZones.find(z =>
               z.id === clickZoneId || z.id === String(clickZoneId) || z.num === clickZoneId
             )
             if (!clickZone) throw new Error(`Zone ${clickZoneId} not found`)
 
             // Find element at zone coordinates
-            const clickZoneEl = document.elementFromPoint(clickZone.x, clickZone.y)
+            let clickZoneEl = document.elementFromPoint(clickZone.x, clickZone.y)
             if (clickZoneEl) {
-              const clickZoneCoords = performCoordinateClick(clickZoneEl)
+              let clickZoneCoords = performCoordinateClick(clickZoneEl)
               result = { clicked: true, zone: clickZoneId, id: clickZone.id, tag: clickZoneEl.tagName, ...clickZoneCoords }
             } else {
               throw new Error(`No element at zone ${clickZoneId} coordinates`)
@@ -968,7 +968,7 @@ async function pollForCommands() {
 
           case 'hideZones':
             // Remove zones overlay
-            const zoneOverlay = document.getElementById('grok-zones-overlay')
+            let zoneOverlay = document.getElementById('grok-zones-overlay')
             if (zoneOverlay) zoneOverlay.remove()
             delete window._grokClickZones
             result = { hidden: true }
@@ -977,46 +977,46 @@ async function pollForCommands() {
           case 'waitForZone':
             // Wait for a specific zone to appear by periodically refreshing zones
             // Returns when the zone is found
-            const waitZoneId = cmd.params.zone
-            const waitTimeout = cmd.params.timeout || 30000
-            const waitStart = Date.now()
+            let waitZoneId = cmd.params.zone
+            let waitTimeout = cmd.params.timeout || 30000
+            let waitStart = Date.now()
 
             while (Date.now() - waitStart < waitTimeout) {
               // Refresh zones list
-              const showButtons = true
-              const showInputs = true
-              const showImages = true
+              let showButtons = true
+              let showInputs = true
+              let showImages = true
 
-              const allClickables = document.querySelectorAll('button, [role="button"], a, input[type="submit"], [onclick], .cursor-pointer')
-              const allInputs = document.querySelectorAll('input:not([type="submit"]):not([type="hidden"]), textarea, [contenteditable="true"]')
-              const allImages = document.querySelectorAll('img[src*="imagine"], img[src*="grok"], img[alt*="image"], div.group\\/media-post-masonry-card img')
+              let allClickables = document.querySelectorAll('button, [role="button"], a, input[type="submit"], [onclick], .cursor-pointer')
+              let allInputs = document.querySelectorAll('input:not([type="submit"]):not([type="hidden"]), textarea, [contenteditable="true"]')
+              let allImages = document.querySelectorAll('img[src*="imagine"], img[src*="grok"], img[alt*="image"], div.group\\/media-post-masonry-card img')
 
-              const foundZones = []
+              let foundZones = []
               let btn = 1, inp = 1, img = 1
 
               allClickables.forEach(el => {
-                const rect = el.getBoundingClientRect()
+                let rect = el.getBoundingClientRect()
                 if (rect.width >= 10 && rect.height >= 10 && rect.top > -50 && rect.left > -50) {
                   foundZones.push({ id: `B${btn}`, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
                   btn++
                 }
               })
               allInputs.forEach(el => {
-                const rect = el.getBoundingClientRect()
+                let rect = el.getBoundingClientRect()
                 if (rect.width >= 10 && rect.height >= 10 && rect.top > -50 && rect.left > -50) {
                   foundZones.push({ id: `I${inp}`, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
                   inp++
                 }
               })
               allImages.forEach(el => {
-                const rect = el.getBoundingClientRect()
+                let rect = el.getBoundingClientRect()
                 if (rect.width >= 20 && rect.height >= 20 && rect.top > -50 && rect.left > -50) {
                   foundZones.push({ id: `M${img}`, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
                   img++
                 }
               })
 
-              const foundZone = foundZones.find(z => z.id === waitZoneId)
+              let foundZone = foundZones.find(z => z.id === waitZoneId)
               if (foundZone) {
                 // Store zones for subsequent clickZone calls
                 window._grokClickZones = foundZones
@@ -1035,17 +1035,17 @@ async function pollForCommands() {
           case 'typeInZone':
             // Type text into input zone
             // Supports string IDs (I1, I2) and legacy numbers
-            const zoneTypeId = cmd.params.zone
-            const zoneTypeText = cmd.params.text
+            let zoneTypeId = cmd.params.zone
+            let zoneTypeText = cmd.params.text
             if (!window._grokClickZones) throw new Error('Run showClickableZones first')
 
             // Find by id (string like 'I1') or num (number for legacy)
-            const zoneForType = window._grokClickZones.find(z =>
+            let zoneForType = window._grokClickZones.find(z =>
               z.id === zoneTypeId || z.id === String(zoneTypeId) || z.num === zoneTypeId
             )
             if (!zoneForType) throw new Error(`Zone ${zoneTypeId} not found`)
 
-            const zoneInputEl = document.elementFromPoint(zoneForType.x, zoneForType.y)
+            let zoneInputEl = document.elementFromPoint(zoneForType.x, zoneForType.y)
             if (!zoneInputEl) throw new Error(`No element at zone ${zoneTypeId}`)
 
             zoneInputEl.focus()
@@ -1107,7 +1107,7 @@ async function evaluateJS(code) {
   console.log(`[GrokBridge] Eval:`, code.substring(0, 100))
 
   return new Promise((resolve, reject) => {
-    const messageId = `grok_eval_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    let messageId = `grok_eval_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     // Listen for result via postMessage (works across context boundaries)
     function handleMessage(event) {
@@ -1127,10 +1127,10 @@ async function evaluateJS(code) {
     window.addEventListener('message', handleMessage)
 
     // Wrap code to post result back via postMessage
-    const wrappedCode = `
+    let wrappedCode = `
       (async () => {
         try {
-          const result = await (async () => { ${code} })()
+          let result = await (async () => { ${code} })()
           window.postMessage({
             type: 'GROK_EVAL_RESULT',
             id: '${messageId}',
@@ -1147,7 +1147,7 @@ async function evaluateJS(code) {
     `
 
     // Inject script tag (runs in page context)
-    const script = document.createElement('script')
+    let script = document.createElement('script')
     script.textContent = wrappedCode
     document.documentElement.appendChild(script)
     script.remove()
@@ -1216,7 +1216,7 @@ document.addEventListener('visibilitychange', () => {
   console.log(`[GrokBridge] Tab visibility: ${isTabVisible ? 'VISIBLE' : 'HIDDEN'}`)
   if (isTabVisible) {
     // Tab became visible - check if we missed polls
-    const elapsed = Date.now() - lastPollTime
+    let elapsed = Date.now() - lastPollTime
     if (elapsed > 5000) {
       console.log(`[GrokBridge] ⚠️ Missed polls! Last poll ${Math.round(elapsed / 1000)}s ago. Chrome throttled us.`)
     }
@@ -1276,11 +1276,11 @@ function getSelector(el) {
   }
 
   // Build path
-  const path = []
+  let path = []
   while (el && el !== document.body) {
     let selector = el.tagName.toLowerCase()
     if (el.className && typeof el.className === 'string') {
-      const classes = el.className.trim().split(/\s+/).filter(c => !c.includes('__') && c.length < 30).slice(0, 2)
+      let classes = el.className.trim().split(/\s+/).filter(c => !c.includes('__') && c.length < 30).slice(0, 2)
       if (classes.length) selector += '.' + classes.join('.')
     }
     path.unshift(selector)
@@ -1298,15 +1298,15 @@ let recordingEnabled = true // Always on for now
 document.addEventListener('click', (e) => {
   if (!recordingEnabled) return
 
-  const el = e.target
-  const rect = el.getBoundingClientRect()
-  const computed = window.getComputedStyle(el)
+  let el = e.target
+  let rect = el.getBoundingClientRect()
+  let computed = window.getComputedStyle(el)
 
   // Get parent button if clicking inside one (svg/path inside button)
-  const parentBtn = el.closest('button, [role="button"]')
-  const parentRect = parentBtn ? parentBtn.getBoundingClientRect() : null
+  let parentBtn = el.closest('button, [role="button"]')
+  let parentRect = parentBtn ? parentBtn.getBoundingClientRect() : null
 
-  const action = {
+  let action = {
     type: 'click',
     timestamp: Date.now(),
     // Basic info
@@ -1363,8 +1363,8 @@ document.addEventListener('click', (e) => {
 document.addEventListener('input', (e) => {
   if (!recordingEnabled) return
 
-  const el = e.target
-  const action = {
+  let el = e.target
+  let action = {
     type: 'input',
     timestamp: Date.now(),
     tag: el.tagName,
@@ -1390,7 +1390,7 @@ console.log('[GrokBridge] Action recording enabled')
   // Inject via external script file to bypass CSP (no inline scripts allowed)
 
   ; (function injectWebSocketInterceptorSync() {
-    const script = document.createElement('script');
+    let script = document.createElement('script');
     script.src = chrome.runtime.getURL('websocket-interceptor.js');
     script.onload = () => {
       script.remove();
@@ -1402,7 +1402,7 @@ console.log('[GrokBridge] Action recording enabled')
 
 // Listen for WebSocket messages from injected script
 window.addEventListener('grok-ws-message', (event) => {
-  const message = event.detail;
+  let message = event.detail;
   console.log(`[GrokBridge] WS ${message.direction}:`, message.data?.substring?.(0, 200) || message.data);
 
   // Send to server for analysis
@@ -1415,7 +1415,7 @@ window.addEventListener('grok-ws-message', (event) => {
 
 // Listen for Fetch API calls from injected script
 window.addEventListener('grok-fetch', (event) => {
-  const logEntry = event.detail;
+  let logEntry = event.detail;
   console.log(`[GrokBridge] Fetch: ${logEntry.method} ${logEntry.url}`);
 
   // Send to server for analysis

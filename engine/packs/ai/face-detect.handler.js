@@ -58,11 +58,11 @@ export default {
       `face:${params.operation}:${params.step}:${inputs.mediaPath}`,
 
     execute: async (inputs, params) => {
-      const { mediaPath } = inputs;
-      const op = params.operation || 'analyze';
+      let { mediaPath } = inputs;
+      let op = params.operation || 'analyze';
 
-      const ops = { analyze, track, 'track-gpu': trackGpu, mouth, 'frames-gpu': framesGpu };
-      const handler = ops[op];
+      let ops = { analyze, track, 'track-gpu': trackGpu, mouth, 'frames-gpu': framesGpu };
+      let handler = ops[op];
       if (!handler) {
         return { result: null, detected: false, error: `Unknown operation: ${op}` };
       }
@@ -95,8 +95,8 @@ async function prepareRemotePath(localPath, host, params) {
     return { remotePath: path.resolve(localPath), cleanup: false };
   }
 
-  const filename = `face_${Date.now()}_${path.basename(localPath)}`;
-  const remotePath = `/tmp/${filename}`;
+  let filename = `face_${Date.now()}_${path.basename(localPath)}`;
+  let remotePath = `/tmp/${filename}`;
 
   execSync(`scp -q "${path.resolve(localPath)}" "${host}:${remotePath}"`, {
     stdio: 'pipe', timeout: 60000,
@@ -122,31 +122,31 @@ function cleanupRemote(remotePath, host) {
  * analyze — Video face detection suitability
  */
 async function analyze(mediaPath, params) {
-  const endpoint = params.endpoint || 'http://localhost:5050';
-  const host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let endpoint = params.endpoint || 'http://localhost:5050';
+  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
 
   try {
     if (params.useRemotePath || isOnServer()) {
-      const response = await fetch(`${endpoint}/analyze?min_coverage=${params.minCoverage || 5}`, {
+      let response = await fetch(`${endpoint}/analyze?min_coverage=${params.minCoverage || 5}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: path.resolve(mediaPath) }),
         signal: AbortSignal.timeout(params.timeout || 120000),
       });
-      const result = await response.json();
+      let result = await response.json();
       return { result, detected: result.suitable || false, error: null };
     }
 
     // Upload via curl for remote analysis
-    const { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
+    let { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
     try {
-      const response = await fetch(`${endpoint}/analyze?min_coverage=${params.minCoverage || 5}`, {
+      let response = await fetch(`${endpoint}/analyze?min_coverage=${params.minCoverage || 5}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: remotePath }),
         signal: AbortSignal.timeout(params.timeout || 120000),
       });
-      const result = await response.json();
+      let result = await response.json();
       return { result, detected: result.suitable || false, error: null };
     } finally {
       if (cleanup) cleanupRemote(remotePath, host);
@@ -160,19 +160,19 @@ async function analyze(mediaPath, params) {
  * track — Dense face tracking with mouth + bbox
  */
 async function track(mediaPath, params) {
-  const endpoint = params.endpoint || 'http://localhost:5050';
-  const host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let endpoint = params.endpoint || 'http://localhost:5050';
+  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
 
   try {
-    const { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
+    let { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
     try {
-      const response = await fetch(`${endpoint}/track-face`, {
+      let response = await fetch(`${endpoint}/track-face`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: remotePath, step: params.step || 3 }),
         signal: AbortSignal.timeout(params.timeout || 120000),
       });
-      const result = await response.json();
+      let result = await response.json();
       result.detected = (result.detectedFrames || 0) > 0;
       return { result, detected: result.detected, error: null };
     } finally {
@@ -187,19 +187,19 @@ async function track(mediaPath, params) {
  * track-gpu — InsightFace GPU tracking with landmarks, bbox, age, gender
  */
 async function trackGpu(mediaPath, params) {
-  const endpoint = params.endpoint || 'http://localhost:5050';
-  const host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let endpoint = params.endpoint || 'http://localhost:5050';
+  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
 
   try {
-    const { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
+    let { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
     try {
-      const response = await fetch(`${endpoint}/track-face-gpu`, {
+      let response = await fetch(`${endpoint}/track-face-gpu`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: remotePath, step: params.step || 1 }),
         signal: AbortSignal.timeout(params.timeout || 120000),
       });
-      const result = await response.json();
+      let result = await response.json();
       result.detected = (result.detectedFrames || 0) > 0;
       return { result, detected: result.detected, error: null };
     } finally {
@@ -214,19 +214,19 @@ async function trackGpu(mediaPath, params) {
  * mouth — Mouth position detection (for speech bubble placement)
  */
 async function mouth(mediaPath, params) {
-  const endpoint = params.endpoint || 'http://localhost:5050';
-  const host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let endpoint = params.endpoint || 'http://localhost:5050';
+  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
 
   try {
-    const { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
+    let { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
     try {
-      const response = await fetch(`${endpoint}/analyze-mouth`, {
+      let response = await fetch(`${endpoint}/analyze-mouth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: remotePath }),
         signal: AbortSignal.timeout(params.timeout || 120000),
       });
-      const result = await response.json();
+      let result = await response.json();
       return { result, detected: result.detected || false, error: null };
     } finally {
       if (cleanup) cleanupRemote(remotePath, host);
@@ -240,8 +240,8 @@ async function mouth(mediaPath, params) {
  * frames-gpu — GPU face tracking on WebP frame sequences
  */
 async function framesGpu(mediaPath, params) {
-  const endpoint = params.endpoint || 'http://localhost:5050';
-  const host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let endpoint = params.endpoint || 'http://localhost:5050';
+  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
 
   try {
     let remotePath = path.resolve(mediaPath);
@@ -249,7 +249,7 @@ async function framesGpu(mediaPath, params) {
 
     // If not on server, rsync frames directory to remote
     if (!params.useRemotePath && !isOnServer()) {
-      const dirName = `face_frames_${Date.now()}`;
+      let dirName = `face_frames_${Date.now()}`;
       remotePath = `/tmp/${dirName}`;
 
       execSync(`rsync -az --quiet "${path.resolve(mediaPath)}/" "${host}:${remotePath}/"`, {
@@ -259,7 +259,7 @@ async function framesGpu(mediaPath, params) {
     }
 
     try {
-      const response = await fetch(`${endpoint}/track-face-frames-gpu`, {
+      let response = await fetch(`${endpoint}/track-face-frames-gpu`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -269,7 +269,7 @@ async function framesGpu(mediaPath, params) {
         }),
         signal: AbortSignal.timeout(params.timeout || 120000),
       });
-      const result = await response.json();
+      let result = await response.json();
       result.detected = (result.detectedFrames || 0) > 0;
       return { result, detected: result.detected, error: null };
     } finally {

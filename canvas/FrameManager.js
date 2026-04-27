@@ -58,11 +58,11 @@ export class FrameManager {
    * @param {number} y
    */
   setPosition(frameId, x, y) {
-    const el = this.#frameViews.get(frameId);
+    let el = this.#frameViews.get(frameId);
     if (!el) return;
     el.style.transform = `translate(${x}px, ${y}px)`;
     el._position = { x, y };
-    const frame = this.#editor?.getFrame(frameId);
+    let frame = this.#editor?.getFrame(frameId);
     if (frame) { frame.x = x; frame.y = y; }
   }
 
@@ -73,11 +73,11 @@ export class FrameManager {
    * @param {number} h
    */
   setSize(frameId, w, h) {
-    const el = this.#frameViews.get(frameId);
+    let el = this.#frameViews.get(frameId);
     if (!el) return;
     el.style.width = `${w}px`;
     el.style.height = `${h}px`;
-    const frame = this.#editor?.getFrame(frameId);
+    let frame = this.#editor?.getFrame(frameId);
     if (frame) { frame.width = w; frame.height = h; }
   }
 
@@ -87,14 +87,14 @@ export class FrameManager {
    * @returns {string[]}
    */
   #getNodesInFrame(frameId) {
-    const el = this.#frameViews.get(frameId);
+    let el = this.#frameViews.get(frameId);
     if (!el) return [];
-    const fp = el._position;
-    const fw = parseFloat(el.style.width) || el._frameData?.width || 400;
-    const fh = parseFloat(el.style.height) || el._frameData?.height || 300;
-    const ids = [];
+    let fp = el._position;
+    let fw = parseFloat(el.style.width) || el._frameData?.width || 400;
+    let fh = parseFloat(el.style.height) || el._frameData?.height || 300;
+    let ids = [];
     for (const [nodeId, nodeEl] of this.#nodeViews) {
-      const np = nodeEl._position;
+      let np = nodeEl._position;
       if (np && np.x >= fp.x && np.y >= fp.y && np.x <= fp.x + fw && np.y <= fp.y + fh) {
         ids.push(nodeId);
       }
@@ -107,7 +107,7 @@ export class FrameManager {
    * @param {import('../core/Frame.js').Frame} frame
    */
   addView(frame) {
-    const el = document.createElement('graph-frame');
+    let el = document.createElement('graph-frame');
     el.style.position = 'absolute';
     el.style.width = `${frame.width}px`;
     el.style.height = `${frame.height}px`;
@@ -126,13 +126,13 @@ export class FrameManager {
         el.$.color = frame.color;
       } else {
         // Fallback: set label text directly
-        const labelEl = el.querySelector('.sn-frame-label');
+        let labelEl = el.querySelector('.sn-frame-label');
         if (labelEl) labelEl.textContent = frame.label;
       }
     });
 
     // Frame drag — moves child nodes too
-    const drag = new Drag();
+    let drag = new Drag();
     let childStartPositions = null;
     let frameStartPos = null;
 
@@ -146,18 +146,18 @@ export class FrameManager {
         onStart: () => {
           frameStartPos = { ...el._position };
           // Capture positions of nodes that are inside this frame
-          const nodeIds = this.#getNodesInFrame(frame.id);
+          let nodeIds = this.#getNodesInFrame(frame.id);
           childStartPositions = new Map();
           for (const nid of nodeIds) {
-            const nel = this.#nodeViews.get(nid);
+            let nel = this.#nodeViews.get(nid);
             if (nel && nel._position) childStartPositions.set(nid, { ...nel._position });
           }
         },
         onTranslate: (x, y) => {
           // Move child nodes by delta from frame start
           if (childStartPositions && frameStartPos) {
-            const dx = x - frameStartPos.x;
-            const dy = y - frameStartPos.y;
+            let dx = x - frameStartPos.x;
+            let dy = y - frameStartPos.y;
             for (const [nid, startPos] of childStartPositions) {
               this.#setNodePosition(nid, startPos.x + dx, startPos.y + dy);
             }
@@ -174,9 +174,9 @@ export class FrameManager {
 
     // Resize handle
     requestAnimationFrame(() => {
-      const handle = el.ref?.resizeHandle;
+      let handle = el.ref?.resizeHandle;
       if (handle) {
-        const resizeDrag = new Drag();
+        let resizeDrag = new Drag();
         let startSize = null;
         resizeDrag.initialize(
           handle,
@@ -189,8 +189,8 @@ export class FrameManager {
               startSize = { w: frame.width, h: frame.height };
             },
             onTranslate: (x, y) => {
-              const w = Math.max(120, x);
-              const h = Math.max(80, y);
+              let w = Math.max(120, x);
+              let h = Math.max(80, y);
               this.setSize(frame.id, w, h);
             },
             onDrop: () => { startSize = null; },
@@ -209,7 +209,7 @@ export class FrameManager {
    * @param {import('../core/Frame.js').Frame} frame
    */
   removeView(frame) {
-    const el = this.#frameViews.get(frame.id);
+    let el = this.#frameViews.get(frame.id);
     if (!el) return;
     if (el._drag) el._drag.destroy();
     if (el._resizeDrag) el._resizeDrag.destroy();
@@ -217,3 +217,5 @@ export class FrameManager {
     this.#frameViews.delete(frame.id);
   }
 }
+
+export { FrameManager as default };

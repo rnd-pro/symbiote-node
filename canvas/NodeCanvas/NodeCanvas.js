@@ -136,7 +136,7 @@ export class NodeCanvas extends Symbiote {
 
     // Remove all connection SVG paths
     if (this.#connRenderer) {
-      const conns = [...this.#connRenderer.data.values()];
+      let conns = [...this.#connRenderer.data.values()];
       for (const conn of conns) {
         this.#connRenderer.remove(conn);
       }
@@ -161,7 +161,7 @@ export class NodeCanvas extends Symbiote {
 
     this.#editor = editor;
 
-    const engineMode = this.getAttribute('connection-engine') || 'svg';
+    let engineMode = this.getAttribute('connection-engine') || 'svg';
 
     if (engineMode === 'canvas') {
       this.#connRenderer = new CanvasConnectionRenderer({
@@ -212,26 +212,29 @@ export class NodeCanvas extends Symbiote {
     });
 
     // Quick Action Toolbar
-    const toolbar = this.ref.quickToolbar;
+    let toolbar = this.ref.quickToolbar;
     if (toolbar) {
+      let actionMap = {
+        delete: (nodeId) => { this.#actions.deleteNode(nodeId); toolbar.hide(); },
+        duplicate: (nodeId) => { this.#actions.cloneNode(nodeId); },
+        enter: (nodeId) => { this.drillDown(nodeId); toolbar.hide(); },
+        mute: (nodeId) => {
+          this.#actions.muteNode(nodeId);
+          let nodeEl = this.#nodeViews.get(nodeId);
+          if (nodeEl) toolbar.show(nodeId, nodeEl);
+        },
+      };
       toolbar._onAction = (action, nodeId) => {
-        const nodeEl = this.#nodeViews.get(nodeId);
-        switch (action) {
-          case 'delete': this.#actions.deleteNode(nodeId); toolbar.hide(); break;
-          case 'duplicate': this.#actions.cloneNode(nodeId); break;
-          case 'enter': this.drillDown(nodeId); toolbar.hide(); break;
-          case 'mute':
-            this.#actions.muteNode(nodeId);
-            if (nodeEl) toolbar.show(nodeId, nodeEl);
-            break;
-          default:
-            // Custom actions — dispatch event for consumer (e.g. dep-graph explore)
-            this.dispatchEvent(new CustomEvent('toolbar-action', {
-              detail: { action, nodeId },
-              bubbles: true,
-            }));
-            toolbar.hide();
-            break;
+        let handler = actionMap[action];
+        if (handler) {
+          handler(nodeId);
+        } else {
+          // Custom actions — dispatch event for consumer (e.g. dep-graph explore)
+          this.dispatchEvent(new CustomEvent('toolbar-action', {
+            detail: { action, nodeId },
+            bubbles: true,
+          }));
+          toolbar.hide();
         }
       };
     }
@@ -267,11 +270,11 @@ export class NodeCanvas extends Symbiote {
     // ConnectFlow
     this.#connectFlow = new ConnectFlow(editor, {
       getNodePosition: (id) => {
-        const el = this.#nodeViews.get(id);
+        let el = this.#nodeViews.get(id);
         return el?._position || { x: 0, y: 0 };
       },
       getNodeSize: (id) => {
-        const el = this.#nodeViews.get(id);
+        let el = this.#nodeViews.get(id);
         return { width: el?.offsetWidth || 180, height: el?.offsetHeight || 60 };
       },
       getTransform: () => ({
@@ -294,17 +297,17 @@ export class NodeCanvas extends Symbiote {
       },
       onCompatibleMove: (worldX, worldY, socketData) => {
         // Highlight compatible SVG dots (no port teleportation)
-        const compatibleIds = this.#actions.getCompatibleNodeIds(socketData);
+        let compatibleIds = this.#actions.getCompatibleNodeIds(socketData);
         this.#connRenderer?.highlightDotsForNodes(compatibleIds);
       },
 
       onDropEmpty: (x, y, socketData) => {
         this.#actions.handleDropEmpty(x, y, socketData);
         // Show context menu at drop position
-        const container = this.ref.canvasContainer;
-        const rect = container.getBoundingClientRect();
-        const menuX = x * this.$.zoom + this.$.panX;
-        const menuY = y * this.$.zoom + this.$.panY;
+        let container = this.ref.canvasContainer;
+        let rect = container.getBoundingClientRect();
+        let menuX = x * this.$.zoom + this.$.panX;
+        let menuY = y * this.$.zoom + this.$.panY;
         this.ref.contextMenu?.show(menuX, menuY, [
           { label: 'Add Node', icon: 'add_box', action: () => this.#editor?.emit('contextadd', { x, y }) },
         ]);
@@ -330,7 +333,7 @@ export class NodeCanvas extends Symbiote {
     });
 
     // Re-render connections after node layout changes (collapse/mute)
-    const refreshNodeConnections = ({ nodeId }) => {
+    let refreshNodeConnections = ({ nodeId }) => {
       requestAnimationFrame(() => this.#connRenderer?.updateForNode(nodeId));
     };
     editor.on('nodecollapse', refreshNodeConnections);
@@ -362,7 +365,7 @@ export class NodeCanvas extends Symbiote {
     // Initialize subgraph navigation (skip during drill-down/drillUp)
     if (!this.#navigating) {
       this.#subgraphManager.initialize(this, editor);
-      const breadcrumb = this.ref.breadcrumb;
+      let breadcrumb = this.ref.breadcrumb;
       if (breadcrumb) {
         this.#subgraphManager.onNavigate((path) => {
           breadcrumb.setPath(path);
@@ -486,7 +489,7 @@ export class NodeCanvas extends Symbiote {
    * @param {string} message - Error message to display
    */
   setNodeError(nodeId, message) {
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
 
     // Remove existing error frame if any
@@ -495,17 +498,17 @@ export class NodeCanvas extends Symbiote {
     el.setAttribute('data-error', '');
 
     // Build error frame DOM
-    const frame = document.createElement('div');
+    let frame = document.createElement('div');
     frame.className = 'error-frame';
 
-    const header = document.createElement('div');
+    let header = document.createElement('div');
     header.className = 'error-frame-header';
-    const icon = document.createElement('span');
+    let icon = document.createElement('span');
     icon.className = 'material-symbols-outlined';
     icon.textContent = 'error';
     header.append(icon, ' Error');
 
-    const body = document.createElement('div');
+    let body = document.createElement('div');
     body.className = 'error-frame-body';
     body.textContent = message;
 
@@ -518,10 +521,10 @@ export class NodeCanvas extends Symbiote {
    * @param {string} nodeId
    */
   clearNodeError(nodeId) {
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
     el.removeAttribute('data-error');
-    const frame = el.querySelector('.error-frame');
+    let frame = el.querySelector('.error-frame');
     if (frame) frame.remove();
   }
 
@@ -539,7 +542,7 @@ export class NodeCanvas extends Symbiote {
    */
   autoLayout() {
     if (!this.#editor) return;
-    const positions = computeAutoLayout(this.#editor);
+    let positions = computeAutoLayout(this.#editor);
     for (const [nodeId, pos] of Object.entries(positions)) {
       this.setNodePosition(nodeId, pos.x, pos.y);
     }
@@ -574,7 +577,7 @@ export class NodeCanvas extends Symbiote {
    * @returns {Object<string, { w: number, h: number }>}
    */
   measureNodeSizes() {
-    const sizes = {};
+    let sizes = {};
     for (const [nodeId, el] of this.#nodeViews) {
       if (el && el.offsetWidth > 0) {
         sizes[nodeId] = { w: el.offsetWidth, h: el.offsetHeight };
@@ -590,20 +593,20 @@ export class NodeCanvas extends Symbiote {
    * @param {'image'|'text'} [type='text']
    */
   setPreview(nodeId, content, type = 'text') {
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
-    const preview = el.ref?.previewArea;
+    let preview = el.ref?.previewArea;
     if (!preview) return;
 
     preview.hidden = false;
     preview.replaceChildren();
     if (type === 'image') {
-      const img = document.createElement('img');
+      let img = document.createElement('img');
       img.src = content;
       img.alt = 'Preview';
       preview.appendChild(img);
     } else {
-      const div = document.createElement('div');
+      let div = document.createElement('div');
       div.className = 'sn-preview-text';
       div.textContent = content;
       preview.appendChild(div);
@@ -615,9 +618,9 @@ export class NodeCanvas extends Symbiote {
    * @param {string} nodeId
    */
   clearPreview(nodeId) {
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
-    const preview = el.ref?.previewArea;
+    let preview = el.ref?.previewArea;
     if (!preview) return;
     preview.hidden = true;
     preview.replaceChildren();
@@ -646,7 +649,7 @@ export class NodeCanvas extends Symbiote {
 
     // Inject keyframe animation once
     if (!document.getElementById('sn-fire-keyframes')) {
-      const style = document.createElement('style');
+      let style = document.createElement('style');
       style.id = 'sn-fire-keyframes';
       style.textContent = `
         @keyframes sn-fire-pulse {
@@ -670,7 +673,7 @@ export class NodeCanvas extends Symbiote {
 
     // Set all traced nodes to pending (dimmed)
     for (const step of trace) {
-      const el = this.#nodeViews.get(step.nodeId);
+      let el = this.#nodeViews.get(step.nodeId);
       if (el) {
         el.style.opacity = '0.4';
         el.style.transition = 'opacity 0.15s';
@@ -680,7 +683,7 @@ export class NodeCanvas extends Symbiote {
     // Sequentially activate each node
     trace.forEach((step, i) => {
       setTimeout(() => {
-        const el = this.#nodeViews.get(step.nodeId);
+        let el = this.#nodeViews.get(step.nodeId);
         if (!el) return;
 
         // Active: green pulse
@@ -699,7 +702,7 @@ export class NodeCanvas extends Symbiote {
     });
 
     // Clear all states after animation completes
-    const totalDuration = trace.length * stepDelay + 3500;
+    let totalDuration = trace.length * stepDelay + 3500;
     setTimeout(() => {
       for (const [, el] of this.#nodeViews) {
         el.style.opacity = '';
@@ -725,7 +728,7 @@ export class NodeCanvas extends Symbiote {
    */
   drillDown(nodeId) {
     if (!this.#editor) return;
-    const node = this.#editor.getNode(nodeId);
+    let node = this.#editor.getNode(nodeId);
     if (!node?._isSubgraph) return;
     this.#navigating = true;
     this.#subgraphManager.drillDown(node);
@@ -790,7 +793,7 @@ export class NodeCanvas extends Symbiote {
    * @param {number} y
    */
   setNodePosition(nodeId, x, y) {
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) {
       this.#viewport?.updatePhantomPosition(nodeId, x, y);
       return;
@@ -808,7 +811,7 @@ export class NodeCanvas extends Symbiote {
     }
 
     // Keep toolbar in sync during drag
-    const toolbar = this.ref.quickToolbar;
+    let toolbar = this.ref.quickToolbar;
     if (toolbar && toolbar._nodeId === nodeId) {
       toolbar.updatePosition(el);
     }
@@ -822,32 +825,32 @@ export class NodeCanvas extends Symbiote {
    * @param {number} [duration=200] - Animation duration in ms
    */
   animateNodeToPosition(nodeId, targetX, targetY, duration = 200) {
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return;
 
-    const startX = el._position.x;
-    const startY = el._position.y;
-    const dx = targetX - startX;
-    const dy = targetY - startY;
+    let startX = el._position.x;
+    let startY = el._position.y;
+    let dx = targetX - startX;
+    let dy = targetY - startY;
 
     // Skip animation if position hasn't changed
     if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
 
-    const startTime = performance.now();
+    let startTime = performance.now();
 
-    const animate = (now) => {
-      const t = Math.min((now - startTime) / duration, 1);
+    let animate = (now) => {
+      let t = Math.min((now - startTime) / duration, 1);
       // Ease-out cubic
-      const ease = 1 - (1 - t) ** 3;
-      const x = startX + dx * ease;
-      const y = startY + dy * ease;
+      let ease = 1 - (1 - t) ** 3;
+      let x = startX + dx * ease;
+      let y = startY + dy * ease;
 
       el.style.transform = `translate(${x}px, ${y}px)`;
       el._position = { x, y };
       this.#connRenderer?.updateForNode(nodeId);
       this.#connRenderer?.refreshFreeDots(nodeId);
 
-      const toolbar = this.ref.quickToolbar;
+      let toolbar = this.ref.quickToolbar;
       if (toolbar && toolbar._nodeId === nodeId) {
         toolbar.updatePosition(el);
       }
@@ -924,11 +927,11 @@ export class NodeCanvas extends Symbiote {
   #lastClickNodeId = null;
 
   #handleNodeClick(nodeId, e) {
-    const accumulate = e.ctrlKey || e.metaKey;
+    let accumulate = e.ctrlKey || e.metaKey;
     this.#selector.selectNode(nodeId, accumulate);
 
     // Double-click detection for subgraph drill-down
-    const now = Date.now();
+    let now = Date.now();
     if (this.#lastClickNodeId === nodeId && now - this.#lastClickTime < 400) {
       this.drillDown(nodeId);
       this.#lastClickTime = 0;
@@ -942,7 +945,7 @@ export class NodeCanvas extends Symbiote {
 
 
   #handleConnectionClick(connId, e) {
-    const accumulate = e.ctrlKey || e.metaKey;
+    let accumulate = e.ctrlKey || e.metaKey;
     this.#selector.selectConnection(connId, accumulate);
   }
 
@@ -960,8 +963,8 @@ export class NodeCanvas extends Symbiote {
   // --- Lifecycle ---
 
   renderCallback() {
-    const container = this.ref.canvasContainer;
-    const content = this.ref.content;
+    let container = this.ref.canvasContainer;
+    let content = this.ref.content;
 
     // Canvas pan
     this.#drag = new Drag();
@@ -992,10 +995,10 @@ export class NodeCanvas extends Symbiote {
         onDrop: (e) => {
           // Unselect only on click (minimal movement), not after panning
           if (this._panStart && e) {
-            const dx = Math.abs(e.pageX - this._panStart.x);
-            const dy = Math.abs(e.pageY - this._panStart.y);
-            const t = this._panStart.target;
-            const isNode = t?.closest?.('graph-node, quick-toolbar, context-menu, inspector-panel');
+            let dx = Math.abs(e.pageX - this._panStart.x);
+            let dy = Math.abs(e.pageY - this._panStart.y);
+            let t = this._panStart.target;
+            let isNode = t?.closest?.('graph-node, quick-toolbar, context-menu, inspector-panel');
             if (dx < 5 && dy < 5 && !isNode) {
               this.#selector.unselectAll();
             }
@@ -1010,8 +1013,8 @@ export class NodeCanvas extends Symbiote {
     this.#zoom = new Zoom(0.1);
     let interactingTimer = null;
     this.#zoom.initialize(container, content, (delta, ox, oy) => {
-      const k = this.$.zoom;
-      const newK = k * (1 + delta);
+      let k = this.$.zoom;
+      let newK = k * (1 + delta);
       if (newK < 0.001 || newK > 5) return;
       this.$.zoom = newK;
       this.$.panX += ox;
@@ -1060,14 +1063,14 @@ export class NodeCanvas extends Symbiote {
 
 
     // Minimap — auto-show on viewport change, toggle button
-    const minimap = this.ref.minimap;
-    const minimapToggle = this.ref.minimapToggle;
+    let minimap = this.ref.minimap;
+    let minimapToggle = this.ref.minimapToggle;
     const MINIMAP_KEY = 'sn-minimap-enabled';
     let minimapEnabled = localStorage.getItem(MINIMAP_KEY) === 'true';
     let fadeTimer = null;
     const FADE_DELAY = 2000;
 
-    const showMinimap = () => {
+    let showMinimap = () => {
       if (!minimapEnabled || !minimap) return;
       minimap.hidden = false;
       minimap.removeAttribute('data-fading');
@@ -1085,7 +1088,7 @@ export class NodeCanvas extends Symbiote {
       }, FADE_DELAY);
     };
 
-    const updateToggleState = () => {
+    let updateToggleState = () => {
       if (minimapToggle) {
         minimapToggle.toggleAttribute('data-active', minimapEnabled);
       }
@@ -1112,9 +1115,9 @@ export class NodeCanvas extends Symbiote {
 
     if (minimap) {
       minimap.setStateGetter(() => {
-        const nodes = [];
+        let nodes = [];
         for (const [id, el] of this.#nodeViews) {
-          const pos = el._position || { x: 0, y: 0 };
+          let pos = el._position || { x: 0, y: 0 };
           if (!el._cachedW) {
             el._cachedW = el.offsetWidth || 180;
             el._cachedH = el.offsetHeight || 60;
@@ -1146,11 +1149,11 @@ export class NodeCanvas extends Symbiote {
     }
 
     // Node search
-    const nodeSearch = this.ref.nodeSearch;
+    let nodeSearch = this.ref.nodeSearch;
     if (nodeSearch) {
       nodeSearch.configure({
         getNodes: () => {
-          const result = [];
+          let result = [];
           if (this.#editor) {
             for (const node of this.#editor.getNodes()) {
               result.push({ id: node.id, label: node.label, type: node.type, category: node.category });
@@ -1162,10 +1165,10 @@ export class NodeCanvas extends Symbiote {
           // Select node
           this.#selector.selectNode(nodeId);
           // Center viewport on node
-          const el = this.#nodeViews.get(nodeId);
+          let el = this.#nodeViews.get(nodeId);
           if (el?._position) {
-            const cx = container.clientWidth / 2;
-            const cy = container.clientHeight / 2;
+            let cx = container.clientWidth / 2;
+            let cy = container.clientHeight / 2;
             this.$.panX = -el._position.x * this.$.zoom + cx;
             this.$.panY = -el._position.y * this.$.zoom + cy;
             this.#updateTransform();

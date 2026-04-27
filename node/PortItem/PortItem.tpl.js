@@ -4,7 +4,7 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div ref="socket" class="sn-socket" ${{ '@data-key': 'key' }}></div>
 <span class="port-label">{{label}}</span>
 `;

@@ -58,12 +58,12 @@ function defaultCacheKey(inputs, params) {
  * @returns {Promise<LifecycleResult>}
  */
 export async function runLifecycle(hooks, inputs, params, cacheState) {
-  const { mode = 'auto', store, nodeId } = cacheState;
+  let { mode = 'auto', store, nodeId } = cacheState;
 
   // Step 1: Validate
   if (hooks.validate) {
     try {
-      const valid = hooks.validate(inputs);
+      let valid = hooks.validate(inputs);
       if (valid === false) {
         return { outputs: null, cached: false, error: 'Validation failed', cacheHash: null };
       }
@@ -73,11 +73,11 @@ export async function runLifecycle(hooks, inputs, params, cacheState) {
   }
 
   // Step 2: Compute cache key
-  const cacheKeyFn = hooks.cacheKey || defaultCacheKey;
-  const cacheHash = cacheKeyFn(inputs, params);
+  let cacheKeyFn = hooks.cacheKey || defaultCacheKey;
+  let cacheHash = cacheKeyFn(inputs, params);
 
   // Step 3: Check cache based on mode
-  const cached = store.get(nodeId);
+  let cached = store.get(nodeId);
 
   if (mode === 'freeze' && cached) {
     return { outputs: cached.outputs, cached: true, error: null, cacheHash: cached.key };
@@ -90,7 +90,7 @@ export async function runLifecycle(hooks, inputs, params, cacheState) {
   // mode === 'force' → skip cache check entirely
 
   // Step 4: Execute
-  const executeFn = hooks.execute;
+  let executeFn = hooks.execute;
   if (!executeFn) {
     return { outputs: null, cached: false, error: 'No execute hook defined', cacheHash };
   }

@@ -4,7 +4,7 @@
  */
 import { css } from '@symbiotejs/symbiote';
 
-export const styles = css`
+export let styles = css`
 inspector-panel {
   position: absolute;
   top: 0;

@@ -18,9 +18,9 @@
  */
 function extractPlaceholders(template) {
   if (!template) return [];
-  const matches = new Set();
+  let matches = new Set();
   // Match both {var} and {{var}} — normalize to single-brace names
-  const regex = /\{\{?([^{}]+)\}?\}/g;
+  let regex = /\{\{?([^{}]+)\}?\}/g;
   let m;
   while ((m = regex.exec(template)) !== null) {
     matches.add(m[1].trim());
@@ -92,22 +92,22 @@ export default {
      * @returns {{ text: string, data: Object }}
      */
     execute: async (inputs, params) => {
-      const template = params?.template;
+      let template = params?.template;
       if (!template) {
-        console.warn('[template-builder] Empty template');
+        console.log('🟡 [template-builder] Empty template');
         return { text: '', data: inputs.data ?? {} };
       }
 
-      const data = inputs.data ?? {};
-      const placeholders = extractPlaceholders(template);
+      let data = inputs.data ?? {};
+      let placeholders = extractPlaceholders(template);
 
       // Interpolate — replace both {var} and {{var}} with resolved values
-      const text = template.replace(/\{\{?([^{}]+)\}?\}/g, (match, key) => {
-        const trimmed = key.trim();
-        const value = resolvePath(data, trimmed);
+      let text = template.replace(/\{\{?([^{}]+)\}?\}/g, (match, key) => {
+        let trimmed = key.trim();
+        let value = resolvePath(data, trimmed);
 
         if (value === undefined) {
-          console.warn(`[template-builder] ⚠️ Missing field "${trimmed}" — available: [${Object.keys(data).join(', ')}]`);
+          console.log(`🟡 [template-builder] Missing field "${trimmed}" — available: [${Object.keys(data).join(', ')}]`);
           return match;
         }
         if (typeof value === 'object') return JSON.stringify(value);
@@ -115,13 +115,13 @@ export default {
       });
 
       // Log discovered vs resolved
-      const resolved = placeholders.filter(p => resolvePath(data, p) !== undefined);
-      const missing = placeholders.filter(p => resolvePath(data, p) === undefined);
+      let resolved = placeholders.filter(p => resolvePath(data, p) !== undefined);
+      let missing = placeholders.filter(p => resolvePath(data, p) === undefined);
       if (missing.length) {
-        console.warn(`[template-builder] ${resolved.length}/${placeholders.length} fields resolved, missing: [${missing.join(', ')}]`);
+        console.log(`🟡 [template-builder] ${resolved.length}/${placeholders.length} fields resolved, missing: [${missing.join(', ')}]`);
       }
 
-      const outputField = params?.outputField ?? 'text';
+      let outputField = params?.outputField ?? 'text';
       return {
         text,
         data: { ...(typeof data === 'object' ? data : {}), [outputField]: text },

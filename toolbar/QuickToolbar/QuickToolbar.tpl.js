@@ -4,7 +4,7 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div class="toolbar" ${{ onclick: 'onBtnClick' }}>
   <button class="tb-btn tb-btn--enter" data-action="enter" title="Enter Subgraph" hidden>
     <span class="material-symbols-outlined tb-icon">login</span>

@@ -12,7 +12,7 @@ import { registerPack } from '../index.js';
 /**
  * Video-domain socket types
  */
-const socketTypes = {
+let socketTypes = {
   image: { color: '#C79650', label: 'Image', compatible: ['image'] },
   audio: { color: '#C1990E', label: 'Audio', compatible: ['audio'] },
   timeline: { color: '#5090C7', label: 'Timeline', compatible: ['timeline'] },
@@ -23,7 +23,7 @@ const socketTypes = {
 /**
  * Video node type definitions
  */
-const nodes = [
+let nodes = [
   // ─── Source ─────────────────────────────────────────────────────────
   {
     type: 'source/audio',

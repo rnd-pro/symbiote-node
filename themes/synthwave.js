@@ -8,7 +8,7 @@
  */
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export const SYNTHWAVE = {
+export let SYNTHWAVE = {
   name: 'synthwave',
   tokens: {
     // === Atomic tokens ===
@@ -111,7 +111,7 @@ export const SYNTHWAVE = {
 };
 
 /** @type {import('./Palette.js').PaletteDefinition} */
-export const SYNTHWAVE_PALETTE = {
+export let SYNTHWAVE_PALETTE = {
   name: 'synthwave',
   colors: {
     '--sn-hue-base': '270',

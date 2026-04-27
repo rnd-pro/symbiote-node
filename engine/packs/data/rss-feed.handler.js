@@ -16,7 +16,7 @@
 function simpleHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    const chr = str.charCodeAt(i);
+    let chr = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + chr;
     hash |= 0;
   }
@@ -31,7 +31,7 @@ function simpleHash(str) {
 function extractImageUrl(item) {
   if (item.enclosure?.url) return item.enclosure.url;
   if (item['media:content']?.$.url) return item['media:content'].$.url;
-  const imgMatch = (item.content || item['content:encoded'] || '').match(/<img[^>]+src=["']([^"']+)/);
+  let imgMatch = (item.content || item['content:encoded'] || '').match(/<img[^>]+src=["']([^"']+)/);
   if (imgMatch) return imgMatch[1];
   return null;
 }
@@ -55,7 +55,7 @@ const CATEGORIES = [
  * @returns {{ id: string, name: string }}
  */
 function categorizeTopic(title, content) {
-  const combined = `${title} ${content}`.toLowerCase();
+  let combined = `${title} ${content}`.toLowerCase();
   let bestCategory = { id: 'general', name: 'General' };
   let bestScore = 0;
 
@@ -79,14 +79,14 @@ function categorizeTopic(title, content) {
  * @returns {Array<Object>}
  */
 function parseRssXml(xml) {
-  const items = [];
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+  let items = [];
+  let itemRegex = /<item>([\s\S]*?)<\/item>/gi;
   let match;
 
   while ((match = itemRegex.exec(xml)) !== null) {
-    const content = match[1];
-    const getTag = (tag) => {
-      const m = content.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+    let content = match[1];
+    let getTag = (tag) => {
+      let m = content.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
       return m ? (m[1] || m[2] || '').trim() : '';
     };
 
@@ -130,7 +130,7 @@ export default {
 
   lifecycle: {
     validate: (inputs, params) => {
-      const op = params.operation;
+      let op = params.operation;
       if (op === 'categorize') return Array.isArray(params.items);
       if (op === 'fetch-multi') return Array.isArray(params.urls) && params.urls.length > 0;
       return typeof inputs.url === 'string' && inputs.url.startsWith('http');
@@ -138,27 +138,27 @@ export default {
 
     cacheKey: (inputs, params) => {
       if (params.operation === 'categorize') return null;
-      const url = params.operation === 'fetch-multi'
+      let url = params.operation === 'fetch-multi'
         ? params.urls.join(',')
         : inputs.url;
       return `rss:${params.operation}:${simpleHash(url)}`;
     },
 
     execute: async (inputs, params) => {
-      const { operation, maxItems, timeout } = params;
+      let { operation, maxItems, timeout } = params;
 
       try {
         switch (operation) {
           case 'fetch': {
-            const response = await fetch(inputs.url, {
+            let response = await fetch(inputs.url, {
               signal: AbortSignal.timeout(timeout),
               headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },            });
             if (!response.ok) return { error: `HTTP ${response.status}: ${response.statusText}` };
 
-            const xml = await response.text();
-            const rawItems = parseRssXml(xml);
+            let xml = await response.text();
+            let rawItems = parseRssXml(xml);
 
-            const items = rawItems.slice(0, maxItems).map(item => ({
+            let items = rawItems.slice(0, maxItems).map(item => ({
               id: simpleHash(item.title + item.link),
               title: item.title,
               link: item.link,
@@ -172,12 +172,12 @@ export default {
           }
 
           case 'fetch-multi': {
-            const allItems = [];
-            const errors = [];
+            let allItems = [];
+            let errors = [];
 
             for (const url of params.urls) {
               try {
-                const response = await fetch(url, {
+                let response = await fetch(url, {
                   signal: AbortSignal.timeout(timeout),
                   headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },                });
                 if (!response.ok) {
@@ -185,8 +185,8 @@ export default {
                   continue;
                 }
 
-                const xml = await response.text();
-                const rawItems = parseRssXml(xml);
+                let xml = await response.text();
+                let rawItems = parseRssXml(xml);
 
                 for (const item of rawItems.slice(0, maxItems)) {
                   allItems.push({
@@ -206,8 +206,8 @@ export default {
             }
 
             // Deduplicate by ID
-            const seen = new Set();
-            const unique = allItems.filter(item => {
+            let seen = new Set();
+            let unique = allItems.filter(item => {
               if (seen.has(item.id)) return false;
               seen.add(item.id);
               return true;
@@ -217,15 +217,15 @@ export default {
           }
 
           case 'categorize': {
-            const categorized = params.items.map(item => ({
+            let categorized = params.items.map(item => ({
               ...item,
               category: categorizeTopic(item.title || '', item.content || item.description || ''),
             }));
 
             // Group by category
-            const grouped = {};
+            let grouped = {};
             for (const item of categorized) {
-              const key = item.category.id;
+              let key = item.category.id;
               if (!grouped[key]) grouped[key] = { category: item.category, items: [] };
               grouped[key].items.push(item);
             }

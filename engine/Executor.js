@@ -44,22 +44,22 @@ export class Executor {
    * @returns {Promise<{outputs: object, executionOrder: string[], log: Array, totalTime: number}>}
    */
   async run(graph, options = {}) {
-    const { cache = false, onNodeStart, onNodeComplete, onNodeSkipped, onNodeCached } = options;
-    const nodes = graph.nodes;
+    let { cache = false, onNodeStart, onNodeComplete, onNodeSkipped, onNodeCached } = options;
+    let nodes = graph.nodes;
     // Duck-typing: Editor has connections as Map, Graph has array
-    const connections = graph.connections instanceof Map
+    let connections = graph.connections instanceof Map
       ? [...graph.connections.values()]
       : graph.connections;
 
     // Topological sort
-    const order = this._topologicalSort(nodes, connections);
+    let order = this._topologicalSort(nodes, connections);
 
     // Execute in order
-    const results = new Map();
+    let results = new Map();
     this.executionLog = [];
 
     for (const nodeId of order) {
-      const node = nodes.get(nodeId);
+      let node = nodes.get(nodeId);
 
       // Skip cached clean nodes
       if (cache && !this._dirty.has(nodeId) && this._cache.has(nodeId)) {
@@ -71,22 +71,22 @@ export class Executor {
 
       if (onNodeStart) onNodeStart(nodeId, node);
       this.currentNode = nodeId;
-      const startTime = performance.now();
+      let startTime = performance.now();
 
       // Resolve inputs from upstream connections
-      const inputs = this._resolveInputs(nodeId, connections, results);
+      let inputs = this._resolveInputs(nodeId, connections, results);
 
       // P22: Branch skipping — if node has incoming connections and
       // all connected inputs are null, this node is on an inactive branch
-      const incomingConns = connections.filter(c => c.to === nodeId);
+      let incomingConns = connections.filter(c => c.to === nodeId);
       if (incomingConns.length > 0) {
-        const allNull = incomingConns.every(c => inputs[c.in] === null || inputs[c.in] === undefined);
+        let allNull = incomingConns.every(c => inputs[c.in] === null || inputs[c.in] === undefined);
         // Skip merge nodes — they expect null from one branch
-        const isMergeType = node.type === 'flow/merge' || node.type === 'flow/wait-all';
+        let isMergeType = node.type === 'flow/merge' || node.type === 'flow/wait-all';
         if (allNull && !isMergeType) {
           node._output = null;
           results.set(nodeId, null);
-          const elapsed = performance.now() - startTime;
+          let elapsed = performance.now() - startTime;
           this.executionLog.push({ nodeId, time: elapsed, skipped: true, branchSkipped: true });
           if (onNodeSkipped) onNodeSkipped(nodeId);
           continue;
@@ -96,24 +96,24 @@ export class Executor {
       // Execute node processor
       // Check for lifecycle hooks first, then fall back to process()
       let output;
-      const typeDef = getNodeType(node.type);
-      const lifecycleHooks = typeDef?.lifecycle;
+      let typeDef = getNodeType(node.type);
+      let lifecycleHooks = typeDef?.lifecycle;
 
       if (lifecycleHooks) {
         // Lifecycle path: validate → cache → execute → postProcess
-        const cacheState = {
+        let cacheState = {
           mode: node.cacheMode || 'auto',
           store: this._lifecycleCache,
           nodeId,
         };
 
-        const lifecycleResult = await runLifecycle(lifecycleHooks, inputs, node.params, cacheState);
+        let lifecycleResult = await runLifecycle(lifecycleHooks, inputs, node.params, cacheState);
 
         if (lifecycleResult.error) {
           node._output = { _error: lifecycleResult.error };
           node._cacheHash = lifecycleResult.cacheHash;
           results.set(nodeId, node._output);
-          const elapsed = performance.now() - startTime;
+          let elapsed = performance.now() - startTime;
           this.executionLog.push({ nodeId, time: elapsed, skipped: false, cached: false, error: lifecycleResult.error });
           if (onNodeComplete) onNodeComplete(nodeId, node._output, elapsed);
           continue;
@@ -128,7 +128,7 @@ export class Executor {
       } else {
         // Legacy path: direct process() call
         // Node-level process overrides type-level (for per-instance composition)
-        const processFn = node.process || typeDef?.process;
+        let processFn = node.process || typeDef?.process;
 
         if (typeof processFn === 'function') {
           output = await processFn(inputs, node.params);
@@ -155,7 +155,7 @@ export class Executor {
       this._cache.set(nodeId, output);
       this._dirty.delete(nodeId);
 
-      const elapsed = performance.now() - startTime;
+      let elapsed = performance.now() - startTime;
       this.executionLog.push({ nodeId, time: elapsed, skipped: false });
 
       if (onNodeComplete) onNodeComplete(nodeId, output, elapsed);
@@ -164,8 +164,8 @@ export class Executor {
     this.currentNode = null;
 
     // Collect output nodes (no outgoing connections)
-    const outputNodeIds = this._findOutputNodes(nodes, connections);
-    const outputs = {};
+    let outputNodeIds = this._findOutputNodes(nodes, connections);
+    let outputs = {};
     for (const id of outputNodeIds) {
       outputs[id] = results.get(id);
     }
@@ -211,11 +211,11 @@ export class Executor {
    * @private
    */
   _topologicalSort(nodes, connections) {
-    const inDegree = new Map();
-    const adjacency = new Map();
+    let inDegree = new Map();
+    let adjacency = new Map();
 
     // Only include connected nodes (skip orphans)
-    const connectedIds = new Set();
+    let connectedIds = new Set();
     for (const conn of connections) {
       connectedIds.add(conn.from);
       connectedIds.add(conn.to);
@@ -250,26 +250,26 @@ export class Executor {
     }
 
     // Kahn's algorithm
-    const queue = [];
+    let queue = [];
     for (const [id, degree] of inDegree) {
       if (degree === 0) queue.push(id);
     }
 
-    const result = [];
+    let result = [];
     while (queue.length > 0) {
-      const nodeId = queue.shift();
+      let nodeId = queue.shift();
       result.push(nodeId);
       for (const neighbor of (adjacency.get(nodeId) || [])) {
-        const nd = inDegree.get(neighbor) - 1;
+        let nd = inDegree.get(neighbor) - 1;
         inDegree.set(neighbor, nd);
         if (nd === 0) queue.push(neighbor);
       }
     }
 
     // Cycle detection
-    const connectedCount = inDegree.size;
+    let connectedCount = inDegree.size;
     if (result.length < connectedCount) {
-      const remaining = [...inDegree.keys()].filter(id => !result.includes(id));
+      let remaining = [...inDegree.keys()].filter(id => !result.includes(id));
       throw new Error(`Graph contains cycle(s). Nodes involved: ${remaining.join(', ')}`);
     }
 
@@ -285,10 +285,10 @@ export class Executor {
    * @private
    */
   _resolveInputs(nodeId, connections, results) {
-    const inputs = {};
+    let inputs = {};
     for (const conn of connections) {
       if (conn.to !== nodeId) continue;
-      const upstream = results.get(conn.from);
+      let upstream = results.get(conn.from);
       if (upstream === undefined) continue;
 
       let value;
@@ -316,11 +316,11 @@ export class Executor {
    * @private
    */
   _findOutputNodes(nodes, connections) {
-    const hasOutgoing = new Set();
+    let hasOutgoing = new Set();
     for (const conn of connections) {
       hasOutgoing.add(conn.from);
     }
-    const connected = new Set();
+    let connected = new Set();
     for (const conn of connections) {
       connected.add(conn.from);
       connected.add(conn.to);
@@ -337,25 +337,25 @@ export class Executor {
    * @private
    */
   async _executeSubGraph(subGraphData, parentInputs, parentParams) {
-    const subGraph = new Graph(subGraphData);
+    let subGraph = new Graph(subGraphData);
 
     // Inject parent inputs into sub-graph input nodes
     for (const node of subGraph.nodes.values()) {
       if (node.type === 'compound/input') {
-        const injectedOutput = { ...parentInputs, ...parentParams };
+        let injectedOutput = { ...parentInputs, ...parentParams };
         node._output = injectedOutput;
         node.process = () => injectedOutput;
       }
     }
 
     // Execute sub-graph with a fresh executor
-    const subExecutor = new Executor();
-    const result = await subExecutor.run(subGraph);
+    let subExecutor = new Executor();
+    let result = await subExecutor.run(subGraph);
 
     // Merge all output node results
-    const merged = {};
+    let merged = {};
     for (const [id, output] of Object.entries(result.outputs)) {
-      const node = subGraph.getNode(id);
+      let node = subGraph.getNode(id);
       if (node.type === 'compound/output' && output) {
         Object.assign(merged, output);
       }

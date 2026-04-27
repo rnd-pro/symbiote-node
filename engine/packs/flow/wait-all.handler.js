@@ -27,7 +27,7 @@ export default {
 
   lifecycle: {
     execute: (inputs) => {
-      const output = {};
+      let output = {};
       for (const [key, val] of Object.entries(inputs)) {
         if (val != null) {
           output[key] = val;

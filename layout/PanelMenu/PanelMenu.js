@@ -16,7 +16,7 @@ export class PanelMenu extends Symbiote {
     currentType: '',
 
     onItemClick: (e) => {
-      const type = e.target.closest('[data-type]')?.dataset.type;
+      let type = e.target.closest('[data-type]')?.dataset.type;
       if (type) {
         this.dispatchEvent(new CustomEvent('panel-type-select', {
           bubbles: true,

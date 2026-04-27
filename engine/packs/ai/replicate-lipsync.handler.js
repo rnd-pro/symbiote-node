@@ -66,20 +66,20 @@ export default {
 
     execute: async (inputs, params) => {
       try {
-        const op = params.operation;
+        let op = params.operation;
 
         if (op === 'validate-tunnel') {
-          const valid = await validateTunnel(params.publicBaseUrl);
+          let valid = await validateTunnel(params.publicBaseUrl);
           return { result: { valid }, error: null };
         }
 
         if (op === 'process') {
-          const result = await processSegment(inputs, params);
+          let result = await processSegment(inputs, params);
           return { result, error: null };
         }
 
         if (op === 'batch') {
-          const results = await processBatch(inputs, params);
+          let results = await processBatch(inputs, params);
           return { result: { processed: results.size, results: Object.fromEntries(results) }, error: null };
         }
 
@@ -101,7 +101,7 @@ export default {
  * @returns {Promise<Object>}
  */
 async function createPrediction(videoUrl, audioUrl, token) {
-  const response = await fetch('https://api.replicate.com/v1/predictions', {
+  let response = await fetch('https://api.replicate.com/v1/predictions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -118,7 +118,7 @@ async function createPrediction(videoUrl, audioUrl, token) {
   });
 
   if (!response.ok) {
-    const error = await response.text();
+    let error = await response.text();
     throw new Error(`Replicate API error ${response.status}: ${error}`);
   }
 
@@ -133,11 +133,11 @@ async function createPrediction(videoUrl, audioUrl, token) {
  * @returns {Promise<Object>}
  */
 async function pollPrediction(predictionId, token, maxWaitMs = 300000) {
-  const startTime = Date.now();
-  const pollInterval = 5000;
+  let startTime = Date.now();
+  let pollInterval = 5000;
 
   while (Date.now() - startTime < maxWaitMs) {
-    const response = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
+    let response = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
 
@@ -145,7 +145,7 @@ async function pollPrediction(predictionId, token, maxWaitMs = 300000) {
       throw new Error(`Replicate poll error: ${response.status}`);
     }
 
-    const prediction = await response.json();
+    let prediction = await response.json();
 
     if (prediction.status === 'succeeded') {
       return prediction;
@@ -167,12 +167,12 @@ async function pollPrediction(predictionId, token, maxWaitMs = 300000) {
  * @returns {Promise<string>}
  */
 async function downloadResult(videoUrl, outputPath) {
-  const response = await fetch(videoUrl);
+  let response = await fetch(videoUrl);
   if (!response.ok) {
     throw new Error(`Failed to download: ${response.status}`);
   }
 
-  const buffer = await response.arrayBuffer();
+  let buffer = await response.arrayBuffer();
   await writeFile(outputPath, Buffer.from(buffer));
   return outputPath;
 }
@@ -185,15 +185,15 @@ async function downloadResult(videoUrl, outputPath) {
  * @returns {Promise<string>}
  */
 async function fileToDataUri(filePath) {
-  const buffer = await readFile(path.resolve(filePath));
-  const ext = path.extname(filePath).toLowerCase();
-  const mimeTypes = {
+  let buffer = await readFile(path.resolve(filePath));
+  let ext = path.extname(filePath).toLowerCase();
+  let mimeTypes = {
     '.mp3': 'audio/mpeg',
     '.wav': 'audio/wav',
     '.mp4': 'video/mp4',
     '.webm': 'video/webm',
   };
-  const mime = mimeTypes[ext] || 'application/octet-stream';
+  let mime = mimeTypes[ext] || 'application/octet-stream';
   return `data:${mime};base64,${buffer.toString('base64')}`;
 }
 
@@ -208,8 +208,8 @@ async function fileToDataUri(filePath) {
 function extractAudioClip(audioPath, startTime, endTime, outputPath) {
   if (existsSync(outputPath)) return outputPath;
 
-  const duration = endTime - startTime;
-  const cmd = `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
+  let duration = endTime - startTime;
+  let cmd = `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
     `-c:a libmp3lame -q:a 2 "${outputPath}" 2>/dev/null`;
 
   execSync(cmd, { stdio: 'pipe' });
@@ -223,7 +223,7 @@ function extractAudioClip(audioPath, startTime, endTime, outputPath) {
  * @returns {string}
  */
 function getPublicUrl(filePath, publicBaseUrl) {
-  const absPath = path.resolve(filePath);
+  let absPath = path.resolve(filePath);
   return `${publicBaseUrl}/${encodeURIComponent(absPath)}`;
 }
 
@@ -234,9 +234,9 @@ function getPublicUrl(filePath, publicBaseUrl) {
  */
 async function validateTunnel(publicBaseUrl) {
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    const response = await fetch(publicBaseUrl, { signal: controller.signal });
+    let controller = new AbortController();
+    let timeout = setTimeout(() => controller.abort(), 10000);
+    let response = await fetch(publicBaseUrl, { signal: controller.signal });
     clearTimeout(timeout);
     return response.status < 500;
   } catch {
@@ -253,20 +253,20 @@ async function validateTunnel(publicBaseUrl) {
  * @returns {Promise<Object>}
  */
 async function processSegment(inputs, params) {
-  const { segmentId, startTime, endTime, outputDir, replicateToken, publicBaseUrl } = params;
+  let { segmentId, startTime, endTime, outputDir, replicateToken, publicBaseUrl } = params;
 
-  const lipsyncDir = path.join(outputDir, 'lipsync-videos');
-  const clipsDir = path.join(outputDir, 'audio-clips');
+  let lipsyncDir = path.join(outputDir, 'lipsync-videos');
+  let clipsDir = path.join(outputDir, 'audio-clips');
   await mkdir(lipsyncDir, { recursive: true });
   await mkdir(clipsDir, { recursive: true });
 
-  const outputPath = path.join(lipsyncDir, `${segmentId}.mp4`);
+  let outputPath = path.join(lipsyncDir, `${segmentId}.mp4`);
   if (existsSync(outputPath)) {
     return { videoPath: outputPath, cached: true };
   }
 
   // Extract audio clip
-  const clipPath = path.join(clipsDir, `${segmentId}.mp3`);
+  let clipPath = path.join(clipsDir, `${segmentId}.mp3`);
   extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
 
   // Get audio data URI or public URL
@@ -278,7 +278,7 @@ async function processSegment(inputs, params) {
   }
 
   // Create prediction
-  const prediction = await createPrediction(inputs.videoUrl, audioUrl, replicateToken);
+  let prediction = await createPrediction(inputs.videoUrl, audioUrl, replicateToken);
 
   // Poll if not already complete
   let result = prediction;
@@ -287,7 +287,7 @@ async function processSegment(inputs, params) {
   }
 
   // Download result
-  const resultUrl = result.output;
+  let resultUrl = result.output;
   if (!resultUrl) {
     throw new Error('No output URL in prediction result');
   }
@@ -303,35 +303,35 @@ async function processSegment(inputs, params) {
  * @returns {Promise<Map>}
  */
 async function processBatch(inputs, params) {
-  const segments = params.segments;
-  const videoMap = params.videoMap || {};
-  const concurrency = params.concurrency;
-  const results = new Map();
-  const queue = [...segments];
+  let segments = params.segments;
+  let videoMap = params.videoMap || {};
+  let concurrency = params.concurrency;
+  let results = new Map();
+  let queue = [...segments];
 
-  const workers = Array(Math.min(concurrency, queue.length)).fill(null).map(async () => {
+  let workers = Array(Math.min(concurrency, queue.length)).fill(null).map(async () => {
     while (queue.length > 0) {
-      const segment = queue.shift();
+      let segment = queue.shift();
       if (!segment) break;
 
-      const videoUrl = videoMap[segment.promptId];
+      let videoUrl = videoMap[segment.promptId];
       if (!videoUrl) continue;
 
       try {
-        const segParams = {
+        let segParams = {
           ...params,
           segmentId: segment.promptId,
           startTime: segment.start,
           endTime: segment.end,
         };
 
-        const result = await processSegment(
+        let result = await processSegment(
           { videoUrl, audioPath: inputs.audioPath },
           segParams,
         );
         results.set(segment.promptId, result.videoPath);
       } catch (error) {
-        console.error(`[Replicate] Failed: ${segment.promptId} - ${error.message}`);
+        console.error(`🔴 [Replicate] Failed: ${segment.promptId} - ${error.message}`);
       }
     }
   });

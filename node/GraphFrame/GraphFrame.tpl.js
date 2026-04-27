@@ -4,7 +4,7 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div class="sn-frame-header">
   <span class="material-symbols-outlined sn-frame-icon">dashboard</span>
   <span class="sn-frame-label">{{label}}</span>

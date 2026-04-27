@@ -47,13 +47,13 @@ export class LayoutSidebar extends Symbiote {
 
     // Restore collapsed state (default: collapsed)
     if (typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem(STORAGE_KEY_COLLAPSED);
+      let stored = localStorage.getItem(STORAGE_KEY_COLLAPSED);
       if (stored === null || stored === 'true') {
         this.$.collapsed = true;
       }
 
       // Restore saved width
-      const savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
+      let savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
       if (savedWidth) this.style.width = savedWidth + 'px';
     }
 
@@ -67,7 +67,7 @@ export class LayoutSidebar extends Symbiote {
           this.style.minWidth = '';
         } else {
           // Restore saved width when expanding
-          const w = localStorage.getItem(STORAGE_KEY_WIDTH);
+          let w = localStorage.getItem(STORAGE_KEY_WIDTH);
           if (w) {
             this.style.width = w + 'px';
             this.style.minWidth = w + 'px';
@@ -77,22 +77,22 @@ export class LayoutSidebar extends Symbiote {
     });
 
     // Resize drag handle
-    const handle = this.querySelector('.sb-resize-handle');
+    let handle = this.querySelector('.sb-resize-handle');
     if (handle) {
       let startX = 0;
       let startW = 0;
 
-      const onMove = (e) => {
-        const newWidth = Math.max(120, Math.min(600, startW + (e.clientX - startX)));
+      let onMove = (e) => {
+        let newWidth = Math.max(120, Math.min(600, startW + (e.clientX - startX)));
         this.style.width = newWidth + 'px';
         this.style.minWidth = newWidth + 'px';
         this.style.transition = 'none';
       };
 
-      const onUp = () => {
+      let onUp = () => {
         handle.classList.remove('dragging');
         this.style.transition = '';
-        const w = this.offsetWidth;
+        let w = this.offsetWidth;
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem(STORAGE_KEY_WIDTH, w);
         }
@@ -124,15 +124,15 @@ export class LayoutSidebar extends Symbiote {
     this.#allSections = items;
 
     // Load saved config (order + visibility)
-    const savedConfig = this.#loadConfig();
+    let savedConfig = this.#loadConfig();
     let ordered = items;
 
     if (savedConfig) {
       // Reorder based on saved order
-      const orderMap = new Map(savedConfig.map((c, i) => [c.id, i]));
+      let orderMap = new Map(savedConfig.map((c, i) => [c.id, i]));
       ordered = [...items].sort((a, b) => {
-        const ai = orderMap.get(a.id) ?? 999;
-        const bi = orderMap.get(b.id) ?? 999;
+        let ai = orderMap.get(a.id) ?? 999;
+        let bi = orderMap.get(b.id) ?? 999;
         return ai - bi;
       });
     }
@@ -154,7 +154,7 @@ export class LayoutSidebar extends Symbiote {
    * @param {Array<{id: string, visible: boolean}>|null} config
    */
   #buildSections(items, config) {
-    const visibilityMap = config
+    let visibilityMap = config
       ? new Map(config.map((c) => [c.id, c.visible]))
       : null;
 
@@ -187,8 +187,8 @@ export class LayoutSidebar extends Symbiote {
    * @param {number} toIndex
    */
   moveSection(fromIndex, toIndex) {
-    const arr = [...this.$.sections];
-    const [moved] = arr.splice(fromIndex, 1);
+    let arr = [...this.$.sections];
+    let [moved] = arr.splice(fromIndex, 1);
     arr.splice(toIndex, 0, moved);
     this.$.sections = arr;
     this.#saveConfig();
@@ -208,7 +208,7 @@ export class LayoutSidebar extends Symbiote {
    * Save current section order and visibility
    */
   #saveConfig() {
-    const config = this.$.sections.map((s) => ({
+    let config = this.$.sections.map((s) => ({
       id: s.sectionId,
       visible: s.isVisible,
     }));
@@ -224,7 +224,7 @@ export class LayoutSidebar extends Symbiote {
   #loadConfig() {
     try {
       if (typeof localStorage !== 'undefined') {
-        const raw = localStorage.getItem(STORAGE_KEY_CONFIG);
+        let raw = localStorage.getItem(STORAGE_KEY_CONFIG);
         return raw ? JSON.parse(raw) : null;
       }
     } catch {
@@ -250,7 +250,7 @@ export class LayoutSidebar extends Symbiote {
    * @param {string[]} disabledIds - Section IDs to disable
    */
   setDisabledSections(disabledIds) {
-    const disabledSet = new Set(disabledIds);
+    let disabledSet = new Set(disabledIds);
     this.$.sections = this.$.sections.map((s) => ({
       ...s,
       isDisabled: disabledSet.has(s.sectionId),

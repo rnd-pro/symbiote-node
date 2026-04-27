@@ -13,8 +13,8 @@ export class DiamondShape extends NodeShape {
   name = 'diamond';
 
   getSocketPosition(side, index, total, { width, height }) {
-    const cx = width / 2;
-    const cy = height / 2;
+    let cx = width / 2;
+    let cy = height / 2;
 
     if (side === 'input') {
       // Inputs distributed along top edges
@@ -22,7 +22,7 @@ export class DiamondShape extends NodeShape {
         return { x: cx, y: 0, angle: 270 };
       }
       // Multiple inputs: spread along top-left and top-right edges
-      const t = (index + 1) / (total + 1);
+      let t = (index + 1) / (total + 1);
       return {
         x: cx * (1 - t),
         y: cy * t,
@@ -41,7 +41,7 @@ export class DiamondShape extends NodeShape {
         : { x: width - cx * 0.35, y: cy + cy * 0.65, angle: 315 };
     }
     // 3+ outputs: spread along bottom edges
-    const t = (index + 1) / (total + 1);
+    let t = (index + 1) / (total + 1);
     return {
       x: t < 0.5 ? cx * (1 - 2 * t) : cx + cx * (2 * t - 1),
       y: t < 0.5 ? cy + cy * 2 * t : cy + cy * (2 - 2 * t),
@@ -59,31 +59,31 @@ export class DiamondShape extends NodeShape {
    * @returns {{ x: number, y: number, angle: number }}
    */
   getSidePosition(side, t, size) {
-    const cx = size.width / 2;
-    const cy = size.height / 2;
+    let cx = size.width / 2;
+    let cy = size.height / 2;
     const NORMALS = { top: -90, right: 0, bottom: 90, left: 180 };
     const MARGIN = 0.2;
-    const effectiveT = MARGIN + t * (1 - 2 * MARGIN);
+    let effectiveT = MARGIN + t * (1 - 2 * MARGIN);
 
     // Diamond vertices: top(cx,0), right(w,cy), bottom(cx,h), left(0,cy)
     // Each "side" spans two edges meeting at the cardinal vertex
-    const vertices = {
+    let vertices = {
       top:    [{ x: 0, y: cy }, { x: cx, y: 0 }, { x: size.width, y: cy }],
       right:  [{ x: cx, y: 0 }, { x: size.width, y: cy }, { x: cx, y: size.height }],
       bottom: [{ x: 0, y: cy }, { x: cx, y: size.height }, { x: size.width, y: cy }],
       left:   [{ x: cx, y: 0 }, { x: 0, y: cy }, { x: cx, y: size.height }],
     };
 
-    const [p0, p1, p2] = vertices[side];
+    let [p0, p1, p2] = vertices[side];
 
     // effectiveT spans from p0 → p1 → p2 (two edges)
     let x, y;
     if (effectiveT <= 0.5) {
-      const segT = effectiveT * 2;
+      let segT = effectiveT * 2;
       x = p0.x + (p1.x - p0.x) * segT;
       y = p0.y + (p1.y - p0.y) * segT;
     } else {
-      const segT = (effectiveT - 0.5) * 2;
+      let segT = (effectiveT - 0.5) * 2;
       x = p1.x + (p2.x - p1.x) * segT;
       y = p1.y + (p2.y - p1.y) * segT;
     }
@@ -96,8 +96,8 @@ export class DiamondShape extends NodeShape {
   }
 
   getClipPath({ width, height }) {
-    const cx = width / 2;
-    const cy = height / 2;
+    let cx = width / 2;
+    let cy = height / 2;
     return `polygon(${cx}px 0, ${width}px ${cy}px, ${cx}px ${height}px, 0 ${cy}px)`;
   }
 

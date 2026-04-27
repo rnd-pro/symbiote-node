@@ -9,7 +9,7 @@
  */
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export const EBOOK = {
+export let EBOOK = {
   name: 'ebook',
   tokens: {
     // === Atomic tokens ===
@@ -112,7 +112,7 @@ export const EBOOK = {
 };
 
 /** @type {import('./Palette.js').PaletteDefinition} */
-export const EBOOK_PALETTE = {
+export let EBOOK_PALETTE = {
   name: 'ebook',
   colors: {
     '--sn-hue-base': '35',

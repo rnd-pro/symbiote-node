@@ -18,13 +18,13 @@ import { Graph } from './Graph.js';
  * @returns {string} JSON string
  */
 export function serialize(graph, options = {}) {
-  const { pretty = true, includeOutput = false } = options;
-  const data = graph.toJSON();
+  let { pretty = true, includeOutput = false } = options;
+  let data = graph.toJSON();
 
   // Strip _output unless explicitly requested
   if (!includeOutput) {
     data.nodes = data.nodes.map(n => {
-      const { _output, ...rest } = n;
+      let { _output, ...rest } = n;
       return rest;
     });
   }
@@ -38,7 +38,7 @@ export function serialize(graph, options = {}) {
  * @returns {Graph}
  */
 export function deserialize(json) {
-  const data = JSON.parse(json);
+  let data = JSON.parse(json);
   return new Graph(data);
 }
 
@@ -50,8 +50,8 @@ export function deserialize(json) {
  * @returns {Promise<void>}
  */
 export async function saveToFile(graph, filePath, options) {
-  const json = serialize(graph, options);
-  const { writeFile } = await import('node:fs/promises');
+  let json = serialize(graph, options);
+  let { writeFile } = await import('node:fs/promises');
   await writeFile(filePath, json, 'utf-8');
 }
 
@@ -61,8 +61,8 @@ export async function saveToFile(graph, filePath, options) {
  * @returns {Promise<Graph>}
  */
 export async function loadFromFile(filePath) {
-  const { readFile } = await import('node:fs/promises');
-  const json = await readFile(filePath, 'utf-8');
+  let { readFile } = await import('node:fs/promises');
+  let json = await readFile(filePath, 'utf-8');
   return deserialize(json);
 }
 
@@ -73,10 +73,10 @@ export async function loadFromFile(filePath) {
  * @param {object} [options]
  */
 export function downloadGraph(graph, filename = 'graph.workflow.json', options) {
-  const json = serialize(graph, options);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  let json = serialize(graph, options);
+  let blob = new Blob([json], { type: 'application/json' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
   a.href = url;
   a.download = filename;
   a.click();

@@ -43,7 +43,7 @@ export class Breadcrumb extends Symbiote {
     crumbs: [],
     isVisible: false,
     onCrumbClick: (e) => {
-      const item = e.target.closest('breadcrumb-item');
+      let item = e.target.closest('breadcrumb-item');
       if (!item || item.$.isActive) return;
       if (this.#onNavigate) this.#onNavigate(item.$.level);
     },

@@ -4,7 +4,7 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
   <div ${{ itemize: 'tabItems', 'item-tag': 'tab-item', onclick: 'onTabClick' }}></div>
   <div class="tab-add" title="New tab" ${{ onclick: 'onAddTab' }}>
     <span class="material-symbols-outlined">add</span>

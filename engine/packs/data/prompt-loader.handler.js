@@ -24,12 +24,12 @@ async function processTemplate(template, context, baseDir) {
   let result = template;
 
   // Process file includes: {{file.md}} or {{path/to/file.md}}
-  const fileIncludeRegex = /\{\{([a-zA-Z0-9_\-\/\.]+\.md)\}\}/g;
+  let fileIncludeRegex = /\{\{([a-zA-Z0-9_\-\/\.]+\.md)\}\}/g;
   let match;
 
   while ((match = fileIncludeRegex.exec(result)) !== null) {
-    const filePath = match[1];
-    const fullMatch = match[0];
+    let filePath = match[1];
+    let fullMatch = match[0];
 
     try {
       let includeContent = await readFile(path.join(baseDir, filePath), 'utf-8');
@@ -42,11 +42,11 @@ async function processTemplate(template, context, baseDir) {
   }
 
   // Process variables: {{VARIABLE_NAME}}
-  const variableRegex = /\{\{([A-Z_][A-Z0-9_]*)\}\}/g;
+  let variableRegex = /\{\{([A-Z_][A-Z0-9_]*)\}\}/g;
 
   result = result.replace(variableRegex, (fullMatch, varName) => {
     if (Object.hasOwn(context, varName)) {
-      const value = context[varName];
+      let value = context[varName];
       if (typeof value === 'string') return value;
       if (typeof value === 'number' || typeof value === 'boolean') return String(value);
       if (Array.isArray(value)) return value.join('\n');
@@ -66,11 +66,11 @@ async function processTemplate(template, context, baseDir) {
  * @returns {Array<string>}
  */
 function validatePromptTemplate(template, context) {
-  const variableRegex = /\{\{([A-Z_][A-Z0-9_]*)\}\}/g;
-  const missing = [];
+  let variableRegex = /\{\{([A-Z_][A-Z0-9_]*)\}\}/g;
+  let missing = [];
   let match;
   while ((match = variableRegex.exec(template)) !== null) {
-    const varName = match[1];
+    let varName = match[1];
     if (!Object.hasOwn(context, varName)) missing.push(varName);
   }
   return [...new Set(missing)];
@@ -83,7 +83,7 @@ function validatePromptTemplate(template, context) {
  */
 async function listPromptTemplates(dir) {
   try {
-    const entries = await readdir(dir, { recursive: true });
+    let entries = await readdir(dir, { recursive: true });
     return entries.filter(e => e.endsWith('.md'));
   } catch {
     return [];
@@ -119,7 +119,7 @@ export default {
 
   lifecycle: {
     validate: (inputs, params) => {
-      const op = params.operation;
+      let op = params.operation;
       if (op === 'list') return typeof params.baseDir === 'string';
       if (op === 'load-multi') return typeof params.templates === 'object' && params.templates !== null;
       if (op === 'validate') return typeof inputs.template === 'string';
@@ -133,7 +133,7 @@ export default {
     },
 
     execute: async (inputs, params) => {
-      const { operation, context, baseDir } = params;
+      let { operation, context, baseDir } = params;
 
       try {
         switch (operation) {
@@ -142,32 +142,32 @@ export default {
             let resolvedBase = baseDir;
 
             if (!template && params.filePath) {
-              const fullPath = path.isAbsolute(params.filePath)
+              let fullPath = path.isAbsolute(params.filePath)
                 ? params.filePath
                 : path.join(baseDir, params.filePath);
               template = await readFile(fullPath, 'utf-8');
               resolvedBase = path.dirname(fullPath);
             }
 
-            const processed = await processTemplate(template, context, resolvedBase);
+            let processed = await processTemplate(template, context, resolvedBase);
             return { result: { content: processed, variablesUsed: Object.keys(context) } };
           }
 
           case 'load-multi': {
-            const entries = Object.entries(params.templates);
-            const results = {};
+            let entries = Object.entries(params.templates);
+            let results = {};
             for (const [name, templatePath] of entries) {
-              const fullPath = path.isAbsolute(templatePath)
+              let fullPath = path.isAbsolute(templatePath)
                 ? templatePath
                 : path.join(baseDir, templatePath);
-              const raw = await readFile(fullPath, 'utf-8');
+              let raw = await readFile(fullPath, 'utf-8');
               results[name] = await processTemplate(raw, context, path.dirname(fullPath));
             }
             return { result: { templates: results, count: entries.length } };
           }
 
           case 'validate': {
-            const missing = validatePromptTemplate(inputs.template, context);
+            let missing = validatePromptTemplate(inputs.template, context);
             return {
               result: {
                 valid: missing.length === 0,
@@ -178,7 +178,7 @@ export default {
           }
 
           case 'list': {
-            const templates = await listPromptTemplates(baseDir);
+            let templates = await listPromptTemplates(baseDir);
             return { result: { templates, count: templates.length, baseDir } };
           }
 

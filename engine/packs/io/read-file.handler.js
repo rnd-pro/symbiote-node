@@ -39,7 +39,7 @@ export default {
 
     execute: async (inputs, params) => {
       try {
-        const content = await fs.readFile(inputs.path, params.encoding || 'utf8');
+        let content = await fs.readFile(inputs.path, params.encoding || 'utf8');
 
         let parsed = null;
         if (inputs.path.endsWith('.json')) {

@@ -52,8 +52,8 @@ export default {
       `opencode:${params.model}:${inputs.prompt}:${JSON.stringify(inputs.context)}`,
 
     execute: async (inputs, params) => {
-      const { prompt, context } = inputs;
-      const {
+      let { prompt, context } = inputs;
+      let {
         model,
         provider,
         opencodeUrl,
@@ -61,19 +61,19 @@ export default {
         outputDir,
       } = params;
 
-      const baseUrl = opencodeUrl || process.env.OPENCODE_URL || 'http://127.0.0.1:4096';
-      const modelConfig = {
+      let baseUrl = opencodeUrl || process.env.OPENCODE_URL || 'http://127.0.0.1:4096';
+      let modelConfig = {
         providerID: provider || process.env.OPENCODE_PROVIDER || 'openrouter',
         modelID: model || process.env.OPENCODE_MODEL || 'deepseek/deepseek-v3.2',
       };
 
       // Workspace for file-based communication
-      const workspace = outputDir || process.env.OPENCODE_WORKSPACE ||
+      let workspace = outputDir || process.env.OPENCODE_WORKSPACE ||
         path.join(os.tmpdir(), 'agi-graph-opencode');
       await fs.mkdir(workspace, { recursive: true });
 
-      const taskPath = path.join(workspace, 'task.json');
-      const outputPath = path.join(workspace, 'output.json');
+      let taskPath = path.join(workspace, 'task.json');
+      let outputPath = path.join(workspace, 'output.json');
 
       // Write task file with context
       await fs.writeFile(taskPath, JSON.stringify({
@@ -88,7 +88,7 @@ export default {
 
       try {
         // 1. Create session
-        const sessionRes = await fetch(`${baseUrl}/session`, {
+        let sessionRes = await fetch(`${baseUrl}/session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: `agi-graph ${Date.now()}` }),
@@ -98,14 +98,14 @@ export default {
           return { result: null, error: `Session creation failed: ${sessionRes.status}` };
         }
 
-        const session = await sessionRes.json();
+        let session = await sessionRes.json();
 
         // 2. Build full prompt with workspace instructions
-        const contextBlock = context
+        let contextBlock = context
           ? `\n\n## Context\n\`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\``
           : '';
 
-        const fullPrompt = `${prompt}${contextBlock}
+        let fullPrompt = `${prompt}${contextBlock}
 
 ## Workspace: ${workspace}
 
@@ -117,7 +117,7 @@ export default {
 Output format: { "result": <your_result> }`;
 
         // 3. Send message (fire & forget)
-        const msgRes = await fetch(`${baseUrl}/session/${session.id}/message`, {
+        let msgRes = await fetch(`${baseUrl}/session/${session.id}/message`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -132,13 +132,13 @@ Output format: { "result": <your_result> }`;
         }
 
         // 4. Poll for output file
-        const startTime = Date.now();
-        const pollInterval = 3000;
+        let startTime = Date.now();
+        let pollInterval = 3000;
 
         while (Date.now() - startTime < timeout) {
           try {
-            const content = await fs.readFile(outputPath, 'utf8');
-            const parsed = JSON.parse(content);
+            let content = await fs.readFile(outputPath, 'utf8');
+            let parsed = JSON.parse(content);
 
             if (parsed.result !== undefined) {
               return { result: parsed.result, error: null };

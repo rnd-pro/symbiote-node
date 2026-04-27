@@ -41,11 +41,11 @@ export default {
       `http:${params.method}:${inputs.url}:${JSON.stringify(inputs.body)}`,
 
     execute: async (inputs, params) => {
-      const { url, body } = inputs;
-      const { method, headers, timeout, responseType } = params;
+      let { url, body } = inputs;
+      let { method, headers, timeout, responseType } = params;
 
       try {
-        const fetchOptions = {
+        let fetchOptions = {
           method: method || 'GET',
           headers: { ...headers },
           signal: AbortSignal.timeout(timeout),
@@ -61,10 +61,10 @@ export default {
           }
         }
 
-        const res = await fetch(url, fetchOptions);
+        let res = await fetch(url, fetchOptions);
 
         let response;
-        const contentType = res.headers.get('content-type') || '';
+        let contentType = res.headers.get('content-type') || '';
 
         if (responseType === 'json' || (responseType === 'auto' && contentType.includes('json'))) {
           response = await res.json();

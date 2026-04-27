@@ -4,10 +4,10 @@
 const SERVER_URL = 'http://localhost:3333'
 
 // Track pending downloads
-const pendingDownloads = new Map()
+let pendingDownloads = new Map()
 
 // Captured API requests (for analysis)
-const capturedRequests = []
+let capturedRequests = []
 
 // Open sidepanel on action click
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
@@ -21,7 +21,7 @@ chrome.webRequest.onBeforeRequest.addListener(
     // Only capture POST/PUT requests to grok.com API
     if (!details.url.includes('/api/') && !details.url.includes('imagine')) return
 
-    const requestData = {
+    let requestData = {
       timestamp: Date.now(),
       method: details.method,
       url: details.url,
@@ -33,8 +33,8 @@ chrome.webRequest.onBeforeRequest.addListener(
     if (details.requestBody) {
       if (details.requestBody.raw) {
         // Binary data - decode to string
-        const decoder = new TextDecoder()
-        const body = details.requestBody.raw.map(part => {
+        let decoder = new TextDecoder()
+        let body = details.requestBody.raw.map(part => {
           if (part.bytes) return decoder.decode(part.bytes)
           return ''
         }).join('')
@@ -66,7 +66,7 @@ chrome.webRequest.onHeadersReceived.addListener(
   (details) => {
     if (!details.url.includes('/api/') && !details.url.includes('imagine')) return
 
-    const responseData = {
+    let responseData = {
       timestamp: Date.now(),
       url: details.url,
       statusCode: details.statusCode,
@@ -75,7 +75,7 @@ chrome.webRequest.onHeadersReceived.addListener(
 
     // Extract relevant headers
     for (const header of details.responseHeaders || []) {
-      const name = header.name.toLowerCase()
+      let name = header.name.toLowerCase()
       if (['content-type', 'content-length', 'x-request-id', 'cf-ray'].includes(name)) {
         responseData.headers[name] = header.value
       }
@@ -100,7 +100,7 @@ chrome.downloads.onChanged.addListener((delta) => {
     // Get download info
     chrome.downloads.search({ id: delta.id }, (results) => {
       if (results && results.length > 0) {
-        const download = results[0]
+        let download = results[0]
         console.log('[GrokBridge] Download complete:', download.filename)
 
         // Notify server about completed download
@@ -154,15 +154,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // Get cookies from the actual URL to capture all including cf_clearance
     chrome.cookies.getAll({ url: 'https://grok.com' }, async (urlCookies) => {
       // Also try domain variations
-      const domainCookies = await chrome.cookies.getAll({ domain: 'grok.com' })
-      const dotCookies = await chrome.cookies.getAll({ domain: '.grok.com' })
+      let domainCookies = await chrome.cookies.getAll({ domain: 'grok.com' })
+      let dotCookies = await chrome.cookies.getAll({ domain: '.grok.com' })
 
-      const allCookies = [...urlCookies, ...domainCookies, ...dotCookies]
+      let allCookies = [...urlCookies, ...domainCookies, ...dotCookies]
 
       // Remove duplicates
-      const seen = new Set()
-      const unique = allCookies.filter(c => {
-        const key = `${c.name}:${c.domain}`
+      let seen = new Set()
+      let unique = allCookies.filter(c => {
+        let key = `${c.name}:${c.domain}`
         if (seen.has(key)) return false
         seen.add(key)
         return true

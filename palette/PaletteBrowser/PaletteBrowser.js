@@ -86,18 +86,18 @@ export class PaletteBrowser extends Symbiote {
   }
 
   #syncList(filter = '') {
-    const lowerFilter = filter.toLowerCase();
+    let lowerFilter = filter.toLowerCase();
     this.#factoryMap.clear();
 
     this.$.categories = this.#rawCategories
       .map(cat => {
-        const filtered = lowerFilter
+        let filtered = lowerFilter
           ? cat.items.filter(it => it.name.toLowerCase().includes(lowerFilter) || it.desc.toLowerCase().includes(lowerFilter))
           : cat.items;
 
         if (filtered.length === 0) return null;
 
-        const catItems = filtered.map(it => {
+        let catItems = filtered.map(it => {
           this.#factoryMap.set(it.name, it.factory);
           return {
             name: it.name,
@@ -118,10 +118,10 @@ export class PaletteBrowser extends Symbiote {
   }
 
   onItemClick(e) {
-    const item = e.target.closest('pal-item');
+    let item = e.target.closest('pal-item');
     if (!item) return;
-    const name = item.$.name;
-    const factory = this.#factoryMap.get(name);
+    let name = item.$.name;
+    let factory = this.#factoryMap.get(name);
     if (this.#onSelect && factory) this.#onSelect(factory, name);
   }
 }

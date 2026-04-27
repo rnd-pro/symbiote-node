@@ -1,6 +1,6 @@
 import { css } from '@symbiotejs/symbiote';
 
-export const styles = css`
+export let styles = css`
 node-canvas {
   display: block;
   width: 100%;

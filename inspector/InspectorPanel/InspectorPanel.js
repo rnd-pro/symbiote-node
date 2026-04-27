@@ -59,19 +59,19 @@ export class InspectorPanel extends Symbiote {
       return;
     }
 
-    const inputs = Object.entries(node.inputs).map(([key, port]) => ({
+    let inputs = Object.entries(node.inputs).map(([key, port]) => ({
       key,
       label: port.label || key,
       socketType: port.socket?.name || 'any',
     }));
 
-    const outputs = Object.entries(node.outputs).map(([key, port]) => ({
+    let outputs = Object.entries(node.outputs).map(([key, port]) => ({
       key,
       label: port.label || key,
       socketType: port.socket?.name || 'any',
     }));
 
-    const controls = Object.entries(node.controls).map(([key, ctrl]) => ({
+    let controls = Object.entries(node.controls).map(([key, ctrl]) => ({
       key,
       label: ctrl.label || key,
       value: ctrl.value ?? '',
@@ -79,7 +79,7 @@ export class InspectorPanel extends Symbiote {
       options: (ctrl.options || []).join(','),
     }));
 
-    const isSubgraph = !!node._isSubgraph;
+    let isSubgraph = !!node._isSubgraph;
     let innerNodeCount = 0;
     if (isSubgraph && node.innerEditor) {
       innerNodeCount = node.innerEditor.getNodes().length;
@@ -88,8 +88,8 @@ export class InspectorPanel extends Symbiote {
     this._currentNodeId = node.id;
 
     // Check if node is fireable (inject or trigger with testData)
-    const driver = node.driver || node._driver;
-    const isFireable = !!(driver?.fireable) ||
+    let driver = node.driver || node._driver;
+    let isFireable = !!(driver?.fireable) ||
       node.type === 'debug/inject' ||
       (node.category === 'trigger' || node.category === 'queue');
 
@@ -113,7 +113,7 @@ export class InspectorPanel extends Symbiote {
     if (node.type === 'transform/template-builder' || node.type === 'transform/template') {
       requestAnimationFrame(() => {
         /** @type {*} */
-        const preview = this.querySelector('template-preview');
+        let preview = this.querySelector('template-preview');
         if (preview && node.params?.template) {
           preview.$.template = node.params.template;
         }
@@ -147,11 +147,11 @@ export class InspectorPanel extends Symbiote {
 
     // Listen for control value changes from InspCtrlItem
     this.addEventListener('ctrl-change', (/** @type {CustomEvent} */ e) => {
-      const { key, value } = e.detail;
+      let { key, value } = e.detail;
       if (this._currentNodeId && this._canvas) {
-        const editor = this._canvas._editor;
+        let editor = this._canvas._editor;
         if (editor) {
-          const node = editor.getNode(this._currentNodeId);
+          let node = editor.getNode(this._currentNodeId);
           if (node && node.controls[key]) {
             node.controls[key].setValue(value);
           }
@@ -161,7 +161,7 @@ export class InspectorPanel extends Symbiote {
           }
           // Update template-preview when template field changes
           if (key === 'template') {
-            const preview = this.querySelector('template-preview');
+            let preview = this.querySelector('template-preview');
             if (preview) preview.$.template = value;
           }
         }
@@ -170,25 +170,25 @@ export class InspectorPanel extends Symbiote {
 
     this.sub('hasSelection', (val) => {
       /** @type {HTMLElement} */
-      const empty = this.querySelector('.insp-empty');
+      let empty = this.querySelector('.insp-empty');
       /** @type {HTMLElement} */
-      const content = this.querySelector('.insp-content');
+      let content = this.querySelector('.insp-content');
       if (empty) empty.hidden = val;
       if (content) content.hidden = !val;
     });
 
     this.sub('isSubgraph', (val) => {
       /** @type {HTMLElement} */
-      const sgSection = this.querySelector('.insp-subgraph');
+      let sgSection = this.querySelector('.insp-subgraph');
       if (sgSection) sgSection.hidden = !val;
     });
 
     // Resize drag handle
     const STORAGE_KEY = 'sn-inspector-width';
-    const handle = this.querySelector('.insp-resize-handle');
+    let handle = this.querySelector('.insp-resize-handle');
 
     // Restore saved width
-    const saved = localStorage.getItem(STORAGE_KEY);
+    let saved = localStorage.getItem(STORAGE_KEY);
     if (saved) this.style.width = saved + 'px';
 
     if (handle) {
@@ -196,13 +196,13 @@ export class InspectorPanel extends Symbiote {
       let startW = 0;
 
       /** @param {PointerEvent} e */
-      const onMove = (e) => {
-        const delta = startX - e.clientX;
-        const newWidth = Math.max(200, Math.min(600, startW + delta));
+      let onMove = (e) => {
+        let delta = startX - e.clientX;
+        let newWidth = Math.max(200, Math.min(600, startW + delta));
         this.style.width = newWidth + 'px';
       };
 
-      const onUp = () => {
+      let onUp = () => {
         handle.classList.remove('dragging');
         localStorage.setItem(STORAGE_KEY, String(this.offsetWidth));
         document.removeEventListener('pointermove', onMove);
@@ -246,7 +246,7 @@ class InspCtrlItem extends Symbiote {
 
   renderCallback() {
     /** @type {HTMLElement} */
-    const container = this.querySelector('.insp-ctrl-input');
+    let container = this.querySelector('.insp-ctrl-input');
     if (!container) return;
 
     this.sub('type', (type) => {
@@ -263,7 +263,7 @@ class InspCtrlItem extends Symbiote {
     container.innerHTML = '';
 
     if (type === 'textarea') {
-      const el = document.createElement('textarea');
+      let el = document.createElement('textarea');
       el.className = 'insp-ctrl-textarea';
       el.value = this.$.value || '';
       el.rows = 6;
@@ -271,25 +271,25 @@ class InspCtrlItem extends Symbiote {
       el.addEventListener('input', () => this._emitChange(el.value));
       container.appendChild(el);
     } else if (type === 'boolean') {
-      const label = document.createElement('label');
+      let label = document.createElement('label');
       label.className = 'insp-ctrl-toggle';
-      const el = document.createElement('input');
+      let el = document.createElement('input');
       el.type = 'checkbox';
       el.checked = this.$.value === true || this.$.value === 'true';
       el.addEventListener('change', () => this._emitChange(el.checked));
-      const slider = document.createElement('span');
+      let slider = document.createElement('span');
       slider.className = 'insp-ctrl-slider';
       label.appendChild(el);
       label.appendChild(slider);
       container.appendChild(label);
     } else if (type === 'select') {
-      const el = document.createElement('select');
+      let el = document.createElement('select');
       el.className = 'insp-ctrl-select';
-      const opts = typeof this.$.options === 'string'
+      let opts = typeof this.$.options === 'string'
         ? this.$.options.split(',').map((s) => s.trim()).filter(Boolean)
         : [];
       for (const opt of opts) {
-        const option = document.createElement('option');
+        let option = document.createElement('option');
         option.value = opt;
         option.textContent = opt;
         if (opt === String(this.$.value)) option.selected = true;
@@ -299,7 +299,7 @@ class InspCtrlItem extends Symbiote {
       container.appendChild(el);
     } else {
       // text / number
-      const el = document.createElement('input');
+      let el = document.createElement('input');
       el.className = 'insp-ctrl-input-el';
       el.type = type === 'number' ? 'number' : 'text';
       el.value = this.$.value ?? '';

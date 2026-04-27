@@ -41,9 +41,9 @@ export class PinExpansion {
    */
   removePins(nodeId) {
     this.#pinCache.delete(nodeId);
-    const el = this.#canvas.getNodeView?.(nodeId);
+    let el = this.#canvas.getNodeView?.(nodeId);
     if (!el) return;
-    const overlay = el.querySelector('.pcb-pin-overlay');
+    let overlay = el.querySelector('.pcb-pin-overlay');
     if (overlay) overlay.remove();
   }
 
@@ -55,13 +55,13 @@ export class PinExpansion {
     if (!this.#canvas) return;
 
     for (const [nodeId, pins] of this.#pinCache) {
-      const el = this.#canvas.getNodeView?.(nodeId);
+      let el = this.#canvas.getNodeView?.(nodeId);
       if (!el) continue;
 
       if (lod === 'expanded') {
         this.#renderPinsForNode(el, pins);
       } else {
-        const overlay = el.querySelector('.pcb-pin-overlay');
+        let overlay = el.querySelector('.pcb-pin-overlay');
         if (overlay) overlay.removeAttribute('data-visible');
       }
     }
@@ -85,18 +85,18 @@ export class PinExpansion {
 
     // Prepare pins if they are empty
     if (overlay.children.length === 0) {
-      const maxPins = Math.min(pins.length, 12);
-      const half = Math.ceil(maxPins / 2);
-      const nodeId = el.getAttribute('node-id');
+      let maxPins = Math.min(pins.length, 12);
+      let half = Math.ceil(maxPins / 2);
+      let nodeId = el.getAttribute('node-id');
 
-      const createPinEl = (pin, side, yPct) => {
-        const pinEl = document.createElement('span');
+      let createPinEl = (pin, side, yPct) => {
+        let pinEl = document.createElement('span');
         pinEl.className = 'pcb-pin';
         pinEl.setAttribute('data-side', side);
         if (pin.kind) pinEl.setAttribute('data-kind', pin.kind);
 
-        const suffix = pin.line ? ` :${pin.line}` : '';
-        const label = pin.label || pin.name || '';
+        let suffix = pin.line ? ` :${pin.line}` : '';
+        let label = pin.label || pin.name || '';
         pinEl.textContent = label + suffix;
         pinEl.style.top = `${yPct}%`;
 
@@ -114,13 +114,13 @@ export class PinExpansion {
 
       // Right side: first half
       for (let i = 0; i < half; i++) {
-        const yPct = ((i + 1) / (half + 1)) * 100;
+        let yPct = ((i + 1) / (half + 1)) * 100;
         overlay.appendChild(createPinEl(pins[i], 'right', yPct));
       }
 
       // Left side: remaining
       for (let i = half; i < maxPins; i++) {
-        const yPct = ((i - half + 1) / (maxPins - half + 1)) * 100;
+        let yPct = ((i - half + 1) / (maxPins - half + 1)) * 100;
         overlay.appendChild(createPinEl(pins[i], 'left', yPct));
       }
     }

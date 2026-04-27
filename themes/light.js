@@ -8,7 +8,7 @@
  */
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export const LIGHT_CLEAN = {
+export let LIGHT_CLEAN = {
   name: 'light-clean',
   tokens: {
     // === Atomic tokens ===
@@ -111,7 +111,7 @@ export const LIGHT_CLEAN = {
 };
 
 /** @type {import('./Palette.js').PaletteDefinition} */
-export const LIGHT_PALETTE = {
+export let LIGHT_PALETTE = {
   name: 'light',
   colors: {
     '--sn-hue-base': '220',

@@ -1,6 +1,6 @@
 import { css } from '@symbiotejs/symbiote';
 
-export const styles = css`
+export let styles = css`
 graph-node {
   display: block;
   min-width: var(--sn-node-min-width, 180px);

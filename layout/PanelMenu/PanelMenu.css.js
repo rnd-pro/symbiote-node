@@ -1,6 +1,6 @@
 import { css } from '@symbiotejs/symbiote';
 
-export const styles = css`
+export let styles = css`
 panel-menu {
   position: fixed;
   z-index: 1000;

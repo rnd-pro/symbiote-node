@@ -39,20 +39,20 @@ const ICON_SHAPES = Object.fromEntries(
  * @returns {string}
  */
 export function editorToText(editor, positions = {}) {
-  const lines = [];
+  let lines = [];
 
   // --- NODES ---
   lines.push('NODES:');
   for (const node of editor.getNodes()) {
-    const icon = SHAPE_ICONS[node.shape] || '□';
-    const ins = Object.keys(node.inputs);
-    const outs = Object.keys(node.outputs);
+    let icon = SHAPE_ICONS[node.shape] || '□';
+    let ins = Object.keys(node.inputs);
+    let outs = Object.keys(node.outputs);
     let line = `[${icon} ${node.id}] ${node.label} (${node.type})`;
     if (node.shape !== 'rect') line += ` shape=${node.shape}`;
     if (node.category !== 'default') line += ` cat=${node.category}`;
     if (ins.length) line += ` in=[${ins.join(',')}]`;
     if (outs.length) line += ` out=[${outs.join(',')}]`;
-    const pos = positions[node.id];
+    let pos = positions[node.id];
     if (pos) line += ` @${pos[0]},${pos[1]}`;
     lines.push('  ' + line);
   }
@@ -65,7 +65,7 @@ export function editorToText(editor, positions = {}) {
   }
 
   // --- FRAMES ---
-  const frames = editor.getFrames();
+  let frames = editor.getFrames();
   if (frames.length) {
     lines.push('');
     lines.push('FRAMES:');
@@ -85,14 +85,14 @@ export function editorToText(editor, positions = {}) {
  * @returns {{ nodes: Array, connections: Array, frames: Array, positions: Object }}
  */
 export function textToGraph(text) {
-  const nodes = [];
-  const connections = [];
-  const frames = [];
-  const positions = {};
+  let nodes = [];
+  let connections = [];
+  let frames = [];
+  let positions = {};
 
   let section = '';
   for (const raw of text.split('\n')) {
-    const line = raw.trim();
+    let line = raw.trim();
     if (!line) continue;
 
     if (line === 'NODES:') { section = 'nodes'; continue; }
@@ -101,13 +101,13 @@ export function textToGraph(text) {
 
     if (section === 'nodes') {
       // [○ trigger] Job Event: RU (queue/job-event) shape=circle cat=server in=[exec] out=[exec,data] @50,200
-      const m = line.match(/^\[(.)\s+(\S+)\]\s+(.+?)\s+\(([^)]+)\)(.*)$/);
+      let m = line.match(/^\[(.)\s+(\S+)\]\s+(.+?)\s+\(([^)]+)\)(.*)$/);
       if (!m) continue;
 
-      const [, shapeIcon, id, name, type, rest] = m;
-      const shape = ICON_SHAPES[shapeIcon] || 'rect';
-      const category = rest.match(/cat=(\S+)/)?.[1] || 'default';
-      const posMatch = rest.match(/@(-?\d+),(-?\d+)/);
+      let [, shapeIcon, id, name, type, rest] = m;
+      let shape = ICON_SHAPES[shapeIcon] || 'rect';
+      let category = rest.match(/cat=(\S+)/)?.[1] || 'default';
+      let posMatch = rest.match(/@(-?\d+),(-?\d+)/);
 
       nodes.push({ id, name, type, shape, category });
       if (posMatch) {
@@ -117,22 +117,22 @@ export function textToGraph(text) {
 
     if (section === 'connections') {
       // trigger.exec --> switch_status.exec
-      const m = line.match(/^(\S+)\.(\S+)\s+-->\s+(\S+)\.(\S+)$/);
+      let m = line.match(/^(\S+)\.(\S+)\s+-->\s+(\S+)\.(\S+)$/);
       if (!m) continue;
-      const [, from, out, to, inp] = m;
+      let [, from, out, to, inp] = m;
       connections.push({ from, out, to, in: inp });
     }
 
     if (section === 'frames') {
       // [Formatters] color=#5cd87a x=490 y=-10 w=260 h=520
-      const m = line.match(/^\[([^\]]+)\]\s+(.*)$/);
+      let m = line.match(/^\[([^\]]+)\]\s+(.*)$/);
       if (!m) continue;
-      const [, label, rest] = m;
-      const color = rest.match(/color=(\S+)/)?.[1] || '#4a9eff';
-      const x = parseInt(rest.match(/x=(-?\d+)/)?.[1] || '0');
-      const y = parseInt(rest.match(/y=(-?\d+)/)?.[1] || '0');
-      const w = parseInt(rest.match(/w=(\d+)/)?.[1] || '400');
-      const h = parseInt(rest.match(/h=(\d+)/)?.[1] || '300');
+      let [, label, rest] = m;
+      let color = rest.match(/color=(\S+)/)?.[1] || '#4a9eff';
+      let x = parseInt(rest.match(/x=(-?\d+)/)?.[1] || '0');
+      let y = parseInt(rest.match(/y=(-?\d+)/)?.[1] || '0');
+      let w = parseInt(rest.match(/w=(\d+)/)?.[1] || '400');
+      let h = parseInt(rest.match(/h=(\d+)/)?.[1] || '300');
       frames.push({ label, color, x, y, width: w, height: h });
     }
   }
@@ -149,16 +149,16 @@ export function textToGraph(text) {
  * @returns {{ editor: import('./Editor.js').NodeEditor, positions: Object }}
  */
 export function textToEditor(text, editor, classes) {
-  const { Node, Connection, Socket, Input, Output, Frame } = classes;
-  const { nodes, connections, frames, positions } = textToGraph(text);
+  let { Node, Connection, Socket, Input, Output, Frame } = classes;
+  let { nodes, connections, frames, positions } = textToGraph(text);
 
-  const execSocket = new Socket('exec', { color: '#ffffff' });
-  const dataSocket = new Socket('data', { color: '#5cb8ff' });
-  const nodeMap = new Map();
+  let execSocket = new Socket('exec', { color: '#ffffff' });
+  let dataSocket = new Socket('data', { color: '#5cb8ff' });
+  let nodeMap = new Map();
 
   // Collect ports from connections
-  const inPorts = {};
-  const outPorts = {};
+  let inPorts = {};
+  let outPorts = {};
   for (const conn of connections) {
     if (!inPorts[conn.to]) inPorts[conn.to] = new Set();
     inPorts[conn.to].add(conn.in);
@@ -167,22 +167,22 @@ export function textToEditor(text, editor, classes) {
   }
 
   for (const n of nodes) {
-    const node = new Node(n.name, {
+    let node = new Node(n.name, {
       id: n.id,
       type: n.type,
       category: n.category,
       shape: n.shape,
     });
 
-    const ins = inPorts[n.id] || new Set();
-    const outs = outPorts[n.id] || new Set();
+    let ins = inPorts[n.id] || new Set();
+    let outs = outPorts[n.id] || new Set();
 
     for (const port of ins) {
-      const isExec = port === 'exec' || port === 'trigger';
+      let isExec = port === 'exec' || port === 'trigger';
       node.addInput(port, new Input(isExec ? execSocket : dataSocket, port === 'exec' ? '' : port));
     }
     for (const port of outs) {
-      const isExec = port === 'exec' || port === 'trigger';
+      let isExec = port === 'exec' || port === 'trigger';
       node.addOutput(port, new Output(isExec ? execSocket : dataSocket, port === 'exec' ? '' : port));
     }
 
@@ -191,8 +191,8 @@ export function textToEditor(text, editor, classes) {
   }
 
   for (const conn of connections) {
-    const fromNode = nodeMap.get(conn.from);
-    const toNode = nodeMap.get(conn.to);
+    let fromNode = nodeMap.get(conn.from);
+    let toNode = nodeMap.get(conn.to);
     if (fromNode && toNode) {
       editor.addConnection(new Connection(fromNode, conn.out, toNode, conn.in));
     }
@@ -208,3 +208,5 @@ export function textToEditor(text, editor, classes) {
 
   return { editor, positions };
 }
+
+export { editorToText as default };

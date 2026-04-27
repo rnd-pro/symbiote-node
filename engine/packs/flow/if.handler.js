@@ -17,7 +17,7 @@
 function evaluateCondition(value, expression) {
   if (typeof expression === 'boolean') return expression;
   if (typeof expression === 'string') {
-    const trimmed = expression.trim();
+    let trimmed = expression.trim();
 
     // Direct boolean strings
     if (trimmed === 'true') return true;
@@ -28,15 +28,15 @@ function evaluateCondition(value, expression) {
     if (trimmed === 'data == null' || trimmed === 'data === null') return value == null;
 
     // Comparison operators
-    const match = trimmed.match(/^(.+?)\s*(===|!==|==|!=|>=|<=|>|<)\s*(.+)$/);
+    let match = trimmed.match(/^(.+?)\s*(===|!==|==|!=|>=|<=|>|<)\s*(.+)$/);
     if (match) {
       let [, left, op, right] = match;
       left = left.trim();
       right = right.trim();
 
       // Resolve left side
-      const leftVal = left === 'data' || left === 'value' ? value : parseValueLiteral(left);
-      const rightVal = parseValueLiteral(right);
+      let leftVal = left === 'data' || left === 'value' ? value : parseValueLiteral(left);
+      let rightVal = parseValueLiteral(right);
 
       switch (op) {
         case '===': return leftVal === rightVal;
@@ -67,7 +67,7 @@ function parseValueLiteral(str) {
   if (str === 'false') return false;
   if (str.startsWith("'") && str.endsWith("'")) return str.slice(1, -1);
   if (str.startsWith('"') && str.endsWith('"')) return str.slice(1, -1);
-  const num = Number(str);
+  let num = Number(str);
   if (!isNaN(num)) return num;
   return str;
 }
@@ -95,7 +95,7 @@ export default {
   lifecycle: {
     validate: (inputs) => inputs.data !== undefined,
     execute: (inputs, params) => {
-      const condValue = params.expression
+      let condValue = params.expression
         ? evaluateCondition(inputs.data, params.expression)
         : !!inputs.condition;
 

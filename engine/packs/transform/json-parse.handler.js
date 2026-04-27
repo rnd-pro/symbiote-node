@@ -33,7 +33,7 @@ export default {
 
     execute: async (inputs) => {
       try {
-        const result = JSON.parse(inputs.input);
+        let result = JSON.parse(inputs.input);
         return { result, error: null };
       } catch (err) {
         return { result: null, error: err.message };

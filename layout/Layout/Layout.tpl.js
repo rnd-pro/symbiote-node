@@ -1,6 +1,6 @@
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div class="layout-root" ref="root"></div>
 <layout-preview ref="preview"></layout-preview>
 <panel-menu ref="menu"></panel-menu>

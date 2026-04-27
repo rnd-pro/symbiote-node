@@ -15,7 +15,7 @@
  */
 
 /** @type {SkinDefinition} */
-export const MODERN_SKIN = {
+export let MODERN_SKIN = {
   name: 'modern',
   geometry: {
     // === Spacing scale (atomic — AI changes these) ===
@@ -44,7 +44,7 @@ export const MODERN_SKIN = {
 };
 
 /** @type {SkinDefinition} */
-export const COMPACT_SKIN = {
+export let COMPACT_SKIN = {
   name: 'compact',
   geometry: {
     // === Spacing scale ===
@@ -73,7 +73,7 @@ export const COMPACT_SKIN = {
 };
 
 /** @type {SkinDefinition} */
-export const ROUNDED_SKIN = {
+export let ROUNDED_SKIN = {
   name: 'rounded',
   geometry: {
     // === Spacing scale ===

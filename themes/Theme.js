@@ -52,16 +52,16 @@ export function applyTheme(element, theme) {
   }
   // Bridge: derive global layout tokens from --sn-* values
   for (const [layoutToken, snToken] of Object.entries(LAYOUT_TOKEN_MAP)) {
-    const value = theme.tokens[snToken];
+    let value = theme.tokens[snToken];
     if (value) {
       element.style.setProperty(layoutToken, value);
     }
   }
   // Extra CSS: inject theme-specific style overrides
   if (theme.extraCSS) {
-    const existing = element.querySelector('style[data-theme]');
+    let existing = element.querySelector('style[data-theme]');
     if (existing) existing.remove();
-    const style = document.createElement('style');
+    let style = document.createElement('style');
     style.setAttribute('data-theme', theme.name || 'custom');
     style.textContent = theme.extraCSS;
     element.prepend(style);
@@ -75,8 +75,8 @@ export function applyTheme(element, theme) {
  * @returns {ThemeDefinition}
  */
 export function extractTheme(element, reference) {
-  const tokens = {};
-  const computed = getComputedStyle(element);
+  let tokens = {};
+  let computed = getComputedStyle(element);
   for (const key of Object.keys(reference.tokens)) {
     tokens[key] = computed.getPropertyValue(key).trim() || reference.tokens[key];
   }

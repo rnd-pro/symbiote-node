@@ -148,8 +148,8 @@ export default {
       let { operation, maxItems, timeout } = params;
 
       try {
-        switch (operation) {
-          case 'fetch': {
+        let opMap = {
+          fetch: async () => {
             let response = await fetch(inputs.url, {
               signal: AbortSignal.timeout(timeout),
               headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },            });
@@ -169,9 +169,8 @@ export default {
             }));
 
             return { result: { items, count: items.length, source: inputs.url } };
-          }
-
-          case 'fetch-multi': {
+          },
+          'fetch-multi': async () => {
             let allItems = [];
             let errors = [];
 
@@ -214,9 +213,8 @@ export default {
             });
 
             return { result: { items: unique, count: unique.length, sources: params.urls.length, errors } };
-          }
-
-          case 'categorize': {
+          },
+          categorize: async () => {
             let categorized = params.items.map(item => ({
               ...item,
               category: categorizeTopic(item.title || '', item.content || item.description || ''),
@@ -232,9 +230,12 @@ export default {
 
             return { result: { categorized, grouped, count: categorized.length } };
           }
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return await opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `rss-feed ${operation} failed: ${err.message}` };

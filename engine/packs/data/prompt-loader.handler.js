@@ -136,8 +136,8 @@ export default {
       let { operation, context, baseDir } = params;
 
       try {
-        switch (operation) {
-          case 'load': {
+        let opMap = {
+          load: async () => {
             let template = inputs.template;
             let resolvedBase = baseDir;
 
@@ -151,9 +151,8 @@ export default {
 
             let processed = await processTemplate(template, context, resolvedBase);
             return { result: { content: processed, variablesUsed: Object.keys(context) } };
-          }
-
-          case 'load-multi': {
+          },
+          'load-multi': async () => {
             let entries = Object.entries(params.templates);
             let results = {};
             for (const [name, templatePath] of entries) {
@@ -164,9 +163,8 @@ export default {
               results[name] = await processTemplate(raw, context, path.dirname(fullPath));
             }
             return { result: { templates: results, count: entries.length } };
-          }
-
-          case 'validate': {
+          },
+          validate: () => {
             let missing = validatePromptTemplate(inputs.template, context);
             return {
               result: {
@@ -175,15 +173,17 @@ export default {
                 totalVariables: (inputs.template.match(/\{\{([A-Z_][A-Z0-9_]*)\}\}/g) || []).length,
               },
             };
-          }
-
-          case 'list': {
+          },
+          list: async () => {
             let templates = await listPromptTemplates(baseDir);
             return { result: { templates, count: templates.length, baseDir } };
           }
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return await opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `prompt-loader ${operation} failed: ${err.message}` };

@@ -38,15 +38,19 @@ function evaluateCondition(value, expression) {
       let leftVal = left === 'data' || left === 'value' ? value : parseValueLiteral(left);
       let rightVal = parseValueLiteral(right);
 
-      switch (op) {
-        case '===': return leftVal === rightVal;
-        case '!==': return leftVal !== rightVal;
-        case '==': return leftVal == rightVal;
-        case '!=': return leftVal != rightVal;
-        case '>': return leftVal > rightVal;
-        case '<': return leftVal < rightVal;
-        case '>=': return leftVal >= rightVal;
-        case '<=': return leftVal <= rightVal;
+      let opMap = {
+        '===': () => leftVal === rightVal,
+        '!==': () => leftVal !== rightVal,
+        '==': () => leftVal == rightVal,
+        '!=': () => leftVal != rightVal,
+        '>': () => leftVal > rightVal,
+        '<': () => leftVal < rightVal,
+        '>=': () => leftVal >= rightVal,
+        '<=': () => leftVal <= rightVal,
+      };
+
+      if (opMap[op]) {
+        return opMap[op]();
       }
     }
   }

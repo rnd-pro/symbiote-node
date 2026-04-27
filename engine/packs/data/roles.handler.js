@@ -139,9 +139,8 @@ export default {
         // Scan directory for all roles
         let roles = await scanRolesDirectory(rolesDir);
 
-        switch (operation) {
-          case 'list':
-          case 'scan': {
+        let opMap = {
+          list: () => {
             let allTags = new Set();
             let rolesList = [];
             for (const [id, role] of roles) {
@@ -161,16 +160,15 @@ export default {
                 tags: [...allTags].sort(),
               },
             };
-          }
-
-          case 'get': {
+          },
+          scan: () => opMap.list(),
+          get: () => {
             if (!params.roleId) return { error: 'roleId is required for get operation' };
             let role = roles.get(params.roleId);
             if (!role) return { error: `Role not found: ${params.roleId}` };
             return { result: { role } };
-          }
-
-          case 'filter-tags': {
+          },
+          'filter-tags': () => {
             if (!Array.isArray(params.tags)) return { error: 'tags array is required' };
             let filtered = [];
             for (const [, role] of roles) {
@@ -180,9 +178,8 @@ export default {
               if (match) filtered.push(role);
             }
             return { result: { roles: filtered, count: filtered.length } };
-          }
-
-          case 'combine': {
+          },
+          combine: () => {
             if (!Array.isArray(params.roleIds)) return { error: 'roleIds array is required' };
             let parts = [];
             let resolved = [];
@@ -204,9 +201,12 @@ export default {
               },
             };
           }
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `roles ${operation} failed: ${err.message}` };

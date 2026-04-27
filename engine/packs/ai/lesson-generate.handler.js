@@ -215,8 +215,8 @@ export default {
       let apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
 
       try {
-        switch (operation) {
-          case 'lesson': {
+        let opMap = {
+          lesson: async () => {
             let materials = params.materialsDir
               ? await loadMaterials(params.materialsDir)
               : {};
@@ -252,9 +252,8 @@ export default {
                 model,
               },
             };
-          }
-
-          case 'vocabulary': {
+          },
+          vocabulary: async () => {
             let prompt = `Extract 10 key vocabulary items from these news headlines for A1 Spanish learners (Rioplatense dialect).\n\nNEWS:\n${newsItems.map(n => `- ${n.title}`).join('\n')}\n\nOUTPUT: JSON array of {"es": "word with article", "ru": "translation"}\nRules: nouns with el/la, no brands, no cognates, prefer regional vocabulary.`;
 
             let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -277,9 +276,8 @@ export default {
             let vocabulary = parseResponse(aiResponse);
 
             return { result: { vocabulary, newsCount: newsItems.length, model } };
-          }
-
-          case 'daily-digest': {
+          },
+          'daily-digest': async () => {
             let prompt = buildDigestPrompt({
               newsItems,
               categories: params.categories,
@@ -305,9 +303,8 @@ export default {
             let digest = parseResponse(aiResponse);
 
             return { result: { digest, newsCount: newsItems.length, model } };
-          }
-
-          case 'validate-style': {
+          },
+          'validate-style': async () => {
             let prompt = `Evaluate if the following ${params.contentType} content matches A1 Rioplatense Spanish learning material standards.\n\nCONTENT:\n${params.content}\n\nCheck:\n1. Vocabulary complexity (should be A1)\n2. Rioplatense dialect usage (vos, local terms)\n3. Bilingual coverage (es + ru)\n4. Educational value\n\nOUTPUT: JSON with {score: 0-100, issues: [string], suggestions: [string]}`;
 
             let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -331,9 +328,12 @@ export default {
 
             return { result: { validation, model } };
           }
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return await opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `lesson-generate ${operation} failed: ${err.message}` };

@@ -388,41 +388,40 @@ export default {
       let { operation } = params;
 
       try {
-        switch (operation) {
-          case 'transliterate': {
+        let opMap = {
+          transliterate: () => {
             let result = transliterateSpanishToCyrillic(text, {
               keepAccents: params.keepAccents,
               autoStress: params.autoStress,
             });
             return { result: { original: text, cyrillic: result } };
-          }
-
-          case 'adapt-rioplatense': {
+          },
+          'adapt-rioplatense': () => {
             let result = adaptSpanishToRioplatense(text);
             return { result: { original: text, adapted: result } };
-          }
-
-          case 'numbers-to-spanish': {
+          },
+          'numbers-to-spanish': () => {
             let result = convertNumbersToSpanish(text);
             return { result: { original: text, converted: result } };
-          }
-
-          case 'voice-instruct': {
+          },
+          'voice-instruct': () => {
             let instruct = generateVoiceInstruct({
               text,
               lang: params.lang,
               context: params.context,
             });
             return { result: { text, instruct, lang: params.lang } };
-          }
-
-          case 'batch-instructs': {
+          },
+          'batch-instructs': () => {
             let instructs = generateBatchInstructs(params.segments);
             return { result: { segments: params.segments, instructs } };
           }
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `riopla-adapt ${operation} failed: ${err.message}` };

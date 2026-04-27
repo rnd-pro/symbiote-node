@@ -162,8 +162,8 @@ export default {
       try {
         let store = await loadStore(storePath);
 
-        switch (operation) {
-          case 'add': {
+        let opMap = {
+          add: async () => {
             let itemsToAdd = params.newsItems
               ? params.newsItems
               : params.newsItem
@@ -190,9 +190,8 @@ export default {
 
             await saveStore(storePath, store);
             return { result: { added, total: store.news.length, duplicatesSkipped: itemsToAdd.length - added } };
-          }
-
-          case 'get': {
+          },
+          get: () => {
             let items = store.news.filter(n => !n.processed);
 
             // Date filter
@@ -216,9 +215,8 @@ export default {
             items = items.slice(0, params.maxItems);
 
             return { result: { items, count: items.length } };
-          }
-
-          case 'mark-processed': {
+          },
+          'mark-processed': async () => {
             if (!Array.isArray(params.newsIds)) return { error: 'newsIds array is required' };
 
             let idsSet = new Set(params.newsIds);
@@ -235,9 +233,8 @@ export default {
             store.processedIds.push(...params.newsIds);
             await saveStore(storePath, store);
             return { result: { marked, total: params.newsIds.length } };
-          }
-
-          case 'new-period': {
+          },
+          'new-period': async () => {
             let archived = {
               periodStart: store.periodStart,
               periodEnd: new Date().toISOString(),
@@ -252,9 +249,8 @@ export default {
 
             await saveStore(storePath, store);
             return { result: { archived, message: 'New period started' } };
-          }
-
-          case 'stats': {
+          },
+          stats: () => {
             let total = store.news.length;
             let processed = store.news.filter(n => n.processed).length;
             let unprocessed = total - processed;
@@ -269,9 +265,12 @@ export default {
               },
             };
           }
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return await opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `news-accumulate ${operation} failed: ${err.message}` };

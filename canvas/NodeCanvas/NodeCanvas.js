@@ -22,6 +22,9 @@ import { applyTheme, DARK_DEFAULT } from '../../themes/Theme.js';
 import { applyPalette } from '../../themes/Palette.js';
 import { applySkin } from '../../themes/Skin.js';
 import { NodeViewManager } from '../NodeViewManager.js';
+import { FrameManager } from '../FrameManager.js';
+import { SelectionSync } from '../SelectionSync.js';
+import { CanvasViewport } from '../CanvasViewport.js';
 import { ConnectionRenderer } from '../ConnectionRenderer.js';
 import { CanvasConnectionRenderer } from '../CanvasConnectionRenderer.js';
 import { PseudoConnection } from '../PseudoConnection.js';
@@ -57,9 +60,17 @@ export class NodeCanvas extends Symbiote {
   /** @type {ConnectFlow|null} */
   #connectFlow = null;
 
+  /** @type {SelectionSync} */
+  #selectionSync = new SelectionSync({
+    canvas: this,
+    getEditor: () => this.#editor,
+    nodeViews: this.#nodeViews,
+    getConnRenderer: () => this.#connRenderer,
+  });
+
   /** @type {Selector} */
   #selector = new Selector({
-    onChange: (nodes, connections) => this.#onSelectionChanged(nodes, connections),
+    onChange: (nodes, connections) => this.#selectionSync.sync(nodes, connections),
   });
 
   /** @type {SnapGrid} */
@@ -68,8 +79,8 @@ export class NodeCanvas extends Symbiote {
   /** @type {Map<string, HTMLElement>} */
   #nodeViews = new Map();
 
-  /** @type {Map<string, HTMLElement>} */
-  #frameViews = new Map();
+  /** @type {FrameManager|null} */
+  #frameManager = null;
 
   /** @type {boolean} */
   #readonly = false;
@@ -95,23 +106,11 @@ export class NodeCanvas extends Symbiote {
   /** @type {ViewportActions|null} */
   #actions = null;
 
-  /** @type {number} */
-  #zCounter = 0;
-
   /** @type {'bezier'|'orthogonal'|'straight'|'pcb'} saved across setEditor calls */
   #pathStyle = 'bezier';
 
-  // ─── Virtualization (Canvas LOD) ───
-  /** All node data objects from editor — the full set regardless of DOM state */
-  #allNodes = new Map();
-  /** Position + size cache for nodes without DOM (phantom rendering on Canvas) */
-  #phantomData = new Map();
-  /** Degree (connection count) per node — for dot sizing */
-  #nodeDegrees = new Map();
-  /** Debounce timer for promote/demote batch */
-  #virtTimer = null;
-  /** Dirty flag — phantom positions changed, needs re-sync to renderer */
-  #phantomDirty = false;
+  /** @type {CanvasViewport|null} */
+  #viewport = null;
 
   // --- Public API ---
 
@@ -128,10 +127,7 @@ export class NodeCanvas extends Symbiote {
       el.remove();
     }
     this.#nodeViews.clear();
-    this.#allNodes.clear();
-    this.#phantomData.clear();
-    this.#nodeDegrees.clear();
-    if (this.#virtTimer) { clearTimeout(this.#virtTimer); this.#virtTimer = null; }
+    if (this.#viewport) this.#viewport.clear();
 
     // Unsubscribe from previous editor events to prevent leaks
     if (this.#editor) {
@@ -147,12 +143,9 @@ export class NodeCanvas extends Symbiote {
     }
 
     // Remove all frame views
-    for (const [, el] of this.#frameViews) {
-      if (el._drag) el._drag.destroy();
-      if (el._resizeDrag) el._resizeDrag.destroy();
-      el.remove();
+    if (this.#frameManager) {
+      this.#frameManager.clear();
     }
-    this.#frameViews.clear();
 
     // Clear selection state
     if (this.#selector) this.#selector.unselectAll();
@@ -257,6 +250,20 @@ export class NodeCanvas extends Symbiote {
       onSvgShapeReady: (nodeId) => this.#connRenderer?.renderFreeDots(nodeId),
     });
 
+    this.#frameManager = new FrameManager({
+      nodeViews: this.#nodeViews,
+      editor,
+      canvas: this,
+      setNodePosition: (id, x, y) => this.setNodePosition(id, x, y),
+    });
+
+    this.#viewport = new CanvasViewport({
+      canvas: this,
+      nodeViews: this.#nodeViews,
+      viewManager: this.#viewManager,
+      getConnRenderer: () => this.#connRenderer,
+    });
+
     // ConnectFlow
     this.#connectFlow = new ConnectFlow(editor, {
       getNodePosition: (id) => {
@@ -306,18 +313,7 @@ export class NodeCanvas extends Symbiote {
     });
 
     // Subscribe to editor events
-    editor.on('nodecreated', (node) => {
-      this.#allNodes.set(node.id, node);
-      // If virtualization is active (phantom data initialized), add as phantom; otherwise DOM
-      if (this.#phantomData.size > 0) {
-        this.#phantomData.set(node.id, {
-          id: node.id, x: 0, y: 0, w: 180, h: 60,
-          degree: 0, color: null, label: node.label || node.id,
-        });
-      } else {
-        this.#viewManager.addView(node);
-      }
-    });
+    editor.on('nodecreated', (node) => this.#viewport.handleNodeCreated(node));
     editor.on('noderemoved', (node) => {
       this.#viewManager.removeView(node);
       // Remove connections touching this node
@@ -341,49 +337,17 @@ export class NodeCanvas extends Symbiote {
     editor.on('nodemute', refreshNodeConnections);
 
     // ─── Virtualized initialization ───
-    // Store all nodes as data, compute degrees from connections
-    this.#allNodes.clear();
-    this.#phantomData.clear();
-    this.#nodeDegrees.clear();
-
-    for (const node of editor.getNodes()) {
-      this.#allNodes.set(node.id, node);
-      this.#nodeDegrees.set(node.id, 0);
-    }
-
-    const allConns = editor.getConnections();
-    for (const conn of allConns) {
-      this.#nodeDegrees.set(conn.from, (this.#nodeDegrees.get(conn.from) || 0) + 1);
-      this.#nodeDegrees.set(conn.to, (this.#nodeDegrees.get(conn.to) || 0) + 1);
-    }
-
-    // Create DOM only for nodes that will be visible (or all if small graph)
-    const VIRT_THRESHOLD = 200;
-    if (this.#allNodes.size <= VIRT_THRESHOLD) {
-      // Small graph — create all DOM nodes immediately
-      this.#viewManager.addViews(editor.getNodes());
-    } else {
-      // Large graph — start all as phantom, promote visible ones after layout
-      const defaultW = 180, defaultH = 60;
-      for (const [id, node] of this.#allNodes) {
-        this.#phantomData.set(id, {
-          id, x: 0, y: 0, w: defaultW, h: defaultH,
-          degree: this.#nodeDegrees.get(id) || 0,
-          color: null,
-          label: node.label || id,
-        });
-      }
-    }
+    this.#viewport.initializeData(editor);
 
     // Batch renderer operations to prevent multiple redundant redraws
     this.#connRenderer.setBatchMode(true);
     this.#connRenderer.addBatch(allConns);
-    this.#syncPhantomToRenderer();
+    this.#viewport.syncPhantom();
     this.#connRenderer.setBatchMode(false);
 
     // Subscribe to frame events
-    editor.on('framecreated', (frame) => this.#addFrameView(frame));
-    editor.on('frameremoved', (frame) => this.#removeFrameView(frame));
+    editor.on('framecreated', (frame) => this.#frameManager.addView(frame));
+    editor.on('frameremoved', (frame) => this.#frameManager.removeView(frame));
 
     // Align tools emit nodemovetopos
     editor.on('nodemovetopos', ({ nodeId, x, y }) => {
@@ -392,7 +356,7 @@ export class NodeCanvas extends Symbiote {
 
     // Render existing frames
     for (const frame of editor.getFrames()) {
-      this.#addFrameView(frame);
+      this.#frameManager.addView(frame);
     }
 
     // Initialize subgraph navigation (skip during drill-down/drillUp)
@@ -587,54 +551,7 @@ export class NodeCanvas extends Symbiote {
    * accounting for the inspector panel if open.
    */
   fitView() {
-    if (this.#nodeViews.size === 0 && this.#phantomData.size === 0) return;
-    
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-    // Include DOM nodes
-    for (const [, el] of this.#nodeViews) {
-      if (!el._position) continue;
-      const x = el._position.x;
-      const y = el._position.y;
-      const w = el._cachedW || el.offsetWidth || 150;
-      const h = el._cachedH || el.offsetHeight || 40;
-      if (x < minX) minX = x;
-      if (y < minY) minY = y;
-      if (x + w > maxX) maxX = x + w;
-      if (y + h > maxY) maxY = y + h;
-    }
-
-    // Include phantom nodes (virtualized)
-    for (const [, pd] of this.#phantomData) {
-      if (pd.x < minX) minX = pd.x;
-      if (pd.y < minY) minY = pd.y;
-      if (pd.x + pd.w > maxX) maxX = pd.x + pd.w;
-      if (pd.y + pd.h > maxY) maxY = pd.y + pd.h;
-    }
-    
-    if (minX === Infinity) return;
-
-    const graphW = maxX - minX;
-    const graphH = maxY - minY;
-    const canvasRect = this.ref.canvasContainer.getBoundingClientRect();
-    
-    let visibleWidth = canvasRect.width;
-    const inspector = this.ref.inspector || this.querySelector('inspector-panel');
-    if (inspector && !inspector.hasAttribute('hidden')) {
-      visibleWidth -= inspector.offsetWidth || 280;
-    }
-
-    const scaleX = (visibleWidth - 80) / graphW;
-    const scaleY = (canvasRect.height - 80) / graphH;
-    const scale = Math.max(0.001, Math.min(scaleX, scaleY, 1.5));
-
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
-
-    this.$.zoom = scale;
-    this.$.panX = (visibleWidth / 2) - centerX * scale;
-    this.$.panY = canvasRect.height / 2 - centerY * scale;
-    this.#updateTransform();
+    this.#viewport?.fitView();
   }
 
   /**
@@ -645,61 +562,8 @@ export class NodeCanvas extends Symbiote {
    * @param {number} [opts.zoom=0.8] - Target zoom level
    * @returns {boolean}
    */
-  flyToNode(nodeId, { zoom = 0.8 } = {}) {
-    let el = this.#nodeViews.get(nodeId);
-
-    // If node is phantom (no DOM), promote it first
-    if (!el && this.#phantomData.has(nodeId)) {
-      this.#promoteNode(nodeId);
-      el = this.#nodeViews.get(nodeId);
-    }
-    if (!el) return false;
-
-    // If position not set yet, use phantom data
-    const pos = el._position || (() => {
-      const pd = this.#phantomData.get(nodeId);
-      return pd ? { x: pd.x, y: pd.y } : { x: 0, y: 0 };
-    })();
-
-    const canvasRect = this.ref.canvasContainer.getBoundingClientRect();
-    let visibleWidth = canvasRect.width;
-    
-    const inspector = this.ref.inspector || this.querySelector('inspector-panel');
-    if (inspector && !inspector.hasAttribute('hidden') && inspector.offsetWidth > 20) {
-        visibleWidth -= inspector.offsetWidth;
-    }
-
-    const elWidth = el._cachedW || el.offsetWidth || 150;
-    const elHeight = el._cachedH || el.offsetHeight || 40;
-
-    const nodeX = pos.x + (elWidth / 2);
-    const nodeY = pos.y + (elHeight / 2);
-
-    const newPanX = (visibleWidth / 2) - nodeX * zoom;
-    const newPanY = canvasRect.height / 2 - nodeY * zoom;
-
-    const dz = Math.abs(this.$.zoom - zoom);
-    const dx = Math.abs(this.$.panX - newPanX);
-    const dy = Math.abs(this.$.panY - newPanY);
-    
-    if (dz < 0.01 && dx < 2 && dy < 2) {
-      this.selectNode(nodeId);
-      if (!this._cullingScheduled) {
-        this._cullingScheduled = true;
-        requestAnimationFrame(() => {
-          this._cullingScheduled = false;
-          this.#applyCullingAndLOD();
-        });
-      }
-      return true;
-    }
-
-    this.$.zoom = zoom;
-    this.$.panX = newPanX;
-    this.$.panY = newPanY;
-
-    this.selectNode(nodeId);
-    return true;
+  flyToNode(nodeId, opts) {
+    return this.#viewport?.flyToNode(nodeId, opts) || false;
   }
 
 
@@ -928,9 +792,7 @@ export class NodeCanvas extends Symbiote {
   setNodePosition(nodeId, x, y) {
     const el = this.#nodeViews.get(nodeId);
     if (!el) {
-      // Update phantom data if node is virtualized (no DOM)
-      const pd = this.#phantomData.get(nodeId);
-      if (pd) { pd.x = x; pd.y = y; this.#phantomDirty = true; }
+      this.#viewport?.updatePhantomPosition(nodeId, x, y);
       return;
     }
     el.style.transform = `translate(${x}px, ${y}px)`;
@@ -1011,21 +873,7 @@ export class NodeCanvas extends Symbiote {
    * @returns {Object<string, number[]>}
    */
   getPositions() {
-    const positions = {};
-    // DOM nodes (promoted / small graph)
-    for (const [id, el] of this.#nodeViews) {
-      if (el._position) {
-        positions[id] = [el._position.x, el._position.y];
-      }
-    }
-    // Phantom nodes (virtualized, laid out but no DOM yet).
-    // Include even at (0,0) — position existence means node IS on this layer.
-    for (const [id, pd] of this.#phantomData) {
-      if (!positions[id]) {
-        positions[id] = [pd.x, pd.y];
-      }
-    }
-    return positions;
+    return this.#viewport?.getPositions() || {};
   }
 
   /**
@@ -1035,7 +883,7 @@ export class NodeCanvas extends Symbiote {
    * @returns {boolean}
    */
   hasNode(nodeId) {
-    return this.#nodeViews.has(nodeId) || this.#phantomData.has(nodeId);
+    return this.#viewport?.hasNode(nodeId) || false;
   }
 
   // --- Frame API ---
@@ -1055,12 +903,7 @@ export class NodeCanvas extends Symbiote {
    * @param {number} y
    */
   setFramePosition(frameId, x, y) {
-    const el = this.#frameViews.get(frameId);
-    if (!el) return;
-    el.style.transform = `translate(${x}px, ${y}px)`;
-    el._position = { x, y };
-    const frame = this.#editor?.getFrame(frameId);
-    if (frame) { frame.x = x; frame.y = y; }
+    this.#frameManager?.setPosition(frameId, x, y);
   }
 
   /**
@@ -1070,263 +913,10 @@ export class NodeCanvas extends Symbiote {
    * @param {number} h
    */
   setFrameSize(frameId, w, h) {
-    const el = this.#frameViews.get(frameId);
-    if (!el) return;
-    el.style.width = `${w}px`;
-    el.style.height = `${h}px`;
-    const frame = this.#editor?.getFrame(frameId);
-    if (frame) { frame.width = w; frame.height = h; }
-  }
-
-  /**
-   * Get node IDs that are spatially inside a frame
-   * @param {string} frameId
-   * @returns {string[]}
-   */
-  #getNodesInFrame(frameId) {
-    const el = this.#frameViews.get(frameId);
-    if (!el) return [];
-    const fp = el._position;
-    const fw = parseFloat(el.style.width) || el._frameData?.width || 400;
-    const fh = parseFloat(el.style.height) || el._frameData?.height || 300;
-    const ids = [];
-    for (const [nodeId, nodeEl] of this.#nodeViews) {
-      const np = nodeEl._position;
-      if (np.x >= fp.x && np.y >= fp.y && np.x <= fp.x + fw && np.y <= fp.y + fh) {
-        ids.push(nodeId);
-      }
-    }
-    return ids;
-  }
-
-  /**
-   * Create frame DOM element with drag and resize
-   * @param {import('../core/Frame.js').Frame} frame
-   */
-  #addFrameView(frame) {
-    const el = document.createElement('graph-frame');
-    el.style.position = 'absolute';
-    el.style.width = `${frame.width}px`;
-    el.style.height = `${frame.height}px`;
-    el.style.transform = `translate(${frame.x}px, ${frame.y}px)`;
-    el._position = { x: frame.x, y: frame.y };
-    el._frameData = frame;
-    el.setAttribute('frame-id', frame.id);
-
-    // Set frame color directly as CSS variable (reliable, no dependency on Symbiote state)
-    el.style.setProperty('--frame-color', frame.color);
-
-    // Wait for Symbiote render, then set state
-    requestAnimationFrame(() => {
-      if (el.$) {
-        el.$.label = frame.label;
-        el.$.color = frame.color;
-      } else {
-        // Fallback: set label text directly
-        const labelEl = el.querySelector('.sn-frame-label');
-        if (labelEl) labelEl.textContent = frame.label;
-      }
-    });
-
-    // Frame drag — moves child nodes too
-    const drag = new Drag();
-    let childStartPositions = null;
-    let frameStartPos = null;
-
-    drag.initialize(
-      el,
-      {
-        getPosition: () => el._position,
-        getZoom: () => this.$.zoom,
-      },
-      {
-        onStart: () => {
-          frameStartPos = { ...el._position };
-          // Capture positions of nodes that are inside this frame
-          const nodeIds = this.#getNodesInFrame(frame.id);
-          childStartPositions = new Map();
-          for (const nid of nodeIds) {
-            const nel = this.#nodeViews.get(nid);
-            if (nel) childStartPositions.set(nid, { ...nel._position });
-          }
-        },
-        onTranslate: (x, y) => {
-          // Move child nodes by delta from frame start
-          if (childStartPositions && frameStartPos) {
-            const dx = x - frameStartPos.x;
-            const dy = y - frameStartPos.y;
-            for (const [nid, startPos] of childStartPositions) {
-              this.setNodePosition(nid, startPos.x + dx, startPos.y + dy);
-            }
-          }
-          this.setFramePosition(frame.id, x, y);
-        },
-        onDrop: () => {
-          childStartPositions = null;
-          frameStartPos = null;
-        },
-      }
-    );
-    el._drag = drag;
-
-    // Resize handle
-    requestAnimationFrame(() => {
-      const handle = el.ref?.resizeHandle;
-      if (handle) {
-        const resizeDrag = new Drag();
-        let startSize = null;
-        resizeDrag.initialize(
-          handle,
-          {
-            getPosition: () => ({ x: frame.width, y: frame.height }),
-            getZoom: () => this.$.zoom,
-          },
-          {
-            onStart: () => {
-              startSize = { w: frame.width, h: frame.height };
-            },
-            onTranslate: (x, y) => {
-              const w = Math.max(120, x);
-              const h = Math.max(80, y);
-              this.setFrameSize(frame.id, w, h);
-            },
-            onDrop: () => { startSize = null; },
-          }
-        );
-        el._resizeDrag = resizeDrag;
-      }
-    });
-
-    this.ref.framesLayer.appendChild(el);
-    this.#frameViews.set(frame.id, el);
-  }
-
-  /**
-   * Remove frame DOM element
-   * @param {import('../core/Frame.js').Frame} frame
-   */
-  #removeFrameView(frame) {
-    const el = this.#frameViews.get(frame.id);
-    if (!el) return;
-    if (el._drag) el._drag.destroy();
-    if (el._resizeDrag) el._resizeDrag.destroy();
-    el.remove();
-    this.#frameViews.delete(frame.id);
+    this.#frameManager?.setSize(frameId, w, h);
   }
 
   // --- Selection ---
-
-  #onSelectionChanged(selectedNodes, selectedConnections) {
-    this.#zCounter++;
-    
-    // 1. Identify neighbors of currently selected nodes for "Focus Mode" label visibility
-    const neighbors = new Set();
-    if (this.#editor && selectedNodes.size > 0) {
-      for (const conn of this.#editor.getConnections()) {
-        if (selectedNodes.has(conn.from)) neighbors.add(conn.to);
-        if (selectedNodes.has(conn.to)) neighbors.add(conn.from);
-      }
-    }
-
-    // Update node attributes — guard to avoid redundant DOM mutations
-    for (const [id, el] of this.#nodeViews) {
-      const shouldSelect = selectedNodes.has(id);
-      const isSelected = el.hasAttribute('data-selected');
-      if (shouldSelect && !isSelected) {
-        el.setAttribute('data-selected', '');
-        el.style.zIndex = this.#zCounter;
-      } else if (!shouldSelect && isSelected) {
-        el.removeAttribute('data-selected');
-      }
-
-      const shouldNeighbor = neighbors.has(id) && !shouldSelect;
-      const isNeighbor = el.hasAttribute('data-neighbor-focused');
-      if (shouldNeighbor && !isNeighbor) {
-        el.setAttribute('data-neighbor-focused', '');
-      } else if (!shouldNeighbor && isNeighbor) {
-        el.removeAttribute('data-neighbor-focused');
-      }
-    }
-
-    // 2. Mark connections touching selected nodes
-    const activeConnIds = new Set();
-    if (this.#editor && selectedNodes.size > 0) {
-      for (const conn of this.#editor.getConnections()) {
-        if (selectedNodes.has(conn.from) || selectedNodes.has(conn.to)) {
-          activeConnIds.add(conn.id);
-        }
-      }
-    }
-
-    // Use cached path map instead of querySelector per connection
-    const connSvg = this.ref.connections;
-    if (!this._connPathCache) this._connPathCache = new Map();
-    for (const [id] of this.#connRenderer?.data || []) {
-      let path = this._connPathCache.get(id);
-      if (!path || !path.isConnected) {
-        path = connSvg.querySelector(`[data-conn-id="${id}"]`);
-        if (path) this._connPathCache.set(id, path);
-      }
-      if (!path) continue;
-
-      // Selection state
-      const shouldSelectConn = selectedConnections.has(id);
-      if (shouldSelectConn !== path.hasAttribute('data-selected')) {
-        shouldSelectConn ? path.setAttribute('data-selected', '') : path.removeAttribute('data-selected');
-      }
-
-      // Active connection: touches a selected node
-      const isActive = activeConnIds.has(id);
-      if (isActive !== path.hasAttribute('data-active-conn')) {
-        isActive ? path.setAttribute('data-active-conn', '') : path.removeAttribute('data-active-conn');
-      }
-
-      // Dimming
-      const shouldDim = !isActive && selectedNodes.size > 0;
-      if (shouldDim !== path.hasAttribute('data-dimmed')) {
-        shouldDim ? path.setAttribute('data-dimmed', '') : path.removeAttribute('data-dimmed');
-      }
-    }
-
-    // Pass selection state to Canvas renderer for dimming implementation
-    if (this.#connRenderer && typeof this.#connRenderer.setSelectionState === 'function') {
-        this.#connRenderer.setSelectionState(selectedNodes.size > 0, activeConnIds);
-    }
-
-    // Quick Action Toolbar — show for single node selection
-    const toolbar = this.ref.quickToolbar;
-    if (toolbar) {
-      if (selectedNodes.size === 1) {
-        const nodeId = [...selectedNodes][0];
-        const nodeEl = this.#nodeViews.get(nodeId);
-        if (nodeEl) toolbar.show(nodeId, nodeEl);
-      } else {
-        toolbar.hide();
-      }
-    }
-
-    // Inspector — show selected node details, auto-hide on deselect
-    const inspector = this.ref.inspector;
-    if (inspector) {
-      inspector._canvas = this;
-      if (selectedNodes.size === 1) {
-        const nodeId = [...selectedNodes][0];
-        const node = this.#editor?.getNode(nodeId);
-        if (node) {
-          inspector.inspect(node);
-          inspector.hidden = false;
-        }
-      } else {
-        inspector.clear();
-        inspector.hidden = true;
-      }
-    }
-
-    // Dispatch event so consumers can react to selection changes (including deselect)
-    this.dispatchEvent(new CustomEvent('selection-changed', {
-      detail: { nodes: [...selectedNodes], connections: [...selectedConnections] },
-    }));
-  }
 
   /** @type {number} */
   #lastClickTime = 0;
@@ -1359,188 +949,12 @@ export class NodeCanvas extends Symbiote {
   // --- Transform ---
 
   #updateTransform() {
-
-    // Sync grid dots with pan/zoom (cached to avoid forced reflow via getComputedStyle)
-    if (this._gridBase === undefined) {
-      this._gridBase = parseInt(getComputedStyle(this).getPropertyValue('--sn-grid-size')) || 20;
-    }
-    const gridBase = this._gridBase;
-    const zoom = this.$.zoom;
-    const multiplier = zoom < 0.5 ? 2 : 1;
-    const gridSize = gridBase * multiplier * zoom;
-    this.style.backgroundSize = `${gridSize}px ${gridSize}px`;
-    this.style.backgroundPosition = `${this.$.panX}px ${this.$.panY}px`;
-
-    // Sync toolbar position with zoom/pan
-    const toolbar = this.ref.quickToolbar;
-    if (toolbar) {
-      toolbar._transform = { zoom, panX: this.$.panX, panY: this.$.panY };
-      if (toolbar._nodeEl) toolbar.updatePosition(toolbar._nodeEl);
-    }
-
-    // Viewport culling + LOD (throttled via rAF to prevent re-render cycles)
-    if (!this._cullingScheduled) {
-      this._cullingScheduled = true;
-      requestAnimationFrame(() => {
-        this._cullingScheduled = false;
-        this.#applyCullingAndLOD();
-      });
-    }
-  }
-
-  /** Apply viewport culling and LOD based on current transform */
-  #applyCullingAndLOD() {
-    if (!this.ref.canvasContainer) return;
-    // Allow running even with 0 DOM nodes (phantom-only mode)
-    if (this.#nodeViews.size === 0 && this.#phantomData.size === 0) return;
-
-    const cw = this.ref.canvasContainer.clientWidth;
-    const ch = this.ref.canvasContainer.clientHeight;
-    const zoom = this.$.zoom;
-    const panX = this.$.panX;
-    const panY = this.$.panY;
-    const margin = 300; 
-
-    const lod = zoom < 0.5 ? 'medium' : 'full';
-    this._currentLod = lod;
-
-    if (this.ref.connections) {
-      const isDimmed = this.ref.connections.hasAttribute('data-lod-dimmed');
-      if (lod !== 'full') {
-        if (!isDimmed) this.ref.connections.setAttribute('data-lod-dimmed', '');
-      } else {
-        if (isDimmed) this.ref.connections.removeAttribute('data-lod-dimmed');
-      }
-    }
-
-    // ─── Virtualization: promote/demote ───
-    const isVirtualized = this.#phantomData.size > 0 || this.#allNodes.size > 200;
-    const FAR_ZOOM = zoom < 0.25;
-    const toPromote = [];
-    const toDemote = [];
-
-    // Check existing DOM nodes for visibility
-    for (const [id, el] of this.#nodeViews) {
-      const pos = el._position;
-      if (!pos) continue;
-
-      const screenX = pos.x * zoom + panX;
-      const screenY = pos.y * zoom + panY;
-      if (!el._cachedW) {
-        el._cachedW = el.offsetWidth || 180;
-        el._cachedH = el.offsetHeight || 60;
-      }
-      const w = el._cachedW * zoom;
-      const h = el._cachedH * zoom;
-
-      const visible = (screenX + w > -margin) && (screenX < cw + margin) &&
-                      (screenY + h > -margin) && (screenY < ch + margin);
-
-      if (isVirtualized && FAR_ZOOM) {
-        toDemote.push(id);
-      } else if (visible) {
-        if (el.style.visibility !== '') el.style.visibility = '';
-        if (el.getAttribute('data-lod') !== lod) el.setAttribute('data-lod', lod);
-      } else if (isVirtualized) {
-        // Demote to phantom (only in virtualized mode)
-        toDemote.push(id);
-      } else {
-        if (el.style.visibility !== 'hidden') el.style.visibility = 'hidden';
-      }
-    }
-
-    // Check phantom nodes for visibility — promote if in viewport
-    // Skip promotion if ALL nodes are still phantom (initial load before fitView)
-    const allPhantom = this.#nodeViews.size === 0 && this.#phantomData.size > 0;
-    if (isVirtualized && !FAR_ZOOM) {
-      for (const [id, pd] of this.#phantomData) {
-        const screenX = pd.x * zoom + panX;
-        const screenY = pd.y * zoom + panY;
-        const w = (pd.w || 180) * zoom;
-        const h = (pd.h || 60) * zoom;
-
-        const visible = (screenX + w > -margin) && (screenX < cw + margin) &&
-                        (screenY + h > -margin) && (screenY < ch + margin);
-
-        if (visible) toPromote.push(id);
-      }
-    }
-
-    // FAR_ZOOM: synchronous demote — no debounce to prevent flicker
-    if (FAR_ZOOM && toDemote.length > 0) {
-      if (this.#virtTimer) { clearTimeout(this.#virtTimer); this.#virtTimer = null; }
-      for (const id of toDemote) this.#demoteNode(id);
-      this.#syncPhantomToRenderer();
-    } else if (toPromote.length > 0 || toDemote.length > 0) {
-      // Normal viewport culling: debounce to avoid thrashing during pan/scroll
-      if (this.#virtTimer) clearTimeout(this.#virtTimer);
-      this.#virtTimer = setTimeout(() => {
-        this.#virtTimer = null;
-        for (const id of toDemote) this.#demoteNode(id);
-        for (const id of toPromote) this.#promoteNode(id);
-        this.#syncPhantomToRenderer();
-      }, 100);
-    } else if (this.#phantomDirty || allPhantom) {
-      // Phantom positions changed or initial phantom-only state — sync to renderer
-      this.#phantomDirty = false;
-      this.#syncPhantomToRenderer();
-    }
-  }
-
-  // ─── Virtualization helpers ───
-
-  /** Promote a phantom node to full DOM */
-  #promoteNode(nodeId) {
-    if (this.#nodeViews.has(nodeId)) return; // already DOM
-    const node = this.#allNodes.get(nodeId);
-    if (!node) return;
-
-    const pd = this.#phantomData.get(nodeId);
-    this.#viewManager.addView(node);
-    const el = this.#nodeViews.get(nodeId);
-    if (el && pd) {
-      el._position = { x: pd.x, y: pd.y };
-      el._cachedW = pd.w;
-      el._cachedH = pd.h;
-      el.style.transform = `translate(${pd.x}px, ${pd.y}px)`;
-    }
-    this.#phantomData.delete(nodeId);
-  }
-
-  /** Demote a DOM node to phantom (Canvas dot) */
-  #demoteNode(nodeId) {
-    if (!this.#nodeViews.has(nodeId)) return; // already phantom
-    const el = this.#nodeViews.get(nodeId);
-    // Capture color from DOM before removal (use cached or inline style — avoid getComputedStyle reflow)
-    let color = null;
-    if (el) {
-      color = el._cachedBgColor || el.style.backgroundColor || null;
-    }
-    const dims = this.#viewManager.removeViewInstant(nodeId);
-    if (dims) {
-      const node = this.#allNodes.get(nodeId);
-      this.#phantomData.set(nodeId, {
-        id: nodeId,
-        x: dims.x, y: dims.y,
-        w: dims.w, h: dims.h,
-        degree: this.#nodeDegrees.get(nodeId) || 0,
-        color,
-        label: node?.label || nodeId,
-      });
-    }
-  }
-
-  /** Push current phantom data to the Canvas renderer */
-  #syncPhantomToRenderer() {
-    if (this.#connRenderer && typeof this.#connRenderer.setPhantomNodes === 'function') {
-      this.#connRenderer.setPhantomNodes([...this.#phantomData.values()]);
-    }
+    this.#viewport?.updateTransform();
   }
 
   /** Public: force sync phantom data to renderer (for use after batch setNodePosition) */
   syncPhantom() {
-    this.#phantomDirty = false;
-    this.#syncPhantomToRenderer();
+    this.#viewport?.syncPhantom();
   }
 
   // --- Lifecycle ---
@@ -1767,65 +1181,11 @@ export class NodeCanvas extends Symbiote {
    * @param {number} [duration=400] - Animation duration in ms
    */
   panToNode(nodeId, duration = 400) {
-    const el = this.#nodeViews.get(nodeId);
-    if (!el?._position) return;
-    const container = this.ref.canvasContainer;
-    if (!container) return;
-
-    const cx = container.clientWidth / 2;
-    const cy = container.clientHeight / 2;
-    const nodeW = (el.offsetWidth || 180) / 2;
-    const nodeH = (el.offsetHeight || 60) / 2;
-    const targetX = -(el._position.x + nodeW) * this.$.zoom + cx;
-    const targetY = -(el._position.y + nodeH) * this.$.zoom + cy;
-
-    this.#animatePan(targetX, targetY, duration);
-  }
-
-  /**
-   * RAF-based smooth pan animation with easeOutCubic
-   * @param {number} targetX
-   * @param {number} targetY
-   * @param {number} duration
-   */
-  #animatePan(targetX, targetY, duration) {
-    if (this.#panAnimFrame) {
-      cancelAnimationFrame(this.#panAnimFrame);
-      this.#panAnimFrame = null;
-    }
-
-    const startX = this.$.panX;
-    const startY = this.$.panY;
-    const dx = targetX - startX;
-    const dy = targetY - startY;
-
-    // Skip if already close enough
-    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
-
-    const startTime = performance.now();
-
-    const step = (now) => {
-      const elapsed = now - startTime;
-      const t = Math.min(elapsed / duration, 1);
-      // easeOutCubic
-      const ease = 1 - Math.pow(1 - t, 3);
-
-      this.$.panX = startX + dx * ease;
-      this.$.panY = startY + dy * ease;
-      this.#updateTransform();
-
-      if (t < 1) {
-        this.#panAnimFrame = requestAnimationFrame(step);
-      } else {
-        this.#panAnimFrame = null;
-      }
-    };
-
-    this.#panAnimFrame = requestAnimationFrame(step);
+    this.#viewport?.panToNode(nodeId, duration);
   }
 
   destroyCallback() {
-    if (this.#panAnimFrame) cancelAnimationFrame(this.#panAnimFrame);
+    if (this.#viewport) this.#viewport.clear();
     if (this.#drag) this.#drag.destroy();
     if (this.#zoom) this.#zoom.destroy();
     if (this.#connectFlow) this.#connectFlow.destroy();

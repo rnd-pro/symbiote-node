@@ -92,10 +92,10 @@ export class ForceLayout {
       if (msg.type === 'done') {
         this.#latestPositions = msg.positions;
         this.#flushRender();
-        this.#running = false;
-        this.#paused = false;
+        // Do NOT terminate the worker or set running=false. 
+        // In continuous mode, the worker stays alive to respond to drag (pin/unpin) interactions.
+        // It will auto-sleep and wake up as needed.
         this.onDone?.(msg.positions, msg.iteration);
-        this.#cleanup();
       }
     };
 

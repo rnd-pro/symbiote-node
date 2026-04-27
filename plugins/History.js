@@ -213,115 +213,71 @@ export class History {
   }
 
   #applyReverse(action) {
-    const editor = this.#editor;
-    const canvas = this.#getCanvas?.();
+    let editor = this.#editor;
+    let canvas = this.#getCanvas?.();
     if (!editor) return;
 
-    switch (action.type) {
-      case 'addNode':
-        editor.removeNode(action.data.node.id);
-        break;
-
-      case 'removeNode': {
-        const { node: nodeData, position, connections } = action.data;
-        const restoredNode = this.#deserializeNode(nodeData);
+    let reverseMap = {
+      addNode: () => editor.removeNode(action.data.node.id),
+      removeNode: () => {
+        let { node: nodeData, position, connections } = action.data;
+        let restoredNode = this.#deserializeNode(nodeData);
         editor.addNode(restoredNode);
-        if (canvas && position) {
-          canvas.setNodePosition(restoredNode.id, position[0], position[1]);
-        }
-        // Restore connections
-        for (const connData of connections) {
-          const { Connection } = this.#classes;
-          const conn = new Connection(connData.from, connData.out, connData.to, connData.in);
+        if (canvas && position) canvas.setNodePosition(restoredNode.id, position[0], position[1]);
+        for (let connData of connections) {
+          let conn = new this.#classes.Connection(connData.from, connData.out, connData.to, connData.in);
           conn.id = connData.id;
           try { editor.addConnection(conn); } catch { /* node may not exist */ }
         }
-        break;
-      }
-
-      case 'moveNode':
-        if (canvas) {
-          canvas.setNodePosition(action.data.nodeId, action.data.from[0], action.data.from[1]);
-        }
-        break;
-
-      case 'addConnection':
-        editor.removeConnection(action.data.connection.id);
-        break;
-
-      case 'removeConnection': {
-        const connData = action.data.connection;
-        const { Connection } = this.#classes;
-        const conn = new Connection(connData.from, connData.out, connData.to, connData.in);
+      },
+      moveNode: () => canvas?.setNodePosition(action.data.nodeId, action.data.from[0], action.data.from[1]),
+      addConnection: () => editor.removeConnection(action.data.connection.id),
+      removeConnection: () => {
+        let connData = action.data.connection;
+        let conn = new this.#classes.Connection(connData.from, connData.out, connData.to, connData.in);
         conn.id = connData.id;
         try { editor.addConnection(conn); } catch { /* already exists */ }
-        break;
-      }
-
-      case 'addFrame':
-        editor.removeFrame(action.data.frame.id);
-        break;
-
-      case 'removeFrame': {
-        const { Frame } = this.#classes;
-        const frame = new Frame(action.data.frame.label, action.data.frame);
+      },
+      addFrame: () => editor.removeFrame(action.data.frame.id),
+      removeFrame: () => {
+        let frame = new this.#classes.Frame(action.data.frame.label, action.data.frame);
         frame.id = action.data.frame.id;
         editor.addFrame(frame);
-        break;
-      }
-    }
+      },
+    };
+
+    reverseMap[action.type]?.();
   }
 
   #applyForward(action) {
-    const editor = this.#editor;
-    const canvas = this.#getCanvas?.();
+    let editor = this.#editor;
+    let canvas = this.#getCanvas?.();
     if (!editor) return;
 
-    switch (action.type) {
-      case 'addNode': {
-        const restoredNode = this.#deserializeNode(action.data.node);
+    let forwardMap = {
+      addNode: () => {
+        let restoredNode = this.#deserializeNode(action.data.node);
         editor.addNode(restoredNode);
-        if (canvas && action.data.position) {
-          canvas.setNodePosition(restoredNode.id, action.data.position[0], action.data.position[1]);
-        }
-        break;
-      }
-
-      case 'removeNode':
-        editor.removeNode(action.data.node.id);
-        break;
-
-      case 'moveNode':
-        if (canvas) {
-          canvas.setNodePosition(action.data.nodeId, action.data.to[0], action.data.to[1]);
-        }
-        break;
-
-      case 'addConnection': {
-        const connData = action.data.connection;
-        const { Connection } = this.#classes;
-        const conn = new Connection(connData.from, connData.out, connData.to, connData.in);
+        if (canvas && action.data.position) canvas.setNodePosition(restoredNode.id, action.data.position[0], action.data.position[1]);
+      },
+      removeNode: () => editor.removeNode(action.data.node.id),
+      moveNode: () => canvas?.setNodePosition(action.data.nodeId, action.data.to[0], action.data.to[1]),
+      addConnection: () => {
+        let connData = action.data.connection;
+        let conn = new this.#classes.Connection(connData.from, connData.out, connData.to, connData.in);
         conn.id = connData.id;
         try { editor.addConnection(conn); } catch { /* already exists */ }
-        break;
-      }
-
-      case 'removeConnection':
-        editor.removeConnection(action.data.connection.id);
-        break;
-
-      case 'addFrame': {
-        const { Frame } = this.#classes;
-        const frame = new Frame(action.data.frame.label, action.data.frame);
+      },
+      removeConnection: () => editor.removeConnection(action.data.connection.id),
+      addFrame: () => {
+        let frame = new this.#classes.Frame(action.data.frame.label, action.data.frame);
         frame.id = action.data.frame.id;
         editor.addFrame(frame);
-        break;
-      }
+      },
+      removeFrame: () => editor.removeFrame(action.data.frame.id),
+    };
 
-      case 'removeFrame':
-        editor.removeFrame(action.data.frame.id);
-        break;
-    }
+    forwardMap[action.type]?.();
   }
 
   #serializeNode(node) {

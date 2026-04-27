@@ -175,65 +175,62 @@ export async function createServer(options = {}) {
     }
   }
 
+  // ── WS Command Map ─────────────────────────────────
+  // cmdMap[type]?.(payload, ws) — one-liner dispatch per BEST-PRACTICES §5
+
+  let UI_PASSTHROUGH = new Set(['ui:layout', 'ui:focus', 'ui:select', 'ui:navigate', 'ui:playback', 'ui:notify', 'ui:cursor']);
+
+  let graphActionMap = {
+    addNode: (payload, ws) => {
+      let { data } = payload;
+      let id = graph.addNode(data.type, data.params, data.options);
+      broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
+      ws.send(JSON.stringify({ type: 'graph:actionResult', payload: { action: 'addNode', nodeId: id } }));
+    },
+    removeNode: (payload, ws) => {
+      graph.removeNode(payload.nodeId);
+      broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
+    },
+    connect: (payload, ws) => {
+      let { from, out, to, in: inp } = payload.data;
+      graph.connect(from, out, to, inp);
+      broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
+    },
+    updateParams: (payload, ws) => {
+      graph.updateParams(payload.nodeId, payload.data.params);
+      broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
+    },
+    execute: async () => {
+      await executeAndStream();
+    },
+  };
+
+  let cmdMap = {
+    'graph:action': (payload, ws) => {
+      let handler = graphActionMap[payload.action];
+      if (handler) return handler(payload, ws);
+      ws.send(JSON.stringify({ type: 'error', payload: { message: `Unknown action: ${payload.action}` } }));
+    },
+  };
+
   /**
    * Handle incoming WebSocket message
    * @param {{type: string, payload: object}} msg
    * @param {import('ws').WebSocket} ws
    */
   async function handleWsMessage(msg, ws) {
-    const { type, payload } = msg;
+    let { type, payload } = msg;
 
-    switch (type) {
-      case 'graph:action': {
-        const { action, nodeId, data } = payload;
-
-        switch (action) {
-          case 'addNode': {
-            const id = graph.addNode(data.type, data.params, data.options);
-            broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
-            ws.send(JSON.stringify({ type: 'graph:actionResult', payload: { action, nodeId: id } }));
-            break;
-          }
-          case 'removeNode': {
-            graph.removeNode(nodeId);
-            broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
-            break;
-          }
-          case 'connect': {
-            const { from, out, to, in: inp } = data;
-            graph.connect(from, out, to, inp);
-            broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
-            break;
-          }
-          case 'updateParams': {
-            graph.updateParams(nodeId, data.params);
-            broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
-            break;
-          }
-          case 'execute': {
-            await executeAndStream();
-            break;
-          }
-          default:
-            ws.send(JSON.stringify({ type: 'error', payload: { message: `Unknown action: ${action}` } }));
-        }
-        break;
-      }
-
-      // Agent UI commands — forward to all other clients
-      case 'ui:layout':
-      case 'ui:focus':
-      case 'ui:select':
-      case 'ui:navigate':
-      case 'ui:playback':
-      case 'ui:notify':
-      case 'ui:cursor':
-        broadcast(msg, ws);
-        break;
-
-      default:
-        ws.send(JSON.stringify({ type: 'error', payload: { message: `Unknown message type: ${type}` } }));
+    // UI passthrough — forward to all other clients
+    if (UI_PASSTHROUGH.has(type)) {
+      broadcast(msg, ws);
+      return;
     }
+
+    let handler = cmdMap[type];
+    if (handler) return handler(payload, ws);
+
+    ws.send(JSON.stringify({ type: 'error', payload: { message: `Unknown message type: ${type}` } }));
   }
 
   /**

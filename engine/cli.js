@@ -369,25 +369,24 @@ Options:
 
 const { command, target, options } = parseArgs(process.argv);
 
-switch (command) {
-  case 'run':
-    if (!target) { console.error('Usage: symbiote-node run <file.workflow.json>'); process.exit(1); }    await cmdRun(target, options);
-    break;
-
-  case 'validate':
-    if (!target) { console.error('Usage: symbiote-node validate <file.workflow.json>'); process.exit(1); }    await cmdValidate(target, options);
-    break;
-
-  case 'list':
+let cliMap = {
+  run: async () => {
+    if (!target) { console.error('Usage: symbiote-node run <file.workflow.json>'); process.exit(1); }
+    await cmdRun(target, options);
+  },
+  validate: async () => {
+    if (!target) { console.error('Usage: symbiote-node validate <file.workflow.json>'); process.exit(1); }
+    await cmdValidate(target, options);
+  },
+  list: async () => {
     await cmdList(options);
-    break;
-
-  case 'inspect':
-    if (!target) { console.error('Usage: symbiote-node inspect <file.workflow.json>'); process.exit(1); }    await cmdInspect(target);
-    break;
-
-  case 'serve': {
-    const port = parseInt(options.port) || 3100;
+  },
+  inspect: async () => {
+    if (!target) { console.error('Usage: symbiote-node inspect <file.workflow.json>'); process.exit(1); }
+    await cmdInspect(target);
+  },
+  serve: async () => {
+    let port = parseInt(options.port) || 3100;
     await createServer({
       port,
       workflowFile: target,
@@ -395,10 +394,13 @@ switch (command) {
       watchFiles: true,
       verbose: !!options.verbose,
     });
-    break;
-  }
+  },
+};
 
-  default:
-    console.log(HELP);
-    break;
+let handler = cliMap[command];
+if (handler) {
+  await handler();
+} else {
+  console.log(HELP);
 }
+

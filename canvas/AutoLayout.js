@@ -535,7 +535,7 @@ export function computeAutoLayout(editor, options = {}) {
 
   for (const k in finalPositions) {
     if (isNaN(finalPositions[k].x) || isNaN(finalPositions[k].y)) {
-      console.error('🔴 [AutoLayout] NaN intercepted for node:", k);
+      console.error('🔴 [AutoLayout] NaN intercepted for node:', k);
       finalPositions[k] = { x: 0, y: 0 };
     }
   }

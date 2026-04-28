@@ -1,3 +1,4 @@
+/* global requestAnimationFrame, cancelAnimationFrame, getComputedStyle */
 /**
  * CanvasViewport.js
  *

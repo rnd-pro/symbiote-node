@@ -1,3 +1,4 @@
+/* global document */
 /**
  * ConnectionRenderer — SVG connection path manager
  *

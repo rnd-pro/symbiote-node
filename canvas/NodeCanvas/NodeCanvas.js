@@ -1,3 +1,4 @@
+/* eslint-env browser */
 /**
  * NodeCanvas — main graph viewport (facade)
  *

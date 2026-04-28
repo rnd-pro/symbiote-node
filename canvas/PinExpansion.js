@@ -1,3 +1,4 @@
+/* eslint-env browser */
 export class PinExpansion {
   /** @type {import('./NodeCanvas/NodeCanvas.js').NodeCanvas} */
   #canvas;

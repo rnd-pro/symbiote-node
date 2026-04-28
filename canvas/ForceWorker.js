@@ -1,3 +1,4 @@
+/* eslint-env worker */
 /**
  * ForceWorker — Force-directed layout in a Web Worker.
  *
@@ -179,6 +180,9 @@ function qtVisit(tree, callback) {
  * Barnes-Hut charge force (Coulomb-like repulsion).
  * Aggregates mass and center-of-mass up the quadtree.
  * θ (theta) controls accuracy vs speed: region_size/distance < θ → treat as point mass.
+ * @param {Array<Object>} nodes
+ * @param {number} strength
+ * @param {number} theta
  */
 function applyChargeForce(nodes, strength, theta) {
   let tree = quadtreeCreate(nodes);
@@ -281,6 +285,9 @@ function applyChargeForce(nodes, strength, theta) {
  * Uses spatial hash grid for O(n) neighbor detection.
  * Applies POSITIONAL separation (not just velocity) for hard constraints.
  * Multi-pass (3 iterations) to resolve chain collisions.
+ * @param {Array<Object>} nodes
+ * @param {number} strength
+ * @param {number} iterations
  */
 function applyCollisionForce(nodes, strength, iterations) {
   let iters = iterations || 3;
@@ -332,6 +339,15 @@ function applyCollisionForce(nodes, strength, iterations) {
   }
 }
 
+/**
+ * Resolve overlap between two nodes
+ * @param {Array<Object>} nodes
+ * @param {number} i
+ * @param {number} j
+ * @param {number} padX
+ * @param {number} padY
+ * @param {number} strength
+ */
 function resolveOverlap(nodes, i, j, padX, padY, strength) {
   let a = nodes[i], b = nodes[j];
   
@@ -400,6 +416,7 @@ function resolveOverlap(nodes, i, j, padX, padY, strength) {
 
 /**
  * Count overlapping node pairs using spatial hash. O(n) average.
+ * @param {Array<Object>} nodes
  * @returns {number} Number of overlapping pairs
  */
 function countOverlaps(nodes) {
@@ -444,6 +461,7 @@ function countOverlaps(nodes) {
 /**
  * Jitter only nodes that are actually overlapping. Uses spatial hash for O(n).
  * Small random displacement breaks deadlocks in post-convergence cleanup.
+ * @param {Array<Object>} nodes
  */
 function jitterOverlappingNodes(nodes) {
   let maxW = 260, maxH = 40;
@@ -500,6 +518,9 @@ function jitterOverlappingNodes(nodes) {
 /**
  * Spring force (Hooke's law) for linked nodes.
  * F = strength * (distance - restLength)
+ * @param {Array<Object>} nodes
+ * @param {Array<Object>} edges
+ * @param {number} alpha
  */
 function applyLinkForce(nodes, edges, alpha) {
   for (const e of edges) {
@@ -528,6 +549,11 @@ function applyLinkForce(nodes, edges, alpha) {
 /**
  * Center force: pulls all nodes toward centroid or attractors.
  * External nodes → global center (0,0). Internal nodes → parent center (bx,by).
+ * @param {Array<Object>} nodes
+ * @param {number} strength
+ * @param {Object} attractors
+ * @param {number} [bx=0]
+ * @param {number} [by=0]
  */
 function applyCenterForce(nodes, strength, attractors, bx = 0, by = 0) {
   for (const n of nodes) {
@@ -555,6 +581,12 @@ function applyCenterForce(nodes, strength, attractors, bx = 0, by = 0) {
 
 /**
  * Boundary force: pushes nodes back if they escape the boundary circle.
+ * @param {Array<Object>} nodes
+ * @param {number} radius
+ * @param {number} strength
+ * @param {number} bx
+ * @param {number} by
+ * @param {string} activeGroupId
  */
 function applyBoundaryForce(nodes, radius, strength, bx, by, activeGroupId) {
   if (!radius) return;

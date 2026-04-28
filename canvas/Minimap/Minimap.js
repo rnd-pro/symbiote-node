@@ -1,3 +1,4 @@
+/* eslint-env browser */
 /**
  * Minimap — small overview of the entire node graph
  *

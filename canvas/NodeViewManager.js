@@ -1,3 +1,4 @@
+/* eslint-env browser */
 /**
  * NodeViewManager — creates/destroys graph-node elements with group drag
  *

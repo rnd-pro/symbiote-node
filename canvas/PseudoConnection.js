@@ -1,3 +1,4 @@
+/* eslint-env browser */
 /**
  * PseudoConnection — temporary connection line during drag
  *

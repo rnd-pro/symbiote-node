@@ -1,3 +1,4 @@
+/* eslint-env browser */
 export class SubgraphRouter {
   #canvas = null;
   #config = {};

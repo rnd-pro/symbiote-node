@@ -1,4 +1,5 @@
 /* eslint-env browser */
+/* global document, requestAnimationFrame */
 /**
  * NodeCanvas — main graph viewport (facade)
  *
@@ -19,7 +20,7 @@ import { Zoom } from '../../interactions/Zoom.js';
 import { ConnectFlow } from '../../interactions/ConnectFlow.js';
 import { Selector } from '../../interactions/Selector.js';
 import { SnapGrid } from '../../interactions/SnapGrid.js';
-import { applyTheme, DARK_DEFAULT } from '../../themes/Theme.js';
+import { applyTheme } from '../../themes/Theme.js';
 import { applyPalette } from '../../themes/Palette.js';
 import { applySkin } from '../../themes/Skin.js';
 import { NodeViewManager } from '../NodeViewManager.js';
@@ -121,7 +122,7 @@ export class NodeCanvas extends Symbiote {
    */
   _clearViews() {
     // Remove all node views and their preview timers
-    for (const [id, el] of this._nodeViews) {
+    for (const [, el] of this._nodeViews) {
       if (el._previewRaf) { clearTimeout(el._previewRaf); el._previewRaf = null; }
       if (el._drag) el._drag.destroy();
       el._redrawPreview = null;
@@ -194,10 +195,6 @@ export class NodeCanvas extends Symbiote {
         },
       });
     }
-  
-    // For test automation
-    this._connRenderer = this._connRenderer;
-
     // Re-apply saved pathStyle after creating new renderer
     if (this._pathStyle !== 'bezier') {
       this._connRenderer.setPathStyle(this._pathStyle);
@@ -305,8 +302,6 @@ export class NodeCanvas extends Symbiote {
       onDropEmpty: (x, y, socketData) => {
         this._actions.handleDropEmpty(x, y, socketData);
         // Show context menu at drop position
-        let container = this.ref.canvasContainer;
-        let rect = container.getBoundingClientRect();
         let menuX = x * this.$.zoom + this.$.panX;
         let menuY = y * this.$.zoom + this.$.panY;
         this.ref.contextMenu?.show(menuX, menuY, [
@@ -1117,7 +1112,7 @@ export class NodeCanvas extends Symbiote {
     if (minimap) {
       minimap.setStateGetter(() => {
         let nodes = [];
-        for (const [id, el] of this._nodeViews) {
+        for (const [, el] of this._nodeViews) {
           let pos = el._position || { x: 0, y: 0 };
           if (!el._cachedW) {
             el._cachedW = el.offsetWidth || 180;

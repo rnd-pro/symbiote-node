@@ -43,10 +43,12 @@ export class ConnectionRenderer {
   /**
    * @param {object} config
    * @param {SVGElement} config.svgLayer
+   * @param {SVGElement} [config.dotLayer]
    * @param {Map<string, HTMLElement>} config.nodeViews
    * @param {import('../core/Editor.js').NodeEditor} config.editor
    * @param {function} config.onConnectionClick - (connId, event)
    * @param {function} config.getZoom - Returns current zoom level
+   * @param {function} [config.onDotDrag] - Callback for dot dragging
    */
   constructor({ svgLayer, dotLayer, nodeViews, editor, onConnectionClick, getZoom, onDotDrag }) {
     this.#svgLayer = svgLayer;
@@ -626,6 +628,7 @@ export class ConnectionRenderer {
   /**
    * Render a single connection SVG path with tangent-aware Bézier and gradient coloring
    * @param {import('../core/Connection.js').Connection} conn
+   * @param {string|null} [draggedNodeId=null]
    */
   #render(conn, draggedNodeId = null) {
     let fromEl = this.#nodeViews.get(conn.from);

@@ -69,36 +69,36 @@ export default {
 
     execute: async (inputs, params) => {
       try {
-        const op = params.operation;
-        const bridge = createBridgeClient(params.bridgeUrl);
+        let op = params.operation;
+        let bridge = createBridgeClient(params.bridgeUrl);
 
         if (op === 'check') {
-          const ok = await bridge.checkHealth();
+          let ok = await bridge.checkHealth();
           return { result: { healthy: ok }, error: null };
         }
 
         if (op === 'image') {
-          const result = await generateImage(bridge, inputs.prompt, params);
+          let result = await generateImage(bridge, inputs.prompt, params);
           return { result, error: null };
         }
 
         if (op === 'image-edit') {
-          const result = await editImage(bridge, inputs.prompt, inputs.referencePath, params);
+          let result = await editImage(bridge, inputs.prompt, inputs.referencePath, params);
           return { result, error: null };
         }
 
         if (op === 'video') {
-          const result = await generateVideo(bridge, params);
+          let result = await generateVideo(bridge, params);
           return { result, error: null };
         }
 
         if (op === 'batch-images') {
-          const results = await batchImages(bridge, params);
+          let results = await batchImages(bridge, params);
           return { result: results, error: null };
         }
 
         if (op === 'batch-videos') {
-          const results = await batchVideos(bridge, params);
+          let results = await batchVideos(bridge, params);
           return { result: results, error: null };
         }
 
@@ -118,13 +118,13 @@ export default {
  * @returns {Object}
  */
 function createBridgeClient(baseUrl) {
-  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  let sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   async function sendCommand(action, cmdParams = {}, timeout = 30000, workerId = null) {
-    const payload = { action, params: cmdParams };
+    let payload = { action, params: cmdParams };
     if (workerId) payload.workerId = workerId;
 
-    const sendRes = await fetch(`${baseUrl}/command`, {
+    let sendRes = await fetch(`${baseUrl}/command`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -132,17 +132,17 @@ function createBridgeClient(baseUrl) {
     });
 
     if (!sendRes.ok) throw new Error('Failed to send command');
-    const { id } = await sendRes.json();
+    let { id } = await sendRes.json();
 
-    const start = Date.now();
+    let start = Date.now();
     while (Date.now() - start < timeout) {
       await sleep(500);
       try {
-        const res = await fetch(`${baseUrl}/result/${id}`, {
+        let res = await fetch(`${baseUrl}/result/${id}`, {
           signal: AbortSignal.timeout(5000),
         });
         if (!res.ok) continue;
-        const data = await res.json();
+        let data = await res.json();
         if (data.error && data.error !== 'Result not found or not ready') {
           throw new Error(data.error);
         }
@@ -162,7 +162,7 @@ function createBridgeClient(baseUrl) {
 
     async checkHealth() {
       try {
-        const res = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(2000) });
+        let res = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(2000) });
         return res.ok;
       } catch {
         return false;
@@ -218,8 +218,8 @@ const SEL = {
  */
 async function ensureOnImagine(bridge, workerId) {
   try {
-    const pageInfo = await bridge.getPageInfo(workerId);
-    const url = pageInfo?.url || '';
+    let pageInfo = await bridge.getPageInfo(workerId);
+    let url = pageInfo?.url || '';
 
     if (url.includes('grok.com/imagine') && !url.includes('/imagine/post/')) {
       try {
@@ -245,26 +245,26 @@ async function ensureOnImagine(bridge, workerId) {
  * @returns {Promise<Object>}
  */
 async function generateImage(bridge, prompt, params) {
-  const { outputDir, filename, globalStyle, workerId } = params;
-  const fullPrompt = globalStyle ? `${globalStyle}, ${prompt}` : prompt;
+  let { outputDir, filename, globalStyle, workerId } = params;
+  let fullPrompt = globalStyle ? `${globalStyle}, ${prompt}` : prompt;
 
   await mkdir(outputDir, { recursive: true });
 
   // Generate via WebSocket
-  const wsResult = await bridge.generateImageWS(fullPrompt, {}, workerId || null);
+  let wsResult = await bridge.generateImageWS(fullPrompt, {}, workerId || null);
 
   if (!wsResult?.imageUrl) {
     throw new Error('No image URL from WebSocket generation');
   }
 
   // Download image via bridge (authenticated)
-  const imageData = await bridge.fetchImage(wsResult.imageUrl, workerId || null);
+  let imageData = await bridge.fetchImage(wsResult.imageUrl, workerId || null);
 
   // Save to file
-  const outputName = filename || `grok-${Date.now()}`;
-  const outputPath = path.join(outputDir, `${outputName}.png`);
+  let outputName = filename || `grok-${Date.now()}`;
+  let outputPath = path.join(outputDir, `${outputName}.png`);
 
-  const base64Data = imageData.dataUrl.split(',')[1];
+  let base64Data = imageData.dataUrl.split(',')[1];
   await writeFile(outputPath, Buffer.from(base64Data, 'base64'));
 
   return {
@@ -283,17 +283,17 @@ async function generateImage(bridge, prompt, params) {
  * @returns {Promise<Object>}
  */
 async function editImage(bridge, prompt, referencePath, params) {
-  const { outputDir, filename, workerId } = params;
+  let { outputDir, filename, workerId } = params;
   await mkdir(outputDir, { recursive: true });
 
   // Navigate to /imagine
   await ensureOnImagine(bridge, workerId || null);
 
   // Upload reference image
-  const imageBuffer = await readFile(path.resolve(referencePath));
-  const base64 = imageBuffer.toString('base64');
-  const ext = path.extname(referencePath).toLowerCase();
-  const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
+  let imageBuffer = await readFile(path.resolve(referencePath));
+  let base64 = imageBuffer.toString('base64');
+  let ext = path.extname(referencePath).toLowerCase();
+  let mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
 
   await bridge.uploadFile(base64, mimeType, `image${ext}`, workerId || null);
   await bridge.sleep(2000);
@@ -306,18 +306,18 @@ async function editImage(bridge, prompt, referencePath, params) {
   await bridge.click(SEL.sendBtn, workerId || null);
 
   // Wait for result via WebSocket
-  const wsResult = await bridge.waitForImageComplete(120000, workerId || null);
+  let wsResult = await bridge.waitForImageComplete(120000, workerId || null);
 
   if (!wsResult?.firstUrl) {
     throw new Error('No image from edit generation');
   }
 
   // Download
-  const imageData = await bridge.fetchImage(wsResult.firstUrl, workerId || null);
-  const outputName = filename || `grok-edit-${Date.now()}`;
-  const outputPath = path.join(outputDir, `${outputName}.png`);
+  let imageData = await bridge.fetchImage(wsResult.firstUrl, workerId || null);
+  let outputName = filename || `grok-edit-${Date.now()}`;
+  let outputPath = path.join(outputDir, `${outputName}.png`);
 
-  const base64Data = imageData.dataUrl.split(',')[1];
+  let base64Data = imageData.dataUrl.split(',')[1];
   await writeFile(outputPath, Buffer.from(base64Data, 'base64'));
 
   return { imagePath: outputPath, imageUrl: wsResult.firstUrl };
@@ -330,17 +330,17 @@ async function editImage(bridge, prompt, referencePath, params) {
  * @returns {Promise<Object>}
  */
 async function generateVideo(bridge, params) {
-  const { imagePath, videoPrompt, outputDir, filename, enableUpscale, workerId } = params;
+  let { imagePath, videoPrompt, outputDir, filename, enableUpscale, workerId } = params;
   await mkdir(outputDir, { recursive: true });
 
   // Navigate to /imagine
   await ensureOnImagine(bridge, workerId || null);
 
   // Upload image
-  const imageBuffer = await readFile(path.resolve(imagePath));
-  const base64 = imageBuffer.toString('base64');
-  const ext = path.extname(imagePath).toLowerCase();
-  const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
+  let imageBuffer = await readFile(path.resolve(imagePath));
+  let base64 = imageBuffer.toString('base64');
+  let ext = path.extname(imagePath).toLowerCase();
+  let mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
 
   await bridge.uploadFile(base64, mimeType, `image${ext}`, workerId || null);
   await bridge.sleep(3000);
@@ -361,29 +361,29 @@ async function generateVideo(bridge, params) {
   try { await bridge.hideZones(workerId || null); } catch { /* ignore */ }
 
   // Wait for video
-  const videoUrl = await waitForVideo(bridge, 90000, workerId || null);
+  let videoUrl = await waitForVideo(bridge, 90000, workerId || null);
 
   // Download video
-  const outputName = filename || `grok-video-${Date.now()}`;
-  const outputPath = path.join(outputDir, `${outputName}.mp4`);
+  let outputName = filename || `grok-video-${Date.now()}`;
+  let outputPath = path.join(outputDir, `${outputName}.mp4`);
 
-  const videoResponse = await fetch(videoUrl);
+  let videoResponse = await fetch(videoUrl);
   if (!videoResponse.ok) throw new Error(`Failed to download video: ${videoResponse.status}`);
-  const buffer = await videoResponse.arrayBuffer();
+  let buffer = await videoResponse.arrayBuffer();
   await writeFile(outputPath, Buffer.from(buffer));
 
-  const result = { videoPath: outputPath, videoUrl };
+  let result = { videoPath: outputPath, videoUrl };
 
   // HD upscale if requested
   if (enableUpscale) {
     try {
       await triggerUpscale(bridge, workerId || null);
-      const hdUrl = await waitForHD(bridge, 120000, workerId || null, videoUrl);
+      let hdUrl = await waitForHD(bridge, 120000, workerId || null, videoUrl);
 
-      const hdPath = path.join(outputDir, `${outputName}_hd.mp4`);
-      const hdResponse = await fetch(hdUrl);
+      let hdPath = path.join(outputDir, `${outputName}_hd.mp4`);
+      let hdResponse = await fetch(hdUrl);
       if (hdResponse.ok) {
-        const hdBuffer = await hdResponse.arrayBuffer();
+        let hdBuffer = await hdResponse.arrayBuffer();
         await writeFile(hdPath, Buffer.from(hdBuffer));
         result.hdVideoPath = hdPath;
         result.hdVideoUrl = hdUrl;
@@ -407,14 +407,14 @@ async function generateVideo(bridge, params) {
  * @returns {Promise<string>}
  */
 async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = null) {
-  const start = Date.now();
+  let start = Date.now();
 
   while (Date.now() - start < timeout) {
     await bridge.sleep(3000);
 
     // Check rate limit
     try {
-      const errors = await bridge.queryAll(SEL.errorToast, workerId);
+      let errors = await bridge.queryAll(SEL.errorToast, workerId);
       if (errors.count > 0) throw new Error('RATE_LIMIT_REACHED');
     } catch (e) {
       if (e.message === 'RATE_LIMIT_REACHED') throw e;
@@ -422,7 +422,7 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
 
     // Check content moderation
     try {
-      const moderated = await bridge.queryAll(SEL.moderatedContent, workerId);
+      let moderated = await bridge.queryAll(SEL.moderatedContent, workerId);
       if (moderated.count > 0) throw new Error('CONTENT_MODERATED');
     } catch (e) {
       if (e.message === 'CONTENT_MODERATED') throw e;
@@ -430,7 +430,7 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
 
     // Check preference selection (A/B test) — refresh to skip
     try {
-      const prefs = await bridge.queryAll(SEL.preferenceBtn, workerId);
+      let prefs = await bridge.queryAll(SEL.preferenceBtn, workerId);
       if (prefs.count >= 2) {
         await bridge.refresh(workerId);
         await bridge.sleep(3000);
@@ -440,8 +440,8 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
 
     // Check for video
     try {
-      const result = await bridge.getAttribute(SEL.video, 'src', workerId);
-      const videoUrl = result.value;
+      let result = await bridge.getAttribute(SEL.video, 'src', workerId);
+      let videoUrl = result.value;
       if (videoUrl?.includes('.mp4')) {
         if (prevUrl && videoUrl === prevUrl) continue;
         return videoUrl;
@@ -482,20 +482,20 @@ async function triggerUpscale(bridge, workerId) {
  * @returns {Promise<string>}
  */
 async function waitForHD(bridge, timeout = 120000, workerId = null, sdUrl = null) {
-  const start = Date.now();
+  let start = Date.now();
 
   while (Date.now() - start < timeout) {
     await bridge.sleep(3000);
 
     try {
-      const hdExists = await bridge.waitFor(SEL.hdButton, 5000, workerId).catch(() => null);
+      let hdExists = await bridge.waitFor(SEL.hdButton, 5000, workerId).catch(() => null);
       if (hdExists) {
-        const result = await bridge.getAttribute(SEL.video, 'src', workerId);
+        let result = await bridge.getAttribute(SEL.video, 'src', workerId);
         if (result.value?.includes('.mp4')) return result.value;
       }
 
       if (sdUrl) {
-        const result = await bridge.getAttribute(SEL.video, 'src', workerId);
+        let result = await bridge.getAttribute(SEL.video, 'src', workerId);
         if (result.value?.includes('.mp4') && result.value !== sdUrl) return result.value;
       }
     } catch { /* not yet */ }
@@ -513,19 +513,19 @@ async function waitForHD(bridge, timeout = 120000, workerId = null, sdUrl = null
  * @returns {Promise<Object>}
  */
 async function batchImages(bridge, params) {
-  const { segments, outputDir, globalStyle } = params;
-  const results = {};
+  let { segments, outputDir, globalStyle } = params;
+  let results = {};
   await mkdir(outputDir, { recursive: true });
 
   for (const seg of segments) {
     try {
-      const result = await generateImage(bridge, seg.prompt || seg.text, {
+      let result = await generateImage(bridge, seg.prompt || seg.text, {
         ...params,
         filename: seg.promptId || seg.id,
       });
       results[seg.promptId || seg.id] = result.imagePath;
     } catch (e) {
-      console.error(`[GrokBatch] Image failed: ${seg.promptId} - ${e.message}`);
+      console.error(`🔴 [GrokBatch] Image failed: ${seg.promptId} - ${e.message}`);
       results[seg.promptId || seg.id] = null;
     }
   }
@@ -540,15 +540,15 @@ async function batchImages(bridge, params) {
  * @returns {Promise<Object>}
  */
 async function batchVideos(bridge, params) {
-  const { segments, outputDir } = params;
-  const results = {};
+  let { segments, outputDir } = params;
+  let results = {};
   await mkdir(outputDir, { recursive: true });
 
   for (const seg of segments) {
     if (!seg.imagePath) continue;
 
     try {
-      const result = await generateVideo(bridge, {
+      let result = await generateVideo(bridge, {
         ...params,
         imagePath: seg.imagePath,
         videoPrompt: seg.videoPrompt || seg.cameraPrompt || '',
@@ -556,7 +556,7 @@ async function batchVideos(bridge, params) {
       });
       results[seg.promptId || seg.id] = result.videoPath;
     } catch (e) {
-      console.error(`[GrokBatch] Video failed: ${seg.promptId} - ${e.message}`);
+      console.error(`🔴 [GrokBatch] Video failed: ${seg.promptId} - ${e.message}`);
       results[seg.promptId || seg.id] = null;
     }
   }

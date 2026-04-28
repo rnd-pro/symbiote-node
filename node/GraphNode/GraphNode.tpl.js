@@ -1,6 +1,6 @@
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div class="sn-node-header">
   <span class="sn-node-icon material-symbols-outlined">{{nodeIcon}}</span>
   <span class="sn-node-label">{{nodeLabel}}</span>

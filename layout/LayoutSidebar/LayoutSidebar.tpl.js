@@ -4,7 +4,7 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const sidebarTemplate = html`
+export let sidebarTemplate = html`
 <div class="sb-header">
   <button class="sb-header-btn" ${{ onclick: 'onToggleEditMode' }}>
     <span class="material-symbols-outlined">tune</span>

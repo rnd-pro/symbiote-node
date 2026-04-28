@@ -114,14 +114,14 @@ export function findParent(root, id) {
  * @returns {LayoutNode} - New root node
  */
 export function splitPanel(root, panelId, direction, ratio = 0.5, newPanelType) {
-  const node = findNode(root, panelId);
+  let node = findNode(root, panelId);
   if (!node || node.type !== 'panel') {
-    console.warn(`Cannot split: panel ${panelId} not found`);
+    console.log(`🟡 Cannot split: panel ${panelId} not found`);
     return root;
   }
 
-  const newPanel = createPanel(newPanelType || node.panelType);
-  const splitNode = createSplit(direction, node, newPanel, ratio);
+  let newPanel = createPanel(newPanelType || node.panelType);
+  let splitNode = createSplit(direction, node, newPanel, ratio);
 
   // If splitting the root
   if (root.id === panelId) {
@@ -129,7 +129,7 @@ export function splitPanel(root, panelId, direction, ratio = 0.5, newPanelType) 
   }
 
   // Find parent and replace
-  const parentInfo = findParent(root, panelId);
+  let parentInfo = findParent(root, panelId);
   if (parentInfo) {
     parentInfo.parent[parentInfo.which] = splitNode;
   }
@@ -144,18 +144,18 @@ export function splitPanel(root, panelId, direction, ratio = 0.5, newPanelType) 
  * @returns {LayoutNode} - New root node
  */
 export function joinPanels(root, panelToRemove) {
-  const parentInfo = findParent(root, panelToRemove);
+  let parentInfo = findParent(root, panelToRemove);
   if (!parentInfo) {
     // Trying to remove root - not allowed
-    console.warn('Cannot join: panel is root');
+    console.log('🟡 Cannot join: panel is root');
     return root;
   }
 
-  const { parent, which } = parentInfo;
-  const survivor = which === 'first' ? parent.second : parent.first;
+  let { parent, which } = parentInfo;
+  let survivor = which === 'first' ? parent.second : parent.first;
 
   // If parent is root, survivor becomes new root
-  const grandparentInfo = findParent(root, parent.id);
+  let grandparentInfo = findParent(root, parent.id);
   if (!grandparentInfo) {
     return survivor;
   }
@@ -173,9 +173,9 @@ export function joinPanels(root, panelToRemove) {
  * @returns {LayoutNode} - Same root (mutated)
  */
 export function resizeSplit(root, splitId, ratio) {
-  const node = findNode(root, splitId);
+  let node = findNode(root, splitId);
   if (!node || node.type !== 'split') {
-    console.warn(`Cannot resize: split ${splitId} not found`);
+    console.log(`🟡 Cannot resize: split ${splitId} not found`);
     return root;
   }
 
@@ -228,7 +228,7 @@ export function getAllPanels(root) {
  * @returns {boolean} - True if node was found and updated
  */
 export function updateNode(root, nodeId, updates) {
-  const node = findNode(root, nodeId);
+  let node = findNode(root, nodeId);
   if (!node) return false;
   Object.assign(node, updates);
   return true;

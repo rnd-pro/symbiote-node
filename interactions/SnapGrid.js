@@ -63,3 +63,5 @@ export class SnapGrid {
     this.#size = size;
   }
 }
+
+export { SnapGrid as default };

@@ -76,11 +76,11 @@ export class Drag {
   #move = (e) => {
     if (!this.#pointerStart || !this.#startPosition) return;
     e.preventDefault();
-    const dx = e.pageX - this.#pointerStart.x;
-    const dy = e.pageY - this.#pointerStart.y;
-    const zoom = this.#getZoom();
-    const x = this.#startPosition.x + dx / zoom;
-    const y = this.#startPosition.y + dy / zoom;
+    let dx = e.pageX - this.#pointerStart.x;
+    let dy = e.pageY - this.#pointerStart.y;
+    let zoom = this.#getZoom();
+    let x = this.#startPosition.x + dx / zoom;
+    let y = this.#startPosition.y + dy / zoom;
     if (this.#onTranslate) this.#onTranslate(x, y, e);
   };
 
@@ -100,3 +100,5 @@ export class Drag {
     window.removeEventListener('pointerup', this.#up);
   }
 }
+
+export { Drag as default };

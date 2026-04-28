@@ -14,7 +14,7 @@
  * Simple in-memory cache
  * @type {Map<string, {data: any, timestamp: number}>}
  */
-const cache = new Map();
+let cache = new Map();
 
 /**
  * Simple hash for caching
@@ -39,7 +39,7 @@ function hashStr(str) {
  * @returns {string}
  */
 function createAdaptationPrompt(content, contentType, targetLevel, options) {
-  const typeLabels = {
+  let typeLabels = {
     news: 'a news article',
     trending: 'a trending topic',
     general: 'educational content',
@@ -77,7 +77,7 @@ function createAdaptationPrompt(content, contentType, targetLevel, options) {
  */
 function parseAiResponse(responseText) {
   // Try to extract JSON from response
-  const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+  let jsonMatch = responseText.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]);
@@ -92,13 +92,13 @@ function parseAiResponse(responseText) {
  * @returns {number}
  */
 function calculateComplexity(content) {
-  const words = content.split(/\s+/);
-  const avgWordLength = words.reduce((sum, w) => sum + w.length, 0) / words.length;
-  const sentenceCount = content.split(/[.!?]+/).filter(Boolean).length;
-  const avgSentenceLength = words.length / sentenceCount;
+  let words = content.split(/\s+/);
+  let avgWordLength = words.reduce((sum, w) => sum + w.length, 0) / words.length;
+  let sentenceCount = content.split(/[.!?]+/).filter(Boolean).length;
+  let avgSentenceLength = words.length / sentenceCount;
 
   // Simple score 0-1 based on word and sentence length
-  const score = Math.min(1, (avgWordLength / 10 + avgSentenceLength / 30) / 2);
+  let score = Math.min(1, (avgWordLength / 10 + avgSentenceLength / 30) / 2);
   return Math.round(score * 100) / 100;
 }
 
@@ -138,7 +138,7 @@ export default {
   lifecycle: {
     validate: (inputs, params) => {
       if (typeof inputs.content !== 'string' || inputs.content.length === 0) return false;
-      const apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
+      let apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
       if (!apiKey) return false;
       return true;
     },
@@ -148,28 +148,28 @@ export default {
     },
 
     execute: async (inputs, params) => {
-      const { content } = inputs;
-      const { operation, model, targetLevel, maxRetries } = params;
-      const apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
+      let { content } = inputs;
+      let { operation, model, targetLevel, maxRetries } = params;
+      let apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
 
       try {
         // Check cache
-        const cacheKey = `${operation}:${hashStr(content.slice(0, 200))}`;
-        const cached = cache.get(cacheKey);
+        let cacheKey = `${operation}:${hashStr(content.slice(0, 200))}`;
+        let cached = cache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < 3600000) {
           return { result: { ...cached.data, cached: true } };
         }
 
         // Determine content type
-        const contentType = operation === 'adapt-news' ? 'news'
+        let contentType = operation === 'adapt-news' ? 'news'
           : operation === 'adapt-trending' ? 'trending'
             : 'general';
 
-        const fullContent = params.title
+        let fullContent = params.title
           ? `Title: ${params.title}\n\n${content}`
           : content;
 
-        const prompt = createAdaptationPrompt(fullContent, contentType, targetLevel, {
+        let prompt = createAdaptationPrompt(fullContent, contentType, targetLevel, {
           includeVocabulary: params.includeVocabulary,
           includeGrammarNotes: params.includeGrammarNotes,
           includeLesson: params.includeLesson,
@@ -179,7 +179,7 @@ export default {
         let lastError;
         for (let attempt = 0; attempt < maxRetries; attempt++) {
           try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -201,13 +201,13 @@ export default {
               return { error: lastError };
             }
 
-            const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || '';
+            let data = await response.json();
+            let aiResponse = data.choices?.[0]?.message?.content || '';
 
-            const parsed = parseAiResponse(aiResponse);
-            const complexity = calculateComplexity(content);
+            let parsed = parseAiResponse(aiResponse);
+            let complexity = calculateComplexity(content);
 
-            const result = {
+            let result = {
               original: content,
               adapted: parsed,
               contentType,

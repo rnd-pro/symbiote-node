@@ -7,9 +7,9 @@ import { css } from '@symbiotejs/symbiote';
 /**
  * Size of the triangular zone (px)
  */
-export const ZONE_SIZE = 16;
+export let ZONE_SIZE = 16;
 
-export const styles = css`
+export let styles = css`
 action-zone {
   position: absolute;
   width: ${ZONE_SIZE}px;

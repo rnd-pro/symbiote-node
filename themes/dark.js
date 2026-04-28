@@ -8,7 +8,7 @@
  */
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export const DARK_DEFAULT = {
+export let DARK_DEFAULT = {
   name: 'dark-default',
   tokens: {
     // === Atomic tokens (AI changes these) ===
@@ -111,7 +111,7 @@ export const DARK_DEFAULT = {
 };
 
 /** @type {import('./Palette.js').PaletteDefinition} */
-export const DARK_PALETTE = {
+export let DARK_PALETTE = {
   name: 'dark',
   colors: {
     '--sn-hue-base': '230',

@@ -8,7 +8,7 @@
  */
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export const CARBON = {
+export let CARBON = {
   name: 'carbon',
   tokens: {
     // === Atomic tokens ===
@@ -111,7 +111,7 @@ export const CARBON = {
 };
 
 /** @type {import('./Palette.js').PaletteDefinition} */
-export const CARBON_PALETTE = {
+export let CARBON_PALETTE = {
   name: 'carbon',
   colors: {
     '--sn-hue-base': '0',

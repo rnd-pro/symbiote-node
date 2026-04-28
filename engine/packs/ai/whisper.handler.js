@@ -58,8 +58,8 @@ export default {
       `whisper:${params.mode}:${params.model}:${inputs.audioPath}`,
 
     execute: async (inputs, params) => {
-      const { audioPath } = inputs;
-      const mode = params.mode || process.env.WHISPER_MODE || 'ssh';
+      let { audioPath } = inputs;
+      let mode = params.mode || process.env.WHISPER_MODE || 'ssh';
 
       if (mode === 'http') {
         return executeHTTP(audioPath, params);
@@ -76,20 +76,20 @@ export default {
  * @returns {Promise<Object>} Result with text, words, duration
  */
 async function executeSSH(audioPath, params) {
-  const host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  const remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
-  const venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
-  const model = params.model || process.env.WHISPER_MODEL || 'medium';
-  const device = params.device || process.env.WHISPER_DEVICE || 'cuda';
-  const language = params.language || 'es';
-  const remoteTmpDir = '/tmp/agi-graph-whisper';
+  let host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
+  let remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
+  let venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
+  let model = params.model || process.env.WHISPER_MODEL || 'medium';
+  let device = params.device || process.env.WHISPER_DEVICE || 'cuda';
+  let language = params.language || 'es';
+  let remoteTmpDir = '/tmp/agi-graph-whisper';
 
   try {
     // Verify file exists
     await fs.access(audioPath);
 
-    const filename = path.basename(audioPath);
-    const remoteAudioPath = `${remoteTmpDir}/${filename}`;
+    let filename = path.basename(audioPath);
+    let remoteAudioPath = `${remoteTmpDir}/${filename}`;
 
     // Ensure remote dir
     execSync(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
@@ -107,21 +107,21 @@ async function executeSSH(audioPath, params) {
 
     try {
       // Run Whisper
-      const pythonCmd = `${venv}/bin/python3`;
-      const whisperScript = `${remotePath}/utils/whisper-word-timing.py`;
+      let pythonCmd = `${venv}/bin/python3`;
+      let whisperScript = `${remotePath}/utils/whisper-word-timing.py`;
 
-      const cmd = `"${pythonCmd}" "${whisperScript}" "${remoteAudioPath}" "${language}" --model "${model}" --device "${device}"`;
-      const fullCmd = `ssh ${host} '${cmd}'`;
+      let cmd = `"${pythonCmd}" "${whisperScript}" "${remoteAudioPath}" "${language}" --model "${model}" --device "${device}"`;
+      let fullCmd = `ssh ${host} '${cmd}'`;
 
-      const output = execSync(fullCmd, {
+      let output = execSync(fullCmd, {
         encoding: 'utf-8',
         maxBuffer: 50 * 1024 * 1024,
         timeout: params.timeout || 300000,
       });
 
-      const words = JSON.parse(output);
-      const text = words.map(w => w.word).join(' ');
-      const duration = words.length > 0
+      let words = JSON.parse(output);
+      let text = words.map(w => w.word).join(' ');
+      let duration = words.length > 0
         ? words[words.length - 1].end
         : 0;
 
@@ -150,14 +150,14 @@ async function executeSSH(audioPath, params) {
  * @returns {Promise<Object>} Result with text, words, duration
  */
 async function executeHTTP(audioPath, params) {
-  const endpoint = params.endpoint || process.env.WHISPER_ENDPOINT || 'http://localhost:5001';
-  const language = params.language || 'es';
+  let endpoint = params.endpoint || process.env.WHISPER_ENDPOINT || 'http://localhost:5001';
+  let language = params.language || 'es';
 
   try {
-    const audioBuffer = await fs.readFile(audioPath);
-    const blob = new Blob([audioBuffer], { type: 'audio/wav' });
+    let audioBuffer = await fs.readFile(audioPath);
+    let blob = new Blob([audioBuffer], { type: 'audio/wav' });
 
-    const formData = new FormData();
+    let formData = new FormData();
     formData.append('file', blob, path.basename(audioPath));
     formData.append('language', language);
     formData.append('word_timestamps', 'true');
@@ -166,7 +166,7 @@ async function executeHTTP(audioPath, params) {
       formData.append('model', params.model);
     }
 
-    const response = await fetch(`${endpoint}/transcribe`, {
+    let response = await fetch(`${endpoint}/transcribe`, {
       method: 'POST',
       body: formData,
       signal: AbortSignal.timeout(params.timeout || 300000),
@@ -176,10 +176,10 @@ async function executeHTTP(audioPath, params) {
       return { text: null, words: null, duration: 0, error: `Whisper API error: ${response.status}` };
     }
 
-    const result = await response.json();
-    const words = result.words || [];
-    const text = result.text || words.map(w => w.word).join(' ');
-    const duration = words.length > 0
+    let result = await response.json();
+    let words = result.words || [];
+    let text = result.text || words.map(w => w.word).join(' ');
+    let duration = words.length > 0
       ? words[words.length - 1].end
       : 0;
 

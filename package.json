@@ -1,17 +1,30 @@
 {
   "name": "symbiote-node",
-  "version": "0.2.1",
+  "version": "0.3.0-alpha.1",
   "type": "module",
   "description": "Visual Node Graph Editor + Execution Engine — extensible, themeable graph editor and runtime built on Symbiote.js",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
     "./engine": "./engine/index.js",
-    "./engine/*": "./engine/*"
+    "./engine/*": "./engine/*",
+    "./themes/*": "./themes/*",
+    "./canvas/*": "./canvas/*",
+    "./layout/*": "./layout/*",
+    "./interactions/*": "./interactions/*",
+    "./node/*": "./node/*",
+    "./shapes/*": "./shapes/*",
+    "./plugins/*": "./plugins/*"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "demo": "npx -y serve -l 3000 ."
+    "demo": "npx -y serve -l 3000 .",
+    "release:alpha": "npm version prerelease --preid=alpha && npm publish --tag alpha",
+    "release:minor": "npm version minor && npm publish",
+    "release:patch": "npm version patch && npm publish"
   },
   "keywords": [
     "node-editor",

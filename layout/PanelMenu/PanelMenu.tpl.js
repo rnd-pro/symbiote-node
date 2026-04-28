@@ -1,6 +1,6 @@
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
 <div class="menu-container" ${{ '@hidden': '!visible' }}>
   <div class="menu-items" itemize="items">
     <template>

@@ -30,9 +30,9 @@ export default {
     cacheKey: null,
 
     execute: async (inputs, params) => {
-      const label = params.label ? `[${params.label}]` : '[symbiote-node]';      const method = params.level || 'info';
+      let label = params.label ? `[${params.label}]` : '[symbiote-node]';      const method = params.level || 'info';
 
-      const logFn = console[method] || console.log;
+      let logFn = console[method] || console.log;
       logFn(label, typeof inputs.value === 'object'
         ? JSON.stringify(inputs.value, null, 2)
         : inputs.value

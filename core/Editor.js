@@ -58,12 +58,19 @@ export class NodeEditor {
    * @returns {boolean} - false if any listener returned false (cancel)
    */
   emit(event, data) {
-    const handlers = this._listeners[event];
+    let handlers = this._listeners[event];
     if (!handlers) return true;
     for (const handler of handlers) {
       if (handler(data) === false) return false;
     }
     return true;
+  }
+
+  /**
+   * Remove all event listeners (for clean teardown)
+   */
+  removeAllListeners() {
+    this._listeners = {};
   }
 
   // --- Node CRUD ---
@@ -104,7 +111,7 @@ export class NodeEditor {
    * @returns {boolean}
    */
   removeNode(id) {
-    const node = this.nodes.get(id);
+    let node = this.nodes.get(id);
     if (!node) throw new Error('node not found');
     if (!this.emit('noderemove', node)) return false;
 
@@ -167,7 +174,7 @@ export class NodeEditor {
    * @returns {boolean}
    */
   removeConnection(id) {
-    const conn = this.connections.get(id);
+    let conn = this.connections.get(id);
     if (!conn) return false;
     if (!this.emit('connectionremove', conn)) return false;
     this.connections.delete(id);
@@ -231,7 +238,7 @@ export class NodeEditor {
    * @returns {boolean}
    */
   removeFrame(id) {
-    const frame = this.frames.get(id);
+    let frame = this.frames.get(id);
     if (!frame) return false;
     if (!this.emit('frameremove', frame)) return false;
     this.frames.delete(id);
@@ -251,7 +258,7 @@ export class NodeEditor {
     return {
       version: 1,
       nodes: this.getNodes().map((n) => {
-        const obj = {
+        let obj = {
           id: n.id,
           type: n.type,
           name: n.label,
@@ -263,7 +270,7 @@ export class NodeEditor {
         if (n.cacheMode && n.cacheMode !== 'auto') obj.cacheMode = n.cacheMode;
 
         // Serialize port definitions for round-trip
-        const inputs = Object.entries(n.inputs);
+        let inputs = Object.entries(n.inputs);
         if (inputs.length > 0) {
           obj.inputs = inputs.map(([key, inp]) => ({
             name: key,
@@ -271,7 +278,7 @@ export class NodeEditor {
             label: inp.label || '',
           }));
         }
-        const outputs = Object.entries(n.outputs);
+        let outputs = Object.entries(n.outputs);
         if (outputs.length > 0) {
           obj.outputs = outputs.map(([key, out]) => ({
             name: key,
@@ -319,7 +326,7 @@ export class NodeEditor {
 
     // Restore nodes
     for (const nd of (data.nodes || [])) {
-      const node = new Node(nd.name || nd.type, {
+      let node = new Node(nd.name || nd.type, {
         id: nd.id,
         type: nd.type,
         category: nd.category || 'default',
@@ -331,7 +338,7 @@ export class NodeEditor {
 
       // Auto-create InputControls from params for Inspector display
       // Merge driver defaults into params (fills missing keys from handler definitions)
-      const driverParams = nd.driver?.params;
+      let driverParams = nd.driver?.params;
       if (driverParams && !nd.params) nd.params = {};
       if (driverParams) {
         for (const [key, def] of Object.entries(driverParams)) {
@@ -349,7 +356,7 @@ export class NodeEditor {
           let controlOptions = [];
 
           // Use driver metadata for richer control type detection
-          const paramMeta = driverParams?.[key];
+          let paramMeta = driverParams?.[key];
           if (paramMeta?.type === 'boolean' || typeof value === 'boolean') {
             controlType = 'boolean';
           } else if (paramMeta?.type === 'number' || typeof value === 'number') {
@@ -392,8 +399,8 @@ export class NodeEditor {
 
     // Restore connections
     for (const cd of (data.connections || [])) {
-      const srcNode = this.nodes.get(cd.from);
-      const tgtNode = this.nodes.get(cd.to);
+      let srcNode = this.nodes.get(cd.from);
+      let tgtNode = this.nodes.get(cd.to);
       if (!srcNode || !tgtNode) continue;
 
       // Ensure ports exist (auto-create if coming from engine format without port defs)
@@ -404,14 +411,14 @@ export class NodeEditor {
         tgtNode.addInput(cd.in, new Input(new Socket('any'), cd.in));
       }
 
-      const conn = new Connection(srcNode, cd.out, tgtNode, cd.in);
+      let conn = new Connection(srcNode, cd.out, tgtNode, cd.in);
       if (cd.id) conn.id = cd.id;
       this.connections.set(conn.id, conn);
     }
 
     // Restore frames
     for (const fd of (data.frames || [])) {
-      const frame = new Frame(fd.label, {
+      let frame = new Frame(fd.label, {
         id: fd.id,
         x: fd.x,
         y: fd.y,
@@ -437,8 +444,10 @@ export class NodeEditor {
    * @returns {Promise<import('../engine/Graph.js').Graph>}
    */
   async toGraph(positions = {}) {
-    const { Graph } = await import('../engine/Graph.js');
-    const json = this.toJSON(positions);
+    let { Graph } = await import('../engine/Graph.js');
+    let json = this.toJSON(positions);
     return new Graph(json);
   }
 }
+
+export { NodeEditor as default };

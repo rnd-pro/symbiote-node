@@ -35,10 +35,10 @@ export default {
 
   lifecycle: {
     execute: (inputs, params) => {
-      const mode = params?.mode || 'first';
+      let mode = params?.mode || 'first';
 
       if (mode === 'combine') {
-        const merged = {};
+        let merged = {};
         for (const value of Object.values(inputs)) {
           if (value != null && typeof value === 'object') {
             Object.assign(merged, value);
@@ -48,12 +48,12 @@ export default {
       }
 
       if (mode === 'append') {
-        const items = Object.values(inputs).filter(v => v != null);
+        let items = Object.values(inputs).filter(v => v != null);
         return { data: items };
       }
 
       // Default: 'first' — first non-null input
-      const data = inputs.a != null ? inputs.a : inputs.b;
+      let data = inputs.a != null ? inputs.a : inputs.b;
       return { data };
     },
   },

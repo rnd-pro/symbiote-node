@@ -38,7 +38,7 @@ export class Layout extends Symbiote {
 
     // Tab click handler for Itemize
     onTabClick: (e) => {
-      const panelId = e.target.closest('[data-panel-id]')?.dataset.panelId;
+      let panelId = e.target.closest('[data-panel-id]')?.dataset.panelId;
       if (panelId && panelId !== this.$.fullscreenPanelId) {
         this._switchFullscreenPanel(panelId);
       }
@@ -113,9 +113,9 @@ export class Layout extends Symbiote {
         // Wait for DOM update, then recalculate tabs
         if (typeof requestAnimationFrame !== 'undefined') {
           requestAnimationFrame(() => {
-            const allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
+            let allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
             // Check if current fullscreen panel still exists
-            const panelExists = Array.from(allPanels).some(p => p.$.nodeId === this.$.fullscreenPanelId);
+            let panelExists = Array.from(allPanels).some(p => p.$.nodeId === this.$.fullscreenPanelId);
             if (panelExists) {
               this._updateTabItems(allPanels, this.$.fullscreenPanelId);
             } else {
@@ -136,29 +136,29 @@ export class Layout extends Symbiote {
   }
 
   _loadLayout() {
-    const storageKey = this.$['@storage-key'];
+    let storageKey = this.$['@storage-key'];
 
     // Try localStorage
     if (storageKey && typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem(storageKey);
+      let stored = localStorage.getItem(storageKey);
       if (stored) {
         try {
           this.$.layoutTree = LayoutTree.deserialize(stored);
           return;
         } catch (e) {
-          console.warn('Failed to load layout:', e);
+          console.log('🟡 Failed to load layout:', e);
         }
       }
     }
 
     // Try layout attribute
-    const layoutAttr = this.getAttribute('layout');
+    let layoutAttr = this.getAttribute('layout');
     if (layoutAttr) {
       try {
         this.$.layoutTree = JSON.parse(layoutAttr);
         return;
       } catch (e) {
-        console.warn('Failed to parse layout:', e);
+        console.log('🟡 Failed to parse layout:', e);
       }
     }
 
@@ -167,7 +167,7 @@ export class Layout extends Symbiote {
   }
 
   _saveLayout() {
-    const storageKey = this.$['@storage-key'];
+    let storageKey = this.$['@storage-key'];
     if (storageKey && this.$.layoutTree && typeof localStorage !== 'undefined') {
       localStorage.setItem(storageKey, LayoutTree.serialize(this.$.layoutTree));
     }
@@ -194,7 +194,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onActionZoneStart(e) {
-    const { panelId, corner } = e.detail;
+    let { panelId, corner } = e.detail;
     this.$.activeGesture = { panelId, corner };
   }
 
@@ -203,25 +203,25 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onActionZoneGesture(e) {
-    const { panelId, gesture, dx, dy } = e.detail;
+    let { panelId, gesture, dx, dy } = e.detail;
 
     // Find the panel element
-    const panelNode = this._findPanelNode(panelId);
+    let panelNode = this._findPanelNode(panelId);
     if (!panelNode) return;
 
-    const panelRect = panelNode.getBoundingClientRect();
+    let panelRect = panelNode.getBoundingClientRect();
 
     // Show preview
-    const preview = this.ref.preview;
+    let preview = this.ref.preview;
     if (!preview) return;
 
     if (gesture === 'split-h' || gesture === 'split-v') {
       preview.showSplit(gesture, panelRect, 0.5);
     } else if (gesture === 'join') {
       // For join, find the neighbor panel that would be removed
-      const neighborInfo = this._findJoinTarget(panelId, dx, dy);
+      let neighborInfo = this._findJoinTarget(panelId, dx, dy);
       if (neighborInfo) {
-        const neighborNode = this._findPanelNode(neighborInfo.id);
+        let neighborNode = this._findPanelNode(neighborInfo.id);
         if (neighborNode) {
           preview.showJoin(neighborNode.getBoundingClientRect());
         }
@@ -234,7 +234,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onActionZoneExecute(e) {
-    const { panelId, corner, gesture } = e.detail;
+    let { panelId, corner, gesture } = e.detail;
 
     if (gesture === 'split-h') {
       this.splitPanel(panelId, 'horizontal', 0.5);
@@ -254,7 +254,7 @@ export class Layout extends Symbiote {
     this.$.activeGesture = null;
 
     // Hide preview
-    const preview = this.ref.preview;
+    let preview = this.ref.preview;
     if (preview) {
       preview.hide();
     }
@@ -265,12 +265,12 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onPanelTypeMenu(e) {
-    const { panelId, currentType, x, y } = e.detail;
-    const menu = this.ref.menu;
+    let { panelId, currentType, x, y } = e.detail;
+    let menu = this.ref.menu;
     if (!menu) return;
 
     // Convert panelTypes to array for menu
-    const items = Object.entries(this.$.panelTypes).map(([type, config]) => ({
+    let items = Object.entries(this.$.panelTypes).map(([type, config]) => ({
       type,
       title: config.title || type,
       icon: config.icon || 'dashboard'
@@ -284,13 +284,13 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onPanelTypeSelect(e) {
-    const { panelId, type } = e.detail;
+    let { panelId, type } = e.detail;
 
     // Update tree
-    const tree = this.$.layoutTree;
+    let tree = this.$.layoutTree;
     if (!tree) return;
 
-    const updateNode = (node) => {
+    let updateNode = (node) => {
       if (!node) return;
       if (node.id === panelId) {
         node.panelType = type;
@@ -310,8 +310,8 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onPanelCollapseToggle(e) {
-    const { panelId, collapsed } = e.detail;
-    const tree = this.$.layoutTree;
+    let { panelId, collapsed } = e.detail;
+    let tree = this.$.layoutTree;
     if (!tree) return;
 
     // Update the node's collapsed state in tree
@@ -326,18 +326,18 @@ export class Layout extends Symbiote {
     // When one panel collapses/expands, both need to recalculate
     if (typeof requestAnimationFrame !== 'undefined') {
       requestAnimationFrame(() => {
-        const panelNode = this._findPanelNode(panelId);
+        let panelNode = this._findPanelNode(panelId);
         if (panelNode) {
           // Find parent split container
-          const container = panelNode.parentElement;
+          let container = panelNode.parentElement;
           if (container?.classList.contains('split-first') || container?.classList.contains('split-second')) {
-            const siblingContainer = container.classList.contains('split-first')
+            let siblingContainer = container.classList.contains('split-first')
               ? container.parentElement?.querySelector('.split-second')
               : container.parentElement?.querySelector('.split-first');
 
             // Update sibling panel
             if (siblingContainer) {
-              const siblingPanel = siblingContainer.querySelector('layout-node[node-type="panel"]');
+              let siblingPanel = siblingContainer.querySelector('layout-node[node-type="panel"]');
               if (siblingPanel?._updatePanelInfo) {
                 siblingPanel._updatePanelInfo();
               }
@@ -358,11 +358,11 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onPanelFullscreen(e) {
-    const { panelId } = e.detail;
-    const panelNode = this._findPanelNode(panelId);
+    let { panelId } = e.detail;
+    let panelNode = this._findPanelNode(panelId);
     if (!panelNode) return;
 
-    const allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
+    let allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
 
     if (this.$.fullscreenPanelId === panelId) {
       // Exit fullscreen
@@ -413,13 +413,13 @@ export class Layout extends Symbiote {
    * @param {string} [activePanelId] - Optional, defaults to fullscreenPanelId
    */
   _updateTabItems(allPanels, activePanelId) {
-    const panels = allPanels || this.querySelectorAll('layout-node[node-type="panel"]');
-    const activeId = activePanelId || this.$.fullscreenPanelId;
+    let panels = allPanels || this.querySelectorAll('layout-node[node-type="panel"]');
+    let activeId = activePanelId || this.$.fullscreenPanelId;
 
     this.$.tabItems = Array.from(panels).map((p) => {
-      const nodeData = p.$.nodeData;
-      const panelType = nodeData?.panelType || 'panel';
-      const typeConfig = this.$.panelTypes[panelType] || {};
+      let nodeData = p.$.nodeData;
+      let panelType = nodeData?.panelType || 'panel';
+      let typeConfig = this.$.panelTypes[panelType] || {};
 
       return {
         panelId: p.$.nodeId,
@@ -435,8 +435,8 @@ export class Layout extends Symbiote {
    * @param {string} panelId - Panel ID to switch to
    */
   _switchFullscreenPanel(panelId) {
-    const allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
-    const newPanel = this._findPanelNode(panelId);
+    let allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
+    let newPanel = this._findPanelNode(panelId);
     if (!newPanel) return;
 
     // Update panel states
@@ -466,7 +466,7 @@ export class Layout extends Symbiote {
    * @returns {HTMLElement|null}
    */
   _findPanelNode(panelId) {
-    const nodes = this.querySelectorAll('layout-node[node-type="panel"]');
+    let nodes = this.querySelectorAll('layout-node[node-type="panel"]');
     for (const node of nodes) {
       if (node.$.nodeId === panelId) {
         return node;
@@ -484,17 +484,17 @@ export class Layout extends Symbiote {
    */
   _findJoinTarget(panelId, dx, dy) {
     // Find parent split of this panel
-    const parentInfo = LayoutTree.findParent(this.$.layoutTree, panelId);
+    let parentInfo = LayoutTree.findParent(this.$.layoutTree, panelId);
     if (!parentInfo) return null;
 
-    const { parent, which } = parentInfo;
+    let { parent, which } = parentInfo;
 
     // The sibling is the join target (the panel that will expand)
-    const sibling = which === 'first' ? parent.second : parent.first;
+    let sibling = which === 'first' ? parent.second : parent.first;
     if (!sibling) return null;
 
     // For nested splits, get the leaf panel ID
-    const siblingId = this._getFirstPanelId(sibling);
+    let siblingId = this._getFirstPanelId(sibling);
 
     return { id: siblingId, direction: parent.direction };
   }
@@ -521,7 +521,7 @@ export class Layout extends Symbiote {
    * @param {string} [newPanelType] - Type for new panel
    */
   splitPanel(panelId, direction, ratio = 0.5, newPanelType) {
-    const newTree = LayoutTree.splitPanel(
+    let newTree = LayoutTree.splitPanel(
       LayoutTree.clone(this.$.layoutTree),
       panelId,
       direction,
@@ -540,7 +540,7 @@ export class Layout extends Symbiote {
    * @param {string} panelToRemove - Panel ID to remove
    */
   joinPanels(panelToRemove) {
-    const newTree = LayoutTree.joinPanels(
+    let newTree = LayoutTree.joinPanels(
       LayoutTree.clone(this.$.layoutTree),
       panelToRemove
     );
@@ -566,7 +566,7 @@ export class Layout extends Symbiote {
   setLayout(layout) {
     // Clear fullscreen state
     if (this.$.fullscreenPanelId) {
-      const panelNode = this._findPanelNode(this.$.fullscreenPanelId);
+      let panelNode = this._findPanelNode(this.$.fullscreenPanelId);
       if (panelNode) {
         panelNode.removeAttribute('fullscreen');
         panelNode.$.isFullscreen = false;

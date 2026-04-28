@@ -32,15 +32,15 @@ export default {
 
   lifecycle: {
     execute: async (inputs, params) => {
-      const inputData = inputs.data || {};
-      const base = params.keepOriginal ? { ...inputData } : {};
+      let inputData = inputs.data || {};
+      let base = params.keepOriginal ? { ...inputData } : {};
 
       for (const [key, rawValue] of Object.entries(params.fields || {})) {
         if (typeof rawValue === 'string' && rawValue.startsWith('={{') && rawValue.endsWith('}}')) {
           // Expression: resolve from input data
-          const expr = rawValue.slice(3, -2).trim();
+          let expr = rawValue.slice(3, -2).trim();
           // Simple dot-path resolution
-          const value = expr.split('.').reduce((obj, k) => {
+          let value = expr.split('.').reduce((obj, k) => {
             if (obj === null || obj === undefined) return undefined;
             return obj[k];
           }, inputData);

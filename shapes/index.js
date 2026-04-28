@@ -12,7 +12,7 @@ import { CommentShape } from './CommentShape.js';
 import { SVGShape, createSVGShape, SVG_PRESETS } from './SVGShape.js';
 
 /** @type {Map<string, NodeShape>} */
-const registry = new Map();
+let registry = new Map();
 
 // Register built-in shapes
 const RECT = new RectShape();

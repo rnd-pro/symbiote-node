@@ -50,15 +50,15 @@ export default {
 
     execute: async (inputs, params) => {
       try {
-        const op = params.operation;
-        const segments = inputs.segments;
+        let op = params.operation;
+        let segments = inputs.segments;
 
         if (op === 'analyze') {
           if (!params.apiKey) {
             return { result: null, stats: null, error: 'apiKey is required for AI analysis' };
           }
-          const analyzed = await analyzeWithAI(segments, inputs.lyrics, params);
-          const lipsyncCount = analyzed.filter(s => s.isLipSync).length;
+          let analyzed = await analyzeWithAI(segments, inputs.lyrics, params);
+          let lipsyncCount = analyzed.filter(s => s.isLipSync).length;
           return {
             result: analyzed,
             stats: { total: segments.length, lipsyncMarked: lipsyncCount },
@@ -67,14 +67,14 @@ export default {
         }
 
         if (op === 'select') {
-          const { selectedSegments, stats } = selectLipsyncSegments(segments, params);
+          let { selectedSegments, stats } = selectLipsyncSegments(segments, params);
           return { result: selectedSegments, stats, error: null };
         }
 
         if (op === 'apply') {
-          const selected = params.selectedSegments || [];
-          const mouthPos = params.mouthPositions || {};
-          const applied = applySelection(segments, selected, mouthPos);
+          let selected = params.selectedSegments || [];
+          let mouthPos = params.mouthPositions || {};
+          let applied = applySelection(segments, selected, mouthPos);
           return {
             result: applied,
             stats: { total: applied.length, lipsync: applied.filter(s => s.isLipSync).length },
@@ -100,30 +100,30 @@ export default {
  * @returns {{selectedSegments: Array, stats: Object}}
  */
 function selectLipsyncSegments(segments, params) {
-  const minFaceCoverage = params.minFaceCoverage;
+  let minFaceCoverage = params.minFaceCoverage;
 
-  const stats = {
+  let stats = {
     total: segments.length,
     markedForLipsync: 0,
     filteredByFace: 0,
     selected: 0,
   };
 
-  const lipsyncMarked = segments.filter(seg => seg.isLipSync === true);
+  let lipsyncMarked = segments.filter(seg => seg.isLipSync === true);
   stats.markedForLipsync = lipsyncMarked.length;
 
   if (lipsyncMarked.length === 0) {
     return { selectedSegments: [], stats };
   }
 
-  const selected = [];
+  let selected = [];
 
   for (const seg of lipsyncMarked) {
     let hasFace = false;
     let faceCoverage = 0;
 
     // Check faceTracking data in segment or source metadata
-    const faceTracking = seg.faceTracking || seg.sourceMetadata?.faceTracking;
+    let faceTracking = seg.faceTracking || seg.sourceMetadata?.faceTracking;
 
     if (faceTracking) {
       if (faceTracking.maxCoverage) {
@@ -135,7 +135,7 @@ function selectLipsyncSegments(segments, params) {
           if (frame.faces?.length > 0) {
             for (const face of frame.faces) {
               if (face.bboxRel) {
-                const coverage = (face.bboxRel.width || 0) * 100;
+                let coverage = (face.bboxRel.width || 0) * 100;
                 if (coverage > maxCov) maxCov = coverage;
               }
             }
@@ -171,12 +171,12 @@ function selectLipsyncSegments(segments, params) {
  * @returns {Array}
  */
 function applySelection(segments, selectedSegments, mouthPositions = {}) {
-  const selectedIds = new Set(selectedSegments.map(s => s.promptId || s.id));
+  let selectedIds = new Set(selectedSegments.map(s => s.promptId || s.id));
 
   return segments.map(seg => {
-    const id = seg.promptId || seg.id;
-    const isLipSync = selectedIds.has(id);
-    const mouthData = mouthPositions[id];
+    let id = seg.promptId || seg.id;
+    let isLipSync = selectedIds.has(id);
+    let mouthData = mouthPositions[id];
 
     return {
       ...seg,
@@ -196,7 +196,7 @@ function applySelection(segments, selectedSegments, mouthPositions = {}) {
  * @returns {Promise<Array>}
  */
 async function analyzeWithAI(segments, lyrics, params) {
-  const segmentSummary = segments.map((seg, idx) => ({
+  let segmentSummary = segments.map((seg, idx) => ({
     idx,
     id: seg.id || seg.promptId,
     text: seg.text || '',
@@ -205,8 +205,8 @@ async function analyzeWithAI(segments, lyrics, params) {
     end: seg.end?.toFixed(1) || '?',
   }));
 
-  const prompt = buildAnalysisPrompt(lyrics, segmentSummary);
-  const response = await callAI(prompt, params);
+  let prompt = buildAnalysisPrompt(lyrics, segmentSummary);
+  let response = await callAI(prompt, params);
   return parseAIResponse(response, segments);
 }
 
@@ -217,7 +217,7 @@ async function analyzeWithAI(segments, lyrics, params) {
  * @returns {string}
  */
 function buildAnalysisPrompt(lyrics, segmentSummary) {
-  const segmentsList = segmentSummary.map(s =>
+  let segmentsList = segmentSummary.map(s =>
     `[${s.idx}] ${s.id} | ${s.section} | ${s.start}-${s.end}s | "${s.text.substring(0, 60)}${s.text.length > 60 ? '...' : ''}"`
   ).join('\n');
 
@@ -269,11 +269,11 @@ Return ONLY valid JSON. Include ALL ${segmentSummary.length} segments.`;
  * @returns {Promise<string>}
  */
 async function callAI(prompt, params) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  let controller = new AbortController();
+  let timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
-    const response = await fetch(`${params.apiBaseUrl}/chat/completions`, {
+    let response = await fetch(`${params.apiBaseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -293,11 +293,11 @@ async function callAI(prompt, params) {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const error = await response.text();
+      let error = await response.text();
       throw new Error(`API error ${response.status}: ${error}`);
     }
 
-    const data = await response.json();
+    let data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
     clearTimeout(timeoutId);
@@ -312,15 +312,15 @@ async function callAI(prompt, params) {
  * @returns {Array}
  */
 function parseAIResponse(response, segments) {
-  const jsonMatch = response.match(/\{[\s\S]*\}/);
+  let jsonMatch = response.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('No JSON found in AI response');
   }
 
-  const parsed = JSON.parse(jsonMatch[0]);
-  const analysis = parsed.analysis || [];
+  let parsed = JSON.parse(jsonMatch[0]);
+  let analysis = parsed.analysis || [];
 
-  const lipsyncMap = new Map();
+  let lipsyncMap = new Map();
   for (const item of analysis) {
     lipsyncMap.set(item.idx, {
       isLipSync: item.lipsync === true,
@@ -329,7 +329,7 @@ function parseAIResponse(response, segments) {
   }
 
   return segments.map((seg, idx) => {
-    const aiDecision = lipsyncMap.get(idx);
+    let aiDecision = lipsyncMap.get(idx);
     return {
       ...seg,
       isLipSync: aiDecision?.isLipSync ?? false,

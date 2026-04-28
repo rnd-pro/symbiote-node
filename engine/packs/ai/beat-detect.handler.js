@@ -69,8 +69,8 @@ export default {
       `beat:${params.mode}:${inputs.audioPath}:${params.peaksPerSecond}:${params.sampleRate}`,
 
     execute: async (inputs, params) => {
-      const { audioPath } = inputs;
-      const mode = params.mode || 'ssh';
+      let { audioPath } = inputs;
+      let mode = params.mode || 'ssh';
 
       if (mode === 'http') {
         return executeHTTP(audioPath, params);
@@ -93,20 +93,20 @@ const EMPTY = {
  * @returns {Promise<Object>}
  */
 async function executeSSH(audioPath, params) {
-  const host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  const remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
-  const venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
-  const sr = params.sampleRate || parseInt(process.env.BEAT_SAMPLE_RATE, 10) || 22050;
-  const hop = params.hopLength || parseInt(process.env.BEAT_HOP_LENGTH, 10) || 512;
-  const pps = params.peaksPerSecond || 10;
-  const remoteTmpDir = '/tmp/agi-graph-beat';
+  let host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
+  let remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
+  let venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
+  let sr = params.sampleRate || parseInt(process.env.BEAT_SAMPLE_RATE, 10) || 22050;
+  let hop = params.hopLength || parseInt(process.env.BEAT_HOP_LENGTH, 10) || 512;
+  let pps = params.peaksPerSecond || 10;
+  let remoteTmpDir = '/tmp/agi-graph-beat';
 
   try {
     // Verify local file exists
     await fs.access(audioPath);
 
-    const filename = path.basename(audioPath);
-    const remoteAudio = `${remoteTmpDir}/${filename}`;
+    let filename = path.basename(audioPath);
+    let remoteAudio = `${remoteTmpDir}/${filename}`;
 
     // Setup remote directory
     execSync(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
@@ -120,7 +120,7 @@ async function executeSSH(audioPath, params) {
 
     // Upload or locate beat detection script
     let remoteScript = `${remoteTmpDir}/beat-detection.py`;
-    const localScript = params.scriptPath
+    let localScript = params.scriptPath
       || path.join(process.cwd(), 'utils/beat-detection.py');
 
     try {
@@ -135,17 +135,17 @@ async function executeSSH(audioPath, params) {
 
     try {
       // Run beat detection
-      const pythonCmd = `${venv}/bin/python3`;
-      const cmd = `"${pythonCmd}" "${remoteScript}" "${remoteAudio}" --sr ${sr} --hop ${hop} --pps ${pps}`;
-      const fullCmd = `ssh ${host} '${cmd}'`;
+      let pythonCmd = `${venv}/bin/python3`;
+      let cmd = `"${pythonCmd}" "${remoteScript}" "${remoteAudio}" --sr ${sr} --hop ${hop} --pps ${pps}`;
+      let fullCmd = `ssh ${host} '${cmd}'`;
 
-      const output = execSync(fullCmd, {
+      let output = execSync(fullCmd, {
         encoding: 'utf-8',
         maxBuffer: 50 * 1024 * 1024,
         timeout: params.timeout || 180000,
       });
 
-      const result = JSON.parse(output);
+      let result = JSON.parse(output);
 
       return {
         beats: result.beats,
@@ -175,19 +175,19 @@ async function executeSSH(audioPath, params) {
  * @returns {Promise<Object>}
  */
 async function executeHTTP(audioPath, params) {
-  const endpoint = params.endpoint || 'http://localhost:5009';
+  let endpoint = params.endpoint || 'http://localhost:5009';
 
   try {
-    const audioBuffer = await fs.readFile(audioPath);
-    const blob = new Blob([audioBuffer], { type: 'audio/wav' });
+    let audioBuffer = await fs.readFile(audioPath);
+    let blob = new Blob([audioBuffer], { type: 'audio/wav' });
 
-    const formData = new FormData();
+    let formData = new FormData();
     formData.append('file', blob, path.basename(audioPath));
     formData.append('sample_rate', String(params.sampleRate || 22050));
     formData.append('hop_length', String(params.hopLength || 512));
     formData.append('peaks_per_second', String(params.peaksPerSecond || 10));
 
-    const response = await fetch(`${endpoint}/analyze`, {
+    let response = await fetch(`${endpoint}/analyze`, {
       method: 'POST',
       body: formData,
       signal: AbortSignal.timeout(params.timeout || 180000),
@@ -197,7 +197,7 @@ async function executeHTTP(audioPath, params) {
       return { ...EMPTY, error: `Beat API error: ${response.status}` };
     }
 
-    const result = await response.json();
+    let result = await response.json();
 
     return {
       beats: result.beats,

@@ -37,15 +37,15 @@ export default {
     },
 
     execute: async (inputs, params, context) => {
-      const data = inputs.data || {};
-      const query = params.query;
+      let data = inputs.data || {};
+      let query = params.query;
 
       // Extract param values from input data
-      const paramNames = (params.paramFields || '')
+      let paramNames = (params.paramFields || '')
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
-      const paramValues = paramNames.map((field) => data[field]);
+      let paramValues = paramNames.map((field) => data[field]);
 
       // Execute via context.db (injected by host)
       if (!context?.db) {
@@ -55,8 +55,8 @@ export default {
         };
       }
 
-      const rows = await context.db.unsafe(query, paramValues);
-      const outputField = params.outputField || 'queryResult';
+      let rows = await context.db.unsafe(query, paramValues);
+      let outputField = params.outputField || 'queryResult';
 
       return {
         rows: [...rows],

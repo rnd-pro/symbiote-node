@@ -17,7 +17,7 @@ const ID_LENGTH = 8;
  */
 export function nanoid(length = ID_LENGTH) {
   let id = '';
-  const bytes = typeof globalThis.crypto?.getRandomValues === 'function'
+  let bytes = typeof globalThis.crypto?.getRandomValues === 'function'
     ? globalThis.crypto.getRandomValues(new Uint8Array(length))
     : Array.from({ length }, () => Math.floor(Math.random() * 256));
 

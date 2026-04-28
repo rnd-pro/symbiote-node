@@ -65,7 +65,7 @@ export function syncWithRouter(component, panelName, mapping) {
   let syncing = false;
 
   // Pre-normalize all mapping entries
-  const normalizedMap = {};
+  let normalizedMap = {};
   for (const [prop, entry] of Object.entries(mapping)) {
     normalizedMap[prop] = normalizeMapping(entry);
   }
@@ -76,11 +76,11 @@ export function syncWithRouter(component, panelName, mapping) {
   function readFromURL() {
     if (syncing) return;
     syncing = true;
-    const query = parseQuery(component.$['ROUTER/query']);
+    let query = parseQuery(component.$['ROUTER/query']);
     for (const [prop, { param, defaultVal, type }] of Object.entries(normalizedMap)) {
-      const rawValue = query[param];
+      let rawValue = query[param];
       if (rawValue !== undefined) {
-        const val = castValue(rawValue, type);
+        let val = castValue(rawValue, type);
         if (component.$[prop] !== val) {
           component.$[prop] = val;
         }
@@ -102,8 +102,8 @@ export function syncWithRouter(component, panelName, mapping) {
     if (syncing) return;
     if (component.$['ROUTER/panel'] !== panelName) return;
     syncing = true;
-    const { param, defaultVal } = normalizedMap[prop];
-    const value = component.$[prop];
+    let { param, defaultVal } = normalizedMap[prop];
+    let value = component.$[prop];
     // Skip writing default values to keep URL clean
     if (value === defaultVal) {
       updateParams({ [param]: '' });
@@ -177,11 +177,11 @@ export function syncWithRouter(component, panelName, mapping) {
  * }
  */
 export function setupPanelRouting(component, panelName, config = {}) {
-  const { tabs, detail, onActivate, syncParams } = config;
+  let { tabs, detail, onActivate, syncParams } = config;
 
   // --- Tab sync via ?tab= ---
   if (tabs && tabs.length > 0) {
-    const defaultTab = tabs[0];
+    let defaultTab = tabs[0];
     syncWithRouter(component, panelName, {
       activeTab: { param: 'tab', default: defaultTab },
       ...(syncParams || {}),
@@ -196,9 +196,9 @@ export function setupPanelRouting(component, panelName, config = {}) {
   function checkDetailMode() {
     if (component.$['ROUTER/panel'] !== panelName) return;
 
-    const subpath = component.$['ROUTER/subpath'];
-    const listWrap = component.ref?.listWrap;
-    const isDetail = !!(detail && subpath);
+    let subpath = component.$['ROUTER/subpath'];
+    let listWrap = component.ref?.listWrap;
+    let isDetail = !!(detail && subpath);
 
     // Global signal — CSS can hide tabs/actions via [data-detail]
     component.toggleAttribute('data-detail', isDetail);
@@ -207,7 +207,7 @@ export function setupPanelRouting(component, panelName, config = {}) {
       // --- Detail mode ---
       if (listWrap) listWrap.hidden = true;
 
-      const detailEl = component.querySelector(detail.component);
+      let detailEl = component.querySelector(detail.component);
       if (detailEl) {
         detailEl.hidden = false;
         if (typeof detailEl[detail.loadMethod] === 'function') {
@@ -219,7 +219,7 @@ export function setupPanelRouting(component, panelName, config = {}) {
       if (listWrap) listWrap.hidden = false;
 
       if (detail) {
-        const detailEl = component.querySelector(detail.component);
+        let detailEl = component.querySelector(detail.component);
         if (detailEl) detailEl.hidden = true;
       }
 

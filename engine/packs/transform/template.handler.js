@@ -36,19 +36,19 @@ export default {
       `tpl:${inputs.template}:${JSON.stringify(inputs.data)}`,
 
     execute: async (inputs, params) => {
-      const template = params?.template || inputs.template;
-      const { data } = inputs;
+      let template = params?.template || inputs.template;
+      let { data } = inputs;
 
-      const result = template.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
-        const trimmed = key.trim();
+      let result = template.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+        let trimmed = key.trim();
         // Support dot notation: {{user.name}}
-        const value = trimmed.split('.').reduce((obj, k) => {
+        let value = trimmed.split('.').reduce((obj, k) => {
           if (obj === null || obj === undefined) return undefined;
           return obj[k];
         }, data);
 
         if (value === undefined) {
-          console.warn(`[template] ⚠️ Missing variable "${trimmed}" in data keys: [${data ? Object.keys(data).join(', ') : 'NO DATA'}]`);
+          console.log(`🟡 [template] Missing variable "${trimmed}" in data keys: [${data ? Object.keys(data).join(', ') : 'NO DATA'}]`);
           return match;
         }
         if (typeof value === 'object') return JSON.stringify(value);
@@ -58,15 +58,15 @@ export default {
       // Output rendered text in both formats:
       // - result: raw string (for chaining)
       // - data: full context with text field (for telegram/chat)
-      const outputField = params?.outputField || 'text';
-      const outputData = { ...(typeof data === 'object' ? data : {}), [outputField]: result };
+      let outputField = params?.outputField || 'text';
+      let outputData = { ...(typeof data === 'object' ? data : {}), [outputField]: result };
 
       // Attach inline keyboard if configured
       if (params?.replyMarkup) {
         try {
           outputData.reply_markup = JSON.parse(params.replyMarkup);
         } catch (e) {
-          console.warn('[template] ⚠️ Invalid replyMarkup JSON:', e.message);
+          console.log('🟡 [template] Invalid replyMarkup JSON:', e.message);
         }
       }
 

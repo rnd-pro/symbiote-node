@@ -47,10 +47,10 @@ function getOffscreenSVG() {
  * @returns {{ scale: number, offsetX: number, offsetY: number }}
  */
 function computeMapping(vb, size) {
-  const [vx, vy, vw, vh] = vb;
-  const scale = Math.min(size.width / vw, size.height / vh);
-  const renderedW = vw * scale;
-  const renderedH = vh * scale;
+  let [vx, vy, vw, vh] = vb;
+  let scale = Math.min(size.width / vw, size.height / vh);
+  let renderedW = vw * scale;
+  let renderedH = vh * scale;
   return {
     scale,
     offsetX: (size.width - renderedW) / 2 - vx * scale,
@@ -111,7 +111,7 @@ export class SVGShape extends NodeShape {
    * @returns {{ x: number, y: number }}
    */
   #scalePoint(px, py, size) {
-    const { scale, offsetX, offsetY } = computeMapping(this.#vb, size);
+    let { scale, offsetX, offsetY } = computeMapping(this.#vb, size);
     return {
       x: px * scale + offsetX,
       y: py * scale + offsetY,
@@ -123,7 +123,7 @@ export class SVGShape extends NodeShape {
    * @returns {{ x: number, y: number }}
    */
   #getCenter() {
-    const [vx, vy, vw, vh] = this.#vb;
+    let [vx, vy, vw, vh] = this.#vb;
     return { x: vx + vw / 2, y: vy + vh / 2 };
   }
 
@@ -132,7 +132,7 @@ export class SVGShape extends NodeShape {
    * @returns {SVGPathElement|null}
    */
   #getPathElement() {
-    const svg = getOffscreenSVG();
+    let svg = getOffscreenSVG();
     if (!svg) return null;
     let pathEl = svg.querySelector(`[data-shape="${this.name}"]`);
     if (!pathEl) {
@@ -154,8 +154,8 @@ export class SVGShape extends NodeShape {
    * @returns {{ x: number, y: number }} - point in viewBox coordinates
    */
   #findPointAtAngle(targetAngle, pathEl) {
-    const totalLen = pathEl.getTotalLength();
-    const center = this.#getCenter();
+    let totalLen = pathEl.getTotalLength();
+    let center = this.#getCenter();
 
     // Phase 1: coarse scan (128 samples)
     let bestDist = Infinity;
@@ -163,9 +163,9 @@ export class SVGShape extends NodeShape {
     const COARSE = 128;
 
     for (let i = 0; i <= COARSE; i++) {
-      const len = (totalLen * i) / COARSE;
-      const pt = pathEl.getPointAtLength(len);
-      const angle = Math.atan2(pt.y - center.y, pt.x - center.x);
+      let len = (totalLen * i) / COARSE;
+      let pt = pathEl.getPointAtLength(len);
+      let angle = Math.atan2(pt.y - center.y, pt.x - center.x);
       let diff = Math.abs(angle - targetAngle);
       if (diff > Math.PI) diff = 2 * Math.PI - diff;
       if (diff < bestDist) {
@@ -175,15 +175,15 @@ export class SVGShape extends NodeShape {
     }
 
     // Phase 2: refine with binary-like search around bestLen
-    const searchRadius = totalLen / COARSE;
+    let searchRadius = totalLen / COARSE;
     const FINE = 32;
-    const startLen = Math.max(0, bestLen - searchRadius);
-    const endLen = Math.min(totalLen, bestLen + searchRadius);
+    let startLen = Math.max(0, bestLen - searchRadius);
+    let endLen = Math.min(totalLen, bestLen + searchRadius);
 
     for (let i = 0; i <= FINE; i++) {
-      const len = startLen + ((endLen - startLen) * i) / FINE;
-      const pt = pathEl.getPointAtLength(len);
-      const angle = Math.atan2(pt.y - center.y, pt.x - center.x);
+      let len = startLen + ((endLen - startLen) * i) / FINE;
+      let pt = pathEl.getPointAtLength(len);
+      let angle = Math.atan2(pt.y - center.y, pt.x - center.x);
       let diff = Math.abs(angle - targetAngle);
       if (diff > Math.PI) diff = 2 * Math.PI - diff;
       if (diff < bestDist) {
@@ -207,14 +207,14 @@ export class SVGShape extends NodeShape {
    */
   getSocketPosition(side, index, total, size) {
     // Cache key: position depends on side, index, total, and element size
-    const key = `${side}|${index}|${total}|${size.width}|${size.height}`;
+    let key = `${side}|${index}|${total}|${size.width}|${size.height}`;
     if (this.#posCache.has(key)) return this.#posCache.get(key);
 
-    const pathEl = this.#getPathElement();
+    let pathEl = this.#getPathElement();
 
     if (!pathEl) {
-      const y = size.height * (index + 1) / (total + 1);
-      const result = side === 'input'
+      let y = size.height * (index + 1) / (total + 1);
+      let result = side === 'input'
         ? { x: 0, y, angle: 180 }
         : { x: size.width, y, angle: 0 };
       this.#posCache.set(key, result);
@@ -222,42 +222,42 @@ export class SVGShape extends NodeShape {
     }
 
     // Distribute ports along the relevant side of the path perimeter
-    const centerAngle = side === 'input' ? Math.PI : 0;
-    const arcSpan = Math.PI * 0.6; // 108° spread
+    let centerAngle = side === 'input' ? Math.PI : 0;
+    let arcSpan = Math.PI * 0.6; // 108° spread
     let targetAngle;
 
     if (total === 1) {
       targetAngle = centerAngle;
     } else {
-      const startAngle = centerAngle - arcSpan / 2;
-      const step = arcSpan / (total - 1);
+      let startAngle = centerAngle - arcSpan / 2;
+      let step = arcSpan / (total - 1);
       targetAngle = startAngle + step * index;
     }
 
-    const pt = this.#findPointAtAngle(targetAngle, pathEl);
-    const scaled = this.#scalePoint(pt.x, pt.y, size);
+    let pt = this.#findPointAtAngle(targetAngle, pathEl);
+    let scaled = this.#scalePoint(pt.x, pt.y, size);
 
     // Compute outward surface normal (same as getEdgePoint)
-    const totalLen = pathEl.getTotalLength();
-    const center = this.#getCenter();
+    let totalLen = pathEl.getTotalLength();
+    let center = this.#getCenter();
     let bestLen = 0, bestDist = Infinity;
     const SCAN = 128;
     for (let i = 0; i <= SCAN; i++) {
-      const len = (totalLen * i) / SCAN;
-      const p = pathEl.getPointAtLength(len);
-      const dist = (p.x - pt.x) ** 2 + (p.y - pt.y) ** 2;
+      let len = (totalLen * i) / SCAN;
+      let p = pathEl.getPointAtLength(len);
+      let dist = (p.x - pt.x) ** 2 + (p.y - pt.y) ** 2;
       if (dist < bestDist) { bestDist = dist; bestLen = len; }
     }
-    const delta = 0.5;
-    const prevPt = pathEl.getPointAtLength(Math.max(0, bestLen - delta));
-    const nextPt = pathEl.getPointAtLength(Math.min(totalLen, bestLen + delta));
-    const tx = nextPt.x - prevPt.x, ty = nextPt.y - prevPt.y;
+    let delta = 0.5;
+    let prevPt = pathEl.getPointAtLength(Math.max(0, bestLen - delta));
+    let nextPt = pathEl.getPointAtLength(Math.min(totalLen, bestLen + delta));
+    let tx = nextPt.x - prevPt.x, ty = nextPt.y - prevPt.y;
     let nx = -ty, ny = tx;
-    const radX = pt.x - center.x, radY = pt.y - center.y;
+    let radX = pt.x - center.x, radY = pt.y - center.y;
     if (nx * radX + ny * radY < 0) { nx = ty; ny = -tx; }
-    const angleDeg = Math.atan2(ny, nx) * 180 / Math.PI;
+    let angleDeg = Math.atan2(ny, nx) * 180 / Math.PI;
 
-    const result = { x: scaled.x, y: scaled.y, angle: angleDeg };
+    let result = { x: scaled.x, y: scaled.y, angle: angleDeg };
     this.#posCache.set(key, result);
     return result;
   }
@@ -272,64 +272,64 @@ export class SVGShape extends NodeShape {
    */
   getEdgePoint(angle, size) {
     // Round to 3 decimal places (~0.06° precision, invisible jitter)
-    const rounded = Math.round(angle * 1000) / 1000;
-    const key = `edge|${rounded}|${size.width}|${size.height}`;
+    let rounded = Math.round(angle * 1000) / 1000;
+    let key = `edge|${rounded}|${size.width}|${size.height}`;
     if (this.#posCache.has(key)) return this.#posCache.get(key);
 
-    const pathEl = this.#getPathElement();
+    let pathEl = this.#getPathElement();
     if (!pathEl) {
-      const cx = size.width / 2;
-      const cy = size.height / 2;
+      let cx = size.width / 2;
+      let cy = size.height / 2;
       return { x: cx + Math.cos(angle) * cx, y: cy + Math.sin(angle) * cy, angle: angle * 180 / Math.PI };
     }
 
-    const pt = this.#findPointAtAngle(angle, pathEl);
-    const scaled = this.#scalePoint(pt.x, pt.y, size);
+    let pt = this.#findPointAtAngle(angle, pathEl);
+    let scaled = this.#scalePoint(pt.x, pt.y, size);
 
     // Compute outward surface normal (perpendicular to edge), NOT radial angle.
     // For polygons, the radial angle varies across a flat edge,
     // but the surface normal is constant — this gives correct perpendicular stubs.
-    const totalLen = pathEl.getTotalLength();
-    const center = this.#getCenter();
+    let totalLen = pathEl.getTotalLength();
+    let center = this.#getCenter();
 
     // Find the path length for this point (re-use findPointAtAngle's logic)
     let bestLen = 0, bestDist = Infinity;
     const SCAN = 128;
     for (let i = 0; i <= SCAN; i++) {
-      const len = (totalLen * i) / SCAN;
-      const p = pathEl.getPointAtLength(len);
-      const dist = (p.x - pt.x) ** 2 + (p.y - pt.y) ** 2;
+      let len = (totalLen * i) / SCAN;
+      let p = pathEl.getPointAtLength(len);
+      let dist = (p.x - pt.x) ** 2 + (p.y - pt.y) ** 2;
       if (dist < bestDist) { bestDist = dist; bestLen = len; }
     }
 
     // Sample neighbors to get tangent vector
-    const delta = 0.5; // small step along path
-    const prevLen = Math.max(0, bestLen - delta);
-    const nextLen = Math.min(totalLen, bestLen + delta);
-    const prevPt = pathEl.getPointAtLength(prevLen);
-    const nextPt = pathEl.getPointAtLength(nextLen);
+    let delta = 0.5; // small step along path
+    let prevLen = Math.max(0, bestLen - delta);
+    let nextLen = Math.min(totalLen, bestLen + delta);
+    let prevPt = pathEl.getPointAtLength(prevLen);
+    let nextPt = pathEl.getPointAtLength(nextLen);
 
     // Tangent = direction along edge
-    const tx = nextPt.x - prevPt.x;
-    const ty = nextPt.y - prevPt.y;
+    let tx = nextPt.x - prevPt.x;
+    let ty = nextPt.y - prevPt.y;
 
     // Normal = tangent rotated 90° (two candidates: +90° and -90°)
     // Pick the one pointing outward (away from center)
     let nx = -ty, ny = tx; // candidate 1: rotate -90°
-    const radX = pt.x - center.x;
-    const radY = pt.y - center.y;
+    let radX = pt.x - center.x;
+    let radY = pt.y - center.y;
     // Dot product with radial vector — if negative, flip
     if (nx * radX + ny * radY < 0) {
       nx = ty; ny = -tx; // candidate 2: rotate +90°
     }
 
-    const angleDeg = Math.atan2(ny, nx) * 180 / Math.PI;
+    let angleDeg = Math.atan2(ny, nx) * 180 / Math.PI;
 
-    const result = { x: scaled.x, y: scaled.y, angle: angleDeg };
+    let result = { x: scaled.x, y: scaled.y, angle: angleDeg };
 
     // Bounded cache: evict oldest when exceeding 360 entries
     if (this.#posCache.size > 360) {
-      const first = this.#posCache.keys().next().value;
+      let first = this.#posCache.keys().next().value;
       this.#posCache.delete(first);
     }
     this.#posCache.set(key, result);
@@ -348,16 +348,16 @@ export class SVGShape extends NodeShape {
    * @returns {{ x: number, y: number, angle: number }} - angle is outward normal in degrees
    */
   getSidePosition(side, t, size) {
-    const key = `side|${side}|${(t * 100) | 0}|${size.width}|${size.height}`;
+    let key = `side|${side}|${(t * 100) | 0}|${size.width}|${size.height}`;
     if (this.#posCache.has(key)) return this.#posCache.get(key);
 
     // Outward normal angles for each side (screen coords: Y down)
     const NORMALS = { top: -90, right: 0, bottom: 90, left: 180 };
-    const angleDeg = NORMALS[side];
+    let angleDeg = NORMALS[side];
 
     // For shapes with pathData: sample points on the side's angular range
     // and interpolate along the edge
-    const pathEl = this.#getPathElement();
+    let pathEl = this.#getPathElement();
     if (pathEl) {
       // Angular ranges for each side (radians, screen coords)
       // Generous ranges that cover the flat + diagonal edges
@@ -368,9 +368,9 @@ export class SVGShape extends NodeShape {
         top:    { from: -3 * Math.PI / 4, to: -Math.PI / 4 },
       };
 
-      const range = RANGES[side];
+      let range = RANGES[side];
       // Use side-level caching for points to prevent SVG DOM explosion
-      const sideKey = `sidepts|${side}|${size.width}|${size.height}`;
+      let sideKey = `sidepts|${side}|${size.width}|${size.height}`;
       let sidePoints;
       
       if (this.#posCache.has(sideKey)) {
@@ -379,9 +379,9 @@ export class SVGShape extends NodeShape {
         sidePoints = [];
         const SAMPLES = 16;
         for (let i = 0; i <= SAMPLES; i++) {
-          const a = range.from + (range.to - range.from) * (i / SAMPLES);
-          const pt = this.#findPointAtAngle(a, pathEl);
-          const sp = this.#scalePoint(pt.x, pt.y, size);
+          let a = range.from + (range.to - range.from) * (i / SAMPLES);
+          let pt = this.#findPointAtAngle(a, pathEl);
+          let sp = this.#scalePoint(pt.x, pt.y, size);
           sidePoints.push(sp);
         }
         this.#posCache.set(sideKey, sidePoints);
@@ -389,16 +389,16 @@ export class SVGShape extends NodeShape {
 
       // Use inset range (20%-80%) to avoid placing on corners
       const MARGIN = 0.2;
-      const effectiveT = MARGIN + t * (1 - 2 * MARGIN);
-      const idx = effectiveT * (sidePoints.length - 1);
-      const lo = Math.floor(idx);
-      const hi = Math.min(lo + 1, sidePoints.length - 1);
-      const frac = idx - lo;
+      let effectiveT = MARGIN + t * (1 - 2 * MARGIN);
+      let idx = effectiveT * (sidePoints.length - 1);
+      let lo = Math.floor(idx);
+      let hi = Math.min(lo + 1, sidePoints.length - 1);
+      let frac = idx - lo;
 
-      const x = sidePoints[lo].x + (sidePoints[hi].x - sidePoints[lo].x) * frac;
-      const y = sidePoints[lo].y + (sidePoints[hi].y - sidePoints[lo].y) * frac;
+      let x = sidePoints[lo].x + (sidePoints[hi].x - sidePoints[lo].x) * frac;
+      let y = sidePoints[lo].y + (sidePoints[hi].y - sidePoints[lo].y) * frac;
 
-      const result = { x, y, angle: angleDeg };
+      let result = { x, y, angle: angleDeg };
       this.#posCache.set(key, result);
       return result;
     }
@@ -412,7 +412,7 @@ export class SVGShape extends NodeShape {
       case 'left':   x = 0; y = size.height * (0.2 + t * 0.6); break;
     }
 
-    const result = { x, y, angle: angleDeg };
+    let result = { x, y, angle: angleDeg };
     this.#posCache.set(key, result);
     return result;
   }
@@ -455,7 +455,7 @@ export function createSVGShape(name, pathData, options = {}) {
 }
 
 // Common icon paths from Material Symbols (24x24 viewBox)
-export const SVG_PRESETS = {
+export let SVG_PRESETS = {
   // Hexagon
   hexagon: 'M12 2L22 8.5V15.5L12 22L2 15.5V8.5Z',
 

@@ -116,13 +116,13 @@ export class LayoutNode extends Symbiote {
   }
 
   _updateStyles() {
-    const ratio = this.$.ratio;
-    const dir = this.$.direction;
-    const data = this.$.nodeData;
+    let ratio = this.$.ratio;
+    let dir = this.$.direction;
+    let data = this.$.nodeData;
 
     // Check if children are collapsed (declarative from nodeData)
-    const firstCollapsed = data?.first?.collapsed || false;
-    const secondCollapsed = data?.second?.collapsed || false;
+    let firstCollapsed = data?.first?.collapsed || false;
+    let secondCollapsed = data?.second?.collapsed || false;
 
     // Collapsed size constants
     const COLLAPSED_SIZE = dir === 'horizontal' ? '32px' : '28px';
@@ -158,8 +158,8 @@ export class LayoutNode extends Symbiote {
   }
 
   _updatePanelInfo() {
-    const panelTypes = this.$['^panelTypes'] || {};
-    const config = panelTypes[this.$.panelType] || {};
+    let panelTypes = this.$['^panelTypes'] || {};
+    let config = panelTypes[this.$.panelType] || {};
     this.$.panelTitle = config.title || this.$.panelType;
     this.$.panelIcon = config.icon || 'dashboard';
 
@@ -167,9 +167,9 @@ export class LayoutNode extends Symbiote {
     this._injectPanelComponent(config);
 
     // Check if panel can collapse (must be child of a split)
-    const container = this.parentElement;
+    let container = this.parentElement;
     if (!container) return;
-    const isSplitChild = container && (container.classList.contains('split-first') || container.classList.contains('split-second'));
+    let isSplitChild = container && (container.classList.contains('split-first') || container.classList.contains('split-second'));
 
     // Additional safety check: Ensure sibling exists and is not collapsed
     let siblingExists = false;
@@ -179,14 +179,14 @@ export class LayoutNode extends Symbiote {
     if (isSplitChild) {
       isFirst = container.classList.contains('split-first');
       // Use :scope > to find direct child only, not nested ones
-      const siblingContainer = isFirst
+      let siblingContainer = isFirst
         ? container.parentElement.querySelector(':scope > .split-second')
         : container.parentElement.querySelector(':scope > .split-first');
       siblingExists = !!siblingContainer;
 
       // Check if sibling panel is collapsed (direct child panel only)
       if (siblingContainer) {
-        const siblingNode = siblingContainer.querySelector(':scope > layout-node');
+        let siblingNode = siblingContainer.querySelector(':scope > layout-node');
         // Only check collapsed state if sibling is a panel
         if (siblingNode?.getAttribute('node-type') === 'panel') {
           siblingCollapsed = siblingNode.$.isCollapsed || false;
@@ -207,7 +207,7 @@ export class LayoutNode extends Symbiote {
         }
 
         if (parentNode) {
-          const parentDir = parentNode.getAttribute('direction');
+          let parentDir = parentNode.getAttribute('direction');
           this.$.collapseDirection = parentDir;
 
           // Arrow shows direction panel will collapse TO:
@@ -232,10 +232,10 @@ export class LayoutNode extends Symbiote {
    * @param {Object} config - Panel type configuration
    */
   _injectPanelComponent(config) {
-    const contentEl = this.ref.panelContent;
+    let contentEl = this.ref.panelContent;
     if (!contentEl) return;
 
-    const componentTag = config.component;
+    let componentTag = config.component;
     if (!componentTag) return;
 
     // Hide all existing panel components via inline style (overrides CSS)
@@ -244,21 +244,21 @@ export class LayoutNode extends Symbiote {
     }
 
     // Check if target component already exists — show it
-    const existing = contentEl.querySelector(componentTag);
+    let existing = contentEl.querySelector(componentTag);
     if (existing) {
       existing.style.display = '';
       return;
     }
 
     // Create new component
-    const component = document.createElement(componentTag);
+    let component = document.createElement(componentTag);
     component.setAttribute('data-panel-id', this.$.nodeData?.id || '');
     contentEl.appendChild(component);
   }
 
   _renderNode(data) {
     // Update attributes for CSS selectors
-    const prevType = this.getAttribute('node-type');
+    let prevType = this.getAttribute('node-type');
     this.setAttribute('node-type', data.type);
 
     if (data.type === 'split') {
@@ -312,7 +312,7 @@ export class LayoutNode extends Symbiote {
 
   _setupActionZones(panelId) {
     // Action zones are in the template, just set their panel ID
-    const zones = this.querySelectorAll('action-zone');
+    let zones = this.querySelectorAll('action-zone');
     zones.forEach((zone) => {
       zone.$.panelId = panelId;
     });
@@ -320,8 +320,8 @@ export class LayoutNode extends Symbiote {
 
   _startResize(e) {
     e.preventDefault();
-    const startPos = this.$.direction === 'horizontal' ? e.clientX : e.clientY;
-    const startRatio = this.$.ratio;
+    let startPos = this.$.direction === 'horizontal' ? e.clientX : e.clientY;
+    let startRatio = this.$.ratio;
 
     this.setAttribute('resizing', '');
 
@@ -329,18 +329,18 @@ export class LayoutNode extends Symbiote {
     const COLLAPSE_THRESHOLD = 0.05;
     const UNCOLLAPSE_THRESHOLD = 0.08;
 
-    const onMove = (moveEvent) => {
-      const rect = this.getBoundingClientRect();
-      const currentPos = this.$.direction === 'horizontal' ? moveEvent.clientX : moveEvent.clientY;
-      const containerSize = this.$.direction === 'horizontal' ? rect.width : rect.height;
-      const startOffset = this.$.direction === 'horizontal' ? rect.left : rect.top;
+    let onMove = (moveEvent) => {
+      let rect = this.getBoundingClientRect();
+      let currentPos = this.$.direction === 'horizontal' ? moveEvent.clientX : moveEvent.clientY;
+      let containerSize = this.$.direction === 'horizontal' ? rect.width : rect.height;
+      let startOffset = this.$.direction === 'horizontal' ? rect.left : rect.top;
 
       // Calculate new ratio based on mouse position relative to container
       let rawRatio = (currentPos - startOffset) / containerSize;
 
       // Get first and second child nodes
-      const firstChild = this.ref.first?.querySelector('layout-node');
-      const secondChild = this.ref.second?.querySelector('layout-node');
+      let firstChild = this.ref.first?.querySelector('layout-node');
+      let secondChild = this.ref.second?.querySelector('layout-node');
 
       // Check for collapse/uncollapse of first panel
       if (rawRatio < COLLAPSE_THRESHOLD && firstChild && !firstChild.$.isCollapsed) {
@@ -383,7 +383,7 @@ export class LayoutNode extends Symbiote {
       this._notifyChange();
     };
 
-    const onUp = () => {
+    let onUp = () => {
       this.removeAttribute('resizing');
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
@@ -446,7 +446,7 @@ export class LayoutNode extends Symbiote {
     // Don't show type menu when collapsed
     if (this.$.isCollapsed) return;
 
-    const rect = e.target.getBoundingClientRect();
+    let rect = e.target.getBoundingClientRect();
     this.dispatchEvent(new CustomEvent('panel-type-menu', {
       bubbles: true,
       composed: true,

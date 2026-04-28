@@ -9,7 +9,7 @@
  */
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export const NEON_GLOW = {
+export let NEON_GLOW = {
   name: 'neon-glow',
   tokens: {
     // === Atomic tokens ===
@@ -112,7 +112,7 @@ export const NEON_GLOW = {
 };
 
 /** @type {import('./Palette.js').PaletteDefinition} */
-export const NEON_PALETTE = {
+export let NEON_PALETTE = {
   name: 'neon',
   colors: {
     '--sn-hue-base': '230',

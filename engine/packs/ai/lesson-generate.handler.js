@@ -19,12 +19,12 @@ import path from 'node:path';
  * @returns {Promise<Object>}
  */
 async function loadMaterials(materialsDir) {
-  const materials = {};
+  let materials = {};
   try {
-    const entries = await readdir(materialsDir);
+    let entries = await readdir(materialsDir);
     for (const entry of entries) {
       if (!entry.endsWith('.md')) continue;
-      const content = await readFile(path.join(materialsDir, entry), 'utf-8');
+      let content = await readFile(path.join(materialsDir, entry), 'utf-8');
       materials[entry.replace('.md', '')] = content;
     }
   } catch { /* no materials dir */ }
@@ -56,7 +56,7 @@ function buildLessonPrompt(newsItems, materials, focus, maxExamples) {
   }
 
   // Add educational materials for style reference
-  const materialKeys = Object.keys(materials);
+  let materialKeys = Object.keys(materials);
   if (materialKeys.length > 0) {
     prompt += `\nSTYLE REFERENCE (learn from these examples):\n`;
     for (const key of materialKeys.slice(0, 3)) {
@@ -97,7 +97,7 @@ RULES:
  * @returns {string}
  */
 function buildDigestPrompt(digestData) {
-  const { newsItems, categories } = digestData;
+  let { newsItems, categories } = digestData;
 
   let prompt = `Create a daily educational news digest for A1 Spanish learners.\n\n`;
 
@@ -132,7 +132,7 @@ function buildDigestPrompt(digestData) {
  * @returns {Object}
  */
 function parseResponse(response) {
-  const jsonMatch = response.match(/\{[\s\S]*\}/);
+  let jsonMatch = response.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]);
@@ -148,7 +148,7 @@ function parseResponse(response) {
  * @returns {Array<string>}
  */
 function validateLesson(lesson, newsItems) {
-  const violations = [];
+  let violations = [];
 
   if (!lesson.title_es) violations.push('Missing title_es');
   if (!lesson.focus) violations.push('Missing focus');
@@ -157,7 +157,7 @@ function validateLesson(lesson, newsItems) {
   }
   if (lesson.examples) {
     for (let i = 0; i < lesson.examples.length; i++) {
-      const ex = lesson.examples[i];
+      let ex = lesson.examples[i];
       if (!ex.es || !ex.ru) violations.push(`Example ${i} missing es or ru`);
     }
   }
@@ -202,7 +202,7 @@ export default {
         return typeof params.content === 'string';
       }
       if (!Array.isArray(inputs.newsItems) || inputs.newsItems.length === 0) return false;
-      const apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
+      let apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
       if (!apiKey) return false;
       return true;
     },
@@ -210,20 +210,20 @@ export default {
     cacheKey: () => null, // AI output varies
 
     execute: async (inputs, params) => {
-      const { newsItems } = inputs;
-      const { operation, model, focus, maxExamples } = params;
-      const apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
+      let { newsItems } = inputs;
+      let { operation, model, focus, maxExamples } = params;
+      let apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
 
       try {
-        switch (operation) {
-          case 'lesson': {
-            const materials = params.materialsDir
+        let opMap = {
+          lesson: async () => {
+            let materials = params.materialsDir
               ? await loadMaterials(params.materialsDir)
               : {};
 
-            const prompt = buildLessonPrompt(newsItems, materials, focus, maxExamples);
+            let prompt = buildLessonPrompt(newsItems, materials, focus, maxExamples);
 
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -238,10 +238,10 @@ export default {
 
             if (!response.ok) return { error: `API error: HTTP ${response.status}` };
 
-            const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || '';
-            const lesson = parseResponse(aiResponse);
-            const violations = validateLesson(lesson, newsItems);
+            let data = await response.json();
+            let aiResponse = data.choices?.[0]?.message?.content || '';
+            let lesson = parseResponse(aiResponse);
+            let violations = validateLesson(lesson, newsItems);
 
             return {
               result: {
@@ -252,12 +252,11 @@ export default {
                 model,
               },
             };
-          }
+          },
+          vocabulary: async () => {
+            let prompt = `Extract 10 key vocabulary items from these news headlines for A1 Spanish learners (Rioplatense dialect).\n\nNEWS:\n${newsItems.map(n => `- ${n.title}`).join('\n')}\n\nOUTPUT: JSON array of {"es": "word with article", "ru": "translation"}\nRules: nouns with el/la, no brands, no cognates, prefer regional vocabulary.`;
 
-          case 'vocabulary': {
-            const prompt = `Extract 10 key vocabulary items from these news headlines for A1 Spanish learners (Rioplatense dialect).\n\nNEWS:\n${newsItems.map(n => `- ${n.title}`).join('\n')}\n\nOUTPUT: JSON array of {"es": "word with article", "ru": "translation"}\nRules: nouns with el/la, no brands, no cognates, prefer regional vocabulary.`;
-
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -272,20 +271,19 @@ export default {
 
             if (!response.ok) return { error: `API error: HTTP ${response.status}` };
 
-            const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || '';
-            const vocabulary = parseResponse(aiResponse);
+            let data = await response.json();
+            let aiResponse = data.choices?.[0]?.message?.content || '';
+            let vocabulary = parseResponse(aiResponse);
 
             return { result: { vocabulary, newsCount: newsItems.length, model } };
-          }
-
-          case 'daily-digest': {
-            const prompt = buildDigestPrompt({
+          },
+          'daily-digest': async () => {
+            let prompt = buildDigestPrompt({
               newsItems,
               categories: params.categories,
             });
 
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -300,17 +298,16 @@ export default {
 
             if (!response.ok) return { error: `API error: HTTP ${response.status}` };
 
-            const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || '';
-            const digest = parseResponse(aiResponse);
+            let data = await response.json();
+            let aiResponse = data.choices?.[0]?.message?.content || '';
+            let digest = parseResponse(aiResponse);
 
             return { result: { digest, newsCount: newsItems.length, model } };
-          }
+          },
+          'validate-style': async () => {
+            let prompt = `Evaluate if the following ${params.contentType} content matches A1 Rioplatense Spanish learning material standards.\n\nCONTENT:\n${params.content}\n\nCheck:\n1. Vocabulary complexity (should be A1)\n2. Rioplatense dialect usage (vos, local terms)\n3. Bilingual coverage (es + ru)\n4. Educational value\n\nOUTPUT: JSON with {score: 0-100, issues: [string], suggestions: [string]}`;
 
-          case 'validate-style': {
-            const prompt = `Evaluate if the following ${params.contentType} content matches A1 Rioplatense Spanish learning material standards.\n\nCONTENT:\n${params.content}\n\nCheck:\n1. Vocabulary complexity (should be A1)\n2. Rioplatense dialect usage (vos, local terms)\n3. Bilingual coverage (es + ru)\n4. Educational value\n\nOUTPUT: JSON with {score: 0-100, issues: [string], suggestions: [string]}`;
-
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -325,15 +322,18 @@ export default {
 
             if (!response.ok) return { error: `API error: HTTP ${response.status}` };
 
-            const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || '';
-            const validation = parseResponse(aiResponse);
+            let data = await response.json();
+            let aiResponse = data.choices?.[0]?.message?.content || '';
+            let validation = parseResponse(aiResponse);
 
             return { result: { validation, model } };
           }
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return await opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `lesson-generate ${operation} failed: ${err.message}` };

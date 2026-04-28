@@ -72,9 +72,9 @@ export class ActionZone extends Symbiote {
     e.stopPropagation();
 
     // Get panel bounds at drag start
-    const panelNode = this.closest('layout-node');
+    let panelNode = this.closest('layout-node');
     if (panelNode) {
-      const rect = panelNode.getBoundingClientRect();
+      let rect = panelNode.getBoundingClientRect();
       this.$.panelBounds = {
         left: rect.left,
         top: rect.top,
@@ -106,9 +106,9 @@ export class ActionZone extends Symbiote {
   _onPointerMove(e) {
     if (!this.$.isDragging) return;
 
-    const dx = e.clientX - this.$.dragStartX;
-    const dy = e.clientY - this.$.dragStartY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    let dx = e.clientX - this.$.dragStartX;
+    let dy = e.clientY - this.$.dragStartY;
+    let distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < DRAG_THRESHOLD) {
       this.$.gestureType = null;
@@ -116,7 +116,7 @@ export class ActionZone extends Symbiote {
     }
 
     // Detect gesture based on current mouse position relative to panel bounds
-    const gesture = this._detectGesture(e.clientX, e.clientY, dx, dy);
+    let gesture = this._detectGesture(e.clientX, e.clientY, dx, dy);
 
     if (gesture !== this.$.gestureType) {
       this.$.gestureType = gesture;
@@ -153,7 +153,7 @@ export class ActionZone extends Symbiote {
 
     this.removeAttribute('dragging');
 
-    const gesture = this.$.gestureType;
+    let gesture = this.$.gestureType;
 
     if (gesture) {
       // Execute the gesture
@@ -190,13 +190,13 @@ export class ActionZone extends Symbiote {
    * @returns {'split-h' | 'split-v' | 'join' | null}
    */
   _detectGesture(mouseX, mouseY, dx, dy) {
-    const bounds = this.$.panelBounds;
+    let bounds = this.$.panelBounds;
 
     if (!bounds) {
       return this._detectGestureByDirection(dx, dy);
     }
 
-    const isOutside = (
+    let isOutside = (
       mouseX < bounds.left ||
       mouseX > bounds.right ||
       mouseY < bounds.top ||
@@ -217,10 +217,10 @@ export class ActionZone extends Symbiote {
    * @returns {'split-h' | 'split-v' | 'join' | null}
    */
   _detectGestureByDirection(dx, dy) {
-    const corner = this.$['@corner'];
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-    const isHorizontal = absDx > absDy;
+    let corner = this.$['@corner'];
+    let absDx = Math.abs(dx);
+    let absDy = Math.abs(dy);
+    let isHorizontal = absDx > absDy;
 
     let isInward = false;
 

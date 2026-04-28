@@ -26,8 +26,8 @@ export class PortItem extends Symbiote {
       if (val) this.setAttribute('data-side', val);
     });
     this.sub('socketName', (val) => {
-      const shape = PortItem.SOCKET_SHAPES[val] || 'circle';
-      const socketEl = this.ref.socket;
+      let shape = PortItem.SOCKET_SHAPES[val] || 'circle';
+      let socketEl = this.ref.socket;
       if (socketEl) socketEl.setAttribute('data-socket-shape', shape);
     });
 
@@ -42,24 +42,24 @@ export class PortItem extends Symbiote {
   #deferRegisterSocket(attempt) {
     if (attempt > 10) return;
 
-    const socketEl = this.ref.socket;
+    let socketEl = this.ref.socket;
     if (!socketEl) return;
 
-    const graphNode = this.closest('graph-node');
+    let graphNode = this.closest('graph-node');
     if (!graphNode || !graphNode._canvas) {
       requestAnimationFrame(() => this.#deferRegisterSocket(attempt + 1));
       return;
     }
 
-    const connectFlow = graphNode._canvas.getConnectFlow();
+    let connectFlow = graphNode._canvas.getConnectFlow();
     if (!connectFlow) return;
 
-    const nodeId = graphNode.getAttribute('node-id');
-    const key = this.$.key;
-    const side = this.$.side;
+    let nodeId = graphNode.getAttribute('node-id');
+    let key = this.$.key;
+    let side = this.$.side;
 
     /** @type {import('../interactions/ConnectFlow.js').SocketData} */
-    const socketData = { nodeId, key, side, element: socketEl };
+    let socketData = { nodeId, key, side, element: socketEl };
     socketEl._socketData = socketData;
 
     connectFlow.registerSocket(socketEl, socketData);

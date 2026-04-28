@@ -8,7 +8,7 @@
  */
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export const GREY_NEUTRAL = {
+export let GREY_NEUTRAL = {
   name: 'grey-neutral',
   tokens: {
     // === Atomic tokens ===
@@ -111,7 +111,7 @@ export const GREY_NEUTRAL = {
 };
 
 /** @type {import('./Palette.js').PaletteDefinition} */
-export const GREY_PALETTE = {
+export let GREY_PALETTE = {
   name: 'grey',
   colors: {
     '--sn-hue-base': '0',

@@ -55,13 +55,13 @@ export class SubgraphNode extends Node {
       if (key.startsWith('sg_')) this.removeOutput(key);
     }
 
-    const anySocket = new Socket('any', { color: '#94a3b8' });
+    let anySocket = new Socket('any', { color: '#94a3b8' });
 
     // Find exposed inner nodes
     for (const innerNode of this.innerEditor.getNodes()) {
       if (innerNode._exposed === 'input') {
         for (const [key, output] of Object.entries(innerNode.outputs)) {
-          const portKey = `sg_${innerNode.id}_${key}`;
+          let portKey = `sg_${innerNode.id}_${key}`;
           this.addInput(portKey, new Input(
             output.socket ?? anySocket,
             innerNode.label ?? key
@@ -70,7 +70,7 @@ export class SubgraphNode extends Node {
       }
       if (innerNode._exposed === 'output') {
         for (const [key, input] of Object.entries(innerNode.inputs)) {
-          const portKey = `sg_${innerNode.id}_${key}`;
+          let portKey = `sg_${innerNode.id}_${key}`;
           this.addOutput(portKey, new Output(
             input.socket ?? anySocket,
             innerNode.label ?? key
@@ -123,3 +123,5 @@ export class SubgraphNode extends Node {
     };
   }
 }
+
+export { SubgraphNode as default };

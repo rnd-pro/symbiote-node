@@ -102,24 +102,24 @@ export default {
 
   lifecycle: {
     validate: (inputs, params) => {
-      const op = params?.operation || 'get';
+      let op = params?.operation || 'get';
       if (op === 'get' && !inputs.personaId) return false;
       return true;
     },
 
     cacheKey: (inputs, params) => {
-      const op = params.operation || 'get';
+      let op = params.operation || 'get';
       if (op === 'get') return `personas:get:${inputs.personaId}`;
       if (op === 'random') return null; // Never cache random
       return `personas:list:${params.filterGender}:${params.filterType}`;
     },
 
     execute: async (inputs, params) => {
-      const presets = params.customPresets || BUILT_IN_PRESETS;
-      const op = params.operation || 'get';
+      let presets = params.customPresets || BUILT_IN_PRESETS;
+      let op = params.operation || 'get';
 
       if (op === 'get') {
-        const persona = presets.find(p => p.id === inputs.personaId);
+        let persona = presets.find(p => p.id === inputs.personaId);
         if (!persona) {
           return { persona: null, personas: null, error: `Persona not found: ${inputs.personaId}` };
         }
@@ -147,10 +147,10 @@ export default {
         }
         // Fisher-Yates shuffle
         for (let i = pool.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
+          let j = Math.floor(Math.random() * (i + 1));
           [pool[i], pool[j]] = [pool[j], pool[i]];
         }
-        const selected = pool.slice(0, Math.min(params.count || 2, pool.length));
+        let selected = pool.slice(0, Math.min(params.count || 2, pool.length));
         return { persona: selected[0] || null, personas: selected, error: null };
       }
 

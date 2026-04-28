@@ -32,7 +32,7 @@ export class TemplatePreview extends Symbiote {
   renderCallback() {
     // Bind textarea to testData
     /** @type {HTMLTextAreaElement|null} */
-    const textarea = this.querySelector('.tpl-test-data');
+    let textarea = this.querySelector('.tpl-test-data');
     if (textarea) {
       textarea.value = this.$.testData;
       textarea.addEventListener('input', () => {
@@ -49,8 +49,8 @@ export class TemplatePreview extends Symbiote {
    * Extract placeholders, interpolate template, update chips + preview.
    */
   _updatePreview() {
-    const tpl = this.$.template;
-    const placeholders = extractPlaceholders(tpl);
+    let tpl = this.$.template;
+    let placeholders = extractPlaceholders(tpl);
 
     this.$.noPlaceholders = placeholders.length === 0;
 
@@ -66,10 +66,10 @@ export class TemplatePreview extends Symbiote {
     }
 
     // Build chips with resolved status
-    const resolved = [];
-    const chips = placeholders.map((name) => {
-      const val = this._resolvePath(data, name);
-      const isResolved = val !== undefined;
+    let resolved = [];
+    let chips = placeholders.map((name) => {
+      let val = this._resolvePath(data, name);
+      let isResolved = val !== undefined;
       if (isResolved) resolved.push(name);
       return { name };
     });
@@ -85,9 +85,9 @@ export class TemplatePreview extends Symbiote {
       return;
     }
 
-    const text = tpl.replace(/\{\{?([^{}]+)\}?\}/g, (match, key) => {
-      const trimmed = key.trim();
-      const value = this._resolvePath(data, trimmed);
+    let text = tpl.replace(/\{\{?([^{}]+)\}?\}/g, (match, key) => {
+      let trimmed = key.trim();
+      let value = this._resolvePath(data, trimmed);
       if (value === undefined) return match;
       if (typeof value === 'object') return JSON.stringify(value);
       return String(value);
@@ -102,9 +102,9 @@ export class TemplatePreview extends Symbiote {
    * @param {string[]} resolved - Names of resolved placeholders
    */
   _applyChipColors(resolved) {
-    const chipEls = this.querySelectorAll('.tpl-chip');
+    let chipEls = this.querySelectorAll('.tpl-chip');
     chipEls.forEach((el) => {
-      const name = el.textContent?.trim();
+      let name = el.textContent?.trim();
       if (name && !resolved.includes(name)) {
         el.setAttribute('data-missing', '');
       } else {

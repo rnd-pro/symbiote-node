@@ -36,11 +36,13 @@ export class Zoom {
    * @param {HTMLElement} container - Outer container
    * @param {HTMLElement} content - Inner content element (for getBoundingClientRect)
    * @param {function} onZoom - Callback: (delta, ox, oy, source)
+   * @param {function} [getTransform] - Optional callback returning {x, y} to avoid getBoundingClientRect layout thrashing
    */
-  initialize(container, content, onZoom) {
+  initialize(container, content, onZoom, getTransform = null) {
     this.#container = container;
     this.#content = content;
     this.#onZoom = onZoom;
+    this.getTransform = getTransform;
 
     container.addEventListener('wheel', this.#wheel, { passive: false });
     container.addEventListener('pointerdown', this.#down);
@@ -50,24 +52,33 @@ export class Zoom {
     window.addEventListener('pointercancel', this.#up);
   }
 
+  #getRect() {
+    if (this.getTransform) {
+      let c = this.#container.getBoundingClientRect();
+      let t = this.getTransform();
+      return { left: c.left + t.x, top: c.top + t.y };
+    }
+    return this.#content.getBoundingClientRect();
+  }
+
   #wheel = (e) => {
     e.preventDefault();
-    const rect = this.#content.getBoundingClientRect();
+    let rect = this.#getRect();
     // Normalize delta: trackpads send small frequent deltas, mice send large ones
-    const absDelta = Math.min(Math.abs(e.deltaY), 10) / 10;
-    const sign = e.deltaY < 0 ? 1 : -1;
-    const delta = sign * this.intensity * absDelta;
-    const ox = (rect.left - e.clientX) * delta;
-    const oy = (rect.top - e.clientY) * delta;
+    let absDelta = Math.min(Math.abs(e.deltaY), 10) / 10;
+    let sign = e.deltaY < 0 ? 1 : -1;
+    let delta = sign * this.intensity * absDelta;
+    let ox = (rect.left - e.clientX) * delta;
+    let oy = (rect.top - e.clientY) * delta;
     this.#onZoom(delta, ox, oy, 'wheel');
   };
 
   #dblclick = (e) => {
     e.preventDefault();
-    const rect = this.#content.getBoundingClientRect();
-    const delta = 4 * this.intensity;
-    const ox = (rect.left - e.clientX) * delta;
-    const oy = (rect.top - e.clientY) * delta;
+    let rect = this.#getRect();
+    let delta = 4 * this.intensity;
+    let ox = (rect.left - e.clientX) * delta;
+    let oy = (rect.top - e.clientY) * delta;
     this.#onZoom(delta, ox, oy, 'dblclick');
   };
 
@@ -81,18 +92,18 @@ export class Zoom {
     );
     if (this.#pointers.length < 2) return;
 
-    const [p1, p2] = this.#pointers;
-    const distance = Math.sqrt(
+    let [p1, p2] = this.#pointers;
+    let distance = Math.sqrt(
       (p1.clientX - p2.clientX) ** 2 + (p1.clientY - p2.clientY) ** 2
     );
-    const cx = (p1.clientX + p2.clientX) / 2;
-    const cy = (p1.clientY + p2.clientY) / 2;
+    let cx = (p1.clientX + p2.clientX) / 2;
+    let cy = (p1.clientY + p2.clientY) / 2;
 
     if (this.#previous && this.#previous.distance > 0) {
-      const rect = this.#content.getBoundingClientRect();
-      const delta = distance / this.#previous.distance - 1;
-      const ox = (rect.left - cx) * delta;
-      const oy = (rect.top - cy) * delta;
+      let rect = this.#getRect();
+      let delta = distance / this.#previous.distance - 1;
+      let ox = (rect.left - cx) * delta;
+      let oy = (rect.top - cy) * delta;
       this.#onZoom(
         delta,
         ox - (this.#previous.cx - cx),
@@ -127,3 +138,5 @@ export class Zoom {
     window.removeEventListener('pointercancel', this.#up);
   }
 }
+
+export { Zoom as default };

@@ -70,7 +70,7 @@ export {
 export { syncWithRouter } from './layout/LayoutRouter/routerSync.js';
 
 // Auto Layout
-export { computeAutoLayout } from './canvas/AutoLayout.js';
+export { computeAutoLayout, computeTreeLayout } from './canvas/AutoLayout.js';
 
 // Portals (Named Reroutes)
 export { PortalManager } from './core/Portal.js';
@@ -84,7 +84,19 @@ export { GraphTabs } from './canvas/GraphTabs/GraphTabs.js';
 // Subgraphs
 export { SubgraphNode } from './core/SubgraphNode.js';
 export { SubgraphManager } from './canvas/SubgraphManager.js';
+export { SubgraphRouter } from './canvas/SubgraphRouter.js';
 export { Breadcrumb } from './canvas/Breadcrumb/Breadcrumb.js';
+
+// Canvas utilities
+export { LODManager } from './canvas/LODManager.js';
+export { PinExpansion } from './canvas/PinExpansion.js';
+export { ForceLayout } from './canvas/ForceLayout.js';
+
+// Additional themes (not in base Theme.js barrel)
+export { CARBON, CARBON_PALETTE } from './themes/carbon.js';
+export { PCB_DARK } from './themes/pcb.js';
+export { EBOOK, EBOOK_PALETTE } from './themes/ebook.js';
+export { NEON_PALETTE } from './themes/neon.js';
 
 // Engine (server-side graph runtime)
 // Usage: import * as Engine from 'symbiote-node/engine'

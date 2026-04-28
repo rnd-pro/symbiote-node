@@ -26,16 +26,21 @@ export class ViewportActions {
   /** @type {Array|null} - clipboard for copy/paste */
   #clipboard = null;
 
+  /** @type {import('./NodeCanvas/NodeCanvas.js').NodeCanvas} */
+  #canvas;
+
   /**
    * @param {object} config
    * @param {import('../core/Editor.js').NodeEditor} config.editor
    * @param {import('../interactions/Selector.js').Selector} config.selector
    * @param {Map<string, HTMLElement>} config.nodeViews
+   * @param {import('./NodeCanvas/NodeCanvas.js').NodeCanvas} config.canvas
    */
-  constructor({ editor, selector, nodeViews }) {
+  constructor({ editor, selector, nodeViews, canvas }) {
     this.#editor = editor;
     this.#selector = selector;
     this.#nodeViews = nodeViews;
+    this.#canvas = canvas;
   }
 
   /** @param {boolean} readonly */
@@ -132,10 +137,10 @@ export class ViewportActions {
    */
   #toggleNodeState(nodeId, prop, attr, eventName) {
     if (!this.#editor) return;
-    const node = this.#editor.getNode(nodeId);
+    let node = this.#editor.getNode(nodeId);
     if (!node) return;
     node[prop] = !node[prop];
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (el) {
       node[prop] ? el.setAttribute(attr, '') : el.removeAttribute(attr);
     }
@@ -165,73 +170,42 @@ export class ViewportActions {
     if (this.#readonly) return;
     e.preventDefault();
 
-    const target = e.target.closest('graph-node');
-    const connTarget = e.target.closest('.sn-conn-path');
+    let target = e.target.closest('graph-node');
+    let connTarget = e.target.closest('.sn-conn-path');
     if (!contextMenuEl) return;
 
-    const rect = container.getBoundingClientRect();
-    const menuX = e.clientX - rect.left;
-    const menuY = e.clientY - rect.top;
+    let rect = container.getBoundingClientRect();
+    let menuX = e.clientX - rect.left;
+    let menuY = e.clientY - rect.top;
 
     if (target) {
-      const nodeId = target.getAttribute('node-id');
+      let nodeId = target.getAttribute('node-id');
       contextMenuEl.show(menuX, menuY, [
         { label: 'Delete Node', icon: 'delete', action: () => this.deleteNode(nodeId) },
         { label: 'Clone Node', icon: 'content_copy', action: () => this.cloneNode(nodeId) },
         { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
       ]);
     } else if (connTarget) {
-      const connId = connTarget.getAttribute('data-conn-id');
+      let connId = connTarget.getAttribute('data-conn-id');
       contextMenuEl.show(menuX, menuY, [
         { label: 'Delete Connection', icon: 'link_off', action: () => this.deleteConnection(connId) },
       ]);
     } else {
-      const graphX = (e.clientX - rect.left - transform.panX) / transform.zoom;
-      const graphY = (e.clientY - rect.top - transform.panY) / transform.zoom;
+      let graphX = (e.clientX - rect.left - transform.panX) / transform.zoom;
+      let graphY = (e.clientY - rect.top - transform.panY) / transform.zoom;
       contextMenuEl.show(menuX, menuY, [
         { label: 'Add Node', icon: 'add_box', action: () => this.#editor?.emit('contextadd', { x: graphX, y: graphY }) },
         { label: 'Add Comment', icon: 'sticky_note_2', action: () => this.#editor?.emit('contextaddcomment', { x: graphX, y: graphY }) },
         { label: 'Add Frame', icon: 'dashboard', action: () => this.#editor?.emit('contextaddframe', { x: graphX, y: graphY }) },
         { label: 'Paste', icon: 'content_paste', action: () => this.#pasteNodes(graphX, graphY) },
         { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
-        { label: 'Fit View', icon: 'fit_screen', action: () => this.fitView(container) },
+        { label: 'Fit View', icon: 'fit_screen', action: () => this.#canvas?.fitView() },
         { label: 'Auto Layout', icon: 'auto_fix_high', action: () => this.#editor?.emit('autolayout') },
       ]);
     }
   }
 
-  /**
-   * Fit all nodes into viewport
-   * @param {HTMLElement} container
-   * @returns {{ zoom: number, panX: number, panY: number }|null}
-   */
-  fitView(container) {
-    if (this.#nodeViews.size === 0) return null;
-    const cw = container.clientWidth;
-    const ch = container.clientHeight;
 
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const [, el] of this.#nodeViews) {
-      const p = el._position;
-      const w = el.offsetWidth || 180;
-      const h = el.offsetHeight || 60;
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x + w > maxX) maxX = p.x + w;
-      if (p.y + h > maxY) maxY = p.y + h;
-    }
-
-    const padding = 60;
-    const contentW = maxX - minX + padding * 2;
-    const contentH = maxY - minY + padding * 2;
-    const zoom = Math.min(cw / contentW, ch / contentH, 2);
-
-    return {
-      zoom,
-      panX: (cw - contentW * zoom) / 2 - (minX - padding) * zoom,
-      panY: (ch - contentH * zoom) / 2 - (minY - padding) * zoom,
-    };
-  }
 
   /**
    * Highlight sockets compatible with picked socket
@@ -239,23 +213,23 @@ export class ViewportActions {
    * @param {HTMLElement} nodesLayer
    */
   highlightCompatibleSockets(socketData, nodesLayer) {
-    const node = this.#editor.getNode(socketData.nodeId);
+    let node = this.#editor.getNode(socketData.nodeId);
     if (!node) return;
 
-    const isOutput = socketData.side === 'output';
-    const pickedPort = isOutput ? node.outputs[socketData.key] : node.inputs[socketData.key];
+    let isOutput = socketData.side === 'output';
+    let pickedPort = isOutput ? node.outputs[socketData.key] : node.inputs[socketData.key];
     if (!pickedPort) return;
 
-    const pickedSocket = pickedPort.socket;
+    let pickedSocket = pickedPort.socket;
 
     for (const [nodeId, el] of this.#nodeViews) {
       if (nodeId === socketData.nodeId) continue;
-      const targetNode = this.#editor.getNode(nodeId);
+      let targetNode = this.#editor.getNode(nodeId);
       if (!targetNode) continue;
 
-      const ports = isOutput ? targetNode.inputs : targetNode.outputs;
+      let ports = isOutput ? targetNode.inputs : targetNode.outputs;
       for (const [key, port] of Object.entries(ports)) {
-        const sockets = el.querySelectorAll(`.sn-socket[data-key="${key}"]`);
+        let sockets = el.querySelectorAll(`.sn-socket[data-key="${key}"]`);
         for (const sock of sockets) {
           if (pickedSocket.isCompatibleWith(port.socket)) {
             sock.setAttribute('data-compatible', '');
@@ -265,9 +239,9 @@ export class ViewportActions {
         }
       }
 
-      const sameSidePorts = isOutput ? targetNode.outputs : targetNode.inputs;
+      let sameSidePorts = isOutput ? targetNode.outputs : targetNode.inputs;
       for (const [key] of Object.entries(sameSidePorts)) {
-        const sockets = el.querySelectorAll(`.sn-socket[data-key="${key}"]`);
+        let sockets = el.querySelectorAll(`.sn-socket[data-key="${key}"]`);
         for (const sock of sockets) {
           sock.setAttribute('data-incompatible', '');
         }
@@ -280,7 +254,7 @@ export class ViewportActions {
    * @param {HTMLElement} nodesLayer
    */
   clearSocketHighlights(nodesLayer) {
-    const all = nodesLayer.querySelectorAll('.sn-socket[data-compatible], .sn-socket[data-incompatible]');
+    let all = nodesLayer.querySelectorAll('.sn-socket[data-compatible], .sn-socket[data-incompatible]');
     for (const sock of all) {
       sock.removeAttribute('data-compatible');
       sock.removeAttribute('data-incompatible');
@@ -295,13 +269,13 @@ export class ViewportActions {
    * @returns {Set<string>}
    */
   updatePortHints(worldX, worldY, socketData) {
-    const compatibleIds = this.getCompatibleNodeIds(socketData);
+    let compatibleIds = this.getCompatibleNodeIds(socketData);
 
     for (const [nodeId, el] of this.#nodeViews) {
       if (compatibleIds.has(nodeId)) {
-        const nodePos = el._position;
-        const nodeW = el.offsetWidth || 180;
-        const nodeCenterX = nodePos ? nodePos.x + nodeW / 2 : 0;
+        let nodePos = el._position;
+        let nodeW = el.offsetWidth || 180;
+        let nodeCenterX = nodePos ? nodePos.x + nodeW / 2 : 0;
         el.setAttribute('data-port-hint', worldX < nodeCenterX ? 'left' : 'right');
       } else {
         el.removeAttribute('data-port-hint');
@@ -317,22 +291,22 @@ export class ViewportActions {
    * @returns {Set<string>}
    */
   getCompatibleNodeIds(socketData) {
-    const pickedNode = this.#editor.getNode(socketData.nodeId);
+    let pickedNode = this.#editor.getNode(socketData.nodeId);
     if (!pickedNode) return new Set();
 
-    const isOutput = socketData.side === 'output';
-    const pickedPort = isOutput ? pickedNode.outputs[socketData.key] : pickedNode.inputs[socketData.key];
+    let isOutput = socketData.side === 'output';
+    let pickedPort = isOutput ? pickedNode.outputs[socketData.key] : pickedNode.inputs[socketData.key];
     if (!pickedPort) return new Set();
 
-    const pickedSocket = pickedPort.socket;
-    const compatibleIds = new Set();
+    let pickedSocket = pickedPort.socket;
+    let compatibleIds = new Set();
 
     for (const [nodeId] of this.#nodeViews) {
       if (nodeId === socketData.nodeId) continue;
-      const targetNode = this.#editor.getNode(nodeId);
+      let targetNode = this.#editor.getNode(nodeId);
       if (!targetNode) continue;
 
-      const ports = isOutput ? targetNode.inputs : targetNode.outputs;
+      let ports = isOutput ? targetNode.inputs : targetNode.outputs;
       for (const [, port] of Object.entries(ports)) {
         if (pickedSocket.isCompatibleWith(port.socket)) {
           compatibleIds.add(nodeId);
@@ -360,12 +334,12 @@ export class ViewportActions {
    * @param {object} socketData
    */
   handleDropEmpty(x, y, socketData) {
-    const node = this.#editor.getNode(socketData.nodeId);
+    let node = this.#editor.getNode(socketData.nodeId);
     if (!node) return;
 
-    const isOutput = socketData.side === 'output';
-    const port = isOutput ? node.outputs[socketData.key] : node.inputs[socketData.key];
-    const socketType = port?.socket?.type || 'any';
+    let isOutput = socketData.side === 'output';
+    let port = isOutput ? node.outputs[socketData.key] : node.inputs[socketData.key];
+    let socketType = port?.socket?.type || 'any';
 
     this.#editor.emit('dropinempty', {
       x, y,
@@ -379,12 +353,12 @@ export class ViewportActions {
   // --- Copy/Paste ---
 
   #copySelected() {
-    const selected = this.#selector.getSelectedNodes();
+    let selected = this.#selector.getSelectedNodes();
     if (selected.length === 0) return;
 
     this.#clipboard = selected.map(nodeId => {
-      const node = this.#editor.getNode(nodeId);
-      const el = this.#nodeViews.get(nodeId);
+      let node = this.#editor.getNode(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       if (!node) return null;
       return {
         label: node.label,
@@ -405,10 +379,10 @@ export class ViewportActions {
   #pasteNodes(x, y) {
     if (!this.#clipboard || this.#clipboard.length === 0) return;
 
-    const offset = 30;
+    let offset = 30;
     for (const data of this.#clipboard) {
-      const posX = x != null ? x : data.position.x + offset;
-      const posY = y != null ? y : data.position.y + offset;
+      let posX = x != null ? x : data.position.x + offset;
+      let posY = y != null ? y : data.position.y + offset;
       this.#editor.emit('contextclone', {
         label: data.label,
         type: data.type,
@@ -424,18 +398,18 @@ export class ViewportActions {
 
   /** Align selected nodes horizontally (same Y) */
   alignSelectedHorizontal() {
-    const selected = this.#selector.getSelectedNodes();
+    let selected = this.#selector.getSelectedNodes();
     if (selected.length < 2) return;
 
     let totalY = 0;
     for (const nodeId of selected) {
-      const el = this.#nodeViews.get(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       totalY += el?._position?.y || 0;
     }
-    const avgY = totalY / selected.length;
+    let avgY = totalY / selected.length;
 
     for (const nodeId of selected) {
-      const el = this.#nodeViews.get(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       if (el?._position) {
         this.#editor.emit('nodemovetopos', {
           nodeId,
@@ -448,18 +422,18 @@ export class ViewportActions {
 
   /** Align selected nodes vertically (same X) */
   alignSelectedVertical() {
-    const selected = this.#selector.getSelectedNodes();
+    let selected = this.#selector.getSelectedNodes();
     if (selected.length < 2) return;
 
     let totalX = 0;
     for (const nodeId of selected) {
-      const el = this.#nodeViews.get(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       totalX += el?._position?.x || 0;
     }
-    const avgX = totalX / selected.length;
+    let avgX = totalX / selected.length;
 
     for (const nodeId of selected) {
-      const el = this.#nodeViews.get(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       if (el?._position) {
         this.#editor.emit('nodemovetopos', {
           nodeId,

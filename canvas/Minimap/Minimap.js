@@ -53,7 +53,7 @@ export class Minimap extends Symbiote {
   }
 
   #startLoop() {
-    const draw = () => {
+    let draw = () => {
       this.#draw();
       this.#rafId = requestAnimationFrame(draw);
     };
@@ -61,30 +61,30 @@ export class Minimap extends Symbiote {
   }
 
   #draw() {
-    const ctx = this.#ctx;
-    const canvas = this.#canvas2d;
+    let ctx = this.#ctx;
+    let canvas = this.#canvas2d;
     if (!ctx || !canvas || !this.#getState) return;
 
-    const state = this.#getState();
+    let state = this.#getState();
     if (!state) return;
 
-    const { nodes, transform, containerSize } = state;
-    const w = canvas.width;
-    const h = canvas.height;
+    let { nodes, transform, containerSize } = state;
+    let w = canvas.width;
+    let h = canvas.height;
 
     // Read theme colors from CSS variables
-    const cs = getComputedStyle(this);
-    const bgColor = cs.getPropertyValue('--sn-minimap-bg').trim()
+    let cs = getComputedStyle(this);
+    let bgColor = cs.getPropertyValue('--sn-minimap-bg').trim()
       || cs.getPropertyValue('--sn-bg').trim()
       || 'rgba(20, 20, 35, 0.85)';
-    const nodeColor = cs.getPropertyValue('--sn-minimap-node').trim()
+    let nodeColor = cs.getPropertyValue('--sn-minimap-node').trim()
       || 'rgba(80, 130, 200, 0.6)';
-    const nodeStroke = cs.getPropertyValue('--sn-minimap-node-stroke').trim()
+    let nodeStroke = cs.getPropertyValue('--sn-minimap-node-stroke').trim()
       || cs.getPropertyValue('--sn-node-border').trim()
       || 'rgba(120, 170, 255, 0.3)';
-    const vpStroke = cs.getPropertyValue('--sn-minimap-viewport').trim()
+    let vpStroke = cs.getPropertyValue('--sn-minimap-viewport').trim()
       || 'rgba(255, 255, 255, 0.6)';
-    const vpFill = cs.getPropertyValue('--sn-minimap-viewport-fill').trim()
+    let vpFill = cs.getPropertyValue('--sn-minimap-viewport-fill').trim()
       || 'rgba(255, 255, 255, 0.04)';
 
     // Clear
@@ -106,20 +106,20 @@ export class Minimap extends Symbiote {
     }
 
     // Add padding
-    const pad = 100;
+    let pad = 100;
     minX -= pad; minY -= pad;
     maxX += pad; maxY += pad;
 
-    const graphW = maxX - minX;
-    const graphH = maxY - minY;
+    let graphW = maxX - minX;
+    let graphH = maxY - minY;
 
     // Scale to fit
-    const scaleX = w / graphW;
-    const scaleY = h / graphH;
-    const scale = Math.min(scaleX, scaleY);
+    let scaleX = w / graphW;
+    let scaleY = h / graphH;
+    let scale = Math.min(scaleX, scaleY);
 
-    const offsetX = (w - graphW * scale) / 2;
-    const offsetY = (h - graphH * scale) / 2;
+    let offsetX = (w - graphW * scale) / 2;
+    let offsetY = (h - graphH * scale) / 2;
 
     // Store for viewport drag
     this._mapMinX = minX;
@@ -130,10 +130,10 @@ export class Minimap extends Symbiote {
 
     // Draw nodes as rectangles
     for (const n of nodes) {
-      const x = (n.x - minX) * scale + offsetX;
-      const y = (n.y - minY) * scale + offsetY;
-      const nw = (n.width || 200) * scale;
-      const nh = (n.height || 80) * scale;
+      let x = (n.x - minX) * scale + offsetX;
+      let y = (n.y - minY) * scale + offsetY;
+      let nw = (n.width || 200) * scale;
+      let nh = (n.height || 80) * scale;
 
       ctx.fillStyle = n.bypassed ? 'rgba(100, 100, 100, 0.5)' : nodeColor;
       ctx.fillRect(x, y, nw, nh);
@@ -144,10 +144,10 @@ export class Minimap extends Symbiote {
 
     // Draw viewport rectangle
     if (containerSize && transform) {
-      const vx = (-transform.x / transform.zoom - minX) * scale + offsetX;
-      const vy = (-transform.y / transform.zoom - minY) * scale + offsetY;
-      const vw = (containerSize.width / transform.zoom) * scale;
-      const vh = (containerSize.height / transform.zoom) * scale;
+      let vx = (-transform.x / transform.zoom - minX) * scale + offsetX;
+      let vy = (-transform.y / transform.zoom - minY) * scale + offsetY;
+      let vw = (containerSize.width / transform.zoom) * scale;
+      let vh = (containerSize.height / transform.zoom) * scale;
 
       ctx.strokeStyle = vpStroke;
       ctx.lineWidth = 1.5;
@@ -174,21 +174,21 @@ export class Minimap extends Symbiote {
 
   #navigateTo(e) {
     if (!this.#getState || !this.#canvas2d) return;
-    const rect = this.#canvas2d.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    let rect = this.#canvas2d.getBoundingClientRect();
+    let mx = e.clientX - rect.left;
+    let my = e.clientY - rect.top;
 
-    const state = this.#getState();
+    let state = this.#getState();
     if (!state?.containerSize || !state?.transform) return;
 
     // Convert minimap coords to graph coords
-    const graphX = (mx - this._mapOffsetX) / this._mapScale + this._mapMinX;
-    const graphY = (my - this._mapOffsetY) / this._mapScale + this._mapMinY;
+    let graphX = (mx - this._mapOffsetX) / this._mapScale + this._mapMinX;
+    let graphY = (my - this._mapOffsetY) / this._mapScale + this._mapMinY;
 
     // Center the viewport on that point
-    const zoom = state.transform.zoom;
-    const newX = -(graphX * zoom - state.containerSize.width / 2);
-    const newY = -(graphY * zoom - state.containerSize.height / 2);
+    let zoom = state.transform.zoom;
+    let newX = -(graphX * zoom - state.containerSize.width / 2);
+    let newY = -(graphY * zoom - state.containerSize.height / 2);
 
     // Dispatch event so NodeCanvas can update its transform
     this.dispatchEvent(new CustomEvent('minimap-navigate', {

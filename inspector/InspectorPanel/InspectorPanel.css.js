@@ -4,7 +4,7 @@
  */
 import { css } from '@symbiotejs/symbiote';
 
-export const styles = css`
+export let styles = css`
 inspector-panel {
   position: absolute;
   top: 0;
@@ -59,7 +59,7 @@ inspector-panel {
 
   & .insp-body {
     flex: 1;
-    padding: 12px 16px;
+    padding: 44px 16px 12px;
   }
 
   & .insp-empty {

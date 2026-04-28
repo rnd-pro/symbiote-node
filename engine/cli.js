@@ -32,7 +32,7 @@ import {
   createServer,
 } from './index.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+let __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ─── Argument Parsing ────────────────────────────────────────────────────────
 
@@ -42,16 +42,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @returns {{command: string, target: string, options: Record<string, string|boolean>}}
  */
 function parseArgs(argv) {
-  const args = argv.slice(2);
-  const command = args[0];
+  let args = argv.slice(2);
+  let command = args[0];
   let target = '';
   /** @type {Record<string, string|boolean>} */
-  const options = {};
+  let options = {};
 
   for (let i = 1; i < args.length; i++) {
     if (args[i].startsWith('--')) {
-      const key = args[i].slice(2);
-      const next = args[i + 1];
+      let key = args[i].slice(2);
+      let next = args[i + 1];
       if (next && !next.startsWith('--')) {
         options[key] = next;
         i++;
@@ -76,9 +76,9 @@ function parseArgs(argv) {
 async function loadSecrets(secretsPath) {
   if (!secretsPath) {
     // Try default location
-    const defaultPath = resolve(process.cwd(), 'secrets.json');
+    let defaultPath = resolve(process.cwd(), 'secrets.json');
     try {
-      const data = await readFile(defaultPath, 'utf-8');
+      let data = await readFile(defaultPath, 'utf-8');
       return JSON.parse(data);
     } catch {
       return {};
@@ -86,7 +86,7 @@ async function loadSecrets(secretsPath) {
   }
 
   try {
-    const data = await readFile(resolve(secretsPath), 'utf-8');
+    let data = await readFile(resolve(secretsPath), 'utf-8');
     return JSON.parse(data);
   } catch (err) {
     console.error(`⚠ Could not load secrets from ${secretsPath}: ${err.message}`);
@@ -101,9 +101,9 @@ async function loadSecrets(secretsPath) {
  * @param {string|string[]} packs
  */
 async function loadPacks(packs) {
-  const packList = Array.isArray(packs) ? packs : packs.split(',');
+  let packList = Array.isArray(packs) ? packs : packs.split(',');
   for (const pack of packList) {
-    const packName = pack.trim();
+    let packName = pack.trim();
     try {
       await import(`./packs/${packName}-pack.js`);
       console.log(`  ✔ Pack loaded: ${packName}`);
@@ -122,7 +122,7 @@ async function loadPacks(packs) {
  * @param {Record<string, string|boolean>} options
  */
 async function cmdRun(filePath, options) {
-  const verbose = !!options.verbose;
+  let verbose = !!options.verbose;
   console.log(`\n🚀 symbiote-node run: ${filePath}\n`);
   // Load packs
   if (options.pack) {
@@ -131,20 +131,20 @@ async function cmdRun(filePath, options) {
 
   // Load handler files
   if (options.handlers) {
-    const dir = resolve(/** @type {string} */(options.handlers));
-    const types = await loadHandlers(dir);
+    let dir = resolve(/** @type {string} */(options.handlers));
+    let types = await loadHandlers(dir);
     if (verbose) console.log(`  🔧 Loaded ${types.length} handler(s) from ${options.handlers}`);
   }
 
   // Load secrets
-  const secrets = await loadSecrets(/** @type {string|undefined} */(options.secrets));
+  let secrets = await loadSecrets(/** @type {string|undefined} */(options.secrets));
   if (Object.keys(secrets).length > 0 && verbose) {
     console.log(`  🔑 Secrets loaded: ${Object.keys(secrets).join(', ')}`);
   }
 
   // Load workflow
-  const raw = await readFile(resolve(filePath), 'utf-8');
-  const workflowData = JSON.parse(raw);
+  let raw = await readFile(resolve(filePath), 'utf-8');
+  let workflowData = JSON.parse(raw);
 
   console.log(`  📄 Workflow: ${workflowData.name || workflowData.id}`);
   console.log(`  📊 Nodes: ${workflowData.nodes?.length || 0}`);
@@ -152,47 +152,47 @@ async function cmdRun(filePath, options) {
   console.log();
 
   // Deserialize into Graph
-  const graph = deserialize(raw);
+  let graph = deserialize(raw);
 
   // Execute
-  const executor = new Executor();
-  const t0 = performance.now();
+  let executor = new Executor();
+  let t0 = performance.now();
 
   try {
-    const result = await executor.run(graph, {
+    let result = await executor.run(graph, {
       cache: workflowData.execution?.cache,
       secrets,
     });
 
-    const elapsed = (performance.now() - t0).toFixed(1);
+    let elapsed = (performance.now() - t0).toFixed(1);
     console.log(`  ✔ Execution complete in ${elapsed}ms`);
     console.log(`  📋 Execution order: ${result.executionOrder.length} nodes`);
 
     if (verbose) {
       console.log('\n  Execution log:');
       for (const entry of result.log) {
-        const status = entry.skipped ? '⏭ skipped' : `✔ ${entry.time.toFixed(2)}ms`;
-        const nodeData = graph.getNode(entry.nodeId);
+        let status = entry.skipped ? '⏭ skipped' : `✔ ${entry.time.toFixed(2)}ms`;
+        let nodeData = graph.getNode(entry.nodeId);
         console.log(`    ${nodeData?.name || entry.nodeId}: ${status}`);
       }
 
       console.log('\n  Outputs:');
       for (const [nodeId, output] of Object.entries(result.outputs)) {
-        const nodeData = graph.getNode(nodeId);
+        let nodeData = graph.getNode(nodeId);
         console.log(`    ${nodeData?.name || nodeId}:`, JSON.stringify(output, null, 2).slice(0, 200));
       }
     }
 
     // Summary
-    const outputNodes = result.executionOrder.filter(id => {
-      const node = graph.getNode(id);
+    let outputNodes = result.executionOrder.filter(id => {
+      let node = graph.getNode(id);
       return node?.type?.startsWith('output/');
     });
 
     if (outputNodes.length > 0) {
       console.log(`\n  Output nodes:`);
       for (const id of outputNodes) {
-        const node = graph.getNode(id);
+        let node = graph.getNode(id);
         console.log(`    → ${node.name || node.type} (${id})`);
       }
     }
@@ -200,7 +200,7 @@ async function cmdRun(filePath, options) {
     console.log(`\n✅ Done\n`);
 
   } catch (err) {
-    const elapsed = (performance.now() - t0).toFixed(1);
+    let elapsed = (performance.now() - t0).toFixed(1);
     console.error(`\n  ✖ Execution failed after ${elapsed}ms: ${err.message}\n`);
     process.exit(1);
   }
@@ -218,19 +218,19 @@ async function cmdValidate(filePath, options) {
   }
 
   if (options.handlers) {
-    const dir = resolve(/** @type {string} */(options.handlers));
+    let dir = resolve(/** @type {string} */(options.handlers));
     await loadHandlers(dir);
   }
 
-  const raw = await readFile(resolve(filePath), 'utf-8');
-  const data = JSON.parse(raw);
+  let raw = await readFile(resolve(filePath), 'utf-8');
+  let data = JSON.parse(raw);
 
   let errors = 0;
   let warnings = 0;
 
   // Check all node types exist
   for (const node of (data.nodes || [])) {
-    const typeDef = getNodeType(node.type);
+    let typeDef = getNodeType(node.type);
     if (!typeDef) {
       console.error(`  ✖ Unknown node type: ${node.type} (node: ${node.id})`);
       errors++;
@@ -238,7 +238,7 @@ async function cmdValidate(filePath, options) {
     }
 
     // Validate params
-    const validation = validateParams(node.type, node.params || {});
+    let validation = validateParams(node.type, node.params || {});
     if (!validation.valid) {
       for (const err of validation.errors) {
         console.error(`  ✖ ${node.id} (${node.type}): ${err}`);
@@ -248,7 +248,7 @@ async function cmdValidate(filePath, options) {
   }
 
   // Check connections reference valid nodes
-  const nodeIds = new Set((data.nodes || []).map(n => n.id));
+  let nodeIds = new Set((data.nodes || []).map(n => n.id));
   for (const conn of (data.connections || [])) {
     if (!nodeIds.has(conn.from)) {
       console.error(`  ✖ Connection references unknown source node: ${conn.from}`);
@@ -261,7 +261,7 @@ async function cmdValidate(filePath, options) {
   }
 
   // Check for nodes with no connections (orphans)
-  const connectedNodes = new Set();
+  let connectedNodes = new Set();
   for (const conn of (data.connections || [])) {
     connectedNodes.add(conn.from);
     connectedNodes.add(conn.to);
@@ -293,23 +293,23 @@ async function cmdList(options) {
   }
 
   if (options.handlers) {
-    const dir = resolve(/** @type {string} */(options.handlers));
+    let dir = resolve(/** @type {string} */(options.handlers));
     await loadHandlers(dir);
   }
 
-  const menu = getNodeMenu();
+  let menu = getNodeMenu();
   for (const group of menu) {
     console.log(`  ═══ ${group.category.toUpperCase()} ═══`);
     for (const node of group.nodes) {
-      const typeDef = getNodeType(node.type);
-      const ins = typeDef?.driver.inputs?.length || 0;
-      const outs = typeDef?.driver.outputs?.length || 0;
+      let typeDef = getNodeType(node.type);
+      let ins = typeDef?.driver.inputs?.length || 0;
+      let outs = typeDef?.driver.outputs?.length || 0;
       console.log(`    ${node.type}  [${ins}→${outs}]  ${node.description || ''}`);
     }
     console.log();
   }
 
-  const total = listDrivers().length;
+  let total = listDrivers().length;
   console.log(`  Total: ${total} node types\n`);
 }
 
@@ -319,8 +319,8 @@ async function cmdList(options) {
  */
 async function cmdInspect(filePath) {
   console.log(`\n🔎 symbiote-node inspect: ${filePath}\n`);
-  const raw = await readFile(resolve(filePath), 'utf-8');
-  const data = JSON.parse(raw);
+  let raw = await readFile(resolve(filePath), 'utf-8');
+  let data = JSON.parse(raw);
 
   console.log(`  Name: ${data.name || '(unnamed)'}`);
   console.log(`  ID: ${data.id || '(none)'}`);
@@ -330,8 +330,8 @@ async function cmdInspect(filePath) {
   // Nodes
   console.log(`  Nodes (${data.nodes?.length || 0}):`);
   for (const node of (data.nodes || [])) {
-    const paramKeys = Object.keys(node.params || {});
-    const paramStr = paramKeys.length > 0 ? ` {${paramKeys.join(', ')}}` : '';
+    let paramKeys = Object.keys(node.params || {});
+    let paramStr = paramKeys.length > 0 ? ` {${paramKeys.join(', ')}}` : '';
     console.log(`    ${node.id}  [${node.type}]  ${node.name || ''}${paramStr}`);
   }
 
@@ -367,27 +367,26 @@ Options:
   --verbose          Show detailed execution log
 `;
 
-const { command, target, options } = parseArgs(process.argv);
+let { command, target, options } = parseArgs(process.argv);
 
-switch (command) {
-  case 'run':
-    if (!target) { console.error('Usage: symbiote-node run <file.workflow.json>'); process.exit(1); }    await cmdRun(target, options);
-    break;
-
-  case 'validate':
-    if (!target) { console.error('Usage: symbiote-node validate <file.workflow.json>'); process.exit(1); }    await cmdValidate(target, options);
-    break;
-
-  case 'list':
+let cliMap = {
+  run: async () => {
+    if (!target) { console.error('Usage: symbiote-node run <file.workflow.json>'); process.exit(1); }
+    await cmdRun(target, options);
+  },
+  validate: async () => {
+    if (!target) { console.error('Usage: symbiote-node validate <file.workflow.json>'); process.exit(1); }
+    await cmdValidate(target, options);
+  },
+  list: async () => {
     await cmdList(options);
-    break;
-
-  case 'inspect':
-    if (!target) { console.error('Usage: symbiote-node inspect <file.workflow.json>'); process.exit(1); }    await cmdInspect(target);
-    break;
-
-  case 'serve': {
-    const port = parseInt(options.port) || 3100;
+  },
+  inspect: async () => {
+    if (!target) { console.error('Usage: symbiote-node inspect <file.workflow.json>'); process.exit(1); }
+    await cmdInspect(target);
+  },
+  serve: async () => {
+    let port = parseInt(options.port) || 3100;
     await createServer({
       port,
       workflowFile: target,
@@ -395,10 +394,13 @@ switch (command) {
       watchFiles: true,
       verbose: !!options.verbose,
     });
-    break;
-  }
+  },
+};
 
-  default:
-    console.log(HELP);
-    break;
+let handler = cliMap[command];
+if (handler) {
+  await handler();
+} else {
+  console.log(HELP);
 }
+

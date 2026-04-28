@@ -43,3 +43,5 @@ export class Connection {
     this.selected = false;
   }
 }
+
+export { Connection as default };

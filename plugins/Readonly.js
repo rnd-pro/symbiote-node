@@ -57,3 +57,5 @@ export class Readonly {
     return this.#enabled;
   }
 }
+
+export { Readonly as default };

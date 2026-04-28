@@ -34,7 +34,7 @@ export class ContextMenu extends Symbiote {
     visible: false,
     onBackdropClick: () => this.hide(),
     onItemClick: (label) => {
-      const action = this._actions.get(label);
+      let action = this._actions.get(label);
       if (action) action();
       this.hide();
     },
@@ -52,7 +52,7 @@ export class ContextMenu extends Symbiote {
       this._actions.set(item.label, item.action);
     }
     this.$.items = items.map((i) => ({ label: i.label, icon: i.icon }));
-    const menu = this.querySelector('.sn-ctx-menu');
+    let menu = this.querySelector('.sn-ctx-menu');
     if (menu) {
       menu.style.left = `${x}px`;
       menu.style.top = `${y}px`;

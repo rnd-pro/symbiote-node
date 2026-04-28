@@ -25,7 +25,7 @@ const HOROSCOPE_PATTERNS = ['horóscopo', 'horoscopo', 'astrolog', 'signo del zo
 function hashString(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    const chr = str.charCodeAt(i);
+    let chr = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + chr;
     hash |= 0;
   }
@@ -38,8 +38,8 @@ function hashString(str) {
  * @returns {string}
  */
 function generateId(item) {
-  const source = item.link || item.url || '';
-  const title = item.title || '';
+  let source = item.link || item.url || '';
+  let title = item.title || '';
   return hashString(`${title}:${source}`);
 }
 
@@ -70,7 +70,7 @@ function standardizeItem(item) {
  */
 function filterArgentinaOnly(items) {
   return items.filter(item => {
-    const text = `${item.title} ${item.description}`.toLowerCase();
+    let text = `${item.title} ${item.description}`.toLowerCase();
     return !NON_LOCAL_PATTERNS.some(p => text.includes(p));
   });
 }
@@ -82,7 +82,7 @@ function filterArgentinaOnly(items) {
  */
 function filterOutHoroscopes(items) {
   return items.filter(item => {
-    const text = `${item.title} ${item.description}`.toLowerCase();
+    let text = `${item.title} ${item.description}`.toLowerCase();
     return !HOROSCOPE_PATTERNS.some(p => text.includes(p));
   });
 }
@@ -94,7 +94,7 @@ function filterOutHoroscopes(items) {
  */
 async function loadStore(storePath) {
   try {
-    const data = await readFile(storePath, 'utf-8');
+    let data = await readFile(storePath, 'utf-8');
     return JSON.parse(data);
   } catch {
     return {
@@ -156,15 +156,15 @@ export default {
     cacheKey: () => null, // mutable state
 
     execute: async (inputs, params) => {
-      const { storePath } = inputs;
-      const { operation } = params;
+      let { storePath } = inputs;
+      let { operation } = params;
 
       try {
-        const store = await loadStore(storePath);
+        let store = await loadStore(storePath);
 
-        switch (operation) {
-          case 'add': {
-            const itemsToAdd = params.newsItems
+        let opMap = {
+          add: async () => {
+            let itemsToAdd = params.newsItems
               ? params.newsItems
               : params.newsItem
                 ? [params.newsItem]
@@ -172,11 +172,11 @@ export default {
 
             if (itemsToAdd.length === 0) return { error: 'No items to add' };
 
-            const existingIds = new Set(store.news.map(n => n.id));
+            let existingIds = new Set(store.news.map(n => n.id));
             let added = 0;
 
             for (const raw of itemsToAdd) {
-              const item = standardizeItem(raw);
+              let item = standardizeItem(raw);
               if (existingIds.has(item.id)) continue;
 
               store.news.push(item);
@@ -184,27 +184,26 @@ export default {
               added++;
 
               // Update category counts
-              const catId = typeof item.category === 'object' ? item.category.id : item.category;
+              let catId = typeof item.category === 'object' ? item.category.id : item.category;
               store.categoryCounts[catId] = (store.categoryCounts[catId] || 0) + 1;
             }
 
             await saveStore(storePath, store);
             return { result: { added, total: store.news.length, duplicatesSkipped: itemsToAdd.length - added } };
-          }
-
-          case 'get': {
+          },
+          get: () => {
             let items = store.news.filter(n => !n.processed);
 
             // Date filter
             if (params.since) {
-              const sinceDate = new Date(params.since);
+              let sinceDate = new Date(params.since);
               items = items.filter(n => new Date(n.addedAt) >= sinceDate);
             }
 
             // Category filter
             if (Array.isArray(params.categories) && params.categories.length > 0) {
               items = items.filter(n => {
-                const catId = typeof n.category === 'object' ? n.category.id : n.category;
+                let catId = typeof n.category === 'object' ? n.category.id : n.category;
                 return params.categories.includes(catId);
               });
             }
@@ -216,12 +215,11 @@ export default {
             items = items.slice(0, params.maxItems);
 
             return { result: { items, count: items.length } };
-          }
-
-          case 'mark-processed': {
+          },
+          'mark-processed': async () => {
             if (!Array.isArray(params.newsIds)) return { error: 'newsIds array is required' };
 
-            const idsSet = new Set(params.newsIds);
+            let idsSet = new Set(params.newsIds);
             let marked = 0;
 
             for (const item of store.news) {
@@ -235,10 +233,9 @@ export default {
             store.processedIds.push(...params.newsIds);
             await saveStore(storePath, store);
             return { result: { marked, total: params.newsIds.length } };
-          }
-
-          case 'new-period': {
-            const archived = {
+          },
+          'new-period': async () => {
+            let archived = {
               periodStart: store.periodStart,
               periodEnd: new Date().toISOString(),
               itemCount: store.news.length,
@@ -252,12 +249,11 @@ export default {
 
             await saveStore(storePath, store);
             return { result: { archived, message: 'New period started' } };
-          }
-
-          case 'stats': {
-            const total = store.news.length;
-            const processed = store.news.filter(n => n.processed).length;
-            const unprocessed = total - processed;
+          },
+          stats: () => {
+            let total = store.news.length;
+            let processed = store.news.filter(n => n.processed).length;
+            let unprocessed = total - processed;
 
             return {
               result: {
@@ -269,9 +265,12 @@ export default {
               },
             };
           }
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return await opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `news-accumulate ${operation} failed: ${err.message}` };

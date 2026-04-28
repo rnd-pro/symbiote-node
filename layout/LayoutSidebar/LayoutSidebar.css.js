@@ -4,7 +4,7 @@
  */
 import { css } from '@symbiotejs/symbiote';
 
-export const sidebarStyles = css`
+export let sidebarStyles = css`
 layout-sidebar {
   display: flex;
   flex-direction: column;

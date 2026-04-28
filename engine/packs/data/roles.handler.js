@@ -19,18 +19,18 @@ import path from 'node:path';
  * @returns {{ frontmatter: Object, body: string }}
  */
 function parseFrontmatter(content) {
-  const fmRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
-  const match = content.match(fmRegex);
+  let fmRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
+  let match = content.match(fmRegex);
   if (!match) return { frontmatter: {}, body: content.trim() };
 
-  const fmText = match[1];
-  const body = match[2].trim();
-  const frontmatter = {};
+  let fmText = match[1];
+  let body = match[2].trim();
+  let frontmatter = {};
 
   for (const line of fmText.split('\n')) {
-    const colonIdx = line.indexOf(':');
+    let colonIdx = line.indexOf(':');
     if (colonIdx < 0) continue;
-    const key = line.slice(0, colonIdx).trim();
+    let key = line.slice(0, colonIdx).trim();
     let value = line.slice(colonIdx + 1).trim();
 
     // Parse arrays (simple YAML inline [a, b, c])
@@ -50,17 +50,17 @@ function parseFrontmatter(content) {
  * @returns {Promise<Map<string, Object>>}
  */
 async function scanRolesDirectory(dirPath, prefix = '') {
-  const roles = new Map();
-  const tags = new Set();
+  let roles = new Map();
+  let tags = new Set();
 
   try {
-    const entries = await readdir(dirPath, { withFileTypes: true });
+    let entries = await readdir(dirPath, { withFileTypes: true });
 
     for (const entry of entries) {
-      const fullPath = path.join(dirPath, entry.name);
+      let fullPath = path.join(dirPath, entry.name);
 
       if (entry.isDirectory()) {
-        const subRoles = await scanRolesDirectory(fullPath, prefix ? `${prefix}/${entry.name}` : entry.name);
+        let subRoles = await scanRolesDirectory(fullPath, prefix ? `${prefix}/${entry.name}` : entry.name);
         for (const [id, role] of subRoles) {
           roles.set(id, role);
           if (Array.isArray(role.tags)) role.tags.forEach(t => tags.add(t));
@@ -70,14 +70,14 @@ async function scanRolesDirectory(dirPath, prefix = '') {
 
       if (!entry.name.endsWith('.md')) continue;
 
-      const content = await readFile(fullPath, 'utf-8');
-      const { frontmatter, body } = parseFrontmatter(content);
+      let content = await readFile(fullPath, 'utf-8');
+      let { frontmatter, body } = parseFrontmatter(content);
 
-      const roleId = prefix
+      let roleId = prefix
         ? `${prefix}/${entry.name.replace('.md', '')}`
         : entry.name.replace('.md', '');
 
-      const role = {
+      let role = {
         id: roleId,
         name: frontmatter.name || frontmatter.title || roleId,
         tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
@@ -132,18 +132,17 @@ export default {
     },
 
     execute: async (inputs, params) => {
-      const { rolesDir } = inputs;
-      const { operation } = params;
+      let { rolesDir } = inputs;
+      let { operation } = params;
 
       try {
         // Scan directory for all roles
-        const roles = await scanRolesDirectory(rolesDir);
+        let roles = await scanRolesDirectory(rolesDir);
 
-        switch (operation) {
-          case 'list':
-          case 'scan': {
-            const allTags = new Set();
-            const rolesList = [];
+        let opMap = {
+          list: () => {
+            let allTags = new Set();
+            let rolesList = [];
             for (const [id, role] of roles) {
               rolesList.push({
                 id: role.id,
@@ -161,34 +160,32 @@ export default {
                 tags: [...allTags].sort(),
               },
             };
-          }
-
-          case 'get': {
+          },
+          scan: () => opMap.list(),
+          get: () => {
             if (!params.roleId) return { error: 'roleId is required for get operation' };
-            const role = roles.get(params.roleId);
+            let role = roles.get(params.roleId);
             if (!role) return { error: `Role not found: ${params.roleId}` };
             return { result: { role } };
-          }
-
-          case 'filter-tags': {
+          },
+          'filter-tags': () => {
             if (!Array.isArray(params.tags)) return { error: 'tags array is required' };
-            const filtered = [];
+            let filtered = [];
             for (const [, role] of roles) {
-              const match = params.matchAll
+              let match = params.matchAll
                 ? params.tags.every(t => role.tags.includes(t))
                 : params.tags.some(t => role.tags.includes(t));
               if (match) filtered.push(role);
             }
             return { result: { roles: filtered, count: filtered.length } };
-          }
-
-          case 'combine': {
+          },
+          combine: () => {
             if (!Array.isArray(params.roleIds)) return { error: 'roleIds array is required' };
-            const parts = [];
-            const resolved = [];
-            const missing = [];
+            let parts = [];
+            let resolved = [];
+            let missing = [];
             for (const id of params.roleIds) {
-              const role = roles.get(id);
+              let role = roles.get(id);
               if (role) {
                 parts.push(`# ${role.name}\n\n${role.content}`);
                 resolved.push(id);
@@ -204,9 +201,12 @@ export default {
               },
             };
           }
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `roles ${operation} failed: ${err.message}` };

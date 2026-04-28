@@ -58,7 +58,7 @@ export function navigate(compoundId) {
  * @returns {UICommand}
  */
 export function playback(action, frame) {
-  const payload = { action };
+  let payload = { action };
   if (frame !== undefined) payload.frame = frame;
   return { type: 'ui:playback', payload };
 }
@@ -81,7 +81,7 @@ export function notify(message, type = 'info') {
  * @returns {UICommand}
  */
 export function cursor(x, y, label) {
-  const payload = { x, y };
+  let payload = { x, y };
   if (label) payload.label = label;
   return { type: 'ui:cursor', payload };
 }
@@ -89,7 +89,7 @@ export function cursor(x, y, label) {
 /**
  * All command types for reference
  */
-export const COMMAND_TYPES = [
+export let COMMAND_TYPES = [
   'ui:layout',
   'ui:focus',
   'ui:select',

@@ -10,7 +10,7 @@ async function runTest() {
     await import('./layout/index.js');
     
     // 3. Process HTML
-    const html = await SSR.processHtml('<panel-layout></panel-layout>');
+    let html = await SSR.processHtml('<panel-layout></panel-layout>');
     console.log('SSR Output:');
     console.log(html);
     console.log('--- SSR Test Passed ---');

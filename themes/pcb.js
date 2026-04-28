@@ -13,28 +13,26 @@
  */
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export const PCB_DARK = {
+export let PCB_DARK = {
   name: 'pcb-dark',
   tokens: {
-    // === Base: identical to Carbon (dark grey dashboard) ===
+    // === Base: Carbon dark palette ===
 
     // Canvas
     '--sn-bg': '#1a1a1a',
     '--sn-grid-dot': 'rgba(255, 255, 255, 0.04)',
     '--sn-grid-size': '20px',
 
-    // Node / Panels — same Carbon surfaces
+    // Node / Panels — Carbon surfaces (keep default geometry)
     '--sn-node-bg': '#222222',
     '--sn-node-border': 'rgba(255, 255, 255, 0.12)',
-    '--sn-node-radius': '2px',
     '--sn-node-shadow': '0 1px 4px rgba(0, 0, 0, 0.5)',
     '--sn-shadow-color': 'rgba(0, 0, 0, 0.5)',
     '--sn-node-header-bg': '#252525',
     '--sn-node-selected': '#d4a04a',
     '--sn-node-hover': '#2d2d2d',
 
-    // Typography — Carbon standard
-    '--sn-font': "'JetBrains Mono', 'Fira Code', 'Inter', monospace",
+    // Typography — keep default (Inter)
     '--sn-text': '#e0e0e0',
     '--sn-text-dim': '#888888',
 
@@ -42,17 +40,37 @@ export const PCB_DARK = {
     '--sn-socket-size': '10px',
     '--sn-socket-border-width': '2px',
 
-    // Connections — copper traces
+    // Connections — copper traces with square caps (PCB)
     '--sn-conn-color': '#c87533',
     '--sn-conn-width': '1.5',
     '--sn-conn-selected': '#d4a04a',
+    '--sn-conn-linecap': 'square',
+    '--sn-conn-linejoin': 'miter',
 
-    // Category accent colors — circuit-inspired
-    '--sn-cat-server': '#c87533',     // copper — core/routing
-    '--sn-cat-instance': '#4caf50',   // green — active
-    '--sn-cat-control': '#d4a04a',    // gold — CPU/hub
-    '--sn-cat-data': '#5c8dbf',       // cool blue — data flow
-    '--sn-cat-default': '#555555',    // neutral
+    // Connection dots — solder pads
+    '--sn-conn-dot-fill': '#c87533',
+    '--sn-conn-dot-stroke': '#222222',
+    '--sn-conn-dot-stroke-width': '1',
+    '--sn-conn-dot-r': '3.5',
+
+    // Frames — subdued zones
+    '--sn-frame-border-style': 'dashed',
+    '--sn-frame-border-width': '1px',
+    '--sn-frame-radius': '6px',
+
+    // Category accent colors
+    '--sn-cat-server': '#c87533',      // copper — server/routing
+    '--sn-cat-instance': '#4caf50',    // green — active
+    '--sn-cat-control': '#d4a04a',     // gold — control/hub
+    '--sn-cat-data': '#5c8dbf',        // cool blue — data flow
+    '--sn-cat-default': '#555555',     // neutral
+    // Codebase-specific categories
+    '--sn-cat-directory': '#f0b840',   // amber — folder
+    '--sn-cat-file': '#5cb8ff',        // sky blue — JS file
+    '--sn-cat-function': '#4ade80',    // green — function
+    '--sn-cat-class': '#a78bfa',       // purple — class
+    '--sn-cat-module': '#ff6b9d',      // pink — entry/index
+    '--sn-cat-asset': '#8b8b8b',        // gray — non-source asset (.css, .html, .json, .md)
 
     // Context menu — matches Carbon
     '--sn-ctx-bg': '#2a2a2a',
@@ -106,20 +124,52 @@ export const PCB_DARK = {
     '--sn-alpha-faint': '0.04',
   },
 
-  // PCB-specific CSS overrides for IC chip file nodes
+  // PCB-specific CSS that can't be expressed as tokens
+  // (pseudo-elements, structural selectors, behavioral modes)
   extraCSS: `
-    /* Hide Material icons — PCB uses geometric shapes, not icons */
-    graph-node .sn-node-icon {
-      display: none !important;
+    /* ── IC Chip Decorations (SVG shape nodes only) ── */
+
+    /* Hide Material icons only on SVG shape nodes (they use watermarks) */
+    graph-node[data-svg-shape] .sn-node-icon {
+      display: none;
+    }
+    graph-node[data-svg-shape] .sn-shape-watermark {
+      display: none;
     }
 
-    /* Hide watermark icons inside SVG shapes */
-    graph-node .sn-shape-watermark {
-      display: none !important;
+    /* IC chip notch marker — SVG shape nodes only */
+    graph-node[data-svg-shape]::before {
+      content: '';
+      position: absolute;
+      top: -1.5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 4px;
+      background: var(--sn-bg, #1a1a1a);
+      border-radius: 0 0 4px 4px;
+      border: 1px solid var(--sn-node-border, rgba(255,255,255,0.12));
+      border-top: none;
+      z-index: 1;
     }
 
-    /* LABEL VISIBILITY MODES */
-    /* By default (or data-label-mode="always"), the label is fully visible. */
+    /* Pin markers on node sides — SVG shape nodes only */
+    graph-node[data-svg-shape]::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -5px;
+      width: 4px;
+      height: 4px;
+      background: var(--sn-conn-color, #c87533);
+      border-radius: 50%;
+      transform: translateY(-50%);
+      box-shadow: calc(100% + 6px) 0 0 0 var(--sn-conn-color, #c87533);
+    }
+
+    /* ── Label Visibility Modes ── */
+
+    /* SVG shape label positioning */
     graph-node[data-svg-shape] .sn-node-header {
       position: absolute;
       top: 50%;
@@ -139,39 +189,64 @@ export const PCB_DARK = {
       transition: opacity 0.2s ease-in-out;
     }
 
-    /* 1. HOVER MODE */
-    :host([data-label-mode="hover"]) graph-node[data-svg-shape] .sn-node-header {
+    /* HOVER MODE */
+    node-canvas[data-label-mode="hover"] graph-node[data-svg-shape] .sn-node-header {
       opacity: 0;
     }
-    :host([data-label-mode="hover"]) graph-node[data-svg-shape]:hover .sn-node-header {
+    node-canvas[data-label-mode="hover"] graph-node[data-svg-shape]:hover .sn-node-header,
+    node-canvas[data-label-mode="hover"] graph-node[data-svg-shape][data-selected] .sn-node-header,
+    node-canvas[data-label-mode="hover"] graph-node[data-svg-shape][data-neighbor-focused] .sn-node-header {
       opacity: 1;
     }
 
-    /* 2. FOCUS MODE */
-    :host([data-label-mode="focus"]) graph-node[data-svg-shape] .sn-node-header {
+    /* FOCUS MODE */
+    node-canvas[data-label-mode="focus"] graph-node[data-svg-shape] .sn-node-header {
       opacity: 0;
     }
-    :host([data-label-mode="focus"]) graph-node[data-svg-shape][data-selected] .sn-node-header,
-    :host([data-label-mode="focus"]) graph-node[data-svg-shape][data-neighbor-focused] .sn-node-header {
+    node-canvas[data-label-mode="focus"] graph-node[data-svg-shape][data-selected] .sn-node-header,
+    node-canvas[data-label-mode="focus"] graph-node[data-svg-shape][data-neighbor-focused] .sn-node-header {
       opacity: 1;
     }
 
-    /* Hide body (inputs/outputs/controls) — PCB uses perimeter connectors */
-    graph-node .sn-node-body {
-      display: none !important;
+    /* ALWAYS: selected always visible */
+    graph-node[data-svg-shape][data-selected] .sn-node-header {
+      opacity: 1 !important;
     }
 
-    /* Compact node size for file-level view */
+    /* ── Connection Focus States ── */
+
+    /* Selected node connections — full opacity, gold, thick */
+    .sn-conn-path[data-active-conn] {
+      opacity: 1 !important;
+      stroke-width: 2.5 !important;
+      stroke: var(--sn-node-selected, #d4a04a) !important;
+    }
+
+    /* Dim non-active connections when a node is selected */
+    .sn-conn-path[data-dimmed] {
+      opacity: 0.3 !important;
+    }
+
+    /* LOD: at low zoom, hide connections but keep active visible */
+    [data-lod-dimmed] .sn-conn-path,
+    [data-lod-dimmed] .sn-conn-arrow {
+      visibility: hidden;
+    }
+    [data-lod-dimmed] .sn-conn-path[data-active-conn],
+    [data-lod-dimmed] .sn-conn-arrow[data-active-conn] {
+      visibility: visible;
+      opacity: 1 !important;
+    }
+
+    /* ── Compact SVG Shape Sizing ── */
     graph-node[data-svg-shape] {
-      min-width: 100px !important;
-      min-height: 60px !important;
+      min-width: 100px;
+      min-height: 60px;
     }
 
     /* Label styling */
     graph-node .sn-node-label {
-      font-size: 10px;
       font-weight: 500;
-      color: var(--sn-text, #e0e0e0);
       text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     }
 
@@ -182,12 +257,17 @@ export const PCB_DARK = {
       color: var(--sn-cat-control, #d4a04a);
     }
 
-    /* Connection dots — pin style */
-    .sn-conn-dot {
-      r: 3;
-      fill: #c87533;
-      stroke: #222;
-      stroke-width: 1;
+    /* Via connections: cross-directory dashed traces */
+    .sn-conn-path[data-via] {
+      stroke-dasharray: 6 3;
+      opacity: 0.7;
+    }
+
+    /* Frame label styling override for PCB silkscreen look */
+    graph-frame .sn-frame-label {
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.6;
     }
   `,
 };

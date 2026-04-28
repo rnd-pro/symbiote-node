@@ -434,15 +434,11 @@ export class NodeEditor {
    * Convert editor state to an engine Graph instance for server-side execution.
    * The Graph can be passed directly to Executor.run().
    * @param {Object<string, number[]>} [positions] - Node positions
-   * @returns {import('../engine/Graph.js').Graph}
+   * @returns {Promise<import('../engine/Graph.js').Graph>}
    */
   async toGraph(positions = {}) {
     const { Graph } = await import('../engine/Graph.js');
     const json = this.toJSON(positions);
-    return new Graph(json);
-  }
-}
-const json = this.toJSON(positions);
     return new Graph(json);
   }
 }

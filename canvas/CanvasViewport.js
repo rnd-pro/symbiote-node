@@ -12,9 +12,9 @@ export class CanvasViewport {
   #canvas;
   /** @type {Map<string, HTMLElement>} */
   #nodeViews;
-  /** @type {import('../NodeViewManager.js').NodeViewManager} */
+  /** @type {import('./NodeViewManager.js').NodeViewManager} */
   #viewManager;
-  /** @type {function(): import('../ConnectionRenderer.js').ConnectionRenderer} */
+  /** @type {function(): import('./ConnectionRenderer.js').ConnectionRenderer} */
   #getConnRenderer;
 
   // ─── Virtualization (Canvas LOD) ───

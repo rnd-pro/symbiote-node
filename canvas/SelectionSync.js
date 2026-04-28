@@ -14,7 +14,7 @@ export class SelectionSync {
   #getEditor;
   /** @type {Map<string, HTMLElement>} */
   #nodeViews;
-  /** @type {function(): import('../ConnectionRenderer.js').ConnectionRenderer} */
+  /** @type {function(): import('./ConnectionRenderer.js').ConnectionRenderer} */
   #getConnRenderer;
 
   #zCounter = 0;
@@ -25,7 +25,7 @@ export class SelectionSync {
    * @param {import('./NodeCanvas/NodeCanvas.js').NodeCanvas} options.canvas
    * @param {function(): import('../core/Editor.js').NodeEditor} options.getEditor
    * @param {Map<string, HTMLElement>} options.nodeViews
-   * @param {function(): import('../ConnectionRenderer.js').ConnectionRenderer} options.getConnRenderer
+   * @param {function(): import('./ConnectionRenderer.js').ConnectionRenderer} options.getConnRenderer
    */
   constructor({ canvas, getEditor, nodeViews, getConnRenderer }) {
     this.#canvas = canvas;

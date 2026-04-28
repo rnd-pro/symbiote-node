@@ -48,7 +48,7 @@ export class NodeCanvas extends Symbiote {
     '+contentTransform': () => `translate(${this.$.panX}px, ${this.$.panY}px) scale(${this.$.zoom})`,
   };
 
-  /** @type {import('../core/Editor.js').NodeEditor|null} */
+  /** @type {import('../../core/Editor.js').NodeEditor|null} */
   _editor = null;
 
   /** @type {Drag|null} */
@@ -153,7 +153,7 @@ export class NodeCanvas extends Symbiote {
 
   /**
    * Bind editor to canvas
-   * @param {import('../core/Editor.js').NodeEditor} editor
+   * @param {import('../../core/Editor.js').NodeEditor} editor
    */
   setEditor(editor) {
     // Clear previous views before switching
@@ -423,7 +423,7 @@ export class NodeCanvas extends Symbiote {
 
   /**
    * Apply a theme to the canvas
-   * @param {import('../themes/Theme.js').ThemeDefinition} theme
+   * @param {import('../../themes/Theme.js').ThemeDefinition} theme
    */
   setTheme(theme) {
     applyTheme(this, theme);
@@ -432,13 +432,13 @@ export class NodeCanvas extends Symbiote {
 
   /**
    * Apply only color palette
-   * @param {import('../themes/Palette.js').PaletteDefinition} palette
+   * @param {import('../../themes/Palette.js').PaletteDefinition} palette
    */
   setPalette(palette) { applyPalette(this, palette); }
 
   /**
    * Apply only geometry skin
-   * @param {import('../themes/Skin.js').SkinDefinition} skin
+   * @param {import('../../themes/Skin.js').SkinDefinition} skin
    */
   setSkin(skin) { applySkin(this, skin); }
 
@@ -890,7 +890,7 @@ export class NodeCanvas extends Symbiote {
 
   /**
    * Add a frame to the canvas
-   * @param {import('../core/Frame.js').Frame} frame
+   * @param {import('../../core/Frame.js').Frame} frame
    */
   addFrame(frame) {
     this._editor?.addFrame(frame);

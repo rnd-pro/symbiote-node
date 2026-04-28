@@ -6,8 +6,13 @@
  *
  * URL format: #panel/subpath?param1=value&param2=value
  *
+ * Two levels of query params:
+ * - **Global** (registered via registerGlobalParam): persist across section switches
+ * - **Section** (everything else): reset when navigating to a new section
+ *
  * Usage in templates: {{ROUTER/panel}}, {{ROUTER/subpath}}, {{ROUTER/query}}
  * Usage in code: this.$['ROUTER/panel'], this.sub('ROUTER/panel', cb)
+ * Global params: this.sub('ROUTER/globalParams', cb)
  *
  * @module symbiote-node/layout/LayoutRouter
  */
@@ -15,10 +20,14 @@ import { PubSub } from '@symbiotejs/symbiote';
 
 const CTX = 'ROUTER';
 
-let routerCtx = PubSub.registerCtx({
+/** @type {Set<string>} Keys that persist across section switches */
+const _globalKeys = new Set();
+
+const routerCtx = PubSub.registerCtx({
   panel: 'default',
   subpath: '',
   query: '',
+  globalParams: {},
 }, CTX);
 
 /**
@@ -28,9 +37,9 @@ let routerCtx = PubSub.registerCtx({
  */
 export function parseQuery(str) {
   if (!str) return {};
-  let result = {};
+  const result = {};
   for (const pair of str.split('&')) {
-    let eqIdx = pair.indexOf('=');
+    const eqIdx = pair.indexOf('=');
     if (eqIdx >= 0) {
       result[decodeURIComponent(pair.substring(0, eqIdx))] = decodeURIComponent(pair.substring(eqIdx + 1));
     }
@@ -44,7 +53,7 @@ export function parseQuery(str) {
  * @returns {string}
  */
 export function buildQuery(params) {
-  let entries = Object.entries(params).filter(([, v]) => v !== '' && v != null);
+  const entries = Object.entries(params).filter(([, v]) => v !== '' && v != null);
   if (entries.length === 0) return '';
   return entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
 }
@@ -59,22 +68,39 @@ export function buildQuery(params) {
 export function buildHash(panel, subpath, params) {
   let hash = panel;
   if (subpath) hash += '/' + subpath;
-  let q = params ? buildQuery(params) : '';
+  const q = params ? buildQuery(params) : '';
   if (q) hash += '?' + q;
   return hash;
 }
 
 /**
- * Navigate to a new route — updates URL and PubSub context
+ * Navigate to a new route — updates URL and PubSub context.
+ * Global params (registered via registerGlobalParam) are automatically
+ * carried over unless explicitly overridden or set to null.
  * @param {string} panel - Master panel section ID
  * @param {string} [subpath] - Sub-path (entity ID, etc.)
- * @param {Object} [params] - Query parameters
+ * @param {Object} [params] - Query parameters (overrides globals if specified)
  */
 export function navigate(panel, subpath = '', params = {}) {
   if (typeof location === 'undefined') return;
-  let hash = buildHash(panel, subpath, params);
+  // Carry global params from current URL into new route
+  const currentQuery = parseQuery(routerCtx.read('query'));
+  const merged = {};
+  for (const key of _globalKeys) {
+    if (currentQuery[key] && params[key] === undefined) {
+      merged[key] = currentQuery[key];
+    }
+  }
+  // Apply explicit params (can override or null-out globals)
+  for (const [k, v] of Object.entries(params)) {
+    if (v != null && v !== '') {
+      merged[k] = v;
+    } else {
+      delete merged[k];
+    }
+  }
+  const hash = buildHash(panel, subpath, merged);
   // Use pushState instead of location.hash to ensure clean URL
-  // (location.hash preserves stale query strings like ?monitoring)
   history.pushState(null, '', location.pathname + '#' + hash);
   syncFromHash();
   if (typeof window !== 'undefined') {
@@ -89,8 +115,8 @@ export function navigate(panel, subpath = '', params = {}) {
  */
 export function updateParams(params) {
   if (typeof location === 'undefined') return;
-  let currentQuery = parseQuery(routerCtx.read('query'));
-  let merged = { ...currentQuery };
+  const currentQuery = parseQuery(routerCtx.read('query'));
+  const merged = { ...currentQuery };
   for (const [k, v] of Object.entries(params)) {
     if (v === '' || v == null) {
       delete merged[k];
@@ -98,8 +124,8 @@ export function updateParams(params) {
       merged[k] = v;
     }
   }
-  let query = buildQuery(merged);
-  let hash = buildHash(routerCtx.read('panel'), routerCtx.read('subpath'), merged);
+  const query = buildQuery(merged);
+  const hash = buildHash(routerCtx.read('panel'), routerCtx.read('subpath'), merged);
   history.replaceState(null, '', '#' + hash);
   routerCtx.pub('query', query);
   if (typeof window !== 'undefined') {
@@ -111,19 +137,29 @@ export function updateParams(params) {
  * Sync PubSub context from current URL hash
  */
 function syncFromHash() {
-  let raw = location.hash.replace(/^#/, '') || 'default';
+  const raw = location.hash.replace(/^#/, '') || 'default';
 
-  let qIdx = raw.indexOf('?');
-  let pathPart = qIdx >= 0 ? raw.substring(0, qIdx) : raw;
-  let queryPart = qIdx >= 0 ? raw.substring(qIdx + 1) : '';
+  const qIdx = raw.indexOf('?');
+  const pathPart = qIdx >= 0 ? raw.substring(0, qIdx) : raw;
+  const queryPart = qIdx >= 0 ? raw.substring(qIdx + 1) : '';
 
-  let slashIdx = pathPart.indexOf('/');
-  let panel = slashIdx >= 0 ? pathPart.substring(0, slashIdx) : pathPart;
-  let subpath = slashIdx >= 0 ? pathPart.substring(slashIdx + 1) : '';
+  const slashIdx = pathPart.indexOf('/');
+  const panel = slashIdx >= 0 ? pathPart.substring(0, slashIdx) : pathPart;
+  const subpath = slashIdx >= 0 ? pathPart.substring(slashIdx + 1) : '';
 
   routerCtx.pub('panel', panel);
   routerCtx.pub('subpath', subpath);
   routerCtx.pub('query', queryPart);
+
+  // Extract and publish global params
+  if (_globalKeys.size > 0) {
+    const allParams = parseQuery(queryPart);
+    const globals = {};
+    for (const key of _globalKeys) {
+      if (allParams[key]) globals[key] = allParams[key];
+    }
+    routerCtx.pub('globalParams', globals);
+  }
 }
 
 /**
@@ -147,6 +183,36 @@ export function setDefaultPanel(panel) {
   if (!location.hash || location.hash === '#') {
     navigate(panel);
   }
+}
+
+/**
+ * Register one or more param keys as global (persistent across section switches).
+ * Global params are automatically carried in navigate() and published
+ * via ROUTER/globalParams PubSub context.
+ * @param {...string} keys - Param names to register as global
+ */
+export function registerGlobalParam(...keys) {
+  keys.forEach((k) => _globalKeys.add(k));
+  // Re-sync to publish initial global params from current URL
+  if (typeof location !== 'undefined') {
+    const allParams = parseQuery(routerCtx.read('query'));
+    const globals = {};
+    for (const key of _globalKeys) {
+      if (allParams[key]) globals[key] = allParams[key];
+    }
+    routerCtx.pub('globalParams', globals);
+  }
+}
+
+/**
+ * Set a single global param value.
+ * Shorthand for registerGlobalParam + updateParams.
+ * @param {string} key
+ * @param {string|null} value - null removes the param
+ */
+export function setGlobalParam(key, value) {
+  _globalKeys.add(key);
+  updateParams({ [key]: value });
 }
 
 // Initial sync + listen to hashchange (browser-only)

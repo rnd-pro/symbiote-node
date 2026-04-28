@@ -65,7 +65,7 @@ export { LayoutSidebar } from './layout/LayoutSidebar/LayoutSidebar.js';
 export * as LayoutTree from './layout/LayoutTree.js';
 export {
   navigate, updateParams, parseQuery, buildHash, buildQuery,
-  getRoute, setDefaultPanel,
+  getRoute, setDefaultPanel, registerGlobalParam, setGlobalParam,
 } from './layout/LayoutRouter/LayoutRouter.js';
 export { syncWithRouter } from './layout/LayoutRouter/routerSync.js';
 

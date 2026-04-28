@@ -11,6 +11,6 @@ export { LayoutSidebar } from './LayoutSidebar/LayoutSidebar.js';
 export * as LayoutTree from './LayoutTree.js';
 export {
   navigate, updateParams, parseQuery, buildHash, buildQuery,
-  getRoute, setDefaultPanel,
+  getRoute, setDefaultPanel, registerGlobalParam, setGlobalParam,
 } from './LayoutRouter/LayoutRouter.js';
 export { syncWithRouter } from './LayoutRouter/routerSync.js';

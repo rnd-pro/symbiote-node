@@ -98,7 +98,7 @@ export class NodeCanvas extends Symbiote {
   /** @type {NodeViewManager|null} */
   _viewManager = null;
 
-  /** @type {ConnectionRenderer|null} */
+  /** @type {import('../ConnectionRenderer.js').ConnectionRenderer | import('../CanvasConnectionRenderer.js').CanvasConnectionRenderer | null} */
   _connRenderer = null;
 
   /** @type {PseudoConnection|null} */
@@ -635,7 +635,10 @@ export class NodeCanvas extends Symbiote {
    */
   _getNodeView(nodeId) { return this._nodeViews.get(nodeId); }
 
-  /** Alias for SubgraphManager */
+  /** 
+   * Alias for SubgraphManager 
+   * @param {string} nodeId
+   */
   getNodeView(nodeId) { return this._nodeViews.get(nodeId); }
 
   /**

@@ -61,6 +61,9 @@ export class NodeCanvas extends Symbiote {
   /** @type {ConnectFlow|null} */
   _connectFlow = null;
 
+  /** @type {Map<string, HTMLElement>} */
+  _nodeViews = new Map();
+
   /** @type {SelectionSync} */
   _selectionSync = new SelectionSync({
     canvas: this,
@@ -76,9 +79,6 @@ export class NodeCanvas extends Symbiote {
 
   /** @type {SnapGrid} */
   _snapGrid = new SnapGrid({ size: 16, dynamic: false });
-
-  /** @type {Map<string, HTMLElement>} */
-  _nodeViews = new Map();
 
   /** @type {FrameManager|null} */
   _frameManager = null;
@@ -344,11 +344,11 @@ export class NodeCanvas extends Symbiote {
     this._viewport.initializeData(editor);
 
     // Batch renderer operations to prevent multiple redundant redraws
-    this._connRenderer.setBatchMode(true);
+    this._connRenderer.setBatchMode?.(true);
     let allConns = editor.getConnections();
     this._connRenderer.addBatch(allConns);
     this._viewport.syncPhantom();
-    this._connRenderer.setBatchMode(false);
+    this._connRenderer.setBatchMode?.(false);
 
     // Subscribe to frame events
     editor.on('framecreated', (frame) => this._frameManager.addView(frame));

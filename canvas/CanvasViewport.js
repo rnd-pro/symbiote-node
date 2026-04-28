@@ -33,6 +33,13 @@ export class CanvasViewport {
   /** @type {number|null} */
   #panAnimFrame = null;
 
+  /**
+   * @param {object} config
+   * @param {import('./NodeCanvas/NodeCanvas.js').NodeCanvas} config.canvas
+   * @param {Map<string, HTMLElement>} config.nodeViews
+   * @param {import('./NodeViewManager.js').NodeViewManager} config.viewManager
+   * @param {function(): import('./ConnectionRenderer.js').ConnectionRenderer} config.getConnRenderer
+   */
   constructor({ canvas, nodeViews, viewManager, getConnRenderer }) {
     this.#canvas = canvas;
     this.#nodeViews = nodeViews;
@@ -78,6 +85,9 @@ export class CanvasViewport {
     }
   }
 
+  /**
+   * Clear all virtualization data
+   */
   clear() {
     this.#allNodes.clear();
     this.#phantomData.clear();
@@ -86,6 +96,10 @@ export class CanvasViewport {
     if (this.#panAnimFrame) { cancelAnimationFrame(this.#panAnimFrame); this.#panAnimFrame = null; }
   }
 
+  /**
+   * Handle node creation event
+   * @param {import('../../core/Node.js').Node} node
+   */
   handleNodeCreated(node) {
     this.#allNodes.set(node.id, node);
     if (this.#phantomData.size > 0) {
@@ -98,6 +112,12 @@ export class CanvasViewport {
     }
   }
 
+  /**
+   * Update phantom node position cache
+   * @param {string} nodeId
+   * @param {number} x
+   * @param {number} y
+   */
   updatePhantomPosition(nodeId, x, y) {
     let pd = this.#phantomData.get(nodeId);
     if (pd) {
@@ -107,6 +127,9 @@ export class CanvasViewport {
     }
   }
 
+  /**
+   * Update viewport transform and schedule culling
+   */
   updateTransform() {
     // Sync grid dots with pan/zoom
     if (this.#canvas._gridBase === undefined) {
@@ -136,6 +159,10 @@ export class CanvasViewport {
     }
   }
 
+  /**
+   * Apply culling and level of detail logic based on zoom/pan
+   * @private
+   */
   #applyCullingAndLOD() {
     if (!this.#canvas.ref.canvasContainer) return;
     if (this.#nodeViews.size === 0 && this.#phantomData.size === 0) return;
@@ -225,6 +252,11 @@ export class CanvasViewport {
     }
   }
 
+  /**
+   * Promote a phantom node to a full DOM node
+   * @param {string} nodeId
+   * @private
+   */
   #promoteNode(nodeId) {
     if (this.#nodeViews.has(nodeId)) return;
     let node = this.#allNodes.get(nodeId);
@@ -242,6 +274,11 @@ export class CanvasViewport {
     this.#phantomData.delete(nodeId);
   }
 
+  /**
+   * Demote a DOM node to a phantom node
+   * @param {string} nodeId
+   * @private
+   */
   #demoteNode(nodeId) {
     if (!this.#nodeViews.has(nodeId)) return;
     let el = this.#nodeViews.get(nodeId);
@@ -263,6 +300,10 @@ export class CanvasViewport {
     }
   }
 
+  /**
+   * Sync phantom node data to the connection renderer
+   * @private
+   */
   #syncPhantomToRenderer() {
     let connRenderer = this.#getConnRenderer();
     if (connRenderer && typeof connRenderer.setPhantomNodes === 'function') {
@@ -270,11 +311,17 @@ export class CanvasViewport {
     }
   }
 
+  /**
+   * Trigger a manual sync of phantom nodes
+   */
   syncPhantom() {
     this.#phantomDirty = false;
     this.#syncPhantomToRenderer();
   }
 
+  /**
+   * Fit all nodes (phantom and DOM) within the viewport
+   */
   fitView() {
     if (this.#nodeViews.size === 0 && this.#phantomData.size === 0) return;
     
@@ -324,6 +371,13 @@ export class CanvasViewport {
     this.updateTransform();
   }
 
+  /**
+   * Fly camera to a specific node, zooming in
+   * @param {string} nodeId
+   * @param {Object} [options]
+   * @param {number} [options.zoom=0.8]
+   * @returns {boolean} True if successful
+   */
   flyToNode(nodeId, { zoom = 0.8 } = {}) {
     let el = this.#nodeViews.get(nodeId);
 
@@ -379,6 +433,11 @@ export class CanvasViewport {
     return true;
   }
 
+  /**
+   * Pan smoothly to a specific node
+   * @param {string} nodeId
+   * @param {number} [duration=400]
+   */
   panToNode(nodeId, duration = 400) {
     let el = this.#nodeViews.get(nodeId);
     if (!el?._position) return;
@@ -395,6 +454,12 @@ export class CanvasViewport {
     this.animatePan(targetX, targetY, duration);
   }
 
+  /**
+   * Animate pan to a target coordinate
+   * @param {number} targetX
+   * @param {number} targetY
+   * @param {number} duration
+   */
   animatePan(targetX, targetY, duration) {
     if (this.#panAnimFrame) {
       cancelAnimationFrame(this.#panAnimFrame);

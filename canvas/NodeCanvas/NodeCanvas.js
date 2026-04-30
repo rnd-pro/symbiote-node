@@ -114,6 +114,18 @@ export class NodeCanvas extends Symbiote {
   /** @type {CanvasViewport|null} */
   _viewport = null;
 
+  /** @type {SubgraphManager} */
+  _subgraphManager = new SubgraphManager();
+
+  /** @type {boolean} - guard to prevent setEditor re-init during navigation */
+  _navigating = false;
+
+  /** @type {number} */
+  _lastClickTime = 0;
+
+  /** @type {string|null} */
+  _lastClickNodeId = null;
+
   // --- Public API ---
 
   /**
@@ -716,12 +728,6 @@ export class NodeCanvas extends Symbiote {
 
   // --- Subgraph Navigation ---
 
-  /** @type {SubgraphManager} */
-  _subgraphManager = new SubgraphManager();
-
-  /** @type {boolean} - guard to prevent setEditor re-init during navigation */
-  _navigating = false;
-
   /**
    * Drill down into a subgraph node
    * @param {string} nodeId - SubgraphNode ID
@@ -916,11 +922,6 @@ export class NodeCanvas extends Symbiote {
   }
 
   // --- Selection ---
-
-  /** @type {number} */
-  _lastClickTime = 0;
-  /** @type {string|null} */
-  _lastClickNodeId = null;
 
   _handleNodeClick(nodeId, e) {
     let accumulate = e.ctrlKey || e.metaKey;

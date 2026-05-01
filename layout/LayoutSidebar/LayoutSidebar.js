@@ -19,6 +19,14 @@ const STORAGE_KEY_WIDTH = 'sn-sidebar-width';
 export class LayoutSidebar extends Symbiote {
   static isoMode = true;
 
+  /**
+   * When true (default), sidebar subscribes to ROUTER/panel PubSub
+   * to auto-highlight active section. Set to false for multi-workspace
+   * scenarios where the host manages active section programmatically.
+   * @type {boolean}
+   */
+  routerSync = true;
+
   init$ = {
     collapsed: false,
     editMode: false,
@@ -139,13 +147,27 @@ export class LayoutSidebar extends Symbiote {
 
     this.#buildSections(ordered, savedConfig);
 
-    // Subscribe to route changes to update active section
-    this.sub('ROUTER/panel', (panel) => {
-      this.$.sections = this.$.sections.map((s) => ({
-        ...s,
-        isActive: s.sectionId === panel,
-      }));
-    });
+    // Subscribe to route changes to update active section (unless disabled)
+    if (this.routerSync) {
+      this.sub('ROUTER/panel', (panel) => {
+        this.$.sections = this.$.sections.map((s) => ({
+          ...s,
+          isActive: s.sectionId === panel,
+        }));
+      });
+    }
+  }
+
+  /**
+   * Programmatically set the active section (highlight).
+   * Use in multi-workspace scenarios where routerSync is disabled.
+   * @param {string} sectionId — section ID to mark active
+   */
+  setActiveSection(sectionId) {
+    this.$.sections = this.$.sections.map((s) => ({
+      ...s,
+      isActive: s.sectionId === sectionId,
+    }));
   }
 
   /**
@@ -165,7 +187,7 @@ export class LayoutSidebar extends Symbiote {
       isActive: false,
       isVisible: visibilityMap ? (visibilityMap.get(item.id) ?? true) : true,
       isExpanded: false,
-      subPanels: [],
+      subPanels: item.subPanels || [],
     }));
   }
 

@@ -16,7 +16,7 @@ async function checkStatus() {
     let data = await res.json()
     statusDot.className = 'status-dot connected'
     statusText.textContent = `Bridge connected (${data.pendingCommands || 0} pending)`
-  } catch {
+  } catch (e) {
     statusDot.className = 'status-dot disconnected'
     statusText.textContent = 'Bridge disconnected'
   }
@@ -72,7 +72,7 @@ async function fetchExistingEvents() {
         }
       })
     }
-  } catch { }
+  } catch (e) { /* tab may not have content script injected */ }
 }
 
 // Initialize

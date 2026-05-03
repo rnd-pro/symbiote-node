@@ -1356,7 +1356,7 @@ document.addEventListener('click', (e) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(action)
-  }).catch(() => { })
+  }).catch((e) => { console.warn('[GrokBridge] action reporting failed:', e.message); })
 }, true)
 
 // Input/change events
@@ -1380,7 +1380,7 @@ document.addEventListener('input', (e) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(action)
-    }).catch(() => { })
+    }).catch((e) => { console.warn('[GrokBridge] input action reporting failed:', e.message); })
   }, 500)
 }, true)
 
@@ -1410,7 +1410,7 @@ window.addEventListener('grok-ws-message', (event) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(message)
-  }).catch(() => { });
+  }).catch((e) => { console.warn('[GrokBridge] WS log failed:', e.message); });
 });
 
 // Listen for Fetch API calls from injected script
@@ -1423,5 +1423,5 @@ window.addEventListener('grok-fetch', (event) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(logEntry)
-  }).catch(() => { });
+  }).catch((e) => { console.warn('[GrokBridge] fetch log failed:', e.message); });
 });

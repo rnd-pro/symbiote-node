@@ -100,6 +100,23 @@ layout-sidebar .sb-header-btn {
   }
 }
 
+/* Reset button — visible only in edit mode */
+layout-sidebar .sb-reset-btn {
+  display: none;
+
+  layout-sidebar[edit-mode] & {
+    display: flex;
+  }
+
+  layout-sidebar[collapsed] & {
+    display: none;
+  }
+
+  &:hover {
+    color: var(--sn-accent-warn, #f59e0b);
+  }
+}
+
 /* Hide tune button when collapsed */
 layout-sidebar[collapsed] .sb-header-btn:first-child {
   display: none;

@@ -39,6 +39,33 @@ export class LayoutSidebar extends Symbiote {
     onToggleEditMode: () => {
       this.$.editMode = !this.$.editMode;
     },
+
+    onResetAllLayouts: () => {
+      if (!confirm('Reset all layouts to default?')) return;
+
+      // Reset sidebar order and visibility
+      this.resetConfig();
+
+      // Clear all saved panel layouts from localStorage
+      if (typeof localStorage !== 'undefined') {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          let key = localStorage.key(i);
+          if (key && key.startsWith('pg-layout-v2-')) {
+            localStorage.removeItem(key);
+          }
+        }
+        localStorage.removeItem(STORAGE_KEY_WIDTH);
+      }
+
+      // Reset inline sizing styles
+      this.style.width = '';
+      this.style.minWidth = '';
+
+      // Reload to apply default layouts and sidebar config
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    },
   };
 
   /** @type {Array<{id: string, icon: string, label: string}>} */

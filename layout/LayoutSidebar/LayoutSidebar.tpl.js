@@ -9,6 +9,9 @@ export let sidebarTemplate = html`
   <button class="sb-header-btn" ${{ onclick: 'onToggleEditMode' }}>
     <span class="material-symbols-outlined">tune</span>
   </button>
+  <button class="sb-header-btn sb-reset-btn" ${{ onclick: 'onResetAllLayouts' }} title="Reset all layouts to default">
+    <span class="material-symbols-outlined">restart_alt</span>
+  </button>
   <div class="sb-header-spacer"></div>
   <button class="sb-header-btn" ${{ onclick: 'onToggle' }}>
     <span class="material-symbols-outlined sb-collapse-icon">chevron_left</span>

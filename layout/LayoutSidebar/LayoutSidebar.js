@@ -41,8 +41,6 @@ export class LayoutSidebar extends Symbiote {
     },
 
     onResetAllLayouts: () => {
-      if (!confirm('Reset all layouts to default?')) return;
-
       // Reset sidebar order and visibility
       this.resetConfig();
 

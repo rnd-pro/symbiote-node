@@ -209,6 +209,9 @@ export class LayoutNode extends Symbiote {
         if (parentNode) {
           let parentDir = parentNode.getAttribute('direction');
           this.$.collapseDirection = parentDir;
+          if (this.$.isCollapsed) {
+            this.setAttribute('collapse-dir', parentDir);
+          }
 
           // Arrow shows direction panel will collapse TO:
           // First panel collapses left/up, second panel collapses right/down

@@ -52,7 +52,7 @@ layout-sidebar .sb-header {
   padding: 2px 4px;
   min-height: 28px;
   background: var(--bg-header, var(--sn-bg, #1e1e1e));
-  border-bottom: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.06));
+  border-bottom: none;
   flex-shrink: 0;
 
   /* Collapsed: center the collapse button */
@@ -268,7 +268,7 @@ sidebar-section .sec-expand {
 /* Active section */
 sidebar-section[data-active] > .sec-item {
   color: var(--text-main, var(--sn-text, #d4d4d4));
-  background: var(--bg-hover, var(--sn-node-hover, rgba(255, 255, 255, 0.06)));
+  background: var(--sn-node-bg, #222222);
   border-left: 2px solid var(--sn-cat-server, #5cb8ff);
   padding-left: 12px;
 

@@ -42,7 +42,7 @@ export class SelectionSync {
   sync(selectedNodes, selectedConnections) {
     this.#zCounter++;
     let editor = this.#getEditor();
-    
+
     // 1. Identify neighbors of currently selected nodes for "Focus Mode" label visibility
     let neighbors = new Set();
     if (editor && selectedNodes.size > 0) {
@@ -97,13 +97,17 @@ export class SelectionSync {
       // Selection state
       let shouldSelectConn = selectedConnections.has(id);
       if (shouldSelectConn !== path.hasAttribute('data-selected')) {
-        shouldSelectConn ? path.setAttribute('data-selected', '') : path.removeAttribute('data-selected');
+        shouldSelectConn
+          ? path.setAttribute('data-selected', '')
+          : path.removeAttribute('data-selected');
       }
 
       // Active connection: touches a selected node
       let isActive = activeConnIds.has(id);
       if (isActive !== path.hasAttribute('data-active-conn')) {
-        isActive ? path.setAttribute('data-active-conn', '') : path.removeAttribute('data-active-conn');
+        isActive
+          ? path.setAttribute('data-active-conn', '')
+          : path.removeAttribute('data-active-conn');
       }
 
       // Dimming
@@ -115,7 +119,7 @@ export class SelectionSync {
 
     // Pass selection state to Canvas renderer for dimming implementation
     if (connRenderer && typeof connRenderer.setSelectionState === 'function') {
-        connRenderer.setSelectionState(selectedNodes.size > 0, activeConnIds);
+      connRenderer.setSelectionState(selectedNodes.size > 0, activeConnIds);
     }
 
     // Quick Action Toolbar — show for single node selection
@@ -148,9 +152,11 @@ export class SelectionSync {
     }
 
     // Dispatch event so consumers can react to selection changes (including deselect)
-    this.#canvas.dispatchEvent(new CustomEvent('selection-changed', {
-      detail: { nodes: [...selectedNodes], connections: [...selectedConnections] },
-    }));
+    this.#canvas.dispatchEvent(
+      new CustomEvent('selection-changed', {
+        detail: { nodes: [...selectedNodes], connections: [...selectedConnections] },
+      })
+    );
   }
 }
 

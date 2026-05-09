@@ -30,9 +30,7 @@ export default {
 
   driver: {
     description: 'Text-to-Speech via Qwen3-TTS (SSH batch or HTTP)',
-    inputs: [
-      { name: 'text', type: 'string' },
-    ],
+    inputs: [{ name: 'text', type: 'string' }],
     outputs: [
       { name: 'audioPath', type: 'string' },
       { name: 'error', type: 'string' },
@@ -41,18 +39,42 @@ export default {
       mode: { type: 'string', default: 'http', description: 'ssh | http' },
       language: { type: 'string', default: 'es', description: 'Language: es, ru, en' },
       speaker: { type: 'string', default: 'vivian', description: 'Built-in Qwen3 speaker ID' },
-      refAudio: { type: 'string', default: '', description: 'Path to voice reference audio (clone mode)' },
-      outputDir: { type: 'string', default: '', description: 'Output directory for generated audio' },
+      refAudio: {
+        type: 'string',
+        default: '',
+        description: 'Path to voice reference audio (clone mode)',
+      },
+      outputDir: {
+        type: 'string',
+        default: '',
+        description: 'Output directory for generated audio',
+      },
       outputFormat: { type: 'string', default: 'wav', description: 'wav | mp3' },
       exaggeration: { type: 'number', default: 0, description: 'Voice exaggeration (0-1)' },
       cfg: { type: 'number', default: 0.1, description: 'Classifier-free guidance (0-1)' },
       // SSH params
-      remoteHost: { type: 'string', default: 'mr-agent@mr-agent.rnd-pro.com', description: 'SSH host' },
-      remotePath: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot', description: 'Remote project path' },
-      remoteVenv: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot/venv', description: 'Remote Python venv path' },
+      remoteHost: {
+        type: 'string',
+        default: 'mr-agent@mr-agent.rnd-pro.com',
+        description: 'SSH host',
+      },
+      remotePath: {
+        type: 'string',
+        default: '/home/mr-agent/automations/argentine-spanish-bot',
+        description: 'Remote project path',
+      },
+      remoteVenv: {
+        type: 'string',
+        default: '/home/mr-agent/automations/argentine-spanish-bot/venv',
+        description: 'Remote Python venv path',
+      },
       device: { type: 'string', default: 'cuda', description: 'cuda | cpu' },
       // HTTP params
-      endpoint: { type: 'string', default: 'http://localhost:5008', description: 'TTS HTTP endpoint' },
+      endpoint: {
+        type: 'string',
+        default: 'http://localhost:5008',
+        description: 'TTS HTTP endpoint',
+      },
       timeout: { type: 'int', default: 120000, description: 'Max wait time (ms)' },
     },
   },
@@ -83,8 +105,16 @@ export default {
  * @type {Set<string>}
  */
 const SPEAKERS = new Set([
-  'aiden', 'dylan', 'eric', 'ono_anna', 'ryan',
-  'serena', 'sohee', 'uncle_fu', 'vivian', 'chelsie',
+  'aiden',
+  'dylan',
+  'eric',
+  'ono_anna',
+  'ryan',
+  'serena',
+  'sohee',
+  'uncle_fu',
+  'vivian',
+  'chelsie',
 ]);
 
 /**
@@ -94,8 +124,12 @@ const SPEAKERS = new Set([
  * @returns {Promise<Object>}
  */
 async function executeSSH(text, params) {
-  let host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  let remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
+  let host =
+    params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
+  let remotePath =
+    params.remotePath ||
+    process.env.WHISPER_REMOTE_PATH ||
+    '/home/mr-agent/automations/argentine-spanish-bot';
   let venv = params.remoteVenv || process.env.TTS_VENV_PATH || `${remotePath}/venv`;
   let device = params.device || process.env.PODCAST_TTS_DEVICE || 'cuda';
 
@@ -108,15 +142,17 @@ async function executeSSH(text, params) {
     await fs.mkdir(outDir, { recursive: true });
 
     // Build batch task
-    let batchTask = [{
-      id: taskId,
-      text,
-      lang: params.language || 'es',
-      prompt: params.refAudio || null,
-      out: `${remoteTmpDir}/${taskId}.wav`,
-      exaggeration: params.exaggeration ?? 0,
-      cfg: params.cfg ?? 0.1,
-    }];
+    let batchTask = [
+      {
+        id: taskId,
+        text,
+        lang: params.language || 'es',
+        prompt: params.refAudio || null,
+        out: `${remoteTmpDir}/${taskId}.wav`,
+        exaggeration: params.exaggeration ?? 0,
+        cfg: params.cfg ?? 0.1,
+      },
+    ];
 
     // If using built-in speaker (no refAudio), add speaker param
     if (!params.refAudio && SPEAKERS.has(params.speaker)) {
@@ -129,12 +165,16 @@ async function executeSSH(text, params) {
 
     // Ensure remote dir + upload batch
     execSync(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
-      encoding: 'utf-8', stdio: 'pipe', timeout: 10000,
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      timeout: 10000,
     });
 
     let remoteBatch = `${remoteTmpDir}/${taskId}_batch.json`;
     execSync(`scp "${batchFile}" "${host}:${remoteBatch}"`, {
-      encoding: 'utf-8', stdio: 'pipe', timeout: 30000,
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      timeout: 30000,
     });
 
     try {
@@ -152,22 +192,24 @@ async function executeSSH(text, params) {
       // Download result
       let remoteOut = `${remoteTmpDir}/${taskId}.wav`;
       execSync(`scp "${host}:${remoteOut}" "${localWav}"`, {
-        encoding: 'utf-8', stdio: 'pipe', timeout: 30000,
+        encoding: 'utf-8',
+        stdio: 'pipe',
+        timeout: 30000,
       });
 
       // Cleanup batch + remote output
-      await fs.unlink(batchFile).catch(() => { });
+      await fs.unlink(batchFile).catch(() => {});
       execSync(`ssh ${host} "rm -f ${remoteBatch} ${remoteOut}"`, {
-        encoding: 'utf-8', stdio: 'pipe', timeout: 5000,
+        encoding: 'utf-8',
+        stdio: 'pipe',
+        timeout: 5000,
       }).toString();
 
       return { audioPath: localWav, error: null };
-
     } catch (err) {
-      await fs.unlink(batchFile).catch(() => { });
+      await fs.unlink(batchFile).catch(() => {});
       return { audioPath: null, error: err.message };
     }
-
   } catch (err) {
     return { audioPath: null, error: err.message };
   }
@@ -234,7 +276,6 @@ async function executeHTTP(text, params) {
     }
 
     return { audioPath: null, error: 'Unexpected TTS response format' };
-
   } catch (err) {
     return { audioPath: null, error: err.message };
   }

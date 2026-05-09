@@ -6,7 +6,13 @@
  */
 
 import {
-  NodeEditor, Node, Connection, Socket, Input, Output, InputControl,
+  NodeEditor,
+  Node,
+  Connection,
+  Socket,
+  Input,
+  Output,
+  InputControl,
   GREY_NEUTRAL,
 } from '../index.js';
 import '../canvas/NodeCanvas/NodeCanvas.js';
@@ -45,7 +51,7 @@ function trackFps() {
   frameCount++;
   const now = performance.now();
   if (now - lastFpsTime >= 1000) {
-    currentFps = Math.round(frameCount * 1000 / (now - lastFpsTime));
+    currentFps = Math.round((frameCount * 1000) / (now - lastFpsTime));
     frameCount = 0;
     lastFpsTime = now;
     document.getElementById('hudFps').textContent = currentFps;
@@ -107,7 +113,10 @@ function fitToContent() {
 
   if (views.length === 0) return;
 
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
   for (const v of views) {
     minX = Math.min(minX, v.x);
     minY = Math.min(minY, v.y);
@@ -116,17 +125,15 @@ function fitToContent() {
   }
 
   const pad = 60;
-  minX -= pad; minY -= pad;
-  maxX += pad; maxY += pad;
+  minX -= pad;
+  minY -= pad;
+  maxX += pad;
+  maxY += pad;
 
   const graphW = maxX - minX;
   const graphH = maxY - minY;
 
-  const zoom = Math.max(0.1, Math.min(
-    container.width / graphW,
-    container.height / graphH,
-    1.5,
-  ));
+  const zoom = Math.max(0.1, Math.min(container.width / graphW, container.height / graphH, 1.5));
 
   const cx = (minX + maxX) / 2;
   const cy = (minY + maxY) / 2;

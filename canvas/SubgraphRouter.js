@@ -32,7 +32,7 @@ export class SubgraphRouter {
       drillableFiles: new Set(),
       onNavigate: () => {},
       ...this.#config,
-      ...config
+      ...config,
     };
   }
 
@@ -64,11 +64,17 @@ export class SubgraphRouter {
       // Find the path string for this node ID
       let path = null;
       for (const [key, id] of this.#config.dirNodeMap.entries()) {
-        if (id === nodeId) { path = key; break; }
+        if (id === nodeId) {
+          path = key;
+          break;
+        }
       }
       if (!path) {
         for (const [key, id] of this.#config.fileMap.entries()) {
-          if (id === nodeId) { path = key; break; }
+          if (id === nodeId) {
+            path = key;
+            break;
+          }
         }
       }
 
@@ -76,14 +82,14 @@ export class SubgraphRouter {
         let hash = window.location.hash;
         let [base, queryStr] = hash.split('?');
         let params = new URLSearchParams(queryStr || '');
-        
+
         params.set('in', '1');
-        
+
         // Preserve symbol if it exists and path is drillable
         if (!params.has('symbol') || !this.#config.drillableFiles.has(path)) {
           params.delete('symbol');
         }
-        
+
         let newQuery = params.toString();
         history.replaceState(null, '', `#${this.#config.hashPrefix}/${path}?${newQuery}`);
       }
@@ -91,11 +97,14 @@ export class SubgraphRouter {
 
     let handleExit = (e) => {
       let level = e.detail?.level;
-      this.#canvasDepth = (typeof level === 'number') ? level : Math.max(0, this.#canvasDepth - 1);
+      this.#canvasDepth = typeof level === 'number' ? level : Math.max(0, this.#canvasDepth - 1);
       if (this.#isAutoRouting) return; // Prevent erasing URL when popping out to find hidden nested paths
-      
+
       // Extract the path we were drilled into BEFORE modifying the URL
-      let hashPath = window.location.hash.replace(`#${this.#config.hashPrefix}/`, '').split('?')[0].split('&')[0];
+      let hashPath = window.location.hash
+        .replace(`#${this.#config.hashPrefix}/`, '')
+        .split('?')[0]
+        .split('&')[0];
 
       // Find the directory path we just exited from (to focus on it)
       let exitedDirPath = hashPath;
@@ -121,18 +130,18 @@ export class SubgraphRouter {
         let hash = window.location.hash;
         let [base, queryStr] = hash.split('?');
         let params = new URLSearchParams(queryStr || '');
-        
+
         let newBase = `#${this.#config.hashPrefix}`;
         if (newPath) newBase += `/${newPath}`;
-        
+
         if (setIn) params.set('in', '1');
         else params.delete('in');
-        
+
         if (setFocus) params.set('focus', setFocus);
         else params.delete('focus');
-        
+
         params.delete('symbol'); // always clear symbol on exit
-        
+
         let newQuery = params.toString();
         let newHash = newQuery ? `${newBase}?${newQuery}` : newBase;
         history.replaceState(null, '', newHash);
@@ -157,8 +166,8 @@ export class SubgraphRouter {
       // Fly to the exited group node at ANY level
       if (exitedDirPath) {
         requestAnimationFrame(() => {
-          let nodeId = this.#config.dirNodeMap?.get(exitedDirPath) ||
-                         this.#config.fileMap?.get(exitedDirPath);
+          let nodeId =
+            this.#config.dirNodeMap?.get(exitedDirPath) || this.#config.fileMap?.get(exitedDirPath);
           if (nodeId && this.#canvas.flyToNode) {
             this.#canvas.flyToNode(nodeId, { zoom: 0.8 });
           } else if (this.#canvas.fitView) {
@@ -172,7 +181,7 @@ export class SubgraphRouter {
 
     this.#canvas.addEventListener('subgraph-enter', handleEnter);
     this.#canvas.addEventListener('subgraph-exit', handleExit);
-    
+
     this.#listeners.push(
       { name: 'subgraph-enter', fn: handleEnter },
       { name: 'subgraph-exit', fn: handleExit }
@@ -181,7 +190,7 @@ export class SubgraphRouter {
 
   /**
    * Reads URL hash and triggers initial drill down + focus sequence.
-   * 
+   *
    * Universal URL semantics:
    * - `#graph`                                      → root, fit view
    * - `#graph?focus=src/analysis/`                   → root, fly to analysis node
@@ -190,8 +199,8 @@ export class SubgraphRouter {
    * - `#graph/src/analysis/file.js?in=1`             → drill into analysis, drill into file
    * - `#graph/src/analysis/file.js?in=1&symbol=name` → drill into file, focus symbol
    * - `#graph/src/analysis/`                         → (legacy) focus analysis at root
-   * 
-   * @param {NodeEditor} editor 
+   *
+   * @param {NodeEditor} editor
    */
   restoreFromHash(editor) {
     if (this.#destroyed || !this.#canvas) return;
@@ -201,13 +210,13 @@ export class SubgraphRouter {
     if (!hash.startsWith(prefix)) return;
 
     let afterPrefix = hash.slice(prefix.length); // e.g. '/src/analysis/?in=1&focus=file.js' or '?focus=src/analysis/'
-    
+
     // Parse query parameters from the hash
     let qIdx = afterPrefix.indexOf('?');
     let pathPart = qIdx >= 0 ? afterPrefix.slice(0, qIdx) : afterPrefix; // '/src/analysis/' or ''
     let queryStr = qIdx >= 0 ? afterPrefix.slice(qIdx + 1) : '';
     let params = new URLSearchParams(queryStr);
-    
+
     let drillPath = pathPart.replace(/^\//, ''); // strip leading /
     let hasDrillFlag = params.get('in') === '1';
     let focusParam = params.get('focus');
@@ -248,7 +257,7 @@ export class SubgraphRouter {
     // Case 2: #graph/path?in=1 (drill into path)
     if (drillPath && hasDrillFlag) {
       let drilled = this.#restoreDrillDown(drillPath, editor, true);
-      
+
       // After drilling, handle &focus= (select node inside group)
       if (drilled && focusParam) {
         let fullFocusPath = drillPath + decodeURIComponent(focusParam);
@@ -256,7 +265,7 @@ export class SubgraphRouter {
           this.navigateTo(fullFocusPath, 0, false);
         });
       }
-      
+
       // Handle &symbol= (focus symbol inside file subgraph)
       if (drilled && symbolParam) {
         requestAnimationFrame(() => {
@@ -292,8 +301,7 @@ export class SubgraphRouter {
           }
         } else {
           // Just focus on the directory node without drilling in
-          this.#canvas.flyToNode?.(node.id, { zoom: 0.8 }) ||
-            this.#canvas.selectNode?.(node.id);
+          this.#canvas.flyToNode?.(node.id, { zoom: 0.8 }) || this.#canvas.selectNode?.(node.id);
         }
         return true;
       }
@@ -355,7 +363,8 @@ export class SubgraphRouter {
 
     if (!targetId) return false;
 
-    let positions = typeof this.#canvas.getPositions === 'function' ? this.#canvas.getPositions() : {};
+    let positions =
+      typeof this.#canvas.getPositions === 'function' ? this.#canvas.getPositions() : {};
     let pos = positions[targetId];
 
     // Auto-traversal engine: if target is not visible on current canvas layer
@@ -408,7 +417,7 @@ export class SubgraphRouter {
       }
       return false; // Unable to locate on any layer
     }
-    
+
     // We found the node on the current layer. If target is a subgraph file and we are commanded to drill into it, do it.
     if (autoDrill && isFile && this.#config.drillableFiles?.has(targetPath)) {
       this.#runAutoRouting(() => {
@@ -424,12 +433,12 @@ export class SubgraphRouter {
 
     // SubgraphRouter delegates raw center/fly animations up to Canvas if possible
     if (this.#canvas.flyToNode) {
-        this.#canvas.flyToNode(targetId, { zoom: 0.8 });
+      this.#canvas.flyToNode(targetId, { zoom: 0.8 });
     } else {
-        // Safe fallback just in case
-        this.#canvas.selectNode?.(targetId);
+      // Safe fallback just in case
+      this.#canvas.selectNode?.(targetId);
     }
-    
+
     this.#config.onNavigate(targetPath);
     return true;
   }

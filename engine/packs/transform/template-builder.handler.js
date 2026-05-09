@@ -48,7 +48,8 @@ export default {
   icon: 'edit_note',
 
   driver: {
-    description: 'Visual template builder — write text with {placeholders}, auto-discovers input fields',
+    description:
+      'Visual template builder — write text with {placeholders}, auto-discovers input fields',
     inputs: [
       { name: 'data', type: 'any', description: 'Input data object with fields to interpolate' },
     ],
@@ -81,8 +82,7 @@ export default {
   },
 
   lifecycle: {
-    cacheKey: (inputs, params) =>
-      `tpl-builder:${params?.template}:${JSON.stringify(inputs.data)}`,
+    cacheKey: (inputs, params) => `tpl-builder:${params?.template}:${JSON.stringify(inputs.data)}`,
 
     /**
      * Execute template interpolation.
@@ -107,7 +107,9 @@ export default {
         let value = resolvePath(data, trimmed);
 
         if (value === undefined) {
-          console.log(`🟡 [template-builder] Missing field "${trimmed}" — available: [${Object.keys(data).join(', ')}]`);
+          console.log(
+            `🟡 [template-builder] Missing field "${trimmed}" — available: [${Object.keys(data).join(', ')}]`
+          );
           return match;
         }
         if (typeof value === 'object') return JSON.stringify(value);
@@ -115,10 +117,12 @@ export default {
       });
 
       // Log discovered vs resolved
-      let resolved = placeholders.filter(p => resolvePath(data, p) !== undefined);
-      let missing = placeholders.filter(p => resolvePath(data, p) === undefined);
+      let resolved = placeholders.filter((p) => resolvePath(data, p) !== undefined);
+      let missing = placeholders.filter((p) => resolvePath(data, p) === undefined);
       if (missing.length) {
-        console.log(`🟡 [template-builder] ${resolved.length}/${placeholders.length} fields resolved, missing: [${missing.join(', ')}]`);
+        console.log(
+          `🟡 [template-builder] ${resolved.length}/${placeholders.length} fields resolved, missing: [${missing.join(', ')}]`
+        );
       }
 
       let outputField = params?.outputField ?? 'text';

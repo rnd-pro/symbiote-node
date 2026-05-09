@@ -32,7 +32,9 @@ export let styles = css`
     cursor: pointer;
     white-space: nowrap;
     border-right: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.06));
-    transition: background 0.15s ease-out, color 0.15s ease-out;
+    transition:
+      background 0.15s ease-out,
+      color 0.15s ease-out;
     position: relative;
 
     &:hover {
@@ -83,7 +85,9 @@ export let styles = css`
     width: 32px;
     cursor: pointer;
     color: var(--sn-text-dim, #a0a0a0);
-    transition: background 0.15s ease-out, color 0.15s ease-out;
+    transition:
+      background 0.15s ease-out,
+      color 0.15s ease-out;
 
     &:hover {
       background: color-mix(in srgb, currentColor 4%, transparent);

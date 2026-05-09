@@ -27,7 +27,6 @@ const ACTIONS = [
 ];
 
 export class QuickToolbar extends Symbiote {
-
   init$ = {
     items: ACTIONS,
     visible: false,

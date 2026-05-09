@@ -15,7 +15,13 @@ import path from 'node:path';
 
 // Non-local patterns to filter out
 const NON_LOCAL_PATTERNS = ['en eeuu', 'desde estados unidos'];
-const HOROSCOPE_PATTERNS = ['horóscopo', 'horoscopo', 'astrolog', 'signo del zodiaco', 'signo del zodíaco'];
+const HOROSCOPE_PATTERNS = [
+  'horóscopo',
+  'horoscopo',
+  'astrolog',
+  'signo del zodiaco',
+  'signo del zodíaco',
+];
 
 /**
  * Simple hash for news dedup
@@ -26,7 +32,7 @@ function hashString(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     let chr = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
+    hash = (hash << 5) - hash + chr;
     hash |= 0;
   }
   return Math.abs(hash).toString(36);
@@ -69,9 +75,9 @@ function standardizeItem(item) {
  * @returns {Array}
  */
 function filterArgentinaOnly(items) {
-  return items.filter(item => {
+  return items.filter((item) => {
     let text = `${item.title} ${item.description}`.toLowerCase();
-    return !NON_LOCAL_PATTERNS.some(p => text.includes(p));
+    return !NON_LOCAL_PATTERNS.some((p) => text.includes(p));
   });
 }
 
@@ -81,9 +87,9 @@ function filterArgentinaOnly(items) {
  * @returns {Array}
  */
 function filterOutHoroscopes(items) {
-  return items.filter(item => {
+  return items.filter((item) => {
     let text = `${item.title} ${item.description}`.toLowerCase();
-    return !HOROSCOPE_PATTERNS.some(p => text.includes(p));
+    return !HOROSCOPE_PATTERNS.some((p) => text.includes(p));
   });
 }
 
@@ -125,23 +131,33 @@ export default {
 
   driver: {
     description: 'Collect and store news with dedup, filtering, periods, and category stats',
-    inputs: [
-      { name: 'storePath', type: 'string' },
-    ],
+    inputs: [{ name: 'storePath', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'get', description: 'Operation: add | get | mark-processed | new-period | stats' },
+      operation: {
+        type: 'string',
+        default: 'get',
+        description: 'Operation: add | get | mark-processed | new-period | stats',
+      },
       // add
       newsItem: { type: 'any', default: null, description: 'News item to add' },
       newsItems: { type: 'any', default: null, description: 'Array of news items to add (batch)' },
       // get filters
       categories: { type: 'any', default: null, description: 'Filter by categories array' },
       since: { type: 'string', default: null, description: 'Get news since ISO date' },
-      filterLocal: { type: 'boolean', default: false, description: 'Filter out non-local (international) news' },
-      filterHoroscopes: { type: 'boolean', default: true, description: 'Filter out horoscope content' },
+      filterLocal: {
+        type: 'boolean',
+        default: false,
+        description: 'Filter out non-local (international) news',
+      },
+      filterHoroscopes: {
+        type: 'boolean',
+        default: true,
+        description: 'Filter out horoscope content',
+      },
       maxItems: { type: 'int', default: 100, description: 'Maximum items to return' },
       // mark-processed
       newsIds: { type: 'any', default: null, description: 'Array of news IDs to mark processed' },
@@ -172,7 +188,7 @@ export default {
 
             if (itemsToAdd.length === 0) return { error: 'No items to add' };
 
-            let existingIds = new Set(store.news.map(n => n.id));
+            let existingIds = new Set(store.news.map((n) => n.id));
             let added = 0;
 
             for (const raw of itemsToAdd) {
@@ -189,20 +205,26 @@ export default {
             }
 
             await saveStore(storePath, store);
-            return { result: { added, total: store.news.length, duplicatesSkipped: itemsToAdd.length - added } };
+            return {
+              result: {
+                added,
+                total: store.news.length,
+                duplicatesSkipped: itemsToAdd.length - added,
+              },
+            };
           },
           get: () => {
-            let items = store.news.filter(n => !n.processed);
+            let items = store.news.filter((n) => !n.processed);
 
             // Date filter
             if (params.since) {
               let sinceDate = new Date(params.since);
-              items = items.filter(n => new Date(n.addedAt) >= sinceDate);
+              items = items.filter((n) => new Date(n.addedAt) >= sinceDate);
             }
 
             // Category filter
             if (Array.isArray(params.categories) && params.categories.length > 0) {
-              items = items.filter(n => {
+              items = items.filter((n) => {
                 let catId = typeof n.category === 'object' ? n.category.id : n.category;
                 return params.categories.includes(catId);
               });
@@ -252,7 +274,7 @@ export default {
           },
           stats: () => {
             let total = store.news.length;
-            let processed = store.news.filter(n => n.processed).length;
+            let processed = store.news.filter((n) => n.processed).length;
             let unprocessed = total - processed;
 
             return {
@@ -264,7 +286,7 @@ export default {
                 categoryCounts: store.categoryCounts,
               },
             };
-          }
+          },
         };
 
         if (opMap[operation]) {

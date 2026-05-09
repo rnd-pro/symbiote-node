@@ -29,7 +29,7 @@
       direction: dir,
       url,
       data: typeof data === 'string' ? data : '[Binary]',
-      dataType: typeof data
+      dataType: typeof data,
     };
     messages.push(msg);
     if (messages.length > 100) messages.shift();
@@ -47,9 +47,7 @@
   window.WebSocket = function (url, protocols) {
     console.log('[WS-Injector] New connection:', url);
 
-    let ws = protocols
-      ? new OriginalWebSocket(url, protocols)
-      : new OriginalWebSocket(url);
+    let ws = protocols ? new OriginalWebSocket(url, protocols) : new OriginalWebSocket(url);
 
     // Store connection if it's the imagine endpoint
     if (url.includes('/ws/imagine/')) {
@@ -109,7 +107,7 @@
         id,
         url: conn.url,
         readyState: conn.ws.readyState,
-        createdAt: conn.createdAt
+        createdAt: conn.createdAt,
       });
     });
     return result;
@@ -215,7 +213,7 @@
                 ourRequestId,
                 results,
                 lastResult: data,
-                finalUrl: data.url
+                finalUrl: data.url,
               });
             }
           }
@@ -268,7 +266,9 @@
           // Final HQ image comes as type:image with url and percentage_complete:100
           if (data.type === 'image' && data.url && data.percentage_complete === 100) {
             completedImages.push(data);
-            console.log(`[WS-Injector] Image complete: ${data.job_id} (${completedImages.length} total)`);
+            console.log(
+              `[WS-Injector] Image complete: ${data.job_id} (${completedImages.length} total)`
+            );
 
             // Wait a bit for potential additional images, then resolve
             setTimeout(() => {
@@ -278,7 +278,7 @@
               resolve({
                 images: completedImages,
                 firstUrl: completedImages[0]?.url,
-                count: completedImages.length
+                count: completedImages.length,
               });
             }, 2000); // Wait 2s for additional images
           }
@@ -298,11 +298,7 @@
    * @returns {Promise<object>} - Generation result
    */
   window.generateGrokImage = async function (prompt, options = {}) {
-    let {
-      aspectRatio = '2:3',
-      enableNsfw = true,
-      skipUpsampler = false
-    } = options;
+    let { aspectRatio = '2:3', enableNsfw = true, skipUpsampler = false } = options;
 
     let requestId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -315,35 +311,37 @@
       timestamp: Date.now(),
       item: {
         type: 'message',
-        content: [{ type: 'reset' }]
-      }
+        content: [{ type: 'reset' }],
+      },
     };
 
     imagineWs.send(JSON.stringify(resetMsg));
     console.log('[WS-Injector] Sent reset');
 
     // Wait a bit then send prompt
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
 
     let promptMsg = {
       type: 'conversation.item.create',
       timestamp: Date.now(),
       item: {
         type: 'message',
-        content: [{
-          requestId,
-          text: prompt,
-          type: 'input_text',
-          properties: {
-            section_count: 0,
-            is_kids_mode: false,
-            enable_nsfw: enableNsfw,
-            skip_upsampler: skipUpsampler,
-            is_initial: false,
-            aspect_ratio: aspectRatio
-          }
-        }]
-      }
+        content: [
+          {
+            requestId,
+            text: prompt,
+            type: 'input_text',
+            properties: {
+              section_count: 0,
+              is_kids_mode: false,
+              enable_nsfw: enableNsfw,
+              skip_upsampler: skipUpsampler,
+              is_initial: false,
+              aspect_ratio: aspectRatio,
+            },
+          },
+        ],
+      },
     };
 
     console.log(`[WS-Injector] Generating image: "${prompt}" (${requestId})`);
@@ -360,29 +358,33 @@
       let result = await window.generateGrokImage(prompt, options);
 
       // Dispatch result
-      window.dispatchEvent(new CustomEvent('grok-generate-result', {
-        detail: {
-          commandId,
-          success: true,
-          result: {
-            jobId: result.lastResult?.job_id,
-            imageId: result.lastResult?.image_id,
-            prompt: result.lastResult?.prompt,
-            fullPrompt: result.lastResult?.full_prompt,
-            modelName: result.lastResult?.model_name,
-            imageUrl: result.finalUrl || result.lastResult?.url,
-            previewCount: result.imageBlobs?.length || 0
-          }
-        }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-generate-result', {
+          detail: {
+            commandId,
+            success: true,
+            result: {
+              jobId: result.lastResult?.job_id,
+              imageId: result.lastResult?.image_id,
+              prompt: result.lastResult?.prompt,
+              fullPrompt: result.lastResult?.full_prompt,
+              modelName: result.lastResult?.model_name,
+              imageUrl: result.finalUrl || result.lastResult?.url,
+              previewCount: result.imageBlobs?.length || 0,
+            },
+          },
+        })
+      );
     } catch (error) {
-      window.dispatchEvent(new CustomEvent('grok-generate-result', {
-        detail: {
-          commandId,
-          success: false,
-          error: error.message
-        }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-generate-result', {
+          detail: {
+            commandId,
+            success: false,
+            error: error.message,
+          },
+        })
+      );
     }
   });
 
@@ -394,21 +396,25 @@
       console.log(`[WS-Injector] Waiting for image completion: ${commandId}`);
       let result = await window.waitForImageComplete(timeout || 120000);
 
-      window.dispatchEvent(new CustomEvent('grok-wait-image-result', {
-        detail: {
-          commandId,
-          success: true,
-          result
-        }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-wait-image-result', {
+          detail: {
+            commandId,
+            success: true,
+            result,
+          },
+        })
+      );
     } catch (error) {
-      window.dispatchEvent(new CustomEvent('grok-wait-image-result', {
-        detail: {
-          commandId,
-          success: false,
-          error: error.message
-        }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-wait-image-result', {
+          detail: {
+            commandId,
+            success: false,
+            error: error.message,
+          },
+        })
+      );
     }
   });
 
@@ -427,7 +433,7 @@
         timestamp: Date.now(),
         url,
         method,
-        body: null
+        body: null,
       };
 
       // Capture request body for POST requests
@@ -442,13 +448,16 @@
               logEntry.formData[key] = value instanceof File ? `[File: ${value.name}]` : value;
             }
           }
-        } catch (e) { }
+        } catch (e) {}
       }
 
       fetchLogs.push(logEntry);
       if (fetchLogs.length > 50) fetchLogs.shift();
 
-      console.log(`[Fetch] ${method} ${url.substring(0, 80)}`, logEntry.body ? logEntry.body.substring(0, 100) : '');
+      console.log(
+        `[Fetch] ${method} ${url.substring(0, 80)}`,
+        logEntry.body ? logEntry.body.substring(0, 100) : ''
+      );
 
       // Dispatch event for capture
       window.dispatchEvent(new CustomEvent('grok-fetch', { detail: logEntry }));
@@ -488,12 +497,12 @@
                 parentPostId: assetId,
                 aspectRatio: aspectRatio || '2:3',
                 videoLength: videoLength || 6,
-                isVideoEdit: false
-              }
-            }
-          }
-        }
-      })
+                isVideoEdit: false,
+              },
+            },
+          },
+        },
+      }),
     });
 
     if (!response.ok) {
@@ -509,7 +518,7 @@
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoId })
+      body: JSON.stringify({ videoId }),
     });
 
     if (!response.ok) {
@@ -535,20 +544,26 @@
         result = await window.grokUpscaleVideo(params.videoId);
       }
 
-      window.dispatchEvent(new CustomEvent('grok-video-result', {
-        detail: { commandId, success: true, result }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-video-result', {
+          detail: { commandId, success: true, result },
+        })
+      );
     } catch (error) {
       console.error('[WS-Injector] Video command error:', error);
-      window.dispatchEvent(new CustomEvent('grok-video-result', {
-        detail: { commandId, success: false, error: error.message }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-video-result', {
+          detail: { commandId, success: false, error: error.message },
+        })
+      );
     }
   });
 
   console.log('[WS-Injector] Ready!');
   console.log('[WS-Injector] API: generateGrokImage(prompt, {aspectRatio, enableNsfw})');
-  console.log('[WS-Injector] API: grokImageToVideo({assetId, assetUrl, prompt, mode, aspectRatio, videoLength})');
+  console.log(
+    '[WS-Injector] API: grokImageToVideo({assetId, assetUrl, prompt, mode, aspectRatio, videoLength})'
+  );
   console.log('[WS-Injector] API: grokUpscaleVideo(videoId)');
   console.log('[WS-Injector] API: getGrokWebSocketConnections()');
   console.log('[WS-Injector] API: getGrokWebSocketMessages()');

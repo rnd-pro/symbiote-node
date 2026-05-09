@@ -36,12 +36,7 @@ export {
 } from './SocketTypes.js';
 
 // Persistence
-export {
-  serialize,
-  deserialize,
-  saveToFile,
-  loadFromFile,
-} from './Persistence.js';
+export { serialize, deserialize, saveToFile, loadFromFile } from './Persistence.js';
 
 // Lifecycle
 export { runLifecycle } from './Lifecycle.js';

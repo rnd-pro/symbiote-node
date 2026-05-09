@@ -1,7 +1,7 @@
 export class LODManager {
   /** @type {import('./NodeCanvas/NodeCanvas.js').NodeCanvas} */
   #canvas;
-  
+
   /** @type {number} */
   #threshold;
 
@@ -43,7 +43,7 @@ export class LODManager {
       if (!this.#attached) return; // guard after destroy
       let newLod = zoom >= this.#threshold ? 'expanded' : 'collapsed';
       if (newLod === this.#currentLod) return;
-      
+
       this.#currentLod = newLod;
       this.#emit(newLod);
     });
@@ -63,7 +63,7 @@ export class LODManager {
   }
 
   /**
-   * @param {Function} callback 
+   * @param {Function} callback
    */
   onLodChange(callback) {
     this.#listeners.push(callback);

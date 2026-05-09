@@ -34,7 +34,11 @@ async function processTemplate(template, context, baseDir) {
     try {
       let includeContent = await readFile(path.join(baseDir, filePath), 'utf-8');
       // Recursively process included content
-      includeContent = await processTemplate(includeContent, context, path.dirname(path.join(baseDir, filePath)));
+      includeContent = await processTemplate(
+        includeContent,
+        context,
+        path.dirname(path.join(baseDir, filePath))
+      );
       result = result.replace(fullMatch, includeContent);
     } catch {
       // Leave placeholder as is
@@ -84,7 +88,7 @@ function validatePromptTemplate(template, context) {
 async function listPromptTemplates(dir) {
   try {
     let entries = await readdir(dir, { recursive: true });
-    return entries.filter(e => e.endsWith('.md'));
+    return entries.filter((e) => e.endsWith('.md'));
   } catch {
     return [];
   }
@@ -98,22 +102,29 @@ export default {
   icon: 'article',
 
   driver: {
-    description: 'Dynamic Markdown template assembly with {{VARIABLE}} substitution and {{file.md}} includes',
-    inputs: [
-      { name: 'template', type: 'string' },
-    ],
+    description:
+      'Dynamic Markdown template assembly with {{VARIABLE}} substitution and {{file.md}} includes',
+    inputs: [{ name: 'template', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'load', description: 'Operation: load | load-multi | validate | list' },
+      operation: {
+        type: 'string',
+        default: 'load',
+        description: 'Operation: load | load-multi | validate | list',
+      },
       context: { type: 'any', default: {}, description: 'Variables map for template substitution' },
       baseDir: { type: 'string', default: '.', description: 'Base directory for file includes' },
       // load-multi
       templates: { type: 'any', default: null, description: 'Map of {name: path} for load-multi' },
       // load from file
-      filePath: { type: 'string', default: null, description: 'Path to template file (alternative to template input)' },
+      filePath: {
+        type: 'string',
+        default: null,
+        description: 'Path to template file (alternative to template input)',
+      },
     },
   },
 
@@ -121,7 +132,8 @@ export default {
     validate: (inputs, params) => {
       let op = params.operation;
       if (op === 'list') return typeof params.baseDir === 'string';
-      if (op === 'load-multi') return typeof params.templates === 'object' && params.templates !== null;
+      if (op === 'load-multi')
+        return typeof params.templates === 'object' && params.templates !== null;
       if (op === 'validate') return typeof inputs.template === 'string';
       // load
       return typeof inputs.template === 'string' || typeof params.filePath === 'string';
@@ -177,7 +189,7 @@ export default {
           list: async () => {
             let templates = await listPromptTemplates(baseDir);
             return { result: { templates, count: templates.length, baseDir } };
-          }
+          },
         };
 
         if (opMap[operation]) {

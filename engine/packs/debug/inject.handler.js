@@ -17,12 +17,15 @@ export default {
     description: 'Inject test data — connect to any node input for manual testing',
     capabilities: ['debug', 'trigger'],
     inputs: [],
-    outputs: [
-      { name: 'data', type: 'exec' },
-    ],
+    outputs: [{ name: 'data', type: 'exec' }],
     params: {
       label: { type: 'string', default: 'Test Data', description: 'Display label' },
-      data: { type: 'textarea', default: '{\n  "status": "created",\n  "region": "RU",\n  "smsCount": 100,\n  "clientName": "Test Client"\n}', description: 'JSON payload to inject' },
+      data: {
+        type: 'textarea',
+        default:
+          '{\n  "status": "created",\n  "region": "RU",\n  "smsCount": 100,\n  "clientName": "Test Client"\n}',
+        description: 'JSON payload to inject',
+      },
     },
     /** Mark as fireable — UI shows ▶ Fire button */
     fireable: true,

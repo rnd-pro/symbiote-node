@@ -9,7 +9,6 @@
  */
 
 export class Readonly {
-
   /** @type {boolean} */
   #enabled = false;
 

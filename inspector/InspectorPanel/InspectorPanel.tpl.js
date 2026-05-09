@@ -5,92 +5,92 @@
 import { html } from '@symbiotejs/symbiote';
 
 export let template = html`
-<div class="insp-resize-handle"></div>
+  <div class="insp-resize-handle"></div>
 
-<div class="insp-body">
-  <div class="insp-empty">
-    <span class="material-symbols-outlined">touch_app</span>
-    <span>Select a node</span>
-  </div>
-
-  <div class="insp-content" hidden>
-    <div class="insp-field">
-      <label>Label</label>
-      <div class="insp-value">{{nodeLabel}}</div>
-    </div>
-    <div class="insp-field">
-      <label>Type</label>
-      <div class="insp-value insp-tag">{{nodeType}}</div>
-    </div>
-    <div class="insp-field">
-      <label>Category</label>
-      <div class="insp-value insp-tag">{{nodeCategory}}</div>
-    </div>
-    <div class="insp-field">
-      <label>ID</label>
-      <div class="insp-value insp-mono">{{nodeId}}</div>
+  <div class="insp-body">
+    <div class="insp-empty">
+      <span class="material-symbols-outlined">touch_app</span>
+      <span>Select a node</span>
     </div>
 
-    <div class="insp-section">
-      <div class="insp-section-title">
-        <span class="material-symbols-outlined">input</span> Inputs
-      </div>
-      <div ${{ itemize: 'inputsList', 'item-tag': 'insp-port-item' }}></div>
-    </div>
-
-    <div class="insp-section">
-      <div class="insp-section-title">
-        <span class="material-symbols-outlined">output</span> Outputs
-      </div>
-      <div ${{ itemize: 'outputsList', 'item-tag': 'insp-port-item' }}></div>
-    </div>
-
-    <div class="insp-section">
-      <div class="insp-section-title">
-        <span class="material-symbols-outlined">tune</span> Controls
-      </div>
-      <div ${{ itemize: 'controlsList', 'item-tag': 'insp-ctrl-item' }}></div>
-    </div>
-
-    <div class="insp-template-preview" ${{ '@hidden': '!isTemplateBuilder' }}>
-      <template-preview></template-preview>
-    </div>
-
-    <div class="insp-fire" ${{ '@hidden': '!isFireable' }}>
-      <button class="insp-fire-btn" ${{ onclick: 'onFire' }}>
-        <span class="material-symbols-outlined">play_arrow</span>
-        Fire
-      </button>
-    </div>
-
-    <div class="insp-subgraph" hidden>
-      <div class="insp-section-title">
-        <span class="material-symbols-outlined">account_tree</span> Subgraph
+    <div class="insp-content" hidden>
+      <div class="insp-field">
+        <label>Label</label>
+        <div class="insp-value">{{nodeLabel}}</div>
       </div>
       <div class="insp-field">
-        <label>Inner Nodes</label>
-        <div class="insp-value">{{innerNodeCount}}</div>
+        <label>Type</label>
+        <div class="insp-value insp-tag">{{nodeType}}</div>
       </div>
-      <button class="insp-enter-btn" ${{ onclick: 'onEnterSubgraph' }}>
-        <span class="material-symbols-outlined">login</span>
-        Enter Subgraph
-      </button>
+      <div class="insp-field">
+        <label>Category</label>
+        <div class="insp-value insp-tag">{{nodeCategory}}</div>
+      </div>
+      <div class="insp-field">
+        <label>ID</label>
+        <div class="insp-value insp-mono">{{nodeId}}</div>
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-title">
+          <span class="material-symbols-outlined">input</span> Inputs
+        </div>
+        <div ${{ itemize: 'inputsList', 'item-tag': 'insp-port-item' }}></div>
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-title">
+          <span class="material-symbols-outlined">output</span> Outputs
+        </div>
+        <div ${{ itemize: 'outputsList', 'item-tag': 'insp-port-item' }}></div>
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-title">
+          <span class="material-symbols-outlined">tune</span> Controls
+        </div>
+        <div ${{ itemize: 'controlsList', 'item-tag': 'insp-ctrl-item' }}></div>
+      </div>
+
+      <div class="insp-template-preview" ${{ '@hidden': '!isTemplateBuilder' }}>
+        <template-preview></template-preview>
+      </div>
+
+      <div class="insp-fire" ${{ '@hidden': '!isFireable' }}>
+        <button class="insp-fire-btn" ${{ onclick: 'onFire' }}>
+          <span class="material-symbols-outlined">play_arrow</span>
+          Fire
+        </button>
+      </div>
+
+      <div class="insp-subgraph" hidden>
+        <div class="insp-section-title">
+          <span class="material-symbols-outlined">account_tree</span> Subgraph
+        </div>
+        <div class="insp-field">
+          <label>Inner Nodes</label>
+          <div class="insp-value">{{innerNodeCount}}</div>
+        </div>
+        <button class="insp-enter-btn" ${{ onclick: 'onEnterSubgraph' }}>
+          <span class="material-symbols-outlined">login</span>
+          Enter Subgraph
+        </button>
+      </div>
     </div>
   </div>
-</div>
 `;
 
 export let inspPortItemTemplate = html`
-<div class="insp-port">
-  <span class="insp-port-dot"></span>
-  <span class="insp-port-label">{{label}}</span>
-  <span class="insp-port-type">{{socketType}}</span>
-</div>
+  <div class="insp-port">
+    <span class="insp-port-dot"></span>
+    <span class="insp-port-label">{{label}}</span>
+    <span class="insp-port-type">{{socketType}}</span>
+  </div>
 `;
 
 export let inspCtrlItemTemplate = html`
-<div class="insp-ctrl">
-  <label class="insp-ctrl-label">{{label}}</label>
-  <div class="insp-ctrl-input"></div>
-</div>
+  <div class="insp-ctrl">
+    <label class="insp-ctrl-label">{{label}}</label>
+    <div class="insp-ctrl-input"></div>
+  </div>
 `;

@@ -92,7 +92,11 @@ export default {
       { name: 'false', type: 'any' },
     ],
     params: {
-      expression: { type: 'string', default: '', description: 'Condition expression (optional, overrides condition input)' },
+      expression: {
+        type: 'string',
+        default: '',
+        description: 'Condition expression (optional, overrides condition input)',
+      },
     },
   },
 
@@ -103,9 +107,7 @@ export default {
         ? evaluateCondition(inputs.data, params.expression)
         : !!inputs.condition;
 
-      return condValue
-        ? { true: inputs.data, false: null }
-        : { true: null, false: inputs.data };
+      return condValue ? { true: inputs.data, false: null } : { true: null, false: inputs.data };
     },
   },
 };

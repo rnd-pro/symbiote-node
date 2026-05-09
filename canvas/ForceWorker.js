@@ -42,15 +42,18 @@
  */
 class Quad {
   constructor(x0, y0, x1, y1) {
-    this.x0 = x0;  // min x
-    this.y0 = y0;  // min y
-    this.x1 = x1;  // max x
-    this.y1 = y1;  // max y
+    this.x0 = x0; // min x
+    this.y0 = y0; // min y
+    this.x1 = x1; // max x
+    this.y1 = y1; // max y
   }
 }
 
 function quadtreeCreate(nodes) {
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  let x0 = Infinity,
+    y0 = Infinity,
+    x1 = -Infinity,
+    y1 = -Infinity;
   for (const n of nodes) {
     if (n.x < x0) x0 = n.x;
     if (n.y < y0) y0 = n.y;
@@ -58,13 +61,17 @@ function quadtreeCreate(nodes) {
     if (n.y > y1) y1 = n.y;
   }
   // Make square and add padding
-  let dx = x1 - x0, dy = y1 - y0;
+  let dx = x1 - x0,
+    dy = y1 - y0;
   let size = Math.max(dx, dy, 1) + 200;
-  let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  let cx = (x0 + x1) / 2,
+    cy = (y0 + y1) / 2;
 
   let tree = {
-    x0: cx - size / 2, y0: cy - size / 2,
-    x1: cx + size / 2, y1: cy + size / 2,
+    x0: cx - size / 2,
+    y0: cy - size / 2,
+    x1: cx + size / 2,
+    y1: cy + size / 2,
     root: null,
   };
 
@@ -76,20 +83,33 @@ function quadtreeCreate(nodes) {
 
 function qtInsert(tree, body) {
   let node = tree.root;
-  if (!node) { tree.root = { data: body, next: null }; return; }
+  if (!node) {
+    tree.root = { data: body, next: null };
+    return;
+  }
 
-  let x0 = tree.x0, y0 = tree.y0, x1 = tree.x1, y1 = tree.y1;
+  let x0 = tree.x0,
+    y0 = tree.y0,
+    x1 = tree.x1,
+    y1 = tree.y1;
   let parent, i;
 
   // Navigate to leaf
-  while (node.length) { // internal node (array of 4 children)
-    let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  while (node.length) {
+    // internal node (array of 4 children)
+    let mx = (x0 + x1) / 2,
+      my = (y0 + y1) / 2;
     i = (body.x >= mx ? 1 : 0) | (body.y >= my ? 2 : 0);
     parent = node;
-    if (body.x >= mx) x0 = mx; else x1 = mx;
-    if (body.y >= my) y0 = my; else y1 = my;
+    if (body.x >= mx) x0 = mx;
+    else x1 = mx;
+    if (body.y >= my) y0 = my;
+    else y1 = my;
     node = node[i];
-    if (!node) { parent[i] = { data: body, next: null }; return; }
+    if (!node) {
+      parent[i] = { data: body, next: null };
+      return;
+    }
   }
 
   // Leaf node — check for coincident point
@@ -105,13 +125,15 @@ function qtInsert(tree, body) {
   // Walk up to find parent and replace
   let leaf = node;
   while (true) {
-    let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    let mx = (x0 + x1) / 2,
+      my = (y0 + y1) / 2;
     let iNew = (body.x >= mx ? 1 : 0) | (body.y >= my ? 2 : 0);
     let iOld = (existing.x >= mx ? 1 : 0) | (existing.y >= my ? 2 : 0);
 
     let internal = [null, null, null, null];
     internal.length = 4; // mark as internal
-    if (parent) parent[i] = internal; else tree.root = internal;
+    if (parent) parent[i] = internal;
+    else tree.root = internal;
 
     if (iNew !== iOld) {
       internal[iNew] = { data: body, next: null };
@@ -122,8 +144,10 @@ function qtInsert(tree, body) {
     // Same quadrant — descend further
     parent = internal;
     i = iNew;
-    if (body.x >= mx) x0 = mx; else x1 = mx;
-    if (body.y >= my) y0 = my; else y1 = my;
+    if (body.x >= mx) x0 = mx;
+    else x1 = mx;
+    if (body.y >= my) y0 = my;
+    else y1 = my;
   }
 }
 
@@ -133,7 +157,8 @@ function qtInsert(tree, body) {
  */
 function qtVisitAfter(tree, callback) {
   let quads = [];
-  if (tree.root) quads.push({ node: tree.root, x0: tree.x0, y0: tree.y0, x1: tree.x1, y1: tree.y1 });
+  if (tree.root)
+    quads.push({ node: tree.root, x0: tree.x0, y0: tree.y0, x1: tree.x1, y1: tree.y1 });
 
   let stack = [];
   while (quads.length) {
@@ -141,7 +166,8 @@ function qtVisitAfter(tree, callback) {
     stack.push(q);
     if (q.node.length) {
       let { x0, y0, x1, y1 } = q;
-      let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+      let mx = (x0 + x1) / 2,
+        my = (y0 + y1) / 2;
       if (q.node[0]) quads.push({ node: q.node[0], x0, y0, x1: mx, y1: my });
       if (q.node[1]) quads.push({ node: q.node[1], x0: mx, y0, x1, y1: my });
       if (q.node[2]) quads.push({ node: q.node[2], x0, y0: my, x1: mx, y1 });
@@ -157,13 +183,15 @@ function qtVisitAfter(tree, callback) {
 
 function qtVisit(tree, callback) {
   let quads = [];
-  if (tree.root) quads.push({ node: tree.root, x0: tree.x0, y0: tree.y0, x1: tree.x1, y1: tree.y1 });
+  if (tree.root)
+    quads.push({ node: tree.root, x0: tree.x0, y0: tree.y0, x1: tree.x1, y1: tree.y1 });
   while (quads.length) {
     let q = quads.pop();
     if (callback(q.node, q.x0, q.y0, q.x1, q.y1)) continue; // skip children
     if (q.node.length) {
       let { x0, y0, x1, y1 } = q;
-      let mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+      let mx = (x0 + x1) / 2,
+        my = (y0 + y1) / 2;
       if (q.node[3]) quads.push({ node: q.node[3], x0: mx, y0: my, x1, y1 });
       if (q.node[2]) quads.push({ node: q.node[2], x0, y0: my, x1: mx, y1 });
       if (q.node[1]) quads.push({ node: q.node[1], x0: mx, y0, x1, y1: my });
@@ -203,7 +231,10 @@ function applyChargeForce(nodes, strength, theta) {
       return;
     }
     // Internal: sum children
-    let value = 0, x = 0, y = 0, weight = 0;
+    let value = 0,
+      x = 0,
+      y = 0,
+      weight = 0;
     for (let i = 0; i < 4; i++) {
       let child = node[i];
       if (!child || !child.value) continue;
@@ -244,8 +275,9 @@ function applyChargeForce(nodes, strength, theta) {
       if (distSq < distMin2) distSq = distMin2; // clamp
 
       // Barnes-Hut criterion: if region width² / distance² < θ² → approximate
-      if (w * w / distSq < thetaSq) {
-        if (distSq < 1000 * 1000) { // distanceMax = 1000
+      if ((w * w) / distSq < thetaSq) {
+        if (distSq < 1000 * 1000) {
+          // distanceMax = 1000
           let force = node.value / distSq;
           body.vx -= dx * force;
           body.vy -= dy * force;
@@ -294,7 +326,7 @@ function applyCollisionForce(nodes, strength, iterations) {
   // Padding: add small gap between nodes
   let padX = 8;
   let padY = 4;
-  
+
   let maxW = 0;
   let maxH = 0;
   for (const n of nodes) {
@@ -349,8 +381,9 @@ function applyCollisionForce(nodes, strength, iterations) {
  * @param {number} strength
  */
 function resolveOverlap(nodes, i, j, padX, padY, strength) {
-  let a = nodes[i], b = nodes[j];
-  
+  let a = nodes[i],
+    b = nodes[j];
+
   // Unified physics constraints:
   // 1. Same parent (or both null) -> collide
   // 2. Active group node collides with ALL root nodes
@@ -359,8 +392,10 @@ function resolveOverlap(nodes, i, j, padX, padY, strength) {
       return;
     }
     // Do not collide the active group with its own children
-    if ((a.id === config.activeGroupId && b.parentId === a.id) ||
-        (b.id === config.activeGroupId && a.parentId === b.id)) {
+    if (
+      (a.id === config.activeGroupId && b.parentId === a.id) ||
+      (b.id === config.activeGroupId && a.parentId === b.id)
+    ) {
       return;
     }
   }
@@ -368,44 +403,44 @@ function resolveOverlap(nodes, i, j, padX, padY, strength) {
   // Calculate overlap using current positions
   let dx = b.x - a.x;
   let dy = b.y - a.y;
-  
+
   let hwA = a.w / 2 + padX;
   let hhA = a.h / 2 + padY;
   let hwB = b.w / 2 + padX;
   let hhB = b.h / 2 + padY;
-  
-  let overlapX = (hwA + hwB) - Math.abs(dx);
-  let overlapY = (hhA + hhB) - Math.abs(dy);
+
+  let overlapX = hwA + hwB - Math.abs(dx);
+  let overlapY = hhA + hhB - Math.abs(dy);
 
   if (overlapX > 0 && overlapY > 0) {
     // HARD CONSTRAINT: 100% impermeable space. Modifying positions directly.
     // Also clearing velocities in the push direction to stop momentum.
     if (overlapX < overlapY) {
-      let sign = dx < 0 ? -1 : (dx > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
+      let sign = dx < 0 ? -1 : dx > 0 ? 1 : Math.random() < 0.5 ? -1 : 1;
       let push = overlapX * strength * 0.5;
-      
+
       a.x -= sign * push;
       b.x += sign * push;
-      
+
       // Stop velocity pushing them together horizontally
       if (Math.sign(a.vx) === sign) a.vx = 0;
       if (Math.sign(b.vx) === -sign) b.vx = 0;
-      
+
       // Orthogonal jitter to prevent perfect 1D stacking
       let jitter = (Math.random() - 0.5) * 0.5;
       a.y -= jitter;
       b.y += jitter;
     } else {
-      let sign = dy < 0 ? -1 : (dy > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1));
+      let sign = dy < 0 ? -1 : dy > 0 ? 1 : Math.random() < 0.5 ? -1 : 1;
       let push = overlapY * strength * 0.5;
-      
+
       a.y -= sign * push;
       b.y += sign * push;
-      
+
       // Stop velocity pushing them together vertically
       if (Math.sign(a.vy) === sign) a.vy = 0;
       if (Math.sign(b.vy) === -sign) b.vy = 0;
-      
+
       // Orthogonal jitter to prevent perfect 1D stacking
       let jitter = (Math.random() - 0.5) * 0.5;
       a.x -= jitter;
@@ -420,7 +455,8 @@ function resolveOverlap(nodes, i, j, padX, padY, strength) {
  * @returns {number} Number of overlapping pairs
  */
 function countOverlaps(nodes) {
-  let maxW = 260, maxH = 40;
+  let maxW = 260,
+    maxH = 40;
   for (const n of nodes) {
     if (n.w > maxW) maxW = n.w;
     if (n.h > maxH) maxH = n.h;
@@ -448,8 +484,10 @@ function countOverlaps(nodes) {
         for (const j of neighbors) {
           if (j <= i) continue;
           let b = nodes[j];
-          let hwA = n.w / 2, hhA = n.h / 2;
-          let hwB = b.w / 2, hhB = b.h / 2;
+          let hwA = n.w / 2,
+            hhA = n.h / 2;
+          let hwB = b.w / 2,
+            hhB = b.h / 2;
           if (Math.abs(n.x - b.x) < hwA + hwB && Math.abs(n.y - b.y) < hhA + hhB) count++;
         }
       }
@@ -464,7 +502,8 @@ function countOverlaps(nodes) {
  * @param {Array<Object>} nodes
  */
 function jitterOverlappingNodes(nodes) {
-  let maxW = 260, maxH = 40;
+  let maxW = 260,
+    maxH = 40;
   for (const n of nodes) {
     if (n.w > maxW) maxW = n.w;
     if (n.h > maxH) maxH = n.h;
@@ -491,20 +530,22 @@ function jitterOverlappingNodes(nodes) {
         for (const j of neighbors) {
           if (j <= i) continue;
           let b = nodes[j];
-          let hwA = a.w / 2, hhA = a.h / 2;
-          let hwB = b.w / 2, hhB = b.h / 2;
-          let ox = (hwA + hwB) - Math.abs(a.x - b.x);
-          let oy = (hhA + hhB) - Math.abs(a.y - b.y);
+          let hwA = a.w / 2,
+            hhA = a.h / 2;
+          let hwB = b.w / 2,
+            hhB = b.h / 2;
+          let ox = hwA + hwB - Math.abs(a.x - b.x);
+          let oy = hhA + hhB - Math.abs(a.y - b.y);
           if (ox > 0 && oy > 0) {
             // Push apart along minimum-overlap axis + small random to break symmetry
             if (ox < oy) {
-              let sign = a.x < b.x ? -1 : (a.x > b.x ? 1 : (Math.random() < 0.5 ? -1 : 1));
-              let push = (ox / 2 + 5 + Math.random() * 10);
+              let sign = a.x < b.x ? -1 : a.x > b.x ? 1 : Math.random() < 0.5 ? -1 : 1;
+              let push = ox / 2 + 5 + Math.random() * 10;
               a.x += sign * push;
               b.x -= sign * push;
             } else {
-              let sign = a.y < b.y ? -1 : (a.y > b.y ? 1 : (Math.random() < 0.5 ? -1 : 1));
-              let push = (oy / 2 + 3 + Math.random() * 6);
+              let sign = a.y < b.y ? -1 : a.y > b.y ? 1 : Math.random() < 0.5 ? -1 : 1;
+              let push = oy / 2 + 3 + Math.random() * 6;
               a.y += sign * push;
               b.y -= sign * push;
             }
@@ -530,10 +571,13 @@ function applyLinkForce(nodes, edges, alpha) {
 
     let dx = t.x + t.vx - s.x - s.vx;
     let dy = t.y + t.vy - s.y - s.vy;
-    if (dx === 0 && dy === 0) { dx = (Math.random() - 0.5) * 1e-6; dy = dx; }
+    if (dx === 0 && dy === 0) {
+      dx = (Math.random() - 0.5) * 1e-6;
+      dy = dx;
+    }
 
     let dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    let force = (dist - e.restLength) / dist * alpha * e.strength;
+    let force = ((dist - e.restLength) / dist) * alpha * e.strength;
     let fx = dx * force;
     let fy = dy * force;
 
@@ -558,7 +602,7 @@ function applyLinkForce(nodes, edges, alpha) {
 function applyCenterForce(nodes, strength, attractors, bx = 0, by = 0) {
   for (const n of nodes) {
     let targetX, targetY;
-    
+
     if (n.parentId) {
       // Internal node → pull toward parent center (+ optional attractor offset)
       if (attractors && n.type && attractors[n.type]) {
@@ -573,7 +617,7 @@ function applyCenterForce(nodes, strength, attractors, bx = 0, by = 0) {
       targetX = 0;
       targetY = 0;
     }
-    
+
     n.vx -= (n.x - targetX) * strength * 0.1;
     n.vy -= (n.y - targetY) * strength * 0.1;
   }
@@ -618,44 +662,44 @@ let paused = false;
 let alpha = 1;
 let iteration = 0;
 let cachedActiveGroupNode = null;
-let galacticSuns = [];    // Hub nodes (high-degree or groups)
-let planets = [];         // Leaf nodes assigned to a sun
+let galacticSuns = []; // Hub nodes (high-degree or groups)
+let planets = []; // Leaf nodes assigned to a sun
 let simMode = 'converge'; // 'converge' | 'continuous'
 let continuousTimer = null;
 
 let config = {
-  chargeStrength: -250,   // Repulsion (negative = repel). NOT scaled by alpha (d3 convention).
-  theta: 0.7,             // Barnes-Hut accuracy (0.5=exact, 1.0=fast)
-  linkDistance: 180,       // Spring rest length for edges
-  linkStrength: 0.15,     // Spring stiffness for edges
-  groupDistance: 120,      // Rest length for directory springs
-  groupStrength: 0.05,    // Stiffness for directory springs
-  collideStrength: 0.95,  // Collision response (0..1)
-  centerStrength: 0.01,   // Center gravity
-  velocityDecay: 0.92,    // Damping — higher = calmer (Ultra-Calm tuned)
-  alphaDecay: 0.015,      // Cooling rate — slower than d3 default for smoother settling
-  alphaMin: 0.001,        // Convergence threshold
-  alphaTarget: 0,          // Target alpha for cooling
+  chargeStrength: -250, // Repulsion (negative = repel). NOT scaled by alpha (d3 convention).
+  theta: 0.7, // Barnes-Hut accuracy (0.5=exact, 1.0=fast)
+  linkDistance: 180, // Spring rest length for edges
+  linkStrength: 0.15, // Spring stiffness for edges
+  groupDistance: 120, // Rest length for directory springs
+  groupStrength: 0.05, // Stiffness for directory springs
+  collideStrength: 0.95, // Collision response (0..1)
+  centerStrength: 0.01, // Center gravity
+  velocityDecay: 0.92, // Damping — higher = calmer (Ultra-Calm tuned)
+  alphaDecay: 0.015, // Cooling rate — slower than d3 default for smoother settling
+  alphaMin: 0.001, // Convergence threshold
+  alphaTarget: 0, // Target alpha for cooling
   // Continuous mode params (Ultra-Calm tuned)
-  contAlphaFloor: 0.001,   // Minimum alpha floor in continuous mode
-  contAlphaTarget: 0.001,  // Alpha target for steady-state drift
-  brownian: 0.005,         // Brownian motion impulse strength — very subtle
-  brownianThresh: 0.005,   // Alpha threshold to start Brownian
-  pinReheat: 0.03,         // Alpha bump on pin
-  pinCap: 0.1,             // Max alpha from pin reheat
-  resumeReheat: 0.05,      // Alpha bump on resume
-  resumeCap: 0.1,          // Max alpha from resume
-  
+  contAlphaFloor: 0.001, // Minimum alpha floor in continuous mode
+  contAlphaTarget: 0.001, // Alpha target for steady-state drift
+  brownian: 0.005, // Brownian motion impulse strength — very subtle
+  brownianThresh: 0.005, // Alpha threshold to start Brownian
+  pinReheat: 0.03, // Alpha bump on pin
+  pinCap: 0.1, // Max alpha from pin reheat
+  resumeReheat: 0.05, // Alpha bump on resume
+  resumeCap: 0.1, // Max alpha from resume
+
   // Group physics
-  activeGroupId: null,     // ID of the currently expanded group
-  boundaryRadius: null,    // If set, constrains nodes to circle of this radius
-  boundaryStrength: 0.2,   // Stiffness of boundary repulsion
-  attractors: null,        // Object mapping node.type to {x, y} coordinates
+  activeGroupId: null, // ID of the currently expanded group
+  boundaryRadius: null, // If set, constrains nodes to circle of this radius
+  boundaryStrength: 0.2, // Stiffness of boundary repulsion
+  attractors: null, // Object mapping node.type to {x, y} coordinates
   // Galactic Physics params (live-tunable, all alpha-scaled)
-  wellStrength: 0.8,       // Planet → Sun pull strength (was 0.06 non-alpha)
-  centerPull: 0.3,         // Sun → origin pull
-  wellRepulsion: 5.0,      // Inter-Sun overlap push strength
-  crossLinkScale: 0.2,     // Cross-cluster link strength multiplier (0.2 = 20%)
+  wellStrength: 0.8, // Planet → Sun pull strength (was 0.06 non-alpha)
+  centerPull: 0.3, // Sun → origin pull
+  wellRepulsion: 5.0, // Inter-Sun overlap push strength
+  crossLinkScale: 0.2, // Cross-cluster link strength multiplier (0.2 = 20%)
 };
 
 function initSimulation(data) {
@@ -664,7 +708,7 @@ function initSimulation(data) {
   // Merge config
   Object.assign(config, options);
   simMode = options.mode || 'converge';
-  
+
   // Will be populated after nodes array is built
   cachedActiveGroupNode = null;
 
@@ -674,7 +718,7 @@ function initSimulation(data) {
     let radius = Math.sqrt(rawNodes.length) * 50;
     let w = n.w || options.nodeWidth || 260;
     let h = n.h || options.nodeHeight || 40;
-    
+
     // If position was provided (from smoothPositions), use it directly
     // Otherwise fall back to circular layout
     let hasPos = n.x !== undefined && n.y !== undefined;
@@ -698,10 +742,10 @@ function initSimulation(data) {
 
   // Pass 2: relocate NEW children (no prior position) to parent center in a small circle
   if (options.activeGroupId) {
-    let parentNode = nodes.find(n => n.id === options.activeGroupId);
+    let parentNode = nodes.find((n) => n.id === options.activeGroupId);
     if (parentNode) {
       // Collect new children
-      let newChildren = nodes.filter(n => n.parentId === options.activeGroupId && !n._hadPos);
+      let newChildren = nodes.filter((n) => n.parentId === options.activeGroupId && !n._hadPos);
       for (let i = 0; i < newChildren.length; i++) {
         let n = newChildren[i];
         // Spread in circle at ~30% of bubble radius
@@ -717,12 +761,15 @@ function initSimulation(data) {
   }
 
   let nodeIndex = {};
-  nodes.forEach((n, i) => { nodeIndex[n.id] = i; });
+  nodes.forEach((n, i) => {
+    nodeIndex[n.id] = i;
+  });
 
   // Compute raw degree counts to find true hubs (most connected nodes)
   let rawDegree = new Array(nodes.length).fill(0);
-  rawEdges.forEach(e => {
-    let si = nodeIndex[e.from], ti = nodeIndex[e.to];
+  rawEdges.forEach((e) => {
+    let si = nodeIndex[e.from],
+      ti = nodeIndex[e.to];
     if (si !== undefined) rawDegree[si]++;
     if (ti !== undefined) rawDegree[ti]++;
   });
@@ -732,8 +779,9 @@ function initSimulation(data) {
 
   // Initialize edges
   edges = rawEdges
-    .map(e => {
-      let si = nodeIndex[e.from], ti = nodeIndex[e.to];
+    .map((e) => {
+      let si = nodeIndex[e.from],
+        ti = nodeIndex[e.to];
       if (si === undefined || ti === undefined) return null;
       degree[si]++;
       degree[ti]++;
@@ -789,10 +837,10 @@ function initSimulation(data) {
     let dt = degree[e.target] || 1;
     e.bias = ds / (ds + dt);
   }
-  
+
   // Cache active group
   if (config.activeGroupId) {
-    cachedActiveGroupNode = nodes.find(n => n.id === config.activeGroupId) || null;
+    cachedActiveGroupNode = nodes.find((n) => n.id === config.activeGroupId) || null;
   }
 
   // ── Compute Gravity Wells ──
@@ -810,10 +858,14 @@ function computeGravityWells(degree) {
   planets = [];
 
   // Clear stale state from previous computation
-  for (const n of nodes) { n.isSun = false; n.mySun = null; }
-  
+  for (const n of nodes) {
+    n.isSun = false;
+    n.mySun = null;
+  }
+
   // 1. Identify "Suns" (Hubs) — nodes with many connections or explicit groups
-  let medianDeg = degree.length > 0 ? [...degree].sort((a, b) => a - b)[Math.floor(degree.length / 2)] : 1;
+  let medianDeg =
+    degree.length > 0 ? [...degree].sort((a, b) => a - b)[Math.floor(degree.length / 2)] : 1;
   let hubThreshold = Math.max(3, medianDeg * 1.5);
 
   for (let i = 0; i < nodes.length; i++) {
@@ -835,7 +887,8 @@ function computeGravityWells(degree) {
 
   // 2. Assign Planets to the nearest Sun
   for (const e of edges) {
-    let s = nodes[e.source], t = nodes[e.target];
+    let s = nodes[e.source],
+      t = nodes[e.target];
     if (s.isSun && !t.isSun && !t.mySun) t.mySun = s;
     else if (t.isSun && !s.isSun && !s.mySun) s.mySun = t;
   }
@@ -856,15 +909,16 @@ function computeGravityWells(degree) {
 
   // 3. Weaken Inter-Galactic links
   for (const e of edges) {
-    let s = nodes[e.source], t = nodes[e.target];
+    let s = nodes[e.source],
+      t = nodes[e.target];
     if (!s || !t) continue;
-    
+
     // Save original properties once
     if (e._origStrength === undefined) {
       e._origStrength = e.strength;
       e._origRestLength = e.restLength;
     }
-    
+
     // Cross-galactic link rules
     e._isCrossGalactic = false;
     if (s.isSun && t.isSun) e._isCrossGalactic = true;
@@ -895,7 +949,7 @@ function tick(alpha) {
   applyCollisionForce(nodes, config.collideStrength, 4);
 
   // ═══ 4. Hierarchical Gravity ═══
-  
+
   // a. Compute dynamic radius for suns
   for (const sun of galacticSuns) {
     sun.dynamicRadius = sun.w || 20;
@@ -925,7 +979,8 @@ function tick(alpha) {
   // c. Inter-Sun Repulsion (Keep galaxies separated)
   for (let i = 0; i < galacticSuns.length; i++) {
     for (let j = i + 1; j < galacticSuns.length; j++) {
-      let si = galacticSuns[i], sj = galacticSuns[j];
+      let si = galacticSuns[i],
+        sj = galacticSuns[j];
       let dx = sj.x - si.x;
       let dy = sj.y - si.y;
       let dist = Math.sqrt(dx * dx + dy * dy) + 1;
@@ -936,7 +991,8 @@ function tick(alpha) {
         let rawForce = overlapRatio * config.wellRepulsion * alpha;
         // Cap maximum force to prevent runaway at start
         let force = Math.min(rawForce, 50);
-        let nx = dx / dist, ny = dy / dist;
+        let nx = dx / dist,
+          ny = dy / dist;
         si.vx -= nx * force;
         si.vy -= ny * force;
         sj.vx += nx * force;
@@ -958,15 +1014,19 @@ function tick(alpha) {
   let decay = 1 - config.velocityDecay;
   let vMax = Math.max(200, Math.sqrt(nodes.length) * 10);
   for (const n of nodes) {
-    if (n.fx !== undefined) { n.x = n.fx; n.vx = 0; }
-    else {
+    if (n.fx !== undefined) {
+      n.x = n.fx;
+      n.vx = 0;
+    } else {
       n.vx *= decay;
       if (n.vx > vMax) n.vx = vMax;
       else if (n.vx < -vMax) n.vx = -vMax;
       n.x += n.vx;
     }
-    if (n.fy !== undefined) { n.y = n.fy; n.vy = 0; }
-    else {
+    if (n.fy !== undefined) {
+      n.y = n.fy;
+      n.vy = 0;
+    } else {
       n.vy *= decay;
       if (n.vy > vMax) n.vy = vMax;
       else if (n.vy < -vMax) n.vy = -vMax;
@@ -1002,7 +1062,7 @@ function getPositionsPacked() {
 
 /** Get ordered node IDs (sent once at init, used to unpack Float32Array). */
 function getNodeIds() {
-  return nodes.map(n => n.id);
+  return nodes.map((n) => n.id);
 }
 
 // =====================================================================
@@ -1042,7 +1102,7 @@ self.onmessage = function (e) {
 
   if (type === 'pin') {
     let { id, x, y } = e.data;
-    let node = nodes.find(n => n.id === id);
+    let node = nodes.find((n) => n.id === id);
     if (node) {
       // GUI sends top-left coordinate, physics needs center coordinate
       node.fx = x + node.w / 2;
@@ -1060,7 +1120,7 @@ self.onmessage = function (e) {
 
   if (type === 'unpin') {
     let { id } = e.data;
-    let node = nodes.find(n => n.id === id);
+    let node = nodes.find((n) => n.id === id);
     if (node) {
       delete node.fx;
       delete node.fy;
@@ -1081,7 +1141,8 @@ self.onmessage = function (e) {
       // Propagate link params to existing edges (skip group edges)
       if (updates.linkDistance !== undefined || updates.linkStrength !== undefined) {
         for (const edge of edges) {
-          if (edge.restLength === config.groupDistance && edge.strength === config.groupStrength) continue;
+          if (edge.restLength === config.groupDistance && edge.strength === config.groupStrength)
+            continue;
           if (updates.linkDistance !== undefined) edge.restLength = config.linkDistance;
           if (updates.linkStrength !== undefined) edge.strength = config.linkStrength;
         }
@@ -1178,14 +1239,15 @@ function startConverge() {
 
       function runExpansionBatch() {
         if (!running) return;
-        
+
         let overlaps = countOverlaps(nodes);
         let bIter = 0;
-        
+
         while (overlaps > 0 && attempt < maxExpansionAttempts && bIter < expansionBatchSize) {
           applyCollisionForce(nodes, 1.0, 4);
 
-          let maxW = 260, maxH = 40;
+          let maxW = 260,
+            maxH = 40;
           for (const n of nodes) {
             if (n.w > maxW) maxW = n.w;
             if (n.h > maxH) maxH = n.h;
@@ -1216,8 +1278,12 @@ function startConverge() {
                   let limitX = (a.w + b.w) / 2;
                   let limitY = (a.h + b.h) / 2;
                   if (Math.abs(ddx) < limitX && Math.abs(ddy) < limitY) {
-                    let len = Math.sqrt(ddx*ddx + ddy*ddy);
-                    if (len === 0) { ddx = Math.random()-0.5; ddy = Math.random()-0.5; len = Math.sqrt(ddx*ddx+ddy*ddy)||1; }
+                    let len = Math.sqrt(ddx * ddx + ddy * ddy);
+                    if (len === 0) {
+                      ddx = Math.random() - 0.5;
+                      ddy = Math.random() - 0.5;
+                      len = Math.sqrt(ddx * ddx + ddy * ddy) || 1;
+                    }
                     let push = 2 / len;
                     a.vx -= ddx * push;
                     b.vx += ddx * push;
@@ -1233,8 +1299,10 @@ function startConverge() {
           for (const n of nodes) {
             n.vx *= decay;
             n.vy *= decay;
-            if (n.vx > 10) n.vx = 10; else if (n.vx < -10) n.vx = -10;
-            if (n.vy > 10) n.vy = 10; else if (n.vy < -10) n.vy = -10;
+            if (n.vx > 10) n.vx = 10;
+            else if (n.vx < -10) n.vx = -10;
+            if (n.vy > 10) n.vy = 10;
+            else if (n.vy < -10) n.vy = -10;
             n.x += n.vx;
             n.y += n.vy;
           }
@@ -1262,7 +1330,7 @@ function startConverge() {
           });
         }
       }
-      
+
       runExpansionBatch();
     }
   }
@@ -1292,7 +1360,10 @@ function startContinuousLoop() {
   if (continuousTimer !== null) return; // already running
 
   function runTick() {
-    if (!running || paused) { continuousTimer = null; return; }
+    if (!running || paused) {
+      continuousTimer = null;
+      return;
+    }
 
     // Physics tick
     let energy = tick(continuousAlpha);
@@ -1322,13 +1393,16 @@ function startContinuousLoop() {
 
     // Send packed positions every tick for smooth 60fps
     let packed = getPositionsPacked();
-    self.postMessage({
-      type: 'tick',
-      packed: packed.buffer,
-      alpha: continuousAlpha,
-      energy: energy,
-      iteration: continuousIteration,
-    }, [packed.buffer]);
+    self.postMessage(
+      {
+        type: 'tick',
+        packed: packed.buffer,
+        alpha: continuousAlpha,
+        energy: energy,
+        iteration: continuousIteration,
+      },
+      [packed.buffer]
+    );
 
     // Send a 'done' message once when the layout has mostly settled so the UI can restore view state
     if (!self._initialDoneSent && Math.abs(continuousAlpha - config.contAlphaTarget) < 0.05) {
@@ -1343,7 +1417,11 @@ function startContinuousLoop() {
     // Auto-sleep: if nodes are completely settled and brownian is disabled, stop the loop.
     // It will wake up on 'pin', 'resume', or 'updateConfig' with reheat.
     // Use an epsilon for alpha asymptote, and scale energy by node count (e.g., avg velocity < 0.1px/tick)
-    if (Math.abs(continuousAlpha - config.contAlphaTarget) < 1e-4 && energy < nodes.length * 0.01 && config.brownian === 0) {
+    if (
+      Math.abs(continuousAlpha - config.contAlphaTarget) < 1e-4 &&
+      energy < nodes.length * 0.01 &&
+      config.brownian === 0
+    ) {
       paused = true;
       continuousTimer = null;
       console.log('🔄 [ForceWorker] Auto-sleep triggered (energy:', energy.toFixed(4), ')');

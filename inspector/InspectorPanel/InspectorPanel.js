@@ -29,11 +29,13 @@ export class InspectorPanel extends Symbiote {
     innerNodeCount: 0,
     onFire: () => {
       if (this._currentNodeId) {
-        this.dispatchEvent(new CustomEvent('node-fire', {
-          detail: { nodeId: this._currentNodeId },
-          bubbles: true,
-          composed: true,
-        }));
+        this.dispatchEvent(
+          new CustomEvent('node-fire', {
+            detail: { nodeId: this._currentNodeId },
+            bubbles: true,
+            composed: true,
+          })
+        );
       }
     },
     onEnterSubgraph: () => {
@@ -89,9 +91,11 @@ export class InspectorPanel extends Symbiote {
 
     // Check if node is fireable (inject or trigger with testData)
     let driver = node.driver || node._driver;
-    let isFireable = !!(driver?.fireable) ||
+    let isFireable =
+      !!driver?.fireable ||
       node.type === 'debug/inject' ||
-      (node.category === 'trigger' || node.category === 'queue');
+      node.category === 'trigger' ||
+      node.category === 'queue';
 
     this.set$({
       nodeLabel: node.label,
@@ -105,7 +109,8 @@ export class InspectorPanel extends Symbiote {
       visible: true,
       isFireable,
       isSubgraph,
-      isTemplateBuilder: node.type === 'transform/template-builder' || node.type === 'transform/template',
+      isTemplateBuilder:
+        node.type === 'transform/template-builder' || node.type === 'transform/template',
       innerNodeCount,
     });
 
@@ -285,9 +290,13 @@ class InspCtrlItem extends Symbiote {
     } else if (type === 'select') {
       let el = document.createElement('select');
       el.className = 'insp-ctrl-select';
-      let opts = typeof this.$.options === 'string'
-        ? this.$.options.split(',').map((s) => s.trim()).filter(Boolean)
-        : [];
+      let opts =
+        typeof this.$.options === 'string'
+          ? this.$.options
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [];
       for (const opt of opts) {
         let option = document.createElement('option');
         option.value = opt;
@@ -317,10 +326,12 @@ class InspCtrlItem extends Symbiote {
    */
   _emitChange(value) {
     this.$.value = value;
-    this.dispatchEvent(new CustomEvent('ctrl-change', {
-      bubbles: true,
-      detail: { key: this.$.key, value },
-    }));
+    this.dispatchEvent(
+      new CustomEvent('ctrl-change', {
+        bubbles: true,
+        detail: { key: this.$.key, value },
+      })
+    );
   }
 }
 

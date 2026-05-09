@@ -38,7 +38,6 @@ BreadcrumbItem.template = html`
 BreadcrumbItem.reg('breadcrumb-item');
 
 export class Breadcrumb extends Symbiote {
-
   init$ = {
     crumbs: [],
     isVisible: false,
@@ -79,7 +78,6 @@ export class Breadcrumb extends Symbiote {
       isFirst: i === 0,
     }));
   }
-
 
   renderCallback() {
     this.sub('isVisible', (val) => {

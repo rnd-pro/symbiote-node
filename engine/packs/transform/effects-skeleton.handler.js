@@ -20,20 +20,30 @@ export default {
 
   driver: {
     description: 'Analyze beat data → intensity zones, drops, fades, transitions',
-    inputs: [
-      { name: 'beatData', type: 'any' },
-    ],
+    inputs: [{ name: 'beatData', type: 'any' }],
     outputs: [
       { name: 'skeleton', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
       energyPerSecond: { type: 'int', default: 10, description: 'Energy samples per second' },
-      fadeWindowSize: { type: 'number', default: 2.0, description: 'Fade detection window (seconds)' },
-      transitionThreshold: { type: 'number', default: 0.25, description: 'Intensity change threshold' },
+      fadeWindowSize: {
+        type: 'number',
+        default: 2.0,
+        description: 'Fade detection window (seconds)',
+      },
+      transitionThreshold: {
+        type: 'number',
+        default: 0.25,
+        description: 'Intensity change threshold',
+      },
       dropThreshold: { type: 'number', default: 0.7, description: 'Drop peak threshold (0-1)' },
       // annotate mode
-      segments: { type: 'any', default: null, description: 'Timeline segments to annotate with effects' },
+      segments: {
+        type: 'any',
+        default: null,
+        description: 'Timeline segments to annotate with effects',
+      },
     },
   },
 
@@ -207,7 +217,11 @@ function detectDropPoints(energy, eps, strongOnsets, threshold) {
   let maxEnergy = Math.max(...energy);
 
   for (let i = 1; i < energy.length - 1; i++) {
-    if (energy[i] > energy[i - 1] && energy[i] > energy[i + 1] && energy[i] > maxEnergy * threshold) {
+    if (
+      energy[i] > energy[i - 1] &&
+      energy[i] > energy[i + 1] &&
+      energy[i] > maxEnergy * threshold
+    ) {
       drops.push({
         time: i / eps,
         intensity: Math.round((energy[i] / maxEnergy) * 100) / 100,
@@ -260,7 +274,7 @@ function getEnergyAtTime(time, energy, eps) {
 function generateBeatMarkers(beats, energy, eps) {
   if (!beats || beats.length === 0) return [];
 
-  let evals = beats.map(t => getEnergyAtTime(t, energy, eps));
+  let evals = beats.map((t) => getEnergyAtTime(t, energy, eps));
   let avg = evals.reduce((a, b) => a + b, 0) / evals.length;
   let strongThreshold = avg * 1.3;
 
@@ -357,13 +371,13 @@ function generateEffectsSkeleton(beatData, params) {
   let beatMarkers = generateBeatMarkers(beats, energy, eps);
   let hiResTransitions = detectHiResTransitions(beats, energy, eps);
 
-  let normalizedQuietZones = rawQuietZones.map(z => ({
+  let normalizedQuietZones = rawQuietZones.map((z) => ({
     start: z.start,
-    end: z.end || (z.start + (z.duration || 0)),
+    end: z.end || z.start + (z.duration || 0),
     duration: z.duration || (z.end ? z.end - z.start : 0),
   }));
 
-  let downbeatAnchors = rawDownbeats.map(t => ({ time: t, type: 'downbeat' }));
+  let downbeatAnchors = rawDownbeats.map((t) => ({ time: t, type: 'downbeat' }));
 
   return {
     metadata: {
@@ -392,14 +406,14 @@ function generateEffectsSkeleton(beatData, params) {
  * @returns {Array} Segments with .effects field
  */
 function annotateSegmentsWithEffects(segments, skeleton) {
-  return segments.map(seg => {
+  return segments.map((seg) => {
     let { start, end } = seg;
     let mid = (start + end) / 2;
 
-    let zone = skeleton.intensityZones.find(z => z.start <= mid && z.end >= mid);
-    let inFade = skeleton.fadeZones.some(z => z.start <= end && z.end >= start);
-    let drops = skeleton.dropPoints.filter(d => d.time >= start && d.time <= end);
-    let trans = skeleton.transitionAnchors.filter(a => a.time >= start && a.time <= end);
+    let zone = skeleton.intensityZones.find((z) => z.start <= mid && z.end >= mid);
+    let inFade = skeleton.fadeZones.some((z) => z.start <= end && z.end >= start);
+    let drops = skeleton.dropPoints.filter((d) => d.time >= start && d.time <= end);
+    let trans = skeleton.transitionAnchors.filter((a) => a.time >= start && a.time <= end);
 
     return {
       ...seg,

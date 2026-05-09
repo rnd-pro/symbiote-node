@@ -48,13 +48,31 @@ export class EventLog extends Symbiote {
 
     const events = [
       ['flowstart', 'flow', (d) => `Flow started — ${d.nodes.length} nodes`],
-      ['nodeprocessing', 'node', (d) => `Processing <span class="log-label">${this._label(d.nodeId)}</span>`],
-      ['nodecompleted', 'success', (d) => `Completed <span class="log-label">${this._label(d.nodeId)}</span>`],
+      [
+        'nodeprocessing',
+        'node',
+        (d) => `Processing <span class="log-label">${this._label(d.nodeId)}</span>`,
+      ],
+      [
+        'nodecompleted',
+        'success',
+        (d) => `Completed <span class="log-label">${this._label(d.nodeId)}</span>`,
+      ],
       ['flowcomplete', 'success', () => 'Flow complete'],
       ['nodecreated', 'info', (d) => `Node created: <span class="log-label">${d.label}</span>`],
       ['noderemoved', 'error', (d) => `Node removed: <span class="log-label">${d.label}</span>`],
-      ['connectioncreated', 'connection', (d) => `Connected <span class="log-label">${this._label(d.from)}</span> → <span class="log-label">${this._label(d.to)}</span>`],
-      ['connectionremoved', 'connection', (d) => `Disconnected <span class="log-label">${this._label(d.from)}</span> ✕ <span class="log-label">${this._label(d.to)}</span>`],
+      [
+        'connectioncreated',
+        'connection',
+        (d) =>
+          `Connected <span class="log-label">${this._label(d.from)}</span> → <span class="log-label">${this._label(d.to)}</span>`,
+      ],
+      [
+        'connectionremoved',
+        'connection',
+        (d) =>
+          `Disconnected <span class="log-label">${this._label(d.from)}</span> ✕ <span class="log-label">${this._label(d.to)}</span>`,
+      ],
     ];
 
     for (const [event, type, fmt] of events) {

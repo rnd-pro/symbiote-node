@@ -10,7 +10,6 @@
 const MAX_HISTORY = 50;
 
 export class History {
-
   /** @type {Array<{nodes: object[], connections: object[]}>} */
   _states = [];
 
@@ -55,16 +54,24 @@ export class History {
   }
 
   /** @returns {boolean} */
-  get canUndo() { return this._index > 0; }
+  get canUndo() {
+    return this._index > 0;
+  }
 
   /** @returns {boolean} */
-  get canRedo() { return this._index < this._states.length - 1; }
+  get canRedo() {
+    return this._index < this._states.length - 1;
+  }
 
   /** @returns {number} */
-  get depth() { return this._states.length; }
+  get depth() {
+    return this._states.length;
+  }
 
   /** @returns {number} */
-  get index() { return this._index; }
+  get index() {
+    return this._index;
+  }
 
   /** Clear all history */
   clear() {

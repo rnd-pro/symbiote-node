@@ -87,7 +87,8 @@ export class CanvasConnectionRenderer {
   #updateStyles() {
     let computed = getComputedStyle(document.body);
     this.#colorParams.normal = computed.getPropertyValue('--sn-conn-color').trim() || '#4a9eff';
-    this.#colorParams.selected = computed.getPropertyValue('--sn-conn-selected').trim() || '#ff6b6b';
+    this.#colorParams.selected =
+      computed.getPropertyValue('--sn-conn-selected').trim() || '#ff6b6b';
     this.#colorParams.outline = computed.getPropertyValue('--sn-port-outline').trim() || '#16213e';
     this.#colorParams.bg = computed.getPropertyValue('--sn-bg').trim() || '#1a1a2e';
     this.#colorParams.width = parseFloat(computed.getPropertyValue('--sn-conn-width')) || 2;
@@ -144,12 +145,14 @@ export class CanvasConnectionRenderer {
     this.redraw();
   }
 
-  highlightDotsForNodes(compatibleNodeIds) { }
-  clearDotHighlights() { }
-  renderFreeDots(nodeId) { }
-  removeFreeDot(nodeId, key, side) { }
-  refreshFreeDots(nodeId) { }
-  findNearestDot(wx, wy, radius = 20) { return null; }
+  highlightDotsForNodes(compatibleNodeIds) {}
+  clearDotHighlights() {}
+  renderFreeDots(nodeId) {}
+  removeFreeDot(nodeId, key, side) {}
+  refreshFreeDots(nodeId) {}
+  findNearestDot(wx, wy, radius = 20) {
+    return null;
+  }
 
   clear() {
     this.#connectionData.clear();
@@ -187,7 +190,7 @@ export class CanvasConnectionRenderer {
       return {
         x: cached.x,
         y: cached.y,
-        angle: cached.angle
+        angle: cached.angle,
       };
     }
 
@@ -209,14 +212,19 @@ export class CanvasConnectionRenderer {
     // Delegate to UniversalSvgShape if defined and handles geometric coordinates (SVGShape)
     let shapeConfig = getShape(nodeModel?.shape);
     if (shapeConfig && shapeConfig.pathData && shapeConfig.getSocketPosition) {
-      let pos = shapeConfig.getSocketPosition(side, portIndex, totalPorts, { width: w, height: h }, targetPos);
+      let pos = shapeConfig.getSocketPosition(
+        side,
+        portIndex,
+        totalPorts,
+        { width: w, height: h },
+        targetPos
+      );
       if (pos) return pos;
     }
 
     // Standard shapes: read from DOM socket elements
-    let container = side === 'output'
-      ? nodeEl.querySelector('.outputs')
-      : nodeEl.querySelector('.inputs');
+    let container =
+      side === 'output' ? nodeEl.querySelector('.outputs') : nodeEl.querySelector('.inputs');
 
     if (container) {
       let portItems = container.querySelectorAll('port-item');
@@ -237,7 +245,7 @@ export class CanvasConnectionRenderer {
     }
 
     return {
-      x: side === 'output' ? (nodeEl._cachedW || nodeEl.offsetWidth || 180) : 0,
+      x: side === 'output' ? nodeEl._cachedW || nodeEl.offsetWidth || 180 : 0,
       y: (nodeEl._cachedH || nodeEl.offsetHeight || 100) / 2,
     };
   }
@@ -262,7 +270,10 @@ export class CanvasConnectionRenderer {
 
   /** Perform full synchronous redraw of all connections */
   redraw() {
-    if (this.#batchMode) { this.#batchDirty = true; return; }
+    if (this.#batchMode) {
+      this.#batchDirty = true;
+      return;
+    }
     let ctx = this.#ctx;
     if (!ctx) return;
 
@@ -285,7 +296,6 @@ export class CanvasConnectionRenderer {
     let time = Date.now();
     let hasFlowing = false;
 
-
     // Cache node layout geometry once per frame for the router (Map for O(1) lookup)
     this._nodeRectMap = new Map();
     for (const [nid, el] of this.#nodeViews) {
@@ -296,7 +306,7 @@ export class CanvasConnectionRenderer {
           y: el._position.y,
           w: el._cachedW || 180,
           h: el._cachedH || 60,
-          el: el
+          el: el,
         });
       }
     }
@@ -309,7 +319,7 @@ export class CanvasConnectionRenderer {
           y: node.y || 0,
           w: node.w || 180,
           h: node.h || 60,
-          el: null
+          el: null,
         });
       }
     }
@@ -356,8 +366,16 @@ export class CanvasConnectionRenderer {
       if (!coords) return;
 
       // Save caps for later drawing (ensures they are on top of all paths)
-      socketsToDraw.set(`${connection.from}:${connection.out}`, { x: coords.startX, y: coords.startY, color: fromColor || this.#colorParams.normal });
-      socketsToDraw.set(`${connection.to}:${connection.in}`, { x: coords.endX, y: coords.endY, color: toColor || this.#colorParams.normal });
+      socketsToDraw.set(`${connection.from}:${connection.out}`, {
+        x: coords.startX,
+        y: coords.startY,
+        color: fromColor || this.#colorParams.normal,
+      });
+      socketsToDraw.set(`${connection.to}:${connection.in}`, {
+        x: coords.endX,
+        y: coords.endY,
+        color: toColor || this.#colorParams.normal,
+      });
 
       let finalColor;
       if (fromColor && toColor && fromColor !== toColor) {
@@ -386,7 +404,7 @@ export class CanvasConnectionRenderer {
         ctx.setLineDash([]);
       }
 
-      // Apply drop shadow for selected lines to make them pop 
+      // Apply drop shadow for selected lines to make them pop
       if (isSelected && !isDimmed) {
         ctx.shadowColor = ctx.strokeStyle;
         ctx.shadowBlur = 8;
@@ -407,7 +425,7 @@ export class CanvasConnectionRenderer {
         ctx.lineTo(5, 0);
         ctx.lineTo(-5, 3.5);
         ctx.closePath();
-        ctx.fillStyle = ctx.strokeStyle; // inherited from path 
+        ctx.fillStyle = ctx.strokeStyle; // inherited from path
         ctx.fill();
         ctx.restore();
       }
@@ -560,16 +578,22 @@ export class CanvasConnectionRenderer {
 
     if (this._nodeRectMap) {
       let c1 = this._nodeRectMap.get(conn.from);
-      if (c1) { fromPos = { x: c1.x, y: c1.y }; if (c1.el) fromEl = c1.el; }
+      if (c1) {
+        fromPos = { x: c1.x, y: c1.y };
+        if (c1.el) fromEl = c1.el;
+      }
       let c2 = this._nodeRectMap.get(conn.to);
-      if (c2) { toPos = { x: c2.x, y: c2.y }; if (c2.el) toEl = c2.el; }
+      if (c2) {
+        toPos = { x: c2.x, y: c2.y };
+        if (c2.el) toEl = c2.el;
+      }
     }
 
     let fromW = fromEl._cachedW || fromEl.offsetWidth || 180;
     let fromH = fromEl._cachedH || fromEl.offsetHeight || 100;
     let toW = toEl._cachedW || toEl.offsetWidth || 180;
     let toH = toEl._cachedH || toEl.offsetHeight || 100;
-    
+
     let fromSize = { width: fromW, height: fromH };
     let toSize = { width: toW, height: toH };
     let fromNode = this.#editor?.getNode(conn.from);
@@ -588,7 +612,6 @@ export class CanvasConnectionRenderer {
     let endX = toPos.x + toOffset.x;
     let endY = toPos.y + toOffset.y;
 
-
     let d;
     let arrow = { x: endX, y: endY, angle: 0 };
     let effectiveStyle = this.#pathStyle;
@@ -606,8 +629,8 @@ export class CanvasConnectionRenderer {
 
       let stubLen = 20;
       let getDxDy = (deg) => ({
-        dx: Math.round(Math.cos(deg * Math.PI / 180)),
-        dy: Math.round(Math.sin(deg * Math.PI / 180))
+        dx: Math.round(Math.cos((deg * Math.PI) / 180)),
+        dy: Math.round(Math.sin((deg * Math.PI) / 180)),
       });
 
       let fDir = getDxDy(fromAngle);
@@ -621,7 +644,10 @@ export class CanvasConnectionRenderer {
       let fromH = fromEl._cachedH || 60;
       let toH = toEl._cachedH || 60;
 
-      let pts = [{ x: startX, y: startY }, { x: p1x, y: p1y }];
+      let pts = [
+        { x: startX, y: startY },
+        { x: p1x, y: p1y },
+      ];
       let skipObstacles = this._nodeRectMap && this._nodeRectMap.size > 200;
 
       if (endX < startX) {
@@ -645,7 +671,8 @@ export class CanvasConnectionRenderer {
             let nh = rect.h || 60;
             if (nx > p1x && nx + nw < p2x) {
               if (Math.min(p1y, p2y) <= ny + nh && Math.max(p1y, p2y) >= ny) {
-                nodeBetween = true; break;
+                nodeBetween = true;
+                break;
               }
             }
           }
@@ -726,9 +753,9 @@ export class CanvasConnectionRenderer {
       // All waypoints snap to a grid. Stubs exit perpendicular to node surface
       // with a minimum length, then route on grid channels with chamfered corners.
 
-      const TRACE_GRID = 5;  // Dense trace grid (5px)
-      const STUB_MIN = 20;   // minimum perpendicular stub from node edge
-      const CHAMFER = 8;     // 45° chamfer radius (px)
+      const TRACE_GRID = 5; // Dense trace grid (5px)
+      const STUB_MIN = 20; // minimum perpendicular stub from node edge
+      const CHAMFER = 8; // 45° chamfer radius (px)
 
       // Snap a coordinate to the trace grid
       let snapGrid = (v) => Math.round(v / TRACE_GRID) * TRACE_GRID;
@@ -738,7 +765,7 @@ export class CanvasConnectionRenderer {
 
       // Determine unique channel shift to prevent parallel traces overlapping
       // Alternates: 0, +5, -5, +10, -10...
-      let shiftIndex = (connIndex > -1 ? connIndex % 12 : 0);
+      let shiftIndex = connIndex > -1 ? connIndex % 12 : 0;
       let channelShift = (shiftIndex % 2 === 0 ? 1 : -1) * Math.ceil(shiftIndex / 2) * TRACE_GRID;
 
       // Compute perpendicular stub directions from surface normals
@@ -748,10 +775,10 @@ export class CanvasConnectionRenderer {
       // Snap angle to cardinal direction (→ ↓ ← ↑)
       let snapDir = (deg) => {
         let r = ((deg % 360) + 360) % 360;
-        if (r < 45 || r >= 315) return { dx: 1, dy: 0 };     // right
-        if (r >= 45 && r < 135) return { dx: 0, dy: 1 };     // down
-        if (r >= 135 && r < 225) return { dx: -1, dy: 0 };    // left
-        return { dx: 0, dy: -1 };                              // up
+        if (r < 45 || r >= 315) return { dx: 1, dy: 0 }; // right
+        if (r >= 45 && r < 135) return { dx: 0, dy: 1 }; // down
+        if (r >= 135 && r < 225) return { dx: -1, dy: 0 }; // left
+        return { dx: 0, dy: -1 }; // up
       };
 
       let fDir = snapDir(fromAngle);
@@ -819,8 +846,10 @@ export class CanvasConnectionRenderer {
             let iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
             for (const rect of iter) {
               if (rect.id === conn.from || rect.id === conn.to) continue;
-              let nx = rect.x, ny = rect.y;
-              let nw = rect.w, nh = rect.h;
+              let nx = rect.x,
+                ny = rect.y;
+              let nw = rect.w,
+                nh = rect.h;
 
               if (midX >= nx - pad && midX <= nx + nw + pad) {
                 if (ny - pad <= maxY && ny + nh + pad >= minY) {
@@ -860,8 +889,10 @@ export class CanvasConnectionRenderer {
         let next = pts[i + 1];
         if (next) {
           // Determine if there's a turn at curr → need chamfer
-          let dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
-          let dx2 = next.x - curr.x, dy2 = next.y - curr.y;
+          let dx1 = curr.x - prev.x,
+            dy1 = curr.y - prev.y;
+          let dx2 = next.x - curr.x,
+            dy2 = next.y - curr.y;
           let isH1 = Math.abs(dx1) > Math.abs(dy1);
           let isH2 = Math.abs(dx2) > Math.abs(dy2);
 
@@ -877,11 +908,13 @@ export class CanvasConnectionRenderer {
             let c = Math.min(CHAMFER, len1 / 2, len2 / 2);
 
             // Pre-corner point
-            let nx1 = dx1 / len1, ny1 = dy1 / len1;
+            let nx1 = dx1 / len1,
+              ny1 = dy1 / len1;
             let preX = curr.x - nx1 * c;
             let preY = curr.y - ny1 * c;
             // Post-corner point
-            let nx2 = dx2 / len2, ny2 = dy2 / len2;
+            let nx2 = dx2 / len2,
+              ny2 = dy2 / len2;
             let postX = curr.x + nx2 * c;
             let postY = curr.y + ny2 * c;
 
@@ -948,7 +981,6 @@ export class CanvasConnectionRenderer {
       arrow.y = (startY + 3 * cp1y + 3 * cp2y + endY) / 8;
       arrow.angle = Math.atan2(endY + cp2y - cp1y - startY, endX + cp2x - cp1x - startX);
     }
-
 
     let p = new Path2D(d);
     return { startX, startY, endX, endY, path2D: p, arrow, pathStyle: effectiveStyle };

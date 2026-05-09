@@ -1,261 +1,287 @@
 import { css } from '@symbiotejs/symbiote';
 
 export let styles = css`
-node-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-  background-color: var(--sn-bg, #1a1a2e);
-  background-image: radial-gradient(circle, var(--sn-grid-dot, rgba(255,255,255,0.06)) 1px, transparent 1px);
-  background-size: var(--sn-grid-size, 20px) var(--sn-grid-size, 20px);
-  cursor: grab;
-  /* Prevent scrollbar oscillation: canvas manages its own viewport internally.
+  node-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    background-color: var(--sn-bg, #1a1a2e);
+    background-image: radial-gradient(
+      circle,
+      var(--sn-grid-dot, rgba(255, 255, 255, 0.06)) 1px,
+      transparent 1px
+    );
+    background-size: var(--sn-grid-size, 20px) var(--sn-grid-size, 20px);
+    cursor: grab;
+    /* Prevent scrollbar oscillation: canvas manages its own viewport internally.
      - size: SVG overflow:visible children cannot influence parent sizing
      - layout: internal layout changes don't trigger parent reflow
      - paint: clips painting to element box */
-  contain: size layout paint;
+    contain: size layout paint;
 
-  &:active {
-    cursor: grabbing;
+    &:active {
+      cursor: grabbing;
+    }
+
+    & .canvas-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      outline: none;
+    }
+
+    &[data-readonly] {
+      cursor: default;
+    }
+
+    & .content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    & .sn-connections {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: all;
+      overflow: visible;
+      width: 1px;
+      height: 1px;
+      contain: layout style;
+    }
+
+    & .sn-conn-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    & .sn-nodes {
+      position: relative;
+    }
+
+    & .pseudo-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      overflow: visible;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
+      z-index: 100;
+    }
   }
 
-  & .canvas-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    outline: none;
-  }
-
-  &[data-readonly] {
-    cursor: default;
-  }
-
-  & .content {
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-origin: 0 0;
-    will-change: transform;
-  }
-
-  & .sn-connections {
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: all;
-    overflow: visible;
-    width: 1px;
-    height: 1px;
-    contain: layout style;
-  }
-
-  & .sn-conn-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
-
-  & .sn-nodes {
-    position: relative;
-  }
-
-  & .pseudo-svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    overflow: visible;
-    width: 1px;
-    height: 1px;
-    pointer-events: none;
-    z-index: 100;
-  }
-}
-
-/* Connection paths */
-.sn-conn-path {
-  fill: none;
-  stroke: var(--sn-conn-color, #4a9eff);
-  stroke-width: var(--sn-conn-width, 2);
-  stroke-linecap: var(--sn-conn-linecap, round);
-  stroke-linejoin: var(--sn-conn-linejoin, round);
-  opacity: 0.7;
-  pointer-events: stroke;
-  cursor: pointer;
-  /* Prevent sub-pixel anti-aliasing recalcs during parent transform */
-  shape-rendering: geometricPrecision;
-  vector-effect: non-scaling-stroke;
-
-  &:hover {
-    opacity: 1;
-    stroke-width: 3;
-  }
-
-  &[data-selected] {
-    stroke: var(--sn-conn-selected, #ff6b6b);
-    stroke-width: 3;
-    opacity: 1;
-  }
-}
-
-/* Kill pointer-events on SVG paths during active zoom/pan to prevent
-   CSS :hover thrashing (stroke-width transition) from causing flicker */
-node-canvas[data-interacting] .sn-conn-path {
-  pointer-events: none;
-  transition: none;
-}
-
-/* Connector endpoint dots — hidden by default, shown only for SVG nodes */
-.sn-conn-dot {
-  display: none;
-  fill: var(--sn-conn-dot-fill, var(--sn-conn-color, #4a9eff));
-  stroke: var(--sn-conn-dot-stroke, var(--sn-node-bg, #fff));
-  stroke-width: var(--sn-conn-dot-stroke-width, 1.5);
-  r: var(--sn-conn-dot-r, 3);
-  opacity: 0.9;
-  pointer-events: none;
-  /* PERF: removed filter:drop-shadow — 672 GPU layers killed Chrome renderer */
-}
-
-.sn-conn-dot[data-svg-wired] {
-  display: initial;
-}
-
-/* Free dots for unconnected SVG ports */
-.sn-free-dot {
-  fill: var(--sn-conn-color, #4a9eff);
-  stroke: var(--sn-node-bg, #fff);
-  stroke-width: 1.5;
-  opacity: 0.9;
-  /* PERF: removed filter:drop-shadow — see .sn-conn-dot */
-}
-.sn-free-dot:hover {
-  r: 6;
-}
-
-/* Dot highlight during compatible connector drag */
-.sn-dot-hint {
-  r: 7;
-  /* PERF: removed filter:drop-shadow — GPU layer per dot */
-  animation: sn-dot-pulse 0.6s ease-in-out infinite;
-}
-
-@keyframes sn-dot-pulse {
-  0%, 100% { opacity: 0.9; }
-  50% { opacity: 1; }
-}
-
-.pseudo-path {
-  fill: none;
-  stroke: var(--sn-conn-color, #4a9eff);
-  stroke-width: 2;
-  opacity: 0.5;
-  stroke-dasharray: 8 4;
-}
-
-/* Data flow animation */
-@keyframes sn-flow {
-  from { stroke-dashoffset: 0; }
-  to { stroke-dashoffset: -20; }
-}
-
-.sn-conn-path[data-flowing] {
-  stroke-dasharray: 10 5;
-  animation: sn-flow 0.6s linear infinite;
-  opacity: 0.9;
-}
-
-/* Plus indicator at connection drag endpoint */
-.plus-indicator {
-  circle {
-    fill: var(--sn-node-bg, #16213e);
+  /* Connection paths */
+  .sn-conn-path {
+    fill: none;
     stroke: var(--sn-conn-color, #4a9eff);
+    stroke-width: var(--sn-conn-width, 2);
+    stroke-linecap: var(--sn-conn-linecap, round);
+    stroke-linejoin: var(--sn-conn-linejoin, round);
+    opacity: 0.7;
+    pointer-events: stroke;
+    cursor: pointer;
+    /* Prevent sub-pixel anti-aliasing recalcs during parent transform */
+    shape-rendering: geometricPrecision;
+    vector-effect: non-scaling-stroke;
+
+    &:hover {
+      opacity: 1;
+      stroke-width: 3;
+    }
+
+    &[data-selected] {
+      stroke: var(--sn-conn-selected, #ff6b6b);
+      stroke-width: 3;
+      opacity: 1;
+    }
+  }
+
+  /* Kill pointer-events on SVG paths during active zoom/pan to prevent
+   CSS :hover thrashing (stroke-width transition) from causing flicker */
+  node-canvas[data-interacting] .sn-conn-path {
+    pointer-events: none;
+    transition: none;
+  }
+
+  /* Connector endpoint dots — hidden by default, shown only for SVG nodes */
+  .sn-conn-dot {
+    display: none;
+    fill: var(--sn-conn-dot-fill, var(--sn-conn-color, #4a9eff));
+    stroke: var(--sn-conn-dot-stroke, var(--sn-node-bg, #fff));
+    stroke-width: var(--sn-conn-dot-stroke-width, 1.5);
+    r: var(--sn-conn-dot-r, 3);
+    opacity: 0.9;
+    pointer-events: none;
+    /* PERF: removed filter:drop-shadow — 672 GPU layers killed Chrome renderer */
+  }
+
+  .sn-conn-dot[data-svg-wired] {
+    display: initial;
+  }
+
+  /* Free dots for unconnected SVG ports */
+  .sn-free-dot {
+    fill: var(--sn-conn-color, #4a9eff);
+    stroke: var(--sn-node-bg, #fff);
     stroke-width: 1.5;
     opacity: 0.9;
+    /* PERF: removed filter:drop-shadow — see .sn-conn-dot */
   }
-  line {
+  .sn-free-dot:hover {
+    r: 6;
+  }
+
+  /* Dot highlight during compatible connector drag */
+  .sn-dot-hint {
+    r: 7;
+    /* PERF: removed filter:drop-shadow — GPU layer per dot */
+    animation: sn-dot-pulse 0.6s ease-in-out infinite;
+  }
+
+  @keyframes sn-dot-pulse {
+    0%,
+    100% {
+      opacity: 0.9;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .pseudo-path {
+    fill: none;
     stroke: var(--sn-conn-color, #4a9eff);
-    stroke-width: 1.5;
-    stroke-linecap: round;
+    stroke-width: 2;
+    opacity: 0.5;
+    stroke-dasharray: 8 4;
   }
-}
 
-/* Socket highlighting during connection drag */
-@keyframes sn-socket-glow {
-  0%, 100% { box-shadow: 0 0 4px currentColor; }
-  50% { box-shadow: 0 0 12px currentColor, 0 0 20px currentColor; }
-}
+  /* Data flow animation */
+  @keyframes sn-flow {
+    from {
+      stroke-dashoffset: 0;
+    }
+    to {
+      stroke-dashoffset: -20;
+    }
+  }
 
-.sn-socket[data-compatible] {
-  animation: sn-socket-glow 1s ease-in-out infinite;
-  transform: scale(1.3);
-  z-index: 10;
-}
+  .sn-conn-path[data-flowing] {
+    stroke-dasharray: 10 5;
+    animation: sn-flow 0.6s linear infinite;
+    opacity: 0.9;
+  }
 
-.sn-socket[data-incompatible] {
-  opacity: 0.25;
-  transform: scale(0.8);
-}
+  /* Plus indicator at connection drag endpoint */
+  .plus-indicator {
+    circle {
+      fill: var(--sn-node-bg, #16213e);
+      stroke: var(--sn-conn-color, #4a9eff);
+      stroke-width: 1.5;
+      opacity: 0.9;
+    }
+    line {
+      stroke: var(--sn-conn-color, #4a9eff);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+  }
 
-/* Node lift effect when dragging */
-.sn-node-lifted {
-  box-shadow: 0 6px 12px var(--sn-shadow-color, rgba(0, 0, 0, 0.5));
-  border-color: var(--sn-node-active-border, rgba(74, 158, 255, 0.5)) !important;
-}
+  /* Socket highlighting during connection drag */
+  @keyframes sn-socket-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 4px currentColor;
+    }
+    50% {
+      box-shadow:
+        0 0 12px currentColor,
+        0 0 20px currentColor;
+    }
+  }
 
-/* Connector dot: input vs output side */
-.sn-dot-output {
-  fill: var(--sn-dot-output, #e8915a);
-}
-.sn-dot-input {
-  fill: var(--sn-dot-input, #5ac8e8);
-}
+  .sn-socket[data-compatible] {
+    animation: sn-socket-glow 1s ease-in-out infinite;
+    transform: scale(1.3);
+    z-index: 10;
+  }
 
-/* Connector dot: socket type overrides */
-.sn-dot-exec {
-  fill: var(--sn-dot-exec, #e8a15a);
-  r: 6;
-}
-.sn-dot-data {
-  /* uses side color by default */
-}
-.sn-dot-ctrl {
-  fill: var(--sn-dot-ctrl, #78d97a);
-  r: 4;
-}
+  .sn-socket[data-incompatible] {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
 
-/* Direction arrow on wire midpoint */
-.sn-conn-arrow {
-  fill: var(--sn-conn-color, #4a9eff);
-  opacity: 0.5;
-  pointer-events: none;
-}
+  /* Node lift effect when dragging */
+  .sn-node-lifted {
+    box-shadow: 0 6px 12px var(--sn-shadow-color, rgba(0, 0, 0, 0.5));
+    border-color: var(--sn-node-active-border, rgba(74, 158, 255, 0.5)) !important;
+  }
 
-/* Fire trace: sequential node execution highlighting */
-@keyframes sn-fire-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.6); }
-  50% { box-shadow: 0 0 16px 4px rgba(76, 175, 80, 0.4); }
-  100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
-}
+  /* Connector dot: input vs output side */
+  .sn-dot-output {
+    fill: var(--sn-dot-output, #e8915a);
+  }
+  .sn-dot-input {
+    fill: var(--sn-dot-input, #5ac8e8);
+  }
 
-graph-node[data-fire-state="active"] {
-  border-color: #4caf50 !important;
-  animation: sn-fire-pulse 0.6s ease-out;
-  z-index: 50;
-}
+  /* Connector dot: socket type overrides */
+  .sn-dot-exec {
+    fill: var(--sn-dot-exec, #e8a15a);
+    r: 6;
+  }
+  .sn-dot-data {
+    /* uses side color by default */
+  }
+  .sn-dot-ctrl {
+    fill: var(--sn-dot-ctrl, #78d97a);
+    r: 4;
+  }
 
-graph-node[data-fire-state="done"] {
-  border-color: rgba(76, 175, 80, 0.4) !important;
-  transition: border-color 2s ease-out;
-}
+  /* Direction arrow on wire midpoint */
+  .sn-conn-arrow {
+    fill: var(--sn-conn-color, #4a9eff);
+    opacity: 0.5;
+    pointer-events: none;
+  }
 
-graph-node[data-fire-state="pending"] {
-  opacity: 0.5;
-  transition: opacity 0.15s;
-}
+  /* Fire trace: sequential node execution highlighting */
+  @keyframes sn-fire-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.6);
+    }
+    50% {
+      box-shadow: 0 0 16px 4px rgba(76, 175, 80, 0.4);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+  }
+
+  graph-node[data-fire-state='active'] {
+    border-color: #4caf50 !important;
+    animation: sn-fire-pulse 0.6s ease-out;
+    z-index: 50;
+  }
+
+  graph-node[data-fire-state='done'] {
+    border-color: rgba(76, 175, 80, 0.4) !important;
+    transition: border-color 2s ease-out;
+  }
+
+  graph-node[data-fire-state='pending'] {
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
 `;

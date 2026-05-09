@@ -42,7 +42,7 @@ export default {
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           if (delay > 0 && attempt > 1) {
-            await new Promise(r => setTimeout(r, delay));
+            await new Promise((r) => setTimeout(r, delay));
           }
           try {
             let result = await inputs.action._retryFn();

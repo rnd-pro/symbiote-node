@@ -99,7 +99,7 @@ export function getNodeType(type) {
  * @returns {Array<{type: string, driver: Driver}>}
  */
 export function listDrivers() {
-  return [..._nodeTypes.values()].map(def => ({
+  return [..._nodeTypes.values()].map((def) => ({
     type: def.type,
     driver: def.driver,
     icon: def.icon,
@@ -131,8 +131,8 @@ export function findCompatible(outputType) {
  */
 export function findByCapability(capability) {
   return [..._nodeTypes.values()]
-    .filter(def => def.driver.capabilities?.includes(capability))
-    .map(def => ({ type: def.type, driver: def.driver }));
+    .filter((def) => def.driver.capabilities?.includes(capability))
+    .map((def) => ({ type: def.type, driver: def.driver }));
 }
 
 /**
@@ -193,7 +193,9 @@ export function validateParams(type, params) {
     if (val === undefined) continue;
 
     if (paramDef.enum && !paramDef.enum.includes(val)) {
-      validationErrors.push(`Param "${key}" must be one of: ${paramDef.enum.join(', ')}. Got: ${val}`);
+      validationErrors.push(
+        `Param "${key}" must be one of: ${paramDef.enum.join(', ')}. Got: ${val}`
+      );
     }
 
     if (paramDef.min !== undefined && val < paramDef.min) {

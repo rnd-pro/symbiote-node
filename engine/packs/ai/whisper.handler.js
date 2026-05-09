@@ -24,9 +24,7 @@ export default {
 
   driver: {
     description: 'Audio transcription with word-level timestamps (SSH or HTTP mode)',
-    inputs: [
-      { name: 'audioPath', type: 'string' },
-    ],
+    inputs: [{ name: 'audioPath', type: 'string' }],
     outputs: [
       { name: 'text', type: 'string' },
       { name: 'words', type: 'any' },
@@ -36,14 +34,34 @@ export default {
     params: {
       mode: { type: 'string', default: 'ssh', description: 'ssh | http' },
       language: { type: 'string', default: 'es', description: 'Language code' },
-      model: { type: 'string', default: 'medium', description: 'Whisper model: tiny, base, small, medium, large-v3' },
+      model: {
+        type: 'string',
+        default: 'medium',
+        description: 'Whisper model: tiny, base, small, medium, large-v3',
+      },
       device: { type: 'string', default: 'cuda', description: 'cuda | cpu' },
       // SSH params
-      remoteHost: { type: 'string', default: 'mr-agent@mr-agent.rnd-pro.com', description: 'SSH host' },
-      remotePath: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot', description: 'Remote project path' },
-      remoteVenv: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot/venv', description: 'Remote Python venv' },
+      remoteHost: {
+        type: 'string',
+        default: 'mr-agent@mr-agent.rnd-pro.com',
+        description: 'SSH host',
+      },
+      remotePath: {
+        type: 'string',
+        default: '/home/mr-agent/automations/argentine-spanish-bot',
+        description: 'Remote project path',
+      },
+      remoteVenv: {
+        type: 'string',
+        default: '/home/mr-agent/automations/argentine-spanish-bot/venv',
+        description: 'Remote Python venv',
+      },
       // HTTP params
-      endpoint: { type: 'string', default: 'http://localhost:5001', description: 'Whisper HTTP endpoint' },
+      endpoint: {
+        type: 'string',
+        default: 'http://localhost:5001',
+        description: 'Whisper HTTP endpoint',
+      },
       timeout: { type: 'int', default: 300000, description: 'Max wait time (ms)' },
     },
   },
@@ -54,8 +72,7 @@ export default {
       return true;
     },
 
-    cacheKey: (inputs, params) =>
-      `whisper:${params.mode}:${params.model}:${inputs.audioPath}`,
+    cacheKey: (inputs, params) => `whisper:${params.mode}:${params.model}:${inputs.audioPath}`,
 
     execute: async (inputs, params) => {
       let { audioPath } = inputs;
@@ -76,8 +93,12 @@ export default {
  * @returns {Promise<Object>} Result with text, words, duration
  */
 async function executeSSH(audioPath, params) {
-  let host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  let remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
+  let host =
+    params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
+  let remotePath =
+    params.remotePath ||
+    process.env.WHISPER_REMOTE_PATH ||
+    '/home/mr-agent/automations/argentine-spanish-bot';
   let venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
   let model = params.model || process.env.WHISPER_MODEL || 'medium';
   let device = params.device || process.env.WHISPER_DEVICE || 'cuda';
@@ -120,13 +141,10 @@ async function executeSSH(audioPath, params) {
       });
 
       let words = JSON.parse(output);
-      let text = words.map(w => w.word).join(' ');
-      let duration = words.length > 0
-        ? words[words.length - 1].end
-        : 0;
+      let text = words.map((w) => w.word).join(' ');
+      let duration = words.length > 0 ? words[words.length - 1].end : 0;
 
       return { text, words, duration, error: null };
-
     } finally {
       // Cleanup remote file
       try {
@@ -135,9 +153,10 @@ async function executeSSH(audioPath, params) {
           stdio: 'pipe',
           timeout: 5000,
         });
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
-
   } catch (err) {
     return { text: null, words: null, duration: 0, error: err.message };
   }
@@ -173,18 +192,20 @@ async function executeHTTP(audioPath, params) {
     });
 
     if (!response.ok) {
-      return { text: null, words: null, duration: 0, error: `Whisper API error: ${response.status}` };
+      return {
+        text: null,
+        words: null,
+        duration: 0,
+        error: `Whisper API error: ${response.status}`,
+      };
     }
 
     let result = await response.json();
     let words = result.words || [];
-    let text = result.text || words.map(w => w.word).join(' ');
-    let duration = words.length > 0
-      ? words[words.length - 1].end
-      : 0;
+    let text = result.text || words.map((w) => w.word).join(' ');
+    let duration = words.length > 0 ? words[words.length - 1].end : 0;
 
     return { text, words, duration, error: null };
-
   } catch (err) {
     return { text: null, words: null, duration: 0, error: err.message };
   }

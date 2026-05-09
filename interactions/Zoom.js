@@ -87,15 +87,11 @@ export class Zoom {
   };
 
   #move = (e) => {
-    this.#pointers = this.#pointers.map(p =>
-      p.pointerId === e.pointerId ? e : p
-    );
+    this.#pointers = this.#pointers.map((p) => (p.pointerId === e.pointerId ? e : p));
     if (this.#pointers.length < 2) return;
 
     let [p1, p2] = this.#pointers;
-    let distance = Math.sqrt(
-      (p1.clientX - p2.clientX) ** 2 + (p1.clientY - p2.clientY) ** 2
-    );
+    let distance = Math.sqrt((p1.clientX - p2.clientX) ** 2 + (p1.clientY - p2.clientY) ** 2);
     let cx = (p1.clientX + p2.clientX) / 2;
     let cy = (p1.clientY + p2.clientY) / 2;
 
@@ -104,19 +100,14 @@ export class Zoom {
       let delta = distance / this.#previous.distance - 1;
       let ox = (rect.left - cx) * delta;
       let oy = (rect.top - cy) * delta;
-      this.#onZoom(
-        delta,
-        ox - (this.#previous.cx - cx),
-        oy - (this.#previous.cy - cy),
-        'touch'
-      );
+      this.#onZoom(delta, ox - (this.#previous.cx - cx), oy - (this.#previous.cy - cy), 'touch');
     }
     this.#previous = { cx, cy, distance };
   };
 
   #up = (e) => {
     this.#previous = null;
-    this.#pointers = this.#pointers.filter(p => p.pointerId !== e.pointerId);
+    this.#pointers = this.#pointers.filter((p) => p.pointerId !== e.pointerId);
   };
 
   /**

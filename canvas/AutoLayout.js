@@ -31,7 +31,7 @@ export function computeAutoLayout(editor, options = {}) {
     existingPositions = null,
     groups = null, // { [groupId]: [nodeId, ...] }
     nodeSizes = null, // { [nodeId]: { w, h } } — per-node dimensions
-    direction = 'LR' // 'LR' or 'TB'
+    direction = 'LR', // 'LR' or 'TB'
   } = options;
 
   // Per-node dimension resolver with fallback to global defaults
@@ -104,10 +104,10 @@ export function computeAutoLayout(editor, options = {}) {
         groupDegrees.get(gFrom).total++;
         groupDegrees.get(gTo).in++;
         groupDegrees.get(gTo).total++;
-        
+
         let outMap = groupCrossLinks.get(gFrom).outgoing;
         outMap.set(gTo, (outMap.get(gTo) || 0) + 1);
-        
+
         let inMap = groupCrossLinks.get(gTo).incoming;
         inMap.set(gFrom, (inMap.get(gFrom) || 0) + 1);
       }
@@ -124,36 +124,37 @@ export function computeAutoLayout(editor, options = {}) {
     }
   }
 
-    // --- 2. Micro Layout Function ---
+  // --- 2. Micro Layout Function ---
   // Sugiyama-style LTR layering with per-node dimensions
   function computeMicroLayout(gId, subNodes) {
     let finalOut = new Map();
     let internalDegree = new Map();
     for (const n of subNodes) {
-       finalOut.set(n, []);
-       internalDegree.set(n, 0);
+      finalOut.set(n, []);
+      internalDegree.set(n, 0);
     }
-    
+
     // Calculate accurate internal degree
     for (const n of subNodes) {
-       for (const child of outgoing.get(n) || []) {
-          if (finalOut.has(child)) {
-             internalDegree.set(n, internalDegree.get(n) + 1);
-             internalDegree.set(child, internalDegree.get(child) + 1);
-          }
-       }
+      for (const child of outgoing.get(n) || []) {
+        if (finalOut.has(child)) {
+          internalDegree.set(n, internalDegree.get(n) + 1);
+          internalDegree.set(child, internalDegree.get(child) + 1);
+        }
+      }
     }
 
     // Partition into Linked vs Isolated
     let linkedNodes = [];
     let isolatedNodes = [];
     for (const n of subNodes) {
-       if (internalDegree.get(n) === 0) isolatedNodes.push(n);
-       else linkedNodes.push(n);
+      if (internalDegree.get(n) === 0) isolatedNodes.push(n);
+      else linkedNodes.push(n);
     }
 
     let localPositions = {};
-    let maxLinkedW = 0, maxLinkedH = 0;
+    let maxLinkedW = 0,
+      maxLinkedH = 0;
 
     // --- Linked Subgraph Layout ---
     if (linkedNodes.length > 0) {
@@ -191,16 +192,20 @@ export function computeAutoLayout(editor, options = {}) {
         if (!changed) break;
       }
 
-      let minL = Infinity, maxL = -Infinity;
+      let minL = Infinity,
+        maxL = -Infinity;
       for (const n of linkedNodes) {
         let l = layers.get(n);
         if (l < minL) minL = l;
         if (l > maxL) maxL = l;
       }
-      if (minL === Infinity) { minL = 0; maxL = 0; }
+      if (minL === Infinity) {
+        minL = 0;
+        maxL = 0;
+      }
 
       let layerArr = [];
-      for (let l = 0; l <= (maxL - minL); l++) layerArr.push([]);
+      for (let l = 0; l <= maxL - minL; l++) layerArr.push([]);
       for (const n of linkedNodes) layerArr[layers.get(n) - minL].push(n);
 
       // --- Per-node height-aware Y positioning ---
@@ -243,12 +248,13 @@ export function computeAutoLayout(editor, options = {}) {
         for (let l = 1; l < layerArr.length; l++) {
           for (let i = 0; i < layerArr[l].length; i++) {
             let node = layerArr[l][i];
-            let parents = (incoming.get(node) || []).filter(n => layerArr[l - 1].includes(n));
+            let parents = (incoming.get(node) || []).filter((n) => layerArr[l - 1].includes(n));
             if (parents.length > 0) {
               parents.sort((a, b) => yPos.get(a) - yPos.get(b));
               let mid = Math.floor(parents.length / 2);
               let tY = yPos.get(parents[mid]);
-              if (parents.length % 2 === 0) tY = (yPos.get(parents[mid - 1]) + yPos.get(parents[mid])) / 2;
+              if (parents.length % 2 === 0)
+                tY = (yPos.get(parents[mid - 1]) + yPos.get(parents[mid])) / 2;
               yPos.set(node, tY);
             }
           }
@@ -258,12 +264,13 @@ export function computeAutoLayout(editor, options = {}) {
         for (let l = layerArr.length - 2; l >= 0; l--) {
           for (let i = 0; i < layerArr[l].length; i++) {
             let node = layerArr[l][i];
-            let children = (finalOut.get(node) || []).filter(n => layerArr[l + 1].includes(n));
+            let children = (finalOut.get(node) || []).filter((n) => layerArr[l + 1].includes(n));
             if (children.length > 0) {
               children.sort((a, b) => yPos.get(a) - yPos.get(b));
               let mid = Math.floor(children.length / 2);
               let tY = yPos.get(children[mid]);
-              if (children.length % 2 === 0) tY = (yPos.get(children[mid - 1]) + yPos.get(children[mid])) / 2;
+              if (children.length % 2 === 0)
+                tY = (yPos.get(children[mid - 1]) + yPos.get(children[mid])) / 2;
               yPos.set(node, tY);
             }
           }
@@ -271,13 +278,17 @@ export function computeAutoLayout(editor, options = {}) {
         }
       }
 
-      let minLocalY = Infinity, maxLocalY = -Infinity;
+      let minLocalY = Infinity,
+        maxLocalY = -Infinity;
       for (const [nId, y] of yPos.entries()) {
         if (y < minLocalY) minLocalY = y;
         let bottom = y + getSize(nId).h;
         if (bottom > maxLocalY) maxLocalY = bottom;
       }
-      if (minLocalY === Infinity) { minLocalY = 0; maxLocalY = 0; }
+      if (minLocalY === Infinity) {
+        minLocalY = 0;
+        maxLocalY = 0;
+      }
 
       // --- Per-layer X offset based on max node width ---
       // Each layer's X position accounts for the widest node in the previous layer
@@ -298,65 +309,65 @@ export function computeAutoLayout(editor, options = {}) {
         for (const node of layerArr[l]) {
           localPositions[node] = {
             x: layerXOffsets[l],
-            y: yPos.get(node) - minLocalY
+            y: yPos.get(node) - minLocalY,
           };
         }
       }
 
       maxLinkedW = xAccum;
-      maxLinkedH = (maxLocalY - minLocalY) + gapY;
+      maxLinkedH = maxLocalY - minLocalY + gapY;
     }
 
     // --- Isolated Subgraph Layout (Grid Wrap) ---
     // Uses per-node dimensions for row/column sizing
-    let isolatedW = 0, isolatedH = 0;
+    let isolatedW = 0,
+      isolatedH = 0;
     if (isolatedNodes.length > 0) {
-       const MAX_COLS = 6;
-       // Calculate column widths and row heights based on actual node sizes
-       let colWidths = [];
-       let rowHeights = [];
-       for (let i = 0; i < isolatedNodes.length; i++) {
-          let col = i % MAX_COLS;
-          let row = Math.floor(i / MAX_COLS);
-          let size = getSize(isolatedNodes[i]);
-          if (!colWidths[col] || size.w > colWidths[col]) colWidths[col] = size.w;
-          if (!rowHeights[row] || size.h > rowHeights[row]) rowHeights[row] = size.h;
-       }
+      const MAX_COLS = 6;
+      // Calculate column widths and row heights based on actual node sizes
+      let colWidths = [];
+      let rowHeights = [];
+      for (let i = 0; i < isolatedNodes.length; i++) {
+        let col = i % MAX_COLS;
+        let row = Math.floor(i / MAX_COLS);
+        let size = getSize(isolatedNodes[i]);
+        if (!colWidths[col] || size.w > colWidths[col]) colWidths[col] = size.w;
+        if (!rowHeights[row] || size.h > rowHeights[row]) rowHeights[row] = size.h;
+      }
 
-       // Compute cumulative X offsets per column
-       let colX = [0];
-       for (let c = 1; c < colWidths.length; c++) {
-         colX[c] = colX[c - 1] + (colWidths[c - 1] || nodeWidth) + gapX;
-       }
-       // Compute cumulative Y offsets per row
-       let rowY = [0];
-       for (let r = 1; r < rowHeights.length; r++) {
-         rowY[r] = rowY[r - 1] + (rowHeights[r - 1] || nodeHeight) + gapY;
-       }
+      // Compute cumulative X offsets per column
+      let colX = [0];
+      for (let c = 1; c < colWidths.length; c++) {
+        colX[c] = colX[c - 1] + (colWidths[c - 1] || nodeWidth) + gapX;
+      }
+      // Compute cumulative Y offsets per row
+      let rowY = [0];
+      for (let r = 1; r < rowHeights.length; r++) {
+        rowY[r] = rowY[r - 1] + (rowHeights[r - 1] || nodeHeight) + gapY;
+      }
 
-       for (let i = 0; i < isolatedNodes.length; i++) {
-          let node = isolatedNodes[i];
-          let col = i % MAX_COLS;
-          let row = Math.floor(i / MAX_COLS);
-          
-          localPositions[node] = {
-             x: colX[col] || 0,
-             y: maxLinkedH + (rowY[row] || 0)
-          };
-       }
+      for (let i = 0; i < isolatedNodes.length; i++) {
+        let node = isolatedNodes[i];
+        let col = i % MAX_COLS;
+        let row = Math.floor(i / MAX_COLS);
 
-       let lastCol = Math.min(isolatedNodes.length, MAX_COLS) - 1;
-       let lastRow = rowHeights.length - 1;
-       isolatedW = (colX[lastCol] || 0) + (colWidths[lastCol] || nodeWidth) + gapX;
-       isolatedH = (rowY[lastRow] || 0) + (rowHeights[lastRow] || nodeHeight) + gapY;
+        localPositions[node] = {
+          x: colX[col] || 0,
+          y: maxLinkedH + (rowY[row] || 0),
+        };
+      }
+
+      let lastCol = Math.min(isolatedNodes.length, MAX_COLS) - 1;
+      let lastRow = rowHeights.length - 1;
+      isolatedW = (colX[lastCol] || 0) + (colWidths[lastCol] || nodeWidth) + gapX;
+      isolatedH = (rowY[lastRow] || 0) + (rowHeights[lastRow] || nodeHeight) + gapY;
     }
 
-    let w = Math.max(maxLinkedW, isolatedW || (nodeWidth + gapX));
+    let w = Math.max(maxLinkedW, isolatedW || nodeWidth + gapX);
     let h = maxLinkedH + isolatedH;
 
     return { localPositions, bounds: { w, h } };
   }
-
 
   // --- 3. Run Micro Layout for all groups ---
   let groupResults = new Map();
@@ -368,12 +379,14 @@ export function computeAutoLayout(editor, options = {}) {
   const M_PI = Math.PI;
   let macroPositions = new Map(); // gId -> {x, y}
   let placedRects = [];
-  
+
   function hitTest(r1, r2, padding = 40) {
-    return !(r2.x >= r1.x + r1.w + padding || 
-             r2.x + r2.w + padding <= r1.x || 
-             r2.y >= r1.y + r1.h + padding ||
-             r2.y + r2.h + padding <= r1.y);
+    return !(
+      r2.x >= r1.x + r1.w + padding ||
+      r2.x + r2.w + padding <= r1.x ||
+      r2.y >= r1.y + r1.h + padding ||
+      r2.y + r2.h + padding <= r1.y
+    );
   }
 
   function placeGroup(gId) {
@@ -381,13 +394,14 @@ export function computeAutoLayout(editor, options = {}) {
     let prefAngle = 0; // default East
 
     // Calculate preferred vector based on connections to ALREADY placed groups
-    let vecX = 0, vecY = 0;
+    let vecX = 0,
+      vecY = 0;
     let links = groupCrossLinks.get(gId);
     for (const p of placedRects) {
       let pId = p.id;
       let toPlaced = links.outgoing.get(pId) || 0; // I export to Placed -> I want to be West of Placed
       let fromPlaced = links.incoming.get(pId) || 0; // Placed exports to me -> I want to be East of Placed
-      
+
       let netForce = fromPlaced - toPlaced; // > 0 goes right, < 0 goes left
       if (netForce !== 0) {
         // Find angle toward placed center
@@ -411,11 +425,14 @@ export function computeAutoLayout(editor, options = {}) {
           let a = prefAngle + delta * sign;
           let x = Math.round(Math.cos(a) * r);
           let y = Math.round(Math.sin(a) * r);
-          
+
           let rect = { x, y, w: res.bounds.w, h: res.bounds.h, id: gId };
           let overlap = false;
           for (const p of placedRects) {
-            if (hitTest(rect, p)) { overlap = true; break; }
+            if (hitTest(rect, p)) {
+              overlap = true;
+              break;
+            }
           }
           if (!overlap) {
             macroPositions.set(gId, { x, y });
@@ -431,7 +448,13 @@ export function computeAutoLayout(editor, options = {}) {
     }
     // Fallback if packed too tight, just shove it way out
     macroPositions.set(gId, { x: placedRects.length * 300, y: placedRects.length * 300 });
-    placedRects.push({ x: placedRects.length*300, y: placedRects.length*300, w: res.bounds.w, h: res.bounds.h, id: gId });
+    placedRects.push({
+      x: placedRects.length * 300,
+      y: placedRects.length * 300,
+      w: res.bounds.w,
+      h: res.bounds.h,
+      id: gId,
+    });
   }
 
   // Place center hub first
@@ -442,9 +465,9 @@ export function computeAutoLayout(editor, options = {}) {
   }
 
   // Sort remaining groups by descending total edges to ensure large interconnected clusters are packed tight
-  let remainingGroups = Array.from(groupNodes.keys()).filter(id => id !== centerGroup);
+  let remainingGroups = Array.from(groupNodes.keys()).filter((id) => id !== centerGroup);
   remainingGroups.sort((a, b) => groupDegrees.get(b).total - groupDegrees.get(a).total);
-  
+
   for (const gId of remainingGroups) {
     placeGroup(gId);
   }
@@ -456,7 +479,7 @@ export function computeAutoLayout(editor, options = {}) {
     for (const [nId, loc] of Object.entries(res.localPositions)) {
       finalPositions[nId] = {
         x: startX + macro.x + loc.x,
-        y: startY + macro.y + loc.y
+        y: startY + macro.y + loc.y,
       };
     }
   }
@@ -474,7 +497,9 @@ export function computeAutoLayout(editor, options = {}) {
 
   // --- 7. Anchor Stabilization ---
   if (existingPositions) {
-    let sumDx = 0, sumDy = 0, count = 0;
+    let sumDx = 0,
+      sumDy = 0,
+      count = 0;
     for (const [id, oldPos] of Object.entries(existingPositions)) {
       if (finalPositions[id] && !isNaN(oldPos.x) && !isNaN(oldPos.y)) {
         sumDx += oldPos.x - finalPositions[id].x;
@@ -489,7 +514,7 @@ export function computeAutoLayout(editor, options = {}) {
         finalPositions[id].x += avgDx;
         finalPositions[id].y += avgDy;
       }
-      
+
       // Post-anchor overlap resolution using per-node dimensions
       let ids = Object.keys(finalPositions);
       for (let pass = 0; pass < 3; pass++) {
@@ -501,19 +526,21 @@ export function computeAutoLayout(editor, options = {}) {
             let p2 = finalPositions[ids[j]];
             let s1 = getSize(ids[i]);
             let s2 = getSize(ids[j]);
-            let dx = p1.x - p2.x, dy = p1.y - p2.y;
-            let absDx = Math.abs(dx), absDy = Math.abs(dy);
-            
+            let dx = p1.x - p2.x,
+              dy = p1.y - p2.y;
+            let absDx = Math.abs(dx),
+              absDy = Math.abs(dy);
+
             // Check overlap using actual node dimensions
             let overlapX = (s1.w + s2.w) / 2 + gapX * 0.3;
             let overlapY = (s1.h + s2.h) / 2 + gapY * 0.3;
-            
+
             if (absDx < overlapX && absDy < overlapY) {
               overlaps = true;
               // Push apart along the axis with more penetration depth (less distance)
               let penX = overlapX - absDx;
               let penY = overlapY - absDy;
-              
+
               if (penX < penY) {
                 // Less X penetration → push apart on X
                 let fix = penX / 2 + 1;
@@ -541,12 +568,15 @@ export function computeAutoLayout(editor, options = {}) {
   }
 
   console.timeEnd(perfId);
-  console.log(`🔄 [AutoLayout] v2 Macro-Micro Groups: ${groupNodes.size}, Nodes: ${nodes.length}, Edges: ${connections.length}`);
-  console.log(`🔄 [AutoLayout] Cycles: ${cycleCount}, crossingPasses: ${crossingPasses}, direction: ${direction}`);
-  
+  console.log(
+    `🔄 [AutoLayout] v2 Macro-Micro Groups: ${groupNodes.size}, Nodes: ${nodes.length}, Edges: ${connections.length}`
+  );
+  console.log(
+    `🔄 [AutoLayout] Cycles: ${cycleCount}, crossingPasses: ${crossingPasses}, direction: ${direction}`
+  );
+
   return finalPositions;
 }
-
 
 /**
  * Tree Layout — positions nodes like a directory tree / file explorer.
@@ -604,7 +634,7 @@ export function computeTreeLayout(editor, options = {}) {
   // parent: Map<nodeId, nodeId>
   let children = new Map();
   let parent = new Map();
-  let nodeIds = new Set(nodes.map(n => n.id));
+  let nodeIds = new Set(nodes.map((n) => n.id));
 
   for (const id of nodeIds) {
     children.set(id, []);
@@ -631,7 +661,7 @@ export function computeTreeLayout(editor, options = {}) {
       // "src/core/" → "src/", "vendor/symbiote-node/canvas/" → "vendor/symbiote-node/"
       let segments = path.replace(/\/$/, '').split('/');
       segments.pop();
-      
+
       let foundParent = false;
       // Walk up the path tree until we find an existing parent
       while (segments.length > 0) {
@@ -674,7 +704,7 @@ export function computeTreeLayout(editor, options = {}) {
   }
 
   // Sort roots: directories first, then files, alphabetically within each group
-  let nodeMap = new Map(nodes.map(n => [n.id, n]));
+  let nodeMap = new Map(nodes.map((n) => [n.id, n]));
   let dirIdSet = dirPaths ? new Set(Object.keys(dirPaths)) : new Set();
   roots.sort((a, b) => {
     let aIsDir = dirIdSet.has(a) || nodeMap.get(a)?._isSubgraph;
@@ -719,7 +749,9 @@ export function computeTreeLayout(editor, options = {}) {
   }
 
   console.timeEnd(perfId);
-  console.log(`🔄 [TreeLayout] Nodes: ${nodes.length}, Roots: ${roots.length}, Edges: ${connections.length}`);
+  console.log(
+    `🔄 [TreeLayout] Nodes: ${nodes.length}, Roots: ${roots.length}, Edges: ${connections.length}`
+  );
 
   return positions;
 }

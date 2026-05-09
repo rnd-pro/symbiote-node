@@ -18,14 +18,14 @@ export default {
 
   driver: {
     description: 'Set or map fields on the data object',
-    inputs: [
-      { name: 'data', type: 'any' },
-    ],
-    outputs: [
-      { name: 'data', type: 'any' },
-    ],
+    inputs: [{ name: 'data', type: 'any' }],
+    outputs: [{ name: 'data', type: 'any' }],
     params: {
-      fields: { type: 'object', default: {}, description: 'Map of fieldName → value or ={{expression}}' },
+      fields: {
+        type: 'object',
+        default: {},
+        description: 'Map of fieldName → value or ={{expression}}',
+      },
       keepOriginal: { type: 'boolean', default: true, description: 'Keep original input fields' },
     },
   },

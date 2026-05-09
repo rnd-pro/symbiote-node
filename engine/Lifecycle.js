@@ -68,7 +68,12 @@ export async function runLifecycle(hooks, inputs, params, cacheState) {
         return { outputs: null, cached: false, error: 'Validation failed', cacheHash: null };
       }
     } catch (err) {
-      return { outputs: null, cached: false, error: `Validation error: ${err.message}`, cacheHash: null };
+      return {
+        outputs: null,
+        cached: false,
+        error: `Validation error: ${err.message}`,
+        cacheHash: null,
+      };
     }
   }
 
@@ -107,7 +112,12 @@ export async function runLifecycle(hooks, inputs, params, cacheState) {
     try {
       outputs = hooks.postProcess(outputs);
     } catch (err) {
-      return { outputs: null, cached: false, error: `PostProcess error: ${err.message}`, cacheHash };
+      return {
+        outputs: null,
+        cached: false,
+        error: `PostProcess error: ${err.message}`,
+        cacheHash,
+      };
     }
   }
 

@@ -87,7 +87,8 @@ export let GREY_NEUTRAL = {
     '--sn-ctx-bg': 'hsl(0, 0%, 22%)',
     '--sn-ctx-border': 'hsl(0, 0%, var(--sn-lit-border))',
     '--sn-ctx-color': 'hsl(0, 0%, var(--sn-lit-text))',
-    '--sn-ctx-hover': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), var(--sn-alpha-subtle))',
+    '--sn-ctx-hover':
+      'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), var(--sn-alpha-subtle))',
 
     // Comments
     '--sn-comment-bg': 'hsla(0, 0%, 100%, 0.04)',
@@ -98,7 +99,8 @@ export let GREY_NEUTRAL = {
     '--sn-toolbar-bg': 'hsla(0, 0%, 22%, var(--sn-alpha-overlay))',
     '--sn-toolbar-border': 'hsla(0, 0%, 100%, 0.08)',
     '--sn-toolbar-color': 'hsl(0, 0%, 67%)',
-    '--sn-toolbar-hover': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), 0.18)',
+    '--sn-toolbar-hover':
+      'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), 0.18)',
     '--sn-toolbar-active': 'hsl(0, 0%, var(--sn-lit-text))',
     '--sn-toolbar-danger': 'hsla(var(--sn-hue-danger), var(--sn-sat-vivid), 60%, 0.22)',
     '--sn-toolbar-danger-color': 'hsl(var(--sn-hue-danger), var(--sn-sat-vivid), 60%)',

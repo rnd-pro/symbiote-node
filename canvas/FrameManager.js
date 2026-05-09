@@ -64,7 +64,10 @@ export class FrameManager {
     el.style.transform = `translate(${x}px, ${y}px)`;
     el._position = { x, y };
     let frame = this.#editor?.getFrame(frameId);
-    if (frame) { frame.x = x; frame.y = y; }
+    if (frame) {
+      frame.x = x;
+      frame.y = y;
+    }
   }
 
   /**
@@ -79,7 +82,10 @@ export class FrameManager {
     el.style.width = `${w}px`;
     el.style.height = `${h}px`;
     let frame = this.#editor?.getFrame(frameId);
-    if (frame) { frame.width = w; frame.height = h; }
+    if (frame) {
+      frame.width = w;
+      frame.height = h;
+    }
   }
 
   /**
@@ -194,7 +200,9 @@ export class FrameManager {
               let h = Math.max(80, y);
               this.setSize(frame.id, w, h);
             },
-            onDrop: () => { startSize = null; },
+            onDrop: () => {
+              startSize = null;
+            },
           }
         );
         el._resizeDrag = resizeDrag;

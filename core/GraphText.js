@@ -27,9 +27,7 @@ const SHAPE_ICONS = {
   comment: '✎',
 };
 
-const ICON_SHAPES = Object.fromEntries(
-  Object.entries(SHAPE_ICONS).map(([k, v]) => [v, k])
-);
+const ICON_SHAPES = Object.fromEntries(Object.entries(SHAPE_ICONS).map(([k, v]) => [v, k]));
 
 /**
  * Convert a NodeEditor to human-readable text
@@ -70,7 +68,9 @@ export function editorToText(editor, positions = {}) {
     lines.push('');
     lines.push('FRAMES:');
     for (const frame of frames) {
-      lines.push(`  [${frame.label}] color=${frame.color} x=${frame.x} y=${frame.y} w=${frame.width} h=${frame.height}`);
+      lines.push(
+        `  [${frame.label}] color=${frame.color} x=${frame.x} y=${frame.y} w=${frame.width} h=${frame.height}`
+      );
     }
   }
 
@@ -95,9 +95,18 @@ export function textToGraph(text) {
     let line = raw.trim();
     if (!line) continue;
 
-    if (line === 'NODES:') { section = 'nodes'; continue; }
-    if (line === 'CONNECTIONS:') { section = 'connections'; continue; }
-    if (line === 'FRAMES:') { section = 'frames'; continue; }
+    if (line === 'NODES:') {
+      section = 'nodes';
+      continue;
+    }
+    if (line === 'CONNECTIONS:') {
+      section = 'connections';
+      continue;
+    }
+    if (line === 'FRAMES:') {
+      section = 'frames';
+      continue;
+    }
 
     if (section === 'nodes') {
       // [○ trigger] Job Event: RU (queue/job-event) shape=circle cat=server in=[exec] out=[exec,data] @50,200
@@ -183,7 +192,10 @@ export function textToEditor(text, editor, classes) {
     }
     for (const port of outs) {
       let isExec = port === 'exec' || port === 'trigger';
-      node.addOutput(port, new Output(isExec ? execSocket : dataSocket, port === 'exec' ? '' : port));
+      node.addOutput(
+        port,
+        new Output(isExec ? execSocket : dataSocket, port === 'exec' ? '' : port)
+      );
     }
 
     editor.addNode(node);
@@ -199,11 +211,15 @@ export function textToEditor(text, editor, classes) {
   }
 
   for (const f of frames) {
-    editor.addFrame(new Frame(f.label, {
-      x: f.x, y: f.y,
-      width: f.width, height: f.height,
-      color: f.color,
-    }));
+    editor.addFrame(
+      new Frame(f.label, {
+        x: f.x,
+        y: f.y,
+        width: f.width,
+        height: f.height,
+        color: f.color,
+      })
+    );
   }
 
   return { editor, positions };

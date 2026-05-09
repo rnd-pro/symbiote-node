@@ -87,7 +87,8 @@ export let SYNTHWAVE = {
     '--sn-ctx-bg': 'hsl(var(--sn-hue-base), var(--sn-sat), var(--sn-lit-surface))',
     '--sn-ctx-border': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), var(--sn-lit-border))',
     '--sn-ctx-color': 'hsl(var(--sn-hue-base), 30%, var(--sn-lit-text))',
-    '--sn-ctx-hover': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), 50%, var(--sn-alpha-subtle))',
+    '--sn-ctx-hover':
+      'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), 50%, var(--sn-alpha-subtle))',
 
     // Comments
     '--sn-comment-bg': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), 50%, 0.05)',
@@ -95,12 +96,14 @@ export let SYNTHWAVE = {
     '--sn-comment-radius': '8px',
 
     // Toolbar
-    '--sn-toolbar-bg': 'hsla(var(--sn-hue-base), var(--sn-sat), var(--sn-lit-surface), var(--sn-alpha-overlay))',
+    '--sn-toolbar-bg':
+      'hsla(var(--sn-hue-base), var(--sn-sat), var(--sn-lit-surface), var(--sn-alpha-overlay))',
     '--sn-toolbar-border': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), 50%, 0.2)',
     '--sn-toolbar-color': 'hsl(var(--sn-hue-base), 20%, 70%)',
     '--sn-toolbar-hover': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), 50%, 0.2)',
     '--sn-toolbar-active': 'hsl(var(--sn-hue-base), 30%, var(--sn-lit-text))',
-    '--sn-toolbar-danger': 'hsla(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent), 0.25)',
+    '--sn-toolbar-danger':
+      'hsla(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent), 0.25)',
     '--sn-toolbar-danger-color': 'hsl(var(--sn-hue-danger), 80%, 60%)',
 
     // Shape fill/stroke

@@ -68,10 +68,26 @@ export class DiamondShape extends NodeShape {
     // Diamond vertices: top(cx,0), right(w,cy), bottom(cx,h), left(0,cy)
     // Each "side" spans two edges meeting at the cardinal vertex
     let vertices = {
-      top:    [{ x: 0, y: cy }, { x: cx, y: 0 }, { x: size.width, y: cy }],
-      right:  [{ x: cx, y: 0 }, { x: size.width, y: cy }, { x: cx, y: size.height }],
-      bottom: [{ x: 0, y: cy }, { x: cx, y: size.height }, { x: size.width, y: cy }],
-      left:   [{ x: cx, y: 0 }, { x: 0, y: cy }, { x: cx, y: size.height }],
+      top: [
+        { x: 0, y: cy },
+        { x: cx, y: 0 },
+        { x: size.width, y: cy },
+      ],
+      right: [
+        { x: cx, y: 0 },
+        { x: size.width, y: cy },
+        { x: cx, y: size.height },
+      ],
+      bottom: [
+        { x: 0, y: cy },
+        { x: cx, y: size.height },
+        { x: size.width, y: cy },
+      ],
+      left: [
+        { x: cx, y: 0 },
+        { x: 0, y: cy },
+        { x: cx, y: size.height },
+      ],
     };
 
     let [p0, p1, p2] = vertices[side];

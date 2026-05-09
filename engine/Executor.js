@@ -14,7 +14,6 @@ import { Graph } from './Graph.js';
 import { runLifecycle } from './Lifecycle.js';
 
 export class Executor {
-
   constructor() {
     /** @type {Map<string, any>} Cached outputs per node ID */
     this._cache = new Map();
@@ -47,9 +46,8 @@ export class Executor {
     let { cache = false, onNodeStart, onNodeComplete, onNodeSkipped, onNodeCached } = options;
     let nodes = graph.nodes;
     // Duck-typing: Editor has connections as Map, Graph has array
-    let connections = graph.connections instanceof Map
-      ? [...graph.connections.values()]
-      : graph.connections;
+    let connections =
+      graph.connections instanceof Map ? [...graph.connections.values()] : graph.connections;
 
     // Topological sort
     let order = this._topologicalSort(nodes, connections);
@@ -78,9 +76,11 @@ export class Executor {
 
       // P22: Branch skipping — if node has incoming connections and
       // all connected inputs are null, this node is on an inactive branch
-      let incomingConns = connections.filter(c => c.to === nodeId);
+      let incomingConns = connections.filter((c) => c.to === nodeId);
       if (incomingConns.length > 0) {
-        let allNull = incomingConns.every(c => inputs[c.in] === null || inputs[c.in] === undefined);
+        let allNull = incomingConns.every(
+          (c) => inputs[c.in] === null || inputs[c.in] === undefined
+        );
         // Skip merge nodes — they expect null from one branch
         let isMergeType = node.type === 'flow/merge' || node.type === 'flow/wait-all';
         if (allNull && !isMergeType) {
@@ -114,7 +114,13 @@ export class Executor {
           node._cacheHash = lifecycleResult.cacheHash;
           results.set(nodeId, node._output);
           let elapsed = performance.now() - startTime;
-          this.executionLog.push({ nodeId, time: elapsed, skipped: false, cached: false, error: lifecycleResult.error });
+          this.executionLog.push({
+            nodeId,
+            time: elapsed,
+            skipped: false,
+            cached: false,
+            error: lifecycleResult.error,
+          });
           if (onNodeComplete) onNodeComplete(nodeId, node._output, elapsed);
           continue;
         }
@@ -223,7 +229,7 @@ export class Executor {
 
     // Include source nodes (no incoming connections but exist in graph)
     for (const id of nodes.keys()) {
-      if (connectedIds.has(id) || !connections.some(c => c.to === id || c.from === id)) {
+      if (connectedIds.has(id) || !connections.some((c) => c.to === id || c.from === id)) {
         // Include connected nodes; orphans are skipped
       }
     }
@@ -259,7 +265,7 @@ export class Executor {
     while (queue.length > 0) {
       let nodeId = queue.shift();
       result.push(nodeId);
-      for (const neighbor of (adjacency.get(nodeId) || [])) {
+      for (const neighbor of adjacency.get(nodeId) || []) {
         let nd = inDegree.get(neighbor) - 1;
         inDegree.set(neighbor, nd);
         if (nd === 0) queue.push(neighbor);
@@ -269,7 +275,7 @@ export class Executor {
     // Cycle detection
     let connectedCount = inDegree.size;
     if (result.length < connectedCount) {
-      let remaining = [...inDegree.keys()].filter(id => !result.includes(id));
+      let remaining = [...inDegree.keys()].filter((id) => !result.includes(id));
       throw new Error(`Graph contains cycle(s). Nodes involved: ${remaining.join(', ')}`);
     }
 
@@ -325,7 +331,7 @@ export class Executor {
       connected.add(conn.from);
       connected.add(conn.to);
     }
-    return [...connected].filter(id => !hasOutgoing.has(id) && nodes.has(id));
+    return [...connected].filter((id) => !hasOutgoing.has(id) && nodes.has(id));
   }
 
   /**

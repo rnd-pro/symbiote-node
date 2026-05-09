@@ -38,8 +38,16 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'image', description: 'Operation: image | image-edit | video | batch-images | batch-videos | check' },
-      bridgeUrl: { type: 'string', default: 'http://localhost:3333', description: 'Bridge server URL' },
+      operation: {
+        type: 'string',
+        default: 'image',
+        description: 'Operation: image | image-edit | video | batch-images | batch-videos | check',
+      },
+      bridgeUrl: {
+        type: 'string',
+        default: 'http://localhost:3333',
+        description: 'Bridge server URL',
+      },
       outputDir: { type: 'string', default: '/tmp/grok-output', description: 'Output directory' },
       globalStyle: { type: 'string', default: '', description: 'Global style prefix for prompts' },
       filename: { type: 'string', default: '', description: 'Output filename (without extension)' },
@@ -58,7 +66,8 @@ export default {
     validate: (inputs, params) => {
       if (params.operation === 'check') return true;
       if (params.operation === 'image' && !inputs.prompt) return false;
-      if (params.operation === 'image-edit' && (!inputs.prompt || !inputs.referencePath)) return false;
+      if (params.operation === 'image-edit' && (!inputs.prompt || !inputs.referencePath))
+        return false;
       if (params.operation === 'video' && !params.imagePath) return false;
       return true;
     },
@@ -118,7 +127,7 @@ export default {
  * @returns {Object}
  */
 function createBridgeClient(baseUrl) {
-  let sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  let sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   async function sendCommand(action, cmdParams = {}, timeout = 30000, workerId = null) {
     let payload = { action, params: cmdParams };
@@ -170,25 +179,55 @@ function createBridgeClient(baseUrl) {
     },
 
     // Atomic actions
-    async navigate(url, workerId) { return sendCommand('navigate', { url }, 30000, workerId); },
-    async waitFor(selector, timeout = 15000, workerId = null) { return sendCommand('waitForSelector', { selector, timeout }, timeout + 5000, workerId); },
-    async click(selector, workerId) { return sendCommand('click', { selector }, 30000, workerId); },
-    async type(selector, text, workerId) { return sendCommand('type', { selector, text }, 30000, workerId); },
-    async uploadFile(base64, mimeType, filename, workerId) { return sendCommand('uploadFile', { base64, mimeType, filename }, 30000, workerId); },
-    async queryAll(selector, workerId) { return sendCommand('querySelectorAll', { selector }, 30000, workerId); },
-    async getAttribute(selector, attribute, workerId) { return sendCommand('getAttribute', { selector, attribute }, 30000, workerId); },
-    async getPageInfo(workerId) { return sendCommand('getPageInfo', {}, 30000, workerId); },
-    async refresh(workerId) { return sendCommand('refresh', {}, 30000, workerId); },
+    async navigate(url, workerId) {
+      return sendCommand('navigate', { url }, 30000, workerId);
+    },
+    async waitFor(selector, timeout = 15000, workerId = null) {
+      return sendCommand('waitForSelector', { selector, timeout }, timeout + 5000, workerId);
+    },
+    async click(selector, workerId) {
+      return sendCommand('click', { selector }, 30000, workerId);
+    },
+    async type(selector, text, workerId) {
+      return sendCommand('type', { selector, text }, 30000, workerId);
+    },
+    async uploadFile(base64, mimeType, filename, workerId) {
+      return sendCommand('uploadFile', { base64, mimeType, filename }, 30000, workerId);
+    },
+    async queryAll(selector, workerId) {
+      return sendCommand('querySelectorAll', { selector }, 30000, workerId);
+    },
+    async getAttribute(selector, attribute, workerId) {
+      return sendCommand('getAttribute', { selector, attribute }, 30000, workerId);
+    },
+    async getPageInfo(workerId) {
+      return sendCommand('getPageInfo', {}, 30000, workerId);
+    },
+    async refresh(workerId) {
+      return sendCommand('refresh', {}, 30000, workerId);
+    },
 
     // WebSocket-based direct generation
-    async generateImageWS(prompt, options, workerId) { return sendCommand('generateImage', { prompt, options }, 90000, workerId); },
-    async fetchImage(url, workerId) { return sendCommand('fetchImage', { url }, 30000, workerId); },
-    async waitForImageComplete(timeout = 120000, workerId) { return sendCommand('waitForImageComplete', { timeout }, timeout + 5000, workerId); },
+    async generateImageWS(prompt, options, workerId) {
+      return sendCommand('generateImage', { prompt, options }, 90000, workerId);
+    },
+    async fetchImage(url, workerId) {
+      return sendCommand('fetchImage', { url }, 30000, workerId);
+    },
+    async waitForImageComplete(timeout = 120000, workerId) {
+      return sendCommand('waitForImageComplete', { timeout }, timeout + 5000, workerId);
+    },
 
     // Zone-based interaction
-    async showZones(layer = 'all', workerId) { return sendCommand('showClickableZones', { layer }, 30000, workerId); },
-    async clickZone(zone, workerId) { return sendCommand('clickZone', { zone }, 30000, workerId); },
-    async hideZones(workerId) { return sendCommand('hideZones', {}, 30000, workerId); },
+    async showZones(layer = 'all', workerId) {
+      return sendCommand('showClickableZones', { layer }, 30000, workerId);
+    },
+    async clickZone(zone, workerId) {
+      return sendCommand('clickZone', { zone }, 30000, workerId);
+    },
+    async hideZones(workerId) {
+      return sendCommand('hideZones', {}, 30000, workerId);
+    },
   };
 }
 
@@ -230,7 +269,9 @@ async function ensureOnImagine(bridge, workerId) {
         await bridge.sleep(3000);
       }
     }
-  } catch { /* not on page */ }
+  } catch {
+    /* not on page */
+  }
 
   await bridge.navigate('https://grok.com/imagine', workerId);
   await bridge.sleep(3000);
@@ -358,7 +399,11 @@ async function generateVideo(bridge, params) {
 
   // Find and click submit button (zone-based)
   await bridge.click(SEL.sendBtn, workerId || null);
-  try { await bridge.hideZones(workerId || null); } catch { /* ignore */ }
+  try {
+    await bridge.hideZones(workerId || null);
+  } catch {
+    /* ignore */
+  }
 
   // Wait for video
   let videoUrl = await waitForVideo(bridge, 90000, workerId || null);
@@ -436,7 +481,9 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
         await bridge.sleep(3000);
         continue;
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     // Check for video
     try {
@@ -446,7 +493,9 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
         if (prevUrl && videoUrl === prevUrl) continue;
         return videoUrl;
       }
-    } catch { /* not yet */ }
+    } catch {
+      /* not yet */
+    }
   }
 
   throw new Error('Timeout waiting for video');
@@ -470,7 +519,11 @@ async function triggerUpscale(bridge, workerId) {
     // Fallback
     await bridge.sendCommand('clickByText', { text: 'Улучшить' }, 30000, workerId);
   }
-  try { await bridge.hideZones(workerId); } catch { /* ignore */ }
+  try {
+    await bridge.hideZones(workerId);
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
@@ -498,7 +551,9 @@ async function waitForHD(bridge, timeout = 120000, workerId = null, sdUrl = null
         let result = await bridge.getAttribute(SEL.video, 'src', workerId);
         if (result.value?.includes('.mp4') && result.value !== sdUrl) return result.value;
       }
-    } catch { /* not yet */ }
+    } catch {
+      /* not yet */
+    }
   }
 
   throw new Error('Timeout waiting for HD video');
@@ -530,7 +585,11 @@ async function batchImages(bridge, params) {
     }
   }
 
-  return { total: segments.length, success: Object.values(results).filter(Boolean).length, results };
+  return {
+    total: segments.length,
+    success: Object.values(results).filter(Boolean).length,
+    results,
+  };
 }
 
 /**
@@ -561,5 +620,9 @@ async function batchVideos(bridge, params) {
     }
   }
 
-  return { total: segments.length, success: Object.values(results).filter(Boolean).length, results };
+  return {
+    total: segments.length,
+    success: Object.values(results).filter(Boolean).length,
+    results,
+  };
 }

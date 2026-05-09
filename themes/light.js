@@ -87,7 +87,8 @@ export let LIGHT_CLEAN = {
     '--sn-ctx-bg': 'hsl(0, 0%, var(--sn-lit-surface))',
     '--sn-ctx-border': 'hsl(var(--sn-hue-base), var(--sn-sat-muted), var(--sn-lit-hover))',
     '--sn-ctx-color': 'hsl(var(--sn-hue-base), 10%, var(--sn-lit-text))',
-    '--sn-ctx-hover': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), var(--sn-alpha-subtle))',
+    '--sn-ctx-hover':
+      'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), var(--sn-alpha-subtle))',
 
     // Comments
     '--sn-comment-bg': 'hsla(0, 0%, 0%, 0.03)',
@@ -98,10 +99,13 @@ export let LIGHT_CLEAN = {
     '--sn-toolbar-bg': 'hsla(0, 0%, var(--sn-lit-surface), var(--sn-alpha-overlay))',
     '--sn-toolbar-border': 'hsla(0, 0%, 0%, 0.1)',
     '--sn-toolbar-color': 'hsl(var(--sn-hue-base), 8%, 35%)',
-    '--sn-toolbar-hover': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), 0.12)',
+    '--sn-toolbar-hover':
+      'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), var(--sn-lit-accent), 0.12)',
     '--sn-toolbar-active': 'hsl(var(--sn-hue-base), 10%, var(--sn-lit-text))',
-    '--sn-toolbar-danger': 'hsla(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent), 0.15)',
-    '--sn-toolbar-danger-color': 'hsl(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent))',
+    '--sn-toolbar-danger':
+      'hsla(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent), 0.15)',
+    '--sn-toolbar-danger-color':
+      'hsl(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent))',
 
     // Shape fill/stroke
     '--sn-shape-fill': 'var(--sn-node-bg)',

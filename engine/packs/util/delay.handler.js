@@ -14,12 +14,8 @@ export default {
 
   driver: {
     description: 'Pause execution for N milliseconds, pass value through',
-    inputs: [
-      { name: 'value', type: 'any' },
-    ],
-    outputs: [
-      { name: 'value', type: 'any' },
-    ],
+    inputs: [{ name: 'value', type: 'any' }],
+    outputs: [{ name: 'value', type: 'any' }],
     params: {
       ms: { type: 'int', default: 1000, description: 'Delay in milliseconds' },
     },
@@ -32,7 +28,7 @@ export default {
     cacheKey: null,
 
     execute: async (inputs, params) => {
-      await new Promise(resolve => setTimeout(resolve, params.ms || 1000));
+      await new Promise((resolve) => setTimeout(resolve, params.ms || 1000));
       return { value: inputs.value };
     },
   },

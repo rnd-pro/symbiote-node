@@ -18,7 +18,6 @@ import { Connection } from '../core/Connection.js';
  */
 
 export class ConnectFlow {
-
   /** @type {SocketData|null} */
   #picked = null;
 
@@ -270,12 +269,8 @@ export class ConnectFlow {
     if (!fromNode || !toNode) return false;
 
     let isFromOutput = from.side === 'output';
-    let output = isFromOutput
-      ? fromNode.outputs[from.key]
-      : toNode.outputs[to.key];
-    let input = isFromOutput
-      ? toNode.inputs[to.key]
-      : fromNode.inputs[from.key];
+    let output = isFromOutput ? fromNode.outputs[from.key] : toNode.outputs[to.key];
+    let input = isFromOutput ? toNode.inputs[to.key] : fromNode.inputs[from.key];
 
     if (!output || !input) return false;
 

@@ -24,7 +24,7 @@ let cache = new Map();
 function hashStr(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = (hash << 5) - hash + str.charCodeAt(i);
     hash |= 0;
   }
   return Math.abs(hash).toString(36);
@@ -81,7 +81,9 @@ function parseAiResponse(responseText) {
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]);
-    } catch { /* fallback */ }
+    } catch {
+      /* fallback */
+    }
   }
   return { adaptedContent: responseText, vocabulary: [], grammarNotes: [] };
 }
@@ -110,24 +112,43 @@ export default {
   icon: 'auto_fix_high',
 
   driver: {
-    description: 'AI-powered content adaptation to target language levels with vocabulary extraction',
-    inputs: [
-      { name: 'content', type: 'string' },
-    ],
+    description:
+      'AI-powered content adaptation to target language levels with vocabulary extraction',
+    inputs: [{ name: 'content', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'adapt', description: 'Operation: adapt | adapt-news | adapt-trending' },
-      apiKey: { type: 'string', default: null, description: 'OpenRouter API key (or OPENROUTER_API_KEY env)' },
-      model: { type: 'string', default: 'anthropic/claude-sonnet-4', description: 'AI model to use' },
-      targetLevel: { type: 'string', default: 'A1', description: 'Target language level (A1, A2, B1, B2)' },
+      operation: {
+        type: 'string',
+        default: 'adapt',
+        description: 'Operation: adapt | adapt-news | adapt-trending',
+      },
+      apiKey: {
+        type: 'string',
+        default: null,
+        description: 'OpenRouter API key (or OPENROUTER_API_KEY env)',
+      },
+      model: {
+        type: 'string',
+        default: 'anthropic/claude-sonnet-4',
+        description: 'AI model to use',
+      },
+      targetLevel: {
+        type: 'string',
+        default: 'A1',
+        description: 'Target language level (A1, A2, B1, B2)',
+      },
       // Content metadata
       title: { type: 'string', default: null, description: 'Content title (for news/trending)' },
       sourceUrl: { type: 'string', default: null, description: 'Source URL' },
       // Options
-      includeVocabulary: { type: 'boolean', default: true, description: 'Include vocabulary extraction' },
+      includeVocabulary: {
+        type: 'boolean',
+        default: true,
+        description: 'Include vocabulary extraction',
+      },
       includeGrammarNotes: { type: 'boolean', default: true, description: 'Include grammar notes' },
       includeLesson: { type: 'boolean', default: true, description: 'Include micro-lesson' },
       // Rate limiting
@@ -161,13 +182,14 @@ export default {
         }
 
         // Determine content type
-        let contentType = operation === 'adapt-news' ? 'news'
-          : operation === 'adapt-trending' ? 'trending'
-            : 'general';
+        let contentType =
+          operation === 'adapt-news'
+            ? 'news'
+            : operation === 'adapt-trending'
+              ? 'trending'
+              : 'general';
 
-        let fullContent = params.title
-          ? `Title: ${params.title}\n\n${content}`
-          : content;
+        let fullContent = params.title ? `Title: ${params.title}\n\n${content}` : content;
 
         let prompt = createAdaptationPrompt(fullContent, contentType, targetLevel, {
           includeVocabulary: params.includeVocabulary,
@@ -183,7 +205,7 @@ export default {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
+                Authorization: `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
                 model,
@@ -195,7 +217,7 @@ export default {
             if (!response.ok) {
               lastError = `API error: HTTP ${response.status}`;
               if (attempt < maxRetries - 1) {
-                await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
                 continue;
               }
               return { error: lastError };
@@ -224,7 +246,7 @@ export default {
           } catch (err) {
             lastError = err.message;
             if (attempt < maxRetries - 1) {
-              await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
             }
           }
         }

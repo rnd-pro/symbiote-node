@@ -17,7 +17,6 @@
 const MAX_STACK = 200;
 
 export class History {
-
   /** @type {HistoryAction[]} */
   #undoStack = [];
 
@@ -52,88 +51,104 @@ export class History {
     this.#classes = options.classes || {};
 
     // Track node additions
-    this.#unsubs.push(editor.on('nodecreated', (node) => {
-      if (this.#isApplying) return;
-      let canvas = this.#getCanvas?.();
-      let pos = canvas ? this.#getNodePosition(canvas, node.id) : [0, 0];
-      this.#push({
-        type: 'addNode',
-        data: { node: this.#serializeNode(node), position: pos },
-      });
-    }));
+    this.#unsubs.push(
+      editor.on('nodecreated', (node) => {
+        if (this.#isApplying) return;
+        let canvas = this.#getCanvas?.();
+        let pos = canvas ? this.#getNodePosition(canvas, node.id) : [0, 0];
+        this.#push({
+          type: 'addNode',
+          data: { node: this.#serializeNode(node), position: pos },
+        });
+      })
+    );
 
     // Track node removals
-    this.#unsubs.push(editor.on('noderemove', (node) => {
-      if (this.#isApplying) return;
-      let canvas = this.#getCanvas?.();
-      let pos = canvas ? this.#getNodePosition(canvas, node.id) : [0, 0];
-      // Capture connections that will be removed with this node
-      let conns = editor.getNodeConnections(node.id).map(c => this.#serializeConnection(c));
-      this.#push({
-        type: 'removeNode',
-        data: { node: this.#serializeNode(node), position: pos, connections: conns },
-      });
-    }));
+    this.#unsubs.push(
+      editor.on('noderemove', (node) => {
+        if (this.#isApplying) return;
+        let canvas = this.#getCanvas?.();
+        let pos = canvas ? this.#getNodePosition(canvas, node.id) : [0, 0];
+        // Capture connections that will be removed with this node
+        let conns = editor.getNodeConnections(node.id).map((c) => this.#serializeConnection(c));
+        this.#push({
+          type: 'removeNode',
+          data: { node: this.#serializeNode(node), position: pos, connections: conns },
+        });
+      })
+    );
 
     // Track node moves
-    this.#unsubs.push(editor.on('nodepicked', (node) => {
-      if (this.#isApplying) return;
-      let canvas = this.#getCanvas?.();
-      if (!canvas) return;
-      let pos = this.#getNodePosition(canvas, node.id);
-      node._historyStartPos = pos;
-    }));
+    this.#unsubs.push(
+      editor.on('nodepicked', (node) => {
+        if (this.#isApplying) return;
+        let canvas = this.#getCanvas?.();
+        if (!canvas) return;
+        let pos = this.#getNodePosition(canvas, node.id);
+        node._historyStartPos = pos;
+      })
+    );
 
-    this.#unsubs.push(editor.on('nodedragged', ({ id }) => {
-      if (this.#isApplying) return;
-      let node = editor.getNode(id);
-      if (!node?._historyStartPos) return;
-      let canvas = this.#getCanvas?.();
-      let endPos = canvas ? this.#getNodePosition(canvas, id) : [0, 0];
-      let startPos = node._historyStartPos;
-      // Only record if position actually changed
-      if (startPos[0] !== endPos[0] || startPos[1] !== endPos[1]) {
-        this.#push({
-          type: 'moveNode',
-          data: { nodeId: id, from: startPos, to: endPos },
-        });
-      }
-      delete node._historyStartPos;
-    }));
+    this.#unsubs.push(
+      editor.on('nodedragged', ({ id }) => {
+        if (this.#isApplying) return;
+        let node = editor.getNode(id);
+        if (!node?._historyStartPos) return;
+        let canvas = this.#getCanvas?.();
+        let endPos = canvas ? this.#getNodePosition(canvas, id) : [0, 0];
+        let startPos = node._historyStartPos;
+        // Only record if position actually changed
+        if (startPos[0] !== endPos[0] || startPos[1] !== endPos[1]) {
+          this.#push({
+            type: 'moveNode',
+            data: { nodeId: id, from: startPos, to: endPos },
+          });
+        }
+        delete node._historyStartPos;
+      })
+    );
 
     // Track connections
-    this.#unsubs.push(editor.on('connectioncreated', (conn) => {
-      if (this.#isApplying) return;
-      this.#push({
-        type: 'addConnection',
-        data: { connection: this.#serializeConnection(conn) },
-      });
-    }));
+    this.#unsubs.push(
+      editor.on('connectioncreated', (conn) => {
+        if (this.#isApplying) return;
+        this.#push({
+          type: 'addConnection',
+          data: { connection: this.#serializeConnection(conn) },
+        });
+      })
+    );
 
-    this.#unsubs.push(editor.on('connectionremove', (conn) => {
-      if (this.#isApplying) return;
-      this.#push({
-        type: 'removeConnection',
-        data: { connection: this.#serializeConnection(conn) },
-      });
-    }));
+    this.#unsubs.push(
+      editor.on('connectionremove', (conn) => {
+        if (this.#isApplying) return;
+        this.#push({
+          type: 'removeConnection',
+          data: { connection: this.#serializeConnection(conn) },
+        });
+      })
+    );
 
     // Track frames
-    this.#unsubs.push(editor.on('framecreated', (frame) => {
-      if (this.#isApplying) return;
-      this.#push({
-        type: 'addFrame',
-        data: { frame: { ...frame } },
-      });
-    }));
+    this.#unsubs.push(
+      editor.on('framecreated', (frame) => {
+        if (this.#isApplying) return;
+        this.#push({
+          type: 'addFrame',
+          data: { frame: { ...frame } },
+        });
+      })
+    );
 
-    this.#unsubs.push(editor.on('frameremove', (frame) => {
-      if (this.#isApplying) return;
-      this.#push({
-        type: 'removeFrame',
-        data: { frame: { ...frame } },
-      });
-    }));
+    this.#unsubs.push(
+      editor.on('frameremove', (frame) => {
+        if (this.#isApplying) return;
+        this.#push({
+          type: 'removeFrame',
+          data: { frame: { ...frame } },
+        });
+      })
+    );
   }
 
   /**
@@ -183,10 +198,14 @@ export class History {
   }
 
   /** @returns {number} */
-  get undoCount() { return this.#undoStack.length; }
+  get undoCount() {
+    return this.#undoStack.length;
+  }
 
   /** @returns {number} */
-  get redoCount() { return this.#redoStack.length; }
+  get redoCount() {
+    return this.#redoStack.length;
+  }
 
   /** Clear all history */
   clear() {
@@ -225,18 +244,37 @@ export class History {
         editor.addNode(restoredNode);
         if (canvas && position) canvas.setNodePosition(restoredNode.id, position[0], position[1]);
         for (let connData of connections) {
-          let conn = new this.#classes.Connection(connData.from, connData.out, connData.to, connData.in);
+          let conn = new this.#classes.Connection(
+            connData.from,
+            connData.out,
+            connData.to,
+            connData.in
+          );
           conn.id = connData.id;
-          try { editor.addConnection(conn); } catch { /* node may not exist */ }
+          try {
+            editor.addConnection(conn);
+          } catch {
+            /* node may not exist */
+          }
         }
       },
-      moveNode: () => canvas?.setNodePosition(action.data.nodeId, action.data.from[0], action.data.from[1]),
+      moveNode: () =>
+        canvas?.setNodePosition(action.data.nodeId, action.data.from[0], action.data.from[1]),
       addConnection: () => editor.removeConnection(action.data.connection.id),
       removeConnection: () => {
         let connData = action.data.connection;
-        let conn = new this.#classes.Connection(connData.from, connData.out, connData.to, connData.in);
+        let conn = new this.#classes.Connection(
+          connData.from,
+          connData.out,
+          connData.to,
+          connData.in
+        );
         conn.id = connData.id;
-        try { editor.addConnection(conn); } catch { /* already exists */ }
+        try {
+          editor.addConnection(conn);
+        } catch {
+          /* already exists */
+        }
       },
       addFrame: () => editor.removeFrame(action.data.frame.id),
       removeFrame: () => {
@@ -258,15 +296,26 @@ export class History {
       addNode: () => {
         let restoredNode = this.#deserializeNode(action.data.node);
         editor.addNode(restoredNode);
-        if (canvas && action.data.position) canvas.setNodePosition(restoredNode.id, action.data.position[0], action.data.position[1]);
+        if (canvas && action.data.position)
+          canvas.setNodePosition(restoredNode.id, action.data.position[0], action.data.position[1]);
       },
       removeNode: () => editor.removeNode(action.data.node.id),
-      moveNode: () => canvas?.setNodePosition(action.data.nodeId, action.data.to[0], action.data.to[1]),
+      moveNode: () =>
+        canvas?.setNodePosition(action.data.nodeId, action.data.to[0], action.data.to[1]),
       addConnection: () => {
         let connData = action.data.connection;
-        let conn = new this.#classes.Connection(connData.from, connData.out, connData.to, connData.in);
+        let conn = new this.#classes.Connection(
+          connData.from,
+          connData.out,
+          connData.to,
+          connData.in
+        );
         conn.id = connData.id;
-        try { editor.addConnection(conn); } catch { /* already exists */ }
+        try {
+          editor.addConnection(conn);
+        } catch {
+          /* already exists */
+        }
       },
       removeConnection: () => editor.removeConnection(action.data.connection.id),
       addFrame: () => {
@@ -288,19 +337,34 @@ export class History {
       category: node.category,
       shape: node.shape,
       params: { ...node.params },
-      inputs: Object.fromEntries(Object.entries(node.inputs).map(([k, v]) => [k, {
-        socket: v.socket ? { type: v.socket.type, color: v.socket.color } : null,
-        label: v.label,
-      }])),
-      outputs: Object.fromEntries(Object.entries(node.outputs).map(([k, v]) => [k, {
-        socket: v.socket ? { type: v.socket.type, color: v.socket.color } : null,
-        label: v.label,
-      }])),
-      controls: Object.fromEntries(Object.entries(node.controls).map(([k, v]) => [k, {
-        label: v.label,
-        value: v.value,
-        type: v.type,
-      }])),
+      inputs: Object.fromEntries(
+        Object.entries(node.inputs).map(([k, v]) => [
+          k,
+          {
+            socket: v.socket ? { type: v.socket.type, color: v.socket.color } : null,
+            label: v.label,
+          },
+        ])
+      ),
+      outputs: Object.fromEntries(
+        Object.entries(node.outputs).map(([k, v]) => [
+          k,
+          {
+            socket: v.socket ? { type: v.socket.type, color: v.socket.color } : null,
+            label: v.label,
+          },
+        ])
+      ),
+      controls: Object.fromEntries(
+        Object.entries(node.controls).map(([k, v]) => [
+          k,
+          {
+            label: v.label,
+            value: v.value,
+            type: v.type,
+          },
+        ])
+      ),
     };
   }
 
@@ -319,15 +383,22 @@ export class History {
     node.params = { ...data.params };
 
     for (const [key, inp] of Object.entries(data.inputs)) {
-      let socket = inp.socket ? new Socket(inp.socket.type, { color: inp.socket.color }) : new Socket('any');
+      let socket = inp.socket
+        ? new Socket(inp.socket.type, { color: inp.socket.color })
+        : new Socket('any');
       node.addInput(key, new Input(socket, inp.label));
     }
     for (const [key, out] of Object.entries(data.outputs)) {
-      let socket = out.socket ? new Socket(out.socket.type, { color: out.socket.color }) : new Socket('any');
+      let socket = out.socket
+        ? new Socket(out.socket.type, { color: out.socket.color })
+        : new Socket('any');
       node.addOutput(key, new Output(socket, out.label));
     }
     for (const [key, ctrl] of Object.entries(data.controls)) {
-      node.addControl(key, new InputControl(ctrl.type || 'text', { label: ctrl.label, initial: ctrl.value }));
+      node.addControl(
+        key,
+        new InputControl(ctrl.type || 'text', { label: ctrl.label, initial: ctrl.value })
+      );
     }
 
     return node;

@@ -23,12 +23,15 @@ const CTX = 'ROUTER';
 /** @type {Set<string>} Keys that persist across section switches */
 const _globalKeys = new Set();
 
-const routerCtx = PubSub.registerCtx({
-  panel: 'default',
-  subpath: '',
-  query: '',
-  globalParams: {},
-}, CTX);
+const routerCtx = PubSub.registerCtx(
+  {
+    panel: 'default',
+    subpath: '',
+    query: '',
+    globalParams: {},
+  },
+  CTX
+);
 
 /**
  * Parse query string into object
@@ -41,7 +44,9 @@ export function parseQuery(str) {
   for (const pair of str.split('&')) {
     const eqIdx = pair.indexOf('=');
     if (eqIdx >= 0) {
-      result[decodeURIComponent(pair.substring(0, eqIdx))] = decodeURIComponent(pair.substring(eqIdx + 1));
+      result[decodeURIComponent(pair.substring(0, eqIdx))] = decodeURIComponent(
+        pair.substring(eqIdx + 1)
+      );
     }
   }
   return result;

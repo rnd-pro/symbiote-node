@@ -152,7 +152,7 @@ export class NodeEditor {
    * @returns {Connection[]}
    */
   getNodeConnections(nodeId) {
-    return this.getConnections().filter(c => c.from === nodeId || c.to === nodeId);
+    return this.getConnections().filter((c) => c.from === nodeId || c.to === nodeId);
   }
 
   /**
@@ -325,7 +325,7 @@ export class NodeEditor {
     this.frames.clear();
 
     // Restore nodes
-    for (const nd of (data.nodes || [])) {
+    for (const nd of data.nodes || []) {
       let node = new Node(nd.name || nd.type, {
         id: nd.id,
         type: nd.type,
@@ -374,11 +374,14 @@ export class NodeEditor {
             controlOptions = paramMeta.options;
           }
 
-          node.addControl(key, new InputControl(controlType, {
-            initial: displayValue,
-            label: paramMeta?.description || key,
-            options: controlOptions,
-          }));
+          node.addControl(
+            key,
+            new InputControl(controlType, {
+              initial: displayValue,
+              label: paramMeta?.description || key,
+              options: controlOptions,
+            })
+          );
         }
       }
 
@@ -398,7 +401,7 @@ export class NodeEditor {
     }
 
     // Restore connections
-    for (const cd of (data.connections || [])) {
+    for (const cd of data.connections || []) {
       let srcNode = this.nodes.get(cd.from);
       let tgtNode = this.nodes.get(cd.to);
       if (!srcNode || !tgtNode) continue;
@@ -417,7 +420,7 @@ export class NodeEditor {
     }
 
     // Restore frames
-    for (const fd of (data.frames || [])) {
+    for (const fd of data.frames || []) {
       let frame = new Frame(fd.label, {
         id: fd.id,
         x: fd.x,

@@ -54,7 +54,6 @@ PalCategory.template = html`
 PalCategory.reg('pal-category');
 
 export class PaletteBrowser extends Symbiote {
-
   init$ = {
     categories: [],
   };
@@ -90,14 +89,18 @@ export class PaletteBrowser extends Symbiote {
     this.#factoryMap.clear();
 
     this.$.categories = this.#rawCategories
-      .map(cat => {
+      .map((cat) => {
         let filtered = lowerFilter
-          ? cat.items.filter(it => it.name.toLowerCase().includes(lowerFilter) || it.desc.toLowerCase().includes(lowerFilter))
+          ? cat.items.filter(
+              (it) =>
+                it.name.toLowerCase().includes(lowerFilter) ||
+                it.desc.toLowerCase().includes(lowerFilter)
+            )
           : cat.items;
 
         if (filtered.length === 0) return null;
 
-        let catItems = filtered.map(it => {
+        let catItems = filtered.map((it) => {
           this.#factoryMap.set(it.name, it.factory);
           return {
             name: it.name,

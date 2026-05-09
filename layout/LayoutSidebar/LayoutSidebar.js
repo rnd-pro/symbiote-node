@@ -201,9 +201,7 @@ export class LayoutSidebar extends Symbiote {
    * @param {Array<{id: string, visible: boolean}>|null} config
    */
   #buildSections(items, config) {
-    let visibilityMap = config
-      ? new Map(config.map((c) => [c.id, c.visible]))
-      : null;
+    let visibilityMap = config ? new Map(config.map((c) => [c.id, c.visible])) : null;
 
     this.$.sections = items.map((item) => ({
       sectionId: item.id,

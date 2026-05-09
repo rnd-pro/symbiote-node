@@ -59,18 +59,18 @@ export let PCB_DARK = {
     '--sn-frame-radius': '6px',
 
     // Category accent colors
-    '--sn-cat-server': '#c87533',      // copper — server/routing
-    '--sn-cat-instance': '#4caf50',    // green — active
-    '--sn-cat-control': '#d4a04a',     // gold — control/hub
-    '--sn-cat-data': '#5c8dbf',        // cool blue — data flow
-    '--sn-cat-default': '#555555',     // neutral
+    '--sn-cat-server': '#c87533', // copper — server/routing
+    '--sn-cat-instance': '#4caf50', // green — active
+    '--sn-cat-control': '#d4a04a', // gold — control/hub
+    '--sn-cat-data': '#5c8dbf', // cool blue — data flow
+    '--sn-cat-default': '#555555', // neutral
     // Codebase-specific categories
-    '--sn-cat-directory': '#f0b840',   // amber — folder
-    '--sn-cat-file': '#5cb8ff',        // sky blue — JS file
-    '--sn-cat-function': '#4ade80',    // green — function
-    '--sn-cat-class': '#a78bfa',       // purple — class
-    '--sn-cat-module': '#ff6b9d',      // pink — entry/index
-    '--sn-cat-asset': '#8b8b8b',        // gray — non-source asset (.css, .html, .json, .md)
+    '--sn-cat-directory': '#f0b840', // amber — folder
+    '--sn-cat-file': '#5cb8ff', // sky blue — JS file
+    '--sn-cat-function': '#4ade80', // green — function
+    '--sn-cat-class': '#a78bfa', // purple — class
+    '--sn-cat-module': '#ff6b9d', // pink — entry/index
+    '--sn-cat-asset': '#8b8b8b', // gray — non-source asset (.css, .html, .json, .md)
 
     // Context menu — matches Carbon
     '--sn-ctx-bg': '#2a2a2a',

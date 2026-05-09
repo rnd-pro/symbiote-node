@@ -111,7 +111,7 @@ export class LayoutNode extends Symbiote {
 
     // Initial render if data already set
     if (this.$.nodeData) {
-      this.sub('nodeData', (d) => { }); // Trigger subscription
+      this.sub('nodeData', (d) => {}); // Trigger subscription
     }
   }
 
@@ -169,7 +169,9 @@ export class LayoutNode extends Symbiote {
     // Check if panel can collapse (must be child of a split)
     let container = this.parentElement;
     if (!container) return;
-    let isSplitChild = container && (container.classList.contains('split-first') || container.classList.contains('split-second'));
+    let isSplitChild =
+      container &&
+      (container.classList.contains('split-first') || container.classList.contains('split-second'));
 
     // Additional safety check: Ensure sibling exists and is not collapsed
     let siblingExists = false;
@@ -296,8 +298,8 @@ export class LayoutNode extends Symbiote {
   }
 
   /**
-   * @param {HTMLElement} container 
-   * @param {Object} nodeData 
+   * @param {HTMLElement} container
+   * @param {Object} nodeData
    */
   _ensureChildNode(container, nodeData) {
     let child = container.querySelector('layout-node');
@@ -356,11 +358,11 @@ export class LayoutNode extends Symbiote {
       }
 
       // Check for collapse/uncollapse of second panel
-      if (rawRatio > (1 - COLLAPSE_THRESHOLD) && secondChild && !secondChild.$.isCollapsed) {
+      if (rawRatio > 1 - COLLAPSE_THRESHOLD && secondChild && !secondChild.$.isCollapsed) {
         // Collapse second panel
         secondChild._setCollapsed(true);
         return; // Don't update styles further when collapsed
-      } else if (rawRatio < (1 - UNCOLLAPSE_THRESHOLD) && secondChild?.$.isCollapsed) {
+      } else if (rawRatio < 1 - UNCOLLAPSE_THRESHOLD && secondChild?.$.isCollapsed) {
         // Uncollapse second panel
         secondChild._setCollapsed(false);
       }
@@ -397,52 +399,60 @@ export class LayoutNode extends Symbiote {
   }
 
   _notifyChange() {
-    this.dispatchEvent(new CustomEvent('layout-change', {
-      bubbles: true,
-      detail: { nodeId: this.$.nodeId }
-    }));
+    this.dispatchEvent(
+      new CustomEvent('layout-change', {
+        bubbles: true,
+        detail: { nodeId: this.$.nodeId },
+      })
+    );
   }
 
   _toggleCollapse() {
     // Dispatch event to Layout - it will update the tree data
     // which triggers a re-render with declarative collapsed handling
-    this.dispatchEvent(new CustomEvent('panel-collapse-toggle', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        panelId: this.$.nodeId,
-        collapsed: !this.$.isCollapsed
-      }
-    }));
+    this.dispatchEvent(
+      new CustomEvent('panel-collapse-toggle', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          panelId: this.$.nodeId,
+          collapsed: !this.$.isCollapsed,
+        },
+      })
+    );
   }
 
   /**
    * Programmatically set collapsed state (used by resize gesture)
-   * @param {boolean} collapsed 
+   * @param {boolean} collapsed
    */
   _setCollapsed(collapsed) {
     if (this.$.isCollapsed === collapsed) return;
 
     // Dispatch event to Layout - it will update the tree data
-    this.dispatchEvent(new CustomEvent('panel-collapse-toggle', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        panelId: this.$.nodeId,
-        collapsed: collapsed
-      }
-    }));
+    this.dispatchEvent(
+      new CustomEvent('panel-collapse-toggle', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          panelId: this.$.nodeId,
+          collapsed: collapsed,
+        },
+      })
+    );
   }
 
   _toggleFullscreen() {
     // Don't allow fullscreen when collapsed
     if (this.$.isCollapsed) return;
 
-    this.dispatchEvent(new CustomEvent('panel-fullscreen', {
-      bubbles: true,
-      composed: true,
-      detail: { panelId: this.$.nodeId }
-    }));
+    this.dispatchEvent(
+      new CustomEvent('panel-fullscreen', {
+        bubbles: true,
+        composed: true,
+        detail: { panelId: this.$.nodeId },
+      })
+    );
   }
 
   _showTypeMenu(e) {
@@ -450,16 +460,18 @@ export class LayoutNode extends Symbiote {
     if (this.$.isCollapsed) return;
 
     let rect = e.target.getBoundingClientRect();
-    this.dispatchEvent(new CustomEvent('panel-type-menu', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        panelId: this.$.nodeId,
-        currentType: this.$.panelType,
-        x: rect.left,
-        y: rect.bottom + 4
-      }
-    }));
+    this.dispatchEvent(
+      new CustomEvent('panel-type-menu', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          panelId: this.$.nodeId,
+          currentType: this.$.panelType,
+          x: rect.left,
+          y: rect.bottom + 4,
+        },
+      })
+    );
   }
 }
 
@@ -467,4 +479,3 @@ LayoutNode.template = template;
 LayoutNode.rootStyles = styles;
 
 LayoutNode.reg('layout-node');
-

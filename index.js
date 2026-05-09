@@ -30,13 +30,39 @@ export { SnapGrid } from './interactions/SnapGrid.js';
 export { ConnectFlow } from './interactions/ConnectFlow.js';
 
 // Shapes
-export { NodeShape, RectShape, PillShape, CircleShape, DiamondShape, CommentShape, getShape, registerShape, SVGShape, createSVGShape, SVG_PRESETS } from './shapes/index.js';
+export {
+  NodeShape,
+  RectShape,
+  PillShape,
+  CircleShape,
+  DiamondShape,
+  CommentShape,
+  getShape,
+  registerShape,
+  SVGShape,
+  createSVGShape,
+  SVG_PRESETS,
+} from './shapes/index.js';
 
 // Themes (unified)
-export { applyTheme, extractTheme, DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE, GREY_NEUTRAL, NEON_GLOW } from './themes/Theme.js';
+export {
+  applyTheme,
+  extractTheme,
+  DARK_DEFAULT,
+  LIGHT_CLEAN,
+  SYNTHWAVE,
+  GREY_NEUTRAL,
+  NEON_GLOW,
+} from './themes/Theme.js';
 
 // Palette (color-only)
-export { applyPalette, DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE } from './themes/Palette.js';
+export {
+  applyPalette,
+  DARK_PALETTE,
+  LIGHT_PALETTE,
+  SYNTHWAVE_PALETTE,
+  GREY_PALETTE,
+} from './themes/Palette.js';
 
 // Skin (geometry-only)
 export { applySkin, MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN } from './themes/Skin.js';
@@ -64,8 +90,15 @@ export { LayoutNode } from './layout/LayoutNode/LayoutNode.js';
 export { LayoutSidebar } from './layout/LayoutSidebar/LayoutSidebar.js';
 export * as LayoutTree from './layout/LayoutTree.js';
 export {
-  navigate, updateParams, parseQuery, buildHash, buildQuery,
-  getRoute, setDefaultPanel, registerGlobalParam, setGlobalParam,
+  navigate,
+  updateParams,
+  parseQuery,
+  buildHash,
+  buildQuery,
+  getRoute,
+  setDefaultPanel,
+  registerGlobalParam,
+  setGlobalParam,
 } from './layout/LayoutRouter/LayoutRouter.js';
 export { syncWithRouter } from './layout/LayoutRouter/routerSync.js';
 

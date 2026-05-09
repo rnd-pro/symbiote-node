@@ -18,9 +18,7 @@ export default {
       { name: 'value', type: 'any' },
       { name: 'data', type: 'any' },
     ],
-    outputs: [
-      { name: 'default', type: 'any' },
-    ],
+    outputs: [{ name: 'default', type: 'any' }],
     params: {
       cases: { type: 'object', default: {}, description: 'Map of value → output name' },
     },
@@ -31,9 +29,12 @@ export default {
     execute: (inputs, params) => {
       let { data } = inputs;
       // Auto-extract value from data[field] when no explicit value input
-      let value = inputs.value !== undefined
-        ? inputs.value
-        : (params.field && data ? data[params.field] : undefined);
+      let value =
+        inputs.value !== undefined
+          ? inputs.value
+          : params.field && data
+            ? data[params.field]
+            : undefined;
       let cases = params.cases;
       let hasCases = cases && Object.keys(cases).length > 0;
       let result = { default: null };

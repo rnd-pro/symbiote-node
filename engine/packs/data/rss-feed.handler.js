@@ -17,7 +17,7 @@ function simpleHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     let chr = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
+    hash = (hash << 5) - hash + chr;
     hash |= 0;
   }
   return Math.abs(hash).toString(36);
@@ -38,14 +38,127 @@ function extractImageUrl(item) {
 
 // Category definitions for topic classification
 const CATEGORIES = [
-  { id: 'politica', name: 'Política', keywords: ['presidente', 'gobierno', 'congreso', 'diputado', 'senador', 'ley', 'decreto', 'ministerio', 'elecciones', 'votación'] },
-  { id: 'economia', name: 'Economía', keywords: ['dólar', 'peso', 'inflación', 'bcra', 'mercado', 'bolsa', 'precio', 'sueldo', 'impuesto', 'deuda'] },
-  { id: 'deportes', name: 'Deportes', keywords: ['gol', 'partido', 'fútbol', 'selección', 'liga', 'mundial', 'copa', 'técnico', 'jugador', 'cancha'] },
-  { id: 'sociedad', name: 'Sociedad', keywords: ['vecinos', 'barrio', 'ciudad', 'protesta', 'educación', 'salud', 'hospital', 'seguridad', 'policía'] },
-  { id: 'tecnologia', name: 'Tecnología', keywords: ['app', 'inteligencia artificial', 'robot', 'celular', 'internet', 'red social', 'digital', 'hacker'] },
-  { id: 'cultura', name: 'Cultura', keywords: ['cine', 'teatro', 'música', 'festival', 'museo', 'libro', 'artista', 'exposición', 'concierto'] },
-  { id: 'internacional', name: 'Internacional', keywords: ['eeuu', 'estados unidos', 'europa', 'china', 'rusia', 'brasil', 'guerra', 'otan', 'onu'] },
-  { id: 'clima', name: 'Clima', keywords: ['temperatura', 'lluvia', 'viento', 'tormenta', 'calor', 'frío', 'pronóstico', 'ola de calor'] },
+  {
+    id: 'politica',
+    name: 'Política',
+    keywords: [
+      'presidente',
+      'gobierno',
+      'congreso',
+      'diputado',
+      'senador',
+      'ley',
+      'decreto',
+      'ministerio',
+      'elecciones',
+      'votación',
+    ],
+  },
+  {
+    id: 'economia',
+    name: 'Economía',
+    keywords: [
+      'dólar',
+      'peso',
+      'inflación',
+      'bcra',
+      'mercado',
+      'bolsa',
+      'precio',
+      'sueldo',
+      'impuesto',
+      'deuda',
+    ],
+  },
+  {
+    id: 'deportes',
+    name: 'Deportes',
+    keywords: [
+      'gol',
+      'partido',
+      'fútbol',
+      'selección',
+      'liga',
+      'mundial',
+      'copa',
+      'técnico',
+      'jugador',
+      'cancha',
+    ],
+  },
+  {
+    id: 'sociedad',
+    name: 'Sociedad',
+    keywords: [
+      'vecinos',
+      'barrio',
+      'ciudad',
+      'protesta',
+      'educación',
+      'salud',
+      'hospital',
+      'seguridad',
+      'policía',
+    ],
+  },
+  {
+    id: 'tecnologia',
+    name: 'Tecnología',
+    keywords: [
+      'app',
+      'inteligencia artificial',
+      'robot',
+      'celular',
+      'internet',
+      'red social',
+      'digital',
+      'hacker',
+    ],
+  },
+  {
+    id: 'cultura',
+    name: 'Cultura',
+    keywords: [
+      'cine',
+      'teatro',
+      'música',
+      'festival',
+      'museo',
+      'libro',
+      'artista',
+      'exposición',
+      'concierto',
+    ],
+  },
+  {
+    id: 'internacional',
+    name: 'Internacional',
+    keywords: [
+      'eeuu',
+      'estados unidos',
+      'europa',
+      'china',
+      'rusia',
+      'brasil',
+      'guerra',
+      'otan',
+      'onu',
+    ],
+  },
+  {
+    id: 'clima',
+    name: 'Clima',
+    keywords: [
+      'temperatura',
+      'lluvia',
+      'viento',
+      'tormenta',
+      'calor',
+      'frío',
+      'pronóstico',
+      'ola de calor',
+    ],
+  },
 ];
 
 /**
@@ -86,7 +199,12 @@ function parseRssXml(xml) {
   while ((match = itemRegex.exec(xml)) !== null) {
     let content = match[1];
     let getTag = (tag) => {
-      let m = content.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+      let m = content.match(
+        new RegExp(
+          `<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`,
+          'i'
+        )
+      );
       return m ? (m[1] || m[2] || '').trim() : '';
     };
 
@@ -111,20 +229,26 @@ export default {
 
   driver: {
     description: 'Fetch and parse RSS feeds with caching, categorization, and multi-source support',
-    inputs: [
-      { name: 'url', type: 'string' },
-    ],
+    inputs: [{ name: 'url', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'fetch', description: 'Operation: fetch | fetch-multi | categorize' },
+      operation: {
+        type: 'string',
+        default: 'fetch',
+        description: 'Operation: fetch | fetch-multi | categorize',
+      },
       urls: { type: 'any', default: null, description: 'Array of URLs for fetch-multi' },
       maxItems: { type: 'int', default: 20, description: 'Maximum items to return per feed' },
       timeout: { type: 'int', default: 10000, description: 'Fetch timeout in ms' },
       // categorize
-      items: { type: 'any', default: null, description: 'Array of {title, content} for categorize operation' },
+      items: {
+        type: 'any',
+        default: null,
+        description: 'Array of {title, content} for categorize operation',
+      },
     },
   },
 
@@ -138,9 +262,7 @@ export default {
 
     cacheKey: (inputs, params) => {
       if (params.operation === 'categorize') return null;
-      let url = params.operation === 'fetch-multi'
-        ? params.urls.join(',')
-        : inputs.url;
+      let url = params.operation === 'fetch-multi' ? params.urls.join(',') : inputs.url;
       return `rss:${params.operation}:${simpleHash(url)}`;
     },
 
@@ -152,13 +274,14 @@ export default {
           fetch: async () => {
             let response = await fetch(inputs.url, {
               signal: AbortSignal.timeout(timeout),
-              headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },            });
+              headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },
+            });
             if (!response.ok) return { error: `HTTP ${response.status}: ${response.statusText}` };
 
             let xml = await response.text();
             let rawItems = parseRssXml(xml);
 
-            let items = rawItems.slice(0, maxItems).map(item => ({
+            let items = rawItems.slice(0, maxItems).map((item) => ({
               id: simpleHash(item.title + item.link),
               title: item.title,
               link: item.link,
@@ -178,7 +301,8 @@ export default {
               try {
                 let response = await fetch(url, {
                   signal: AbortSignal.timeout(timeout),
-                  headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },                });
+                  headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },
+                });
                 if (!response.ok) {
                   errors.push({ url, error: `HTTP ${response.status}` });
                   continue;
@@ -206,16 +330,18 @@ export default {
 
             // Deduplicate by ID
             let seen = new Set();
-            let unique = allItems.filter(item => {
+            let unique = allItems.filter((item) => {
               if (seen.has(item.id)) return false;
               seen.add(item.id);
               return true;
             });
 
-            return { result: { items: unique, count: unique.length, sources: params.urls.length, errors } };
+            return {
+              result: { items: unique, count: unique.length, sources: params.urls.length, errors },
+            };
           },
           categorize: async () => {
-            let categorized = params.items.map(item => ({
+            let categorized = params.items.map((item) => ({
               ...item,
               category: categorizeTopic(item.title || '', item.content || item.description || ''),
             }));
@@ -229,7 +355,7 @@ export default {
             }
 
             return { result: { categorized, grouped, count: categorized.length } };
-          }
+          },
         };
 
         if (opMap[operation]) {

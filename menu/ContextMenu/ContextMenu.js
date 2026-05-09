@@ -25,7 +25,6 @@ CtxItem.template = ctxItemTemplate;
 CtxItem.reg('ctx-item');
 
 export class ContextMenu extends Symbiote {
-
   /** @type {Map<string, function>} */
   _actions = new Map();
 

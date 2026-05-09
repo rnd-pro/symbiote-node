@@ -23,7 +23,7 @@ export function serialize(graph, options = {}) {
 
   // Strip _output unless explicitly requested
   if (!includeOutput) {
-    data.nodes = data.nodes.map(n => {
+    data.nodes = data.nodes.map((n) => {
       let { _output, ...rest } = n;
       return rest;
     });

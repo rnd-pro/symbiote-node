@@ -172,7 +172,11 @@ let nodes = [
       ],
       outputs: [{ name: 'output', type: 'effect' }],
       params: {
-        preset: { type: 'string', default: 'bounceIn', enum: ['bounceIn', 'dropImpact', 'glitch', 'shake', 'zoom', 'rubberBand', 'pulse'] },
+        preset: {
+          type: 'string',
+          default: 'bounceIn',
+          enum: ['bounceIn', 'dropImpact', 'glitch', 'shake', 'zoom', 'rubberBand', 'pulse'],
+        },
         beatSync: { type: 'boolean', default: true },
         intensity: { type: 'float', default: 1.0, min: 0, max: 3 },
       },
@@ -208,7 +212,11 @@ let nodes = [
       ],
       outputs: [{ name: 'output', type: 'image' }],
       params: {
-        type: { type: 'string', default: 'fade', enum: ['fade', 'slide', 'wipe', 'zoom', 'dissolve'] },
+        type: {
+          type: 'string',
+          default: 'fade',
+          enum: ['fade', 'slide', 'wipe', 'zoom', 'dissolve'],
+        },
         duration: { type: 'int', default: 30, min: 1 },
         direction: { type: 'string', default: 'left', enum: ['left', 'right', 'up', 'down'] },
       },
@@ -248,7 +256,11 @@ let nodes = [
       ],
       outputs: [{ name: 'output', type: 'image' }],
       params: {
-        mode: { type: 'string', default: 'normal', enum: ['normal', 'multiply', 'screen', 'overlay', 'add'] },
+        mode: {
+          type: 'string',
+          default: 'normal',
+          enum: ['normal', 'multiply', 'screen', 'overlay', 'add'],
+        },
         opacity: { type: 'float', default: 1.0, min: 0, max: 1 },
       },
     },

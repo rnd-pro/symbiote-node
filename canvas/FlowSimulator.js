@@ -14,7 +14,6 @@
  */
 
 export class FlowSimulator {
-
   /** @type {import('../core/Editor.js').NodeEditor} */
   #editor;
 
@@ -314,10 +313,14 @@ export class FlowSimulator {
   #wait(ms) {
     return new Promise((resolve) => {
       let timer = setTimeout(resolve, ms);
-      this.#abort?.signal.addEventListener('abort', () => {
-        clearTimeout(timer);
-        resolve();
-      }, { once: true });
+      this.#abort?.signal.addEventListener(
+        'abort',
+        () => {
+          clearTimeout(timer);
+          resolve();
+        },
+        { once: true }
+      );
     });
   }
 }

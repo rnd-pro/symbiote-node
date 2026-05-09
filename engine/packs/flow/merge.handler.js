@@ -21,9 +21,7 @@ export default {
       { name: 'a', type: 'any' },
       { name: 'b', type: 'any' },
     ],
-    outputs: [
-      { name: 'data', type: 'any' },
-    ],
+    outputs: [{ name: 'data', type: 'any' }],
     params: {
       mode: {
         type: 'string',
@@ -48,7 +46,7 @@ export default {
       }
 
       if (mode === 'append') {
-        let items = Object.values(inputs).filter(v => v != null);
+        let items = Object.values(inputs).filter((v) => v != null);
         return { data: items };
       }
 

@@ -62,19 +62,13 @@ export class SubgraphNode extends Node {
       if (innerNode._exposed === 'input') {
         for (const [key, output] of Object.entries(innerNode.outputs)) {
           let portKey = `sg_${innerNode.id}_${key}`;
-          this.addInput(portKey, new Input(
-            output.socket ?? anySocket,
-            innerNode.label ?? key
-          ));
+          this.addInput(portKey, new Input(output.socket ?? anySocket, innerNode.label ?? key));
         }
       }
       if (innerNode._exposed === 'output') {
         for (const [key, input] of Object.entries(innerNode.inputs)) {
           let portKey = `sg_${innerNode.id}_${key}`;
-          this.addOutput(portKey, new Output(
-            input.socket ?? anySocket,
-            innerNode.label ?? key
-          ));
+          this.addOutput(portKey, new Output(input.socket ?? anySocket, innerNode.label ?? key));
         }
       }
     }

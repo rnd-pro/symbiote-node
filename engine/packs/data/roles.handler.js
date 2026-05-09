@@ -35,7 +35,10 @@ function parseFrontmatter(content) {
 
     // Parse arrays (simple YAML inline [a, b, c])
     if (value.startsWith('[') && value.endsWith(']')) {
-      value = value.slice(1, -1).split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+      value = value
+        .slice(1, -1)
+        .split(',')
+        .map((v) => v.trim().replace(/^["']|["']$/g, ''));
     }
     frontmatter[key] = value;
   }
@@ -60,10 +63,13 @@ async function scanRolesDirectory(dirPath, prefix = '') {
       let fullPath = path.join(dirPath, entry.name);
 
       if (entry.isDirectory()) {
-        let subRoles = await scanRolesDirectory(fullPath, prefix ? `${prefix}/${entry.name}` : entry.name);
+        let subRoles = await scanRolesDirectory(
+          fullPath,
+          prefix ? `${prefix}/${entry.name}` : entry.name
+        );
         for (const [id, role] of subRoles) {
           roles.set(id, role);
-          if (Array.isArray(role.tags)) role.tags.forEach(t => tags.add(t));
+          if (Array.isArray(role.tags)) role.tags.forEach((t) => tags.add(t));
         }
         continue;
       }
@@ -82,13 +88,13 @@ async function scanRolesDirectory(dirPath, prefix = '') {
         name: frontmatter.name || frontmatter.title || roleId,
         tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
         description: frontmatter.description || '',
-        category: frontmatter.category || (prefix || 'general'),
+        category: frontmatter.category || prefix || 'general',
         content: body,
         path: fullPath,
       };
 
       roles.set(roleId, role);
-      role.tags.forEach(t => tags.add(t));
+      role.tags.forEach((t) => tags.add(t));
     }
   } catch {
     // Directory not found or unreadable
@@ -106,19 +112,29 @@ export default {
 
   driver: {
     description: 'Manage AI roles/instructions from Markdown files with YAML frontmatter',
-    inputs: [
-      { name: 'rolesDir', type: 'string' },
-    ],
+    inputs: [{ name: 'rolesDir', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'list', description: 'Operation: list | get | filter-tags | combine | scan' },
+      operation: {
+        type: 'string',
+        default: 'list',
+        description: 'Operation: list | get | filter-tags | combine | scan',
+      },
       roleId: { type: 'string', default: null, description: 'Role ID for get operation' },
       tags: { type: 'any', default: null, description: 'Array of tags for filter-tags' },
-      matchAll: { type: 'boolean', default: true, description: 'Require ALL tags (true) or ANY tag (false)' },
-      roleIds: { type: 'any', default: null, description: 'Array of role IDs for combine operation' },
+      matchAll: {
+        type: 'boolean',
+        default: true,
+        description: 'Require ALL tags (true) or ANY tag (false)',
+      },
+      roleIds: {
+        type: 'any',
+        default: null,
+        description: 'Array of role IDs for combine operation',
+      },
     },
   },
 
@@ -151,7 +167,7 @@ export default {
                 description: role.description,
                 category: role.category,
               });
-              role.tags.forEach(t => allTags.add(t));
+              role.tags.forEach((t) => allTags.add(t));
             }
             return {
               result: {
@@ -173,8 +189,8 @@ export default {
             let filtered = [];
             for (const [, role] of roles) {
               let match = params.matchAll
-                ? params.tags.every(t => role.tags.includes(t))
-                : params.tags.some(t => role.tags.includes(t));
+                ? params.tags.every((t) => role.tags.includes(t))
+                : params.tags.some((t) => role.tags.includes(t));
               if (match) filtered.push(role);
             }
             return { result: { roles: filtered, count: filtered.length } };
@@ -200,7 +216,7 @@ export default {
                 missing,
               },
             };
-          }
+          },
         };
 
         if (opMap[operation]) {

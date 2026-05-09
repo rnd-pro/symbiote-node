@@ -84,7 +84,7 @@ export let ROUNDED_SKIN = {
     '--sn-space-xl': '28px',
 
     // === Semantic geometry ===
-    '--sn-node-radius': 'var(--sn-space-lg)',       // larger radius for "rounded" feel
+    '--sn-node-radius': 'var(--sn-space-lg)', // larger radius for "rounded" feel
     '--sn-comment-radius': 'var(--sn-space-md)',
     '--sn-socket-size': 'var(--sn-space-md)',
     '--sn-socket-border-width': '2.5px',

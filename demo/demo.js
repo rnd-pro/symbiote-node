@@ -6,12 +6,31 @@
  */
 
 import {
-  NodeEditor, Node, Connection, Socket, Input, Output, InputControl,
-  FlowSimulator, Frame, History, SubgraphNode,
-  DARK_DEFAULT, SYNTHWAVE, GREY_NEUTRAL, NEON_GLOW,
-  DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE,
-  MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN,
-  Layout, LayoutTree, applyTheme,
+  NodeEditor,
+  Node,
+  Connection,
+  Socket,
+  Input,
+  Output,
+  InputControl,
+  FlowSimulator,
+  Frame,
+  History,
+  SubgraphNode,
+  DARK_DEFAULT,
+  SYNTHWAVE,
+  GREY_NEUTRAL,
+  NEON_GLOW,
+  DARK_PALETTE,
+  LIGHT_PALETTE,
+  SYNTHWAVE_PALETTE,
+  GREY_PALETTE,
+  MODERN_SKIN,
+  COMPACT_SKIN,
+  ROUNDED_SKIN,
+  Layout,
+  LayoutTree,
+  applyTheme,
 } from '../index.js';
 import '../canvas/NodeCanvas/NodeCanvas.js';
 import '../node/GraphNode/GraphNode.js';
@@ -39,7 +58,11 @@ async function initDemo() {
   // ══════════════════════════════════════════════════
 
   // ⬡ API Gateway — hexagon SVG node (entry point)
-  const gateway = new Node('API Gateway', { type: 'gateway', category: 'server', shape: 'hexagon' });
+  const gateway = new Node('API Gateway', {
+    type: 'gateway',
+    category: 'server',
+    shape: 'hexagon',
+  });
   gateway.addInput('auth', new Input(execSocket, 'Auth'));
   gateway.addOutput('data', new Output(dataSocket, 'Data'));
   gateway.addOutput('meta', new Output(textSocket, 'Meta'));
@@ -50,7 +73,11 @@ async function initDemo() {
   auth.addOutput('ok', new Output(execSocket, 'Verified'));
 
   // ☁ Cloud Storage — cloud SVG node (data source)
-  const cloudSrc = new Node('Cloud Fetch', { type: 'storage', category: 'instance', shape: 'cloud' });
+  const cloudSrc = new Node('Cloud Fetch', {
+    type: 'storage',
+    category: 'instance',
+    shape: 'cloud',
+  });
   cloudSrc.addInput('query', new Input(dataSocket, 'Query'));
   cloudSrc.addOutput('docs', new Output(arraySocket, 'Documents'));
 
@@ -113,7 +140,10 @@ async function initDemo() {
   const debug = new Node('Debug Log', { type: 'debug', category: 'default' });
   debug.addInput('inspect', new Input(anySocket, 'Inspect'));
   debug.addInput('health', new Input(textSocket, 'Health'));
-  debug.addControl('output', new InputControl('text', { initial: '{ status: "ok", latency: "42ms" }', readonly: true }));
+  debug.addControl(
+    'output',
+    new InputControl('text', { initial: '{ status: "ok", latency: "42ms" }', readonly: true })
+  );
 
   // ★ Notification — star SVG (alerts)
   const notify = new Node('Notify', { type: 'event', category: 'control', shape: 'star' });
@@ -158,9 +188,19 @@ async function initDemo() {
   // ══════════════════════════════════════════════════
 
   const allNodes = [
-    trigger, auth, gateway, cloudSrc,
-    httpReq, aiAgent, filter, merge,
-    cdn, db, health, debug, notify,
+    trigger,
+    auth,
+    gateway,
+    cloudSrc,
+    httpReq,
+    aiAgent,
+    filter,
+    merge,
+    cdn,
+    db,
+    health,
+    debug,
+    notify,
     subgraph,
   ];
   allNodes.forEach((n) => editor.addNode(n));
@@ -335,17 +375,19 @@ async function initDemo() {
         if (!saved) {
           if (sectionId === 'canvas') {
             // Canvas gets the original 3-panel split layout
-            layout.setLayout(LayoutTree.createSplit(
-              'horizontal',
+            layout.setLayout(
               LayoutTree.createSplit(
-                'vertical',
-                LayoutTree.createPanel('canvas'),
-                LayoutTree.createPanel('eventlog'),
-                0.78,
-              ),
-              LayoutTree.createPanel('aichat'),
-              0.78,
-            ));
+                'horizontal',
+                LayoutTree.createSplit(
+                  'vertical',
+                  LayoutTree.createPanel('canvas'),
+                  LayoutTree.createPanel('eventlog'),
+                  0.78
+                ),
+                LayoutTree.createPanel('aichat'),
+                0.78
+              )
+            );
           } else {
             // Other sections get a single panel
             layout.setLayout({
@@ -469,16 +511,38 @@ async function initDemo() {
 
       // Demo features: error state, preview
       canvas.setNodeError(filter.id, 'Missing required condition');
-      canvas.setPreview(aiAgent.id, '▶ Processing prompt...\n✓ 847 tokens used\n✓ Response cached', 'text');
+      canvas.setPreview(
+        aiAgent.id,
+        '▶ Processing prompt...\n✓ 847 tokens used\n✓ Response cached',
+        'text'
+      );
 
       // Settle SVG connectors after all nodes are positioned
       requestAnimationFrame(() => canvas.refreshConnections());
     }, 200);
 
     // Frames
-    const sourceFrame = new Frame('Data Sources', { x: -30, y: 40, width: 784, height: 224, color: '#5cb8ff' });
-    const processFrame = new Frame('AI Processing', { x: -227, y: 315, width: 1179, height: 371, color: '#a78bfa' });
-    const deliveryFrame = new Frame('Delivery', { x: -84, y: 752, width: 897, height: 232, color: '#5cd87a' });
+    const sourceFrame = new Frame('Data Sources', {
+      x: -30,
+      y: 40,
+      width: 784,
+      height: 224,
+      color: '#5cb8ff',
+    });
+    const processFrame = new Frame('AI Processing', {
+      x: -227,
+      y: 315,
+      width: 1179,
+      height: 371,
+      color: '#a78bfa',
+    });
+    const deliveryFrame = new Frame('Delivery', {
+      x: -84,
+      y: 752,
+      width: 897,
+      height: 232,
+      color: '#5cd87a',
+    });
     editor.addFrame(sourceFrame);
     editor.addFrame(processFrame);
     editor.addFrame(deliveryFrame);
@@ -567,17 +631,29 @@ async function initDemo() {
         }
         const frames = {};
         for (const f of editor.getFrames()) {
-          frames[f.label] = { x: Math.round(f.x), y: Math.round(f.y), width: Math.round(f.width), height: Math.round(f.height), color: f.color };
+          frames[f.label] = {
+            x: Math.round(f.x),
+            y: Math.round(f.y),
+            width: Math.round(f.width),
+            height: Math.round(f.height),
+            color: f.color,
+          };
         }
         const layout = {
-          viewport: { panX: Math.round(canvas.$.panX), panY: Math.round(canvas.$.panY), zoom: Math.round(canvas.$.zoom * 100) / 100 },
+          viewport: {
+            panX: Math.round(canvas.$.panX),
+            panY: Math.round(canvas.$.panY),
+            zoom: Math.round(canvas.$.zoom * 100) / 100,
+          },
           nodes: labeled,
           frames,
         };
         const json = JSON.stringify(layout, null, 2);
         await navigator.clipboard.writeText(json);
         btnCopy.lastChild.textContent = ' Copied!';
-        setTimeout(() => { btnCopy.lastChild.textContent = ' Copy Layout'; }, 1500);
+        setTimeout(() => {
+          btnCopy.lastChild.textContent = ' Copy Layout';
+        }, 1500);
       });
     }
 

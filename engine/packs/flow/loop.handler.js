@@ -16,12 +16,8 @@ export default {
 
   driver: {
     description: 'Iterate over array — execute body per item',
-    inputs: [
-      { name: 'items', type: 'array' },
-    ],
-    outputs: [
-      { name: 'results', type: 'array' },
-    ],
+    inputs: [{ name: 'items', type: 'array' }],
+    outputs: [{ name: 'results', type: 'array' }],
     params: {
       bodyType: { type: 'string', default: '', description: 'Node type to execute per item' },
     },

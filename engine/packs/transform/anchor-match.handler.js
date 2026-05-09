@@ -28,10 +28,22 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'align', description: 'Operation: align | align-fuzzy | parse-lyrics' },
+      operation: {
+        type: 'string',
+        default: 'align',
+        description: 'Operation: align | align-fuzzy | parse-lyrics',
+      },
       apiKey: { type: 'string', default: '', description: 'OpenRouter API key for AI correction' },
-      model: { type: 'string', default: 'deepseek/deepseek-v3.2', description: 'AI model for correction' },
-      maxPhraseWords: { type: 'int', default: 8, description: 'Max words per phrase for subtitle readability' },
+      model: {
+        type: 'string',
+        default: 'deepseek/deepseek-v3.2',
+        description: 'AI model for correction',
+      },
+      maxPhraseWords: {
+        type: 'int',
+        default: 8,
+        description: 'Max words per phrase for subtitle readability',
+      },
     },
   },
 
@@ -56,8 +68,17 @@ export default {
           return { phrases: null, segments, stats: { sections: segments.length }, error: null };
         }
 
-        if (!inputs.whisperWords || !Array.isArray(inputs.whisperWords) || inputs.whisperWords.length === 0) {
-          return { phrases: null, segments: null, stats: null, error: 'whisperWords array is required for alignment' };
+        if (
+          !inputs.whisperWords ||
+          !Array.isArray(inputs.whisperWords) ||
+          inputs.whisperWords.length === 0
+        ) {
+          return {
+            phrases: null,
+            segments: null,
+            stats: null,
+            error: 'whisperWords array is required for alignment',
+          };
         }
 
         let segments = parseLyrics(inputs.lyrics);
@@ -148,7 +169,8 @@ function extractSingableText(line) {
  * @returns {string}
  */
 function normalizeWord(word) {
-  return word.toLowerCase()
+  return word
+    .toLowerCase()
     .replace(/[.,!?¿¡'"()]/g, '')
     .replace(/[áà]/g, 'a')
     .replace(/[éè]/g, 'e')
@@ -167,7 +189,9 @@ function normalizeWord(word) {
 function editDistance(s1, s2) {
   let m = s1.length;
   let n = s2.length;
-  let dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  let dp = Array(m + 1)
+    .fill(null)
+    .map(() => Array(n + 1).fill(0));
 
   for (let i = 0; i <= m; i++) dp[i][0] = i;
   for (let j = 0; j <= n; j++) dp[0][j] = j;
@@ -234,7 +258,7 @@ function calculateSectionTiming(segments, correctedWords) {
   if (!segments || segments.length === 0) return segments;
 
   let wordIndex = 0;
-  return segments.map(seg => {
+  return segments.map((seg) => {
     let startTime = null;
 
     for (const line of seg.lines) {
@@ -245,8 +269,10 @@ function calculateSectionTiming(segments, correctedWords) {
 
       for (let i = wordIndex; i < correctedWords.length && i < wordIndex + 50; i++) {
         let cw = correctedWords[i];
-        if (normalizeWord(cw.word) === firstWord ||
-          editDistance(normalizeWord(cw.word), firstWord) <= 1) {
+        if (
+          normalizeWord(cw.word) === firstWord ||
+          editDistance(normalizeWord(cw.word), firstWord) <= 1
+        ) {
           startTime = cw.start;
           wordIndex = i;
           break;
@@ -276,7 +302,7 @@ async function alignHybrid(referenceLyrics, whisperWords, segments, params) {
       let singable = extractSingableText(line);
       if (!singable) continue;
       let words = singable.match(/[\w\u00C0-\u024F]+[.,!?']*|[.,!?]+/gi) || [];
-      words.forEach(w => {
+      words.forEach((w) => {
         if (w.trim()) {
           let norm = normalizeWord(w);
           if (!lyricsVocabulary.has(norm) || /[.,!?']$/.test(w)) {
@@ -291,7 +317,7 @@ async function alignHybrid(referenceLyrics, whisperWords, segments, params) {
   }
 
   // Correct Whisper words using vocabulary
-  let correctedWords = whisperWords.map(w => {
+  let correctedWords = whisperWords.map((w) => {
     let whisperNorm = normalizeWord(w.word);
 
     // Exact match
@@ -320,8 +346,7 @@ async function alignHybrid(referenceLyrics, whisperWords, segments, params) {
       if (dist === 0) break;
     }
 
-    let isConfident = bestDistance <= 1 ||
-      (bestDistance === 2 && whisperNorm.length > 5);
+    let isConfident = bestDistance <= 1 || (bestDistance === 2 && whisperNorm.length > 5);
 
     let correctedWord = isConfident && bestMatch ? bestMatch.original : w.word;
 
@@ -373,7 +398,7 @@ function buildPhrasesFromCorrectedWords(correctedWords, segments, maxWords = 8) 
         end: w.end,
         section: inferSection(phraseStart, segments),
         confidence: 0.9,
-        words: correctedWords.slice(i - currentPhrase.length + 1, i + 1).map(cw => ({
+        words: correctedWords.slice(i - currentPhrase.length + 1, i + 1).map((cw) => ({
           word: cw.word,
           start: cw.start,
           end: cw.end,
@@ -393,7 +418,7 @@ function buildPhrasesFromCorrectedWords(correctedWords, segments, maxWords = 8) 
       end: lastEnd,
       section: 'Outro',
       confidence: 0.9,
-      words: correctedWords.slice(startIdx).map(cw => ({
+      words: correctedWords.slice(startIdx).map((cw) => ({
         word: cw.word,
         start: cw.start,
         end: cw.end,
@@ -420,7 +445,7 @@ function alignWithFuzzy(segments, whisperWords) {
       if (!singable) continue;
 
       let isExclamation = line.trim().startsWith('(');
-      let words = singable.split(/\s+/).filter(w => w.length > 0);
+      let words = singable.split(/\s+/).filter((w) => w.length > 0);
       if (words.length === 0) continue;
 
       let firstWord = normalizeWord(words[0]);
@@ -469,7 +494,7 @@ function alignWithFuzzy(segments, whisperWords) {
           start: startTime,
           end: endTime,
           section: seg.section,
-          confidence: bestScore === 0 ? 0.95 : (bestScore === 1 ? 0.85 : 0.7),
+          confidence: bestScore === 0 ? 0.95 : bestScore === 1 ? 0.85 : 0.7,
           isExclamation,
         });
 

@@ -37,9 +37,9 @@ export class LayoutPreview extends Symbiote {
 
   /**
    * Show split preview
-   * @param {'split-h' | 'split-v'} direction 
-   * @param {DOMRect} panelRect 
-   * @param {number} [ratio=0.5] 
+   * @param {'split-h' | 'split-v'} direction
+   * @param {DOMRect} panelRect
+   * @param {number} [ratio=0.5]
    */
   showSplit(direction, panelRect, ratio = 0.5) {
     this.$.previewType = direction;

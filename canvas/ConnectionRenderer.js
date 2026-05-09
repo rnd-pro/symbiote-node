@@ -12,7 +12,6 @@
 import { getShape } from '../shapes/index.js';
 
 export class ConnectionRenderer {
-
   /** @type {Map<string, import('../core/Connection.js').Connection>} */
   #connectionData = new Map();
 
@@ -141,7 +140,9 @@ export class ConnectionRenderer {
       path.style.opacity = '0';
       path.addEventListener('transitionend', () => path.remove(), { once: true });
       // Fallback removal if transition doesn't fire
-      setTimeout(() => { if (path.parentNode) path.remove(); }, 200);
+      setTimeout(() => {
+        if (path.parentNode) path.remove();
+      }, 200);
     }
     // Remove endpoint dots and arrow
     for (const end of ['start', 'end']) {
@@ -217,7 +218,6 @@ export class ConnectionRenderer {
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId || conn.to === nodeId) {
         touchedConns.push(conn);
-
       }
     }
 
@@ -236,7 +236,7 @@ export class ConnectionRenderer {
   refreshAll() {
     let t0 = performance.now();
     ConnectionRenderer._refreshCycleCount = (ConnectionRenderer._refreshCycleCount || 0) + 1;
-    
+
     this.#clearAllSlots();
 
     // Clear stale free dots from previous render
@@ -355,7 +355,9 @@ export class ConnectionRenderer {
 
           if (ConnectionRenderer.debug) {
             let label = el._nodeData?.label || nodeId;
-            console.log(`🔄 [PIN] ${label} | ${item.portSide}:${item.portKey} → side=${nodeSide} t=${t.toFixed(2)} pos=(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}) angle=${pos.angle}°`);
+            console.log(
+              `🔄 [PIN] ${label} | ${item.portSide}:${item.portKey} → side=${nodeSide} t=${t.toFixed(2)} pos=(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}) angle=${pos.angle}°`
+            );
           }
         });
       }
@@ -381,22 +383,30 @@ export class ConnectionRenderer {
           let s1 = this._allSegments[i];
           let s2 = this._allSegments[j];
           if (s1.connId === s2.connId) continue;
-          
+
           // Check if both are horizontal
           if (s1.p1.y === s1.p2.y && s2.p1.y === s2.p2.y && s1.p1.y === s2.p1.y) {
-            let minX1 = Math.min(s1.p1.x, s1.p2.x), maxX1 = Math.max(s1.p1.x, s1.p2.x);
-            let minX2 = Math.min(s2.p1.x, s2.p2.x), maxX2 = Math.max(s2.p1.x, s2.p2.x);
+            let minX1 = Math.min(s1.p1.x, s1.p2.x),
+              maxX1 = Math.max(s1.p1.x, s1.p2.x);
+            let minX2 = Math.min(s2.p1.x, s2.p2.x),
+              maxX2 = Math.max(s2.p1.x, s2.p2.x);
             if (Math.max(minX1, minX2) + 5 < Math.min(maxX1, maxX2)) {
-              console.log(`🟡 [PCB DEBUG] Trace Overlap (Horizontal) Y=${s1.p1.y}: conn[${s1.connId}] overlaps conn[${s2.connId}]`);
+              console.log(
+                `🟡 [PCB DEBUG] Trace Overlap (Horizontal) Y=${s1.p1.y}: conn[${s1.connId}] overlaps conn[${s2.connId}]`
+              );
               overlaps++;
             }
           }
           // Check if both are vertical
           if (s1.p1.x === s1.p2.x && s2.p1.x === s2.p2.x && s1.p1.x === s2.p1.x) {
-            let minY1 = Math.min(s1.p1.y, s1.p2.y), maxY1 = Math.max(s1.p1.y, s1.p2.y);
-            let minY2 = Math.min(s2.p1.y, s2.p2.y), maxY2 = Math.max(s2.p1.y, s2.p2.y);
+            let minY1 = Math.min(s1.p1.y, s1.p2.y),
+              maxY1 = Math.max(s1.p1.y, s1.p2.y);
+            let minY2 = Math.min(s2.p1.y, s2.p2.y),
+              maxY2 = Math.max(s2.p1.y, s2.p2.y);
             if (Math.max(minY1, minY2) + 5 < Math.min(maxY1, maxY2)) {
-              console.log(`🟡 [PCB DEBUG] Trace Overlap (Vertical) X=${s1.p1.x}: conn[${s1.connId}] overlaps conn[${s2.connId}]`);
+              console.log(
+                `🟡 [PCB DEBUG] Trace Overlap (Vertical) X=${s1.p1.x}: conn[${s1.connId}] overlaps conn[${s2.connId}]`
+              );
               overlaps++;
             }
           }
@@ -414,14 +424,18 @@ export class ConnectionRenderer {
     // ─── Performance Monitoring ───
     if (ConnectionRenderer.debug) {
       let t1 = performance.now();
-      let mem = (performance?.memory?.usedJSHeapSize) 
-        ? (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2) + 'MB' 
+      let mem = performance?.memory?.usedJSHeapSize
+        ? (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2) + 'MB'
         : 'N/A';
-      console.log(`🔄 [PCB PERF] refreshAll cycle #${ConnectionRenderer._refreshCycleCount} took ${(t1 - t0).toFixed(2)}ms | Mem: ${mem}`);
-      
+      console.log(
+        `🔄 [PCB PERF] refreshAll cycle #${ConnectionRenderer._refreshCycleCount} took ${(t1 - t0).toFixed(2)}ms | Mem: ${mem}`
+      );
+
       let dt = t0 - (ConnectionRenderer._lastRefreshTime || 0);
       if (ConnectionRenderer._lastRefreshTime > 0 && dt < 16) {
-        console.log(`🟡 [PCB PERF] High refresh rate detected! dt=${dt.toFixed(2)}ms (possible rendering loop or layout oscillation)`);
+        console.log(
+          `🟡 [PCB PERF] High refresh rate detected! dt=${dt.toFixed(2)}ms (possible rendering loop or layout oscillation)`
+        );
       }
       ConnectionRenderer._lastRefreshTime = t0;
     }
@@ -464,9 +478,10 @@ export class ConnectionRenderer {
     }
   }
 
-
   /** @returns {'bezier'|'orthogonal'|'straight'} */
-  get pathStyle() { return this.#pathStyle; }
+  get pathStyle() {
+    return this.#pathStyle;
+  }
 
   /**
    * Get socket offset relative to graph-node.
@@ -503,9 +518,8 @@ export class ConnectionRenderer {
         let dy = targetPos.y - cy;
 
         // Determine side from angle to target
-        let nodeSide = Math.abs(dx) > Math.abs(dy)
-          ? (dx > 0 ? 'right' : 'left')
-          : (dy > 0 ? 'bottom' : 'top');
+        let nodeSide =
+          Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'bottom' : 'top';
 
         let pos = shape.getSidePosition(nodeSide, 0.5, size);
         let result = { x: pos.x, y: pos.y, angle: pos.angle };
@@ -532,8 +546,8 @@ export class ConnectionRenderer {
         // 2. Anti-crossing: reverse port order based on perpendicular direction
         let dx = targetPos.x - cx;
         let dy = targetPos.y - cy;
-        let shouldReverse = (side === 'output') ? (dy < 0) : (dy > 0);
-        let effectiveIndex = shouldReverse ? (total - 1 - index) : index;
+        let shouldReverse = side === 'output' ? dy < 0 : dy > 0;
+        let effectiveIndex = shouldReverse ? total - 1 - index : index;
 
         // 3. Spread ports around adjusted base angle
         let angle = adjustedBase;
@@ -562,7 +576,7 @@ export class ConnectionRenderer {
         while (attempts < 24) {
           let testPos = shape.getEdgePoint(nudged, size);
           let tooClose = nodeEl._usedCoords.some(
-            c => Math.abs(testPos.x - c.x) < MIN_PIX && Math.abs(testPos.y - c.y) < MIN_PIX
+            (c) => Math.abs(testPos.x - c.x) < MIN_PIX && Math.abs(testPos.y - c.y) < MIN_PIX
           );
           if (!tooClose) break;
           nudged += step;
@@ -591,15 +605,14 @@ export class ConnectionRenderer {
     // Fast path: if node is culled, skip forced layout resolution
     if (nodeEl.style.contentVisibility === 'hidden') {
       return {
-        x: side === 'output' ? (nodeEl._cachedW || 180) : 0,
+        x: side === 'output' ? nodeEl._cachedW || 180 : 0,
         y: (nodeEl._cachedH || 100) / 2,
       };
     }
 
     // Standard shapes: read from DOM socket elements
-    let container = side === 'output'
-      ? nodeEl.querySelector('.outputs')
-      : nodeEl.querySelector('.inputs');
+    let container =
+      side === 'output' ? nodeEl.querySelector('.outputs') : nodeEl.querySelector('.inputs');
 
     if (container) {
       let portItems = container.querySelectorAll('port-item');
@@ -620,7 +633,7 @@ export class ConnectionRenderer {
     }
 
     return {
-      x: side === 'output' ? (nodeEl._cachedW || nodeEl.offsetWidth || 180) : 0,
+      x: side === 'output' ? nodeEl._cachedW || nodeEl.offsetWidth || 180 : 0,
       y: (nodeEl._cachedH || nodeEl.offsetHeight || 100) / 2,
     };
   }
@@ -684,8 +697,8 @@ export class ConnectionRenderer {
 
       let stubLen = 20;
       let getDxDy = (deg) => ({
-        dx: Math.round(Math.cos(deg * Math.PI / 180)),
-        dy: Math.round(Math.sin(deg * Math.PI / 180))
+        dx: Math.round(Math.cos((deg * Math.PI) / 180)),
+        dy: Math.round(Math.sin((deg * Math.PI) / 180)),
       });
 
       let fDir = getDxDy(fromAngle);
@@ -699,88 +712,92 @@ export class ConnectionRenderer {
       let fromH = fromEl._cachedH || 60;
       let toH = toEl._cachedH || 60;
 
-      let pts = [{x: startX, y: startY}, {x: p1x, y: p1y}];
+      let pts = [
+        { x: startX, y: startY },
+        { x: p1x, y: p1y },
+      ];
 
       if (endX < startX) {
-          let bottomY = Math.max(fromPos.y + fromH, toPos.y + toH) + 30 + traceOffset;
-          pts.push({x: p1x, y: bottomY});
-          pts.push({x: p2x, y: bottomY});
+        let bottomY = Math.max(fromPos.y + fromH, toPos.y + toH) + 30 + traceOffset;
+        pts.push({ x: p1x, y: bottomY });
+        pts.push({ x: p2x, y: bottomY });
       } else {
-          let maxH = Math.max(fromH, toH);
-          if (Math.abs(p1y - p2y) < maxH) {
-              let nodeBetween = false;
-              for (const [, node] of this.#nodeViews) {
-                  if (!node._position) continue;
-                  let nx = node._position.x;
-                  let ny = node._position.y;
-                  let nw = node._cachedW || 180;
-                  let nh = node._cachedH || 60;
-                  if (nx > p1x && nx + nw < p2x) {
-                      if (Math.min(p1y, p2y) <= ny + nh && Math.max(p1y, p2y) >= ny) {
-                          nodeBetween = true; break;
-                      }
-                  }
+        let maxH = Math.max(fromH, toH);
+        if (Math.abs(p1y - p2y) < maxH) {
+          let nodeBetween = false;
+          for (const [, node] of this.#nodeViews) {
+            if (!node._position) continue;
+            let nx = node._position.x;
+            let ny = node._position.y;
+            let nw = node._cachedW || 180;
+            let nh = node._cachedH || 60;
+            if (nx > p1x && nx + nw < p2x) {
+              if (Math.min(p1y, p2y) <= ny + nh && Math.max(p1y, p2y) >= ny) {
+                nodeBetween = true;
+                break;
               }
-              
-              if (nodeBetween) {
-                  let detourY = Math.min(fromPos.y, toPos.y) - 30 - traceOffset;
-                  pts.push({x: p1x, y: detourY});
-                  pts.push({x: p2x, y: detourY});
-              } else {
-                  let midX = (p1x + p2x) / 2 + traceOffset;
-                  pts.push({x: midX, y: p1y});
-                  pts.push({x: midX, y: p2y});
-              }
-          } else {
-              let midX = (p1x + p2x) / 2 + traceOffset;
-              let obstacleNode = null;
-              let minY = Math.min(p1y, p2y);
-              let maxY = Math.max(p1y, p2y);
-              
-              for (const [, node] of this.#nodeViews) {
-                  if (!node._position) continue;
-                  let nx = node._position.x;
-                  let ny = node._position.y;
-                  let nw = node._cachedW || 180;
-                  let nh = node._cachedH || 60;
-                  if (midX >= nx && midX <= nx + nw) {
-                      if (ny <= maxY && ny + nh >= minY) {
-                          obstacleNode = {x: nx, w: nw};
-                          break;
-                      }
-                  }
-              }
-              
-              if (obstacleNode) {
-                  let leftDist = Math.abs(midX - obstacleNode.x);
-                  let rightDist = Math.abs(midX - (obstacleNode.x + obstacleNode.w));
-                  if (leftDist < rightDist) {
-                      midX = obstacleNode.x - 30 - traceOffset;
-                  } else {
-                      midX = obstacleNode.x + obstacleNode.w + 30 + traceOffset;
-                  }
-              }
-              
-              pts.push({x: midX, y: p1y});
-              pts.push({x: midX, y: p2y});
+            }
           }
+
+          if (nodeBetween) {
+            let detourY = Math.min(fromPos.y, toPos.y) - 30 - traceOffset;
+            pts.push({ x: p1x, y: detourY });
+            pts.push({ x: p2x, y: detourY });
+          } else {
+            let midX = (p1x + p2x) / 2 + traceOffset;
+            pts.push({ x: midX, y: p1y });
+            pts.push({ x: midX, y: p2y });
+          }
+        } else {
+          let midX = (p1x + p2x) / 2 + traceOffset;
+          let obstacleNode = null;
+          let minY = Math.min(p1y, p2y);
+          let maxY = Math.max(p1y, p2y);
+
+          for (const [, node] of this.#nodeViews) {
+            if (!node._position) continue;
+            let nx = node._position.x;
+            let ny = node._position.y;
+            let nw = node._cachedW || 180;
+            let nh = node._cachedH || 60;
+            if (midX >= nx && midX <= nx + nw) {
+              if (ny <= maxY && ny + nh >= minY) {
+                obstacleNode = { x: nx, w: nw };
+                break;
+              }
+            }
+          }
+
+          if (obstacleNode) {
+            let leftDist = Math.abs(midX - obstacleNode.x);
+            let rightDist = Math.abs(midX - (obstacleNode.x + obstacleNode.w));
+            if (leftDist < rightDist) {
+              midX = obstacleNode.x - 30 - traceOffset;
+            } else {
+              midX = obstacleNode.x + obstacleNode.w + 30 + traceOffset;
+            }
+          }
+
+          pts.push({ x: midX, y: p1y });
+          pts.push({ x: midX, y: p2y });
+        }
       }
 
-      pts.push({x: p2x, y: p2y});
-      pts.push({x: endX, y: endY});
+      pts.push({ x: p2x, y: p2y });
+      pts.push({ x: endX, y: endY });
 
       let path = `M ${pts[0].x} ${pts[0].y}`;
       for (let i = 1; i < pts.length; i++) {
-          let prev = pts[i-1];
-          let curr = pts[i];
-          if (curr.x === prev.x && curr.y === prev.y) continue;
-          if (curr.x !== prev.x && curr.y !== prev.y) {
-              path += ` H ${curr.x} V ${curr.y}`;
-          } else if (curr.x !== prev.x) {
-              path += ` H ${curr.x}`;
-          } else if (curr.y !== prev.y) {
-              path += ` V ${curr.y}`;
-          }
+        let prev = pts[i - 1];
+        let curr = pts[i];
+        if (curr.x === prev.x && curr.y === prev.y) continue;
+        if (curr.x !== prev.x && curr.y !== prev.y) {
+          path += ` H ${curr.x} V ${curr.y}`;
+        } else if (curr.x !== prev.x) {
+          path += ` H ${curr.x}`;
+        } else if (curr.y !== prev.y) {
+          path += ` V ${curr.y}`;
+        }
       }
       d = path;
     } else if (this.#pathStyle === 'pcb') {
@@ -788,9 +805,9 @@ export class ConnectionRenderer {
       // All waypoints snap to a grid. Stubs exit perpendicular to node surface
       // with a minimum length, then route on grid channels with chamfered corners.
 
-      const TRACE_GRID = 5;  // Dense trace grid (5px)
-      const STUB_MIN = 20;   // minimum perpendicular stub from node edge
-      const CHAMFER = 8;     // 45° chamfer radius (px)
+      const TRACE_GRID = 5; // Dense trace grid (5px)
+      const STUB_MIN = 20; // minimum perpendicular stub from node edge
+      const CHAMFER = 8; // 45° chamfer radius (px)
 
       // Snap a coordinate to the trace grid
       let snapGrid = (v) => Math.round(v / TRACE_GRID) * TRACE_GRID;
@@ -798,10 +815,10 @@ export class ConnectionRenderer {
       // Connection channel index for parallel trace separation
       let connKeys = Array.from(this.#connectionData.keys());
       let connIndex = connKeys.indexOf(conn.id);
-      
+
       // Determine unique channel shift to prevent parallel traces overlapping
       // Alternates: 0, +5, -5, +10, -10...
-      let shiftIndex = (connIndex > -1 ? connIndex % 12 : 0);
+      let shiftIndex = connIndex > -1 ? connIndex % 12 : 0;
       let channelShift = (shiftIndex % 2 === 0 ? 1 : -1) * Math.ceil(shiftIndex / 2) * TRACE_GRID;
 
       // Compute perpendicular stub directions from surface normals
@@ -811,10 +828,10 @@ export class ConnectionRenderer {
       // Snap angle to cardinal direction (→ ↓ ← ↑)
       let snapDir = (deg) => {
         let r = ((deg % 360) + 360) % 360;
-        if (r < 45 || r >= 315) return { dx: 1, dy: 0 };     // right
-        if (r >= 45 && r < 135)  return { dx: 0, dy: 1 };     // down
-        if (r >= 135 && r < 225) return { dx: -1, dy: 0 };    // left
-        return { dx: 0, dy: -1 };                              // up
+        if (r < 45 || r >= 315) return { dx: 1, dy: 0 }; // right
+        if (r >= 45 && r < 135) return { dx: 0, dy: 1 }; // down
+        if (r >= 135 && r < 225) return { dx: -1, dy: 0 }; // left
+        return { dx: 0, dy: -1 }; // up
       };
 
       let fDir = snapDir(fromAngle);
@@ -845,19 +862,19 @@ export class ConnectionRenderer {
 
         let iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
         for (const rect of iter) {
-            let nx = rect.x;
-            let ny = rect.y;
-            let nw = rect.w;
-            let nh = rect.h;
-            // Check if node is in the horizontal path of the detour
-            let pad = TRACE_GRID * 2;
-            if (nx + nw + pad >= minXForObstacle && nx - pad <= maxXForObstacle) {
-                if (ny + nh > maxObstacleY) {
-                    maxObstacleY = ny + nh;
-                }
+          let nx = rect.x;
+          let ny = rect.y;
+          let nw = rect.w;
+          let nh = rect.h;
+          // Check if node is in the horizontal path of the detour
+          let pad = TRACE_GRID * 2;
+          if (nx + nw + pad >= minXForObstacle && nx - pad <= maxXForObstacle) {
+            if (ny + nh > maxObstacleY) {
+              maxObstacleY = ny + nh;
             }
+          }
         }
-        
+
         // Detour deeply below all nodes in the path to avoid overlaps
         // We use absolute channelShift so tracks stack neatly downward
         let bottomY = snapGrid(maxObstacleY + 30) + Math.abs(channelShift);
@@ -880,9 +897,11 @@ export class ConnectionRenderer {
           let iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
           for (const rect of iter) {
             if (rect.id === conn.from || rect.id === conn.to) continue;
-            let nx = rect.x, ny = rect.y;
-            let nw = rect.w, nh = rect.h;
-            
+            let nx = rect.x,
+              ny = rect.y;
+            let nw = rect.w,
+              nh = rect.h;
+
             if (midX >= nx - pad && midX <= nx + nw + pad) {
               if (ny - pad <= maxY && ny + nh + pad >= minY) {
                 // Detour around obstacle
@@ -911,27 +930,37 @@ export class ConnectionRenderer {
         let segY1 = Math.min(pts[i].y, pts[i + 1].y);
         let segX2 = Math.max(pts[i].x, pts[i + 1].x);
         let segY2 = Math.max(pts[i].y, pts[i + 1].y);
-        
+
         let iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
         for (const rect of iter) {
           if (rect.id === conn.from || rect.id === conn.to) continue;
-          
-          let nx = rect.x, ny = rect.y;
-          let nw = rect.w, nh = rect.h;
-          
+
+          let nx = rect.x,
+            ny = rect.y;
+          let nw = rect.w,
+            nh = rect.h;
+
           if (segX1 < nx + nw && segX2 > nx && segY1 < ny + nh && segY2 > ny) {
-            debugCollisions.push(`Node Collision: (${pts[i].x},${pts[i].y})->(${pts[i+1].x},${pts[i+1].y}) intersects Node[${rect.id}]`);
+            debugCollisions.push(
+              `Node Collision: (${pts[i].x},${pts[i].y})->(${pts[i + 1].x},${pts[i + 1].y}) intersects Node[${rect.id}]`
+            );
           }
         }
       }
 
       // 2. Self-overlap (180 degree turn)
       for (let i = 0; i < pts.length - 2; i++) {
-        let p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2];
-        let v1x = p2.x - p1.x, v1y = p2.y - p1.y;
-        let v2x = p3.x - p2.x, v2y = p3.y - p2.y;
+        let p1 = pts[i],
+          p2 = pts[i + 1],
+          p3 = pts[i + 2];
+        let v1x = p2.x - p1.x,
+          v1y = p2.y - p1.y;
+        let v2x = p3.x - p2.x,
+          v2y = p3.y - p2.y;
         if (v1x * v2x < 0 || v1y * v2y < 0) {
-           debugCollisions.push(`180° Fold: at (${p2.x},${p2.y}) turning back toward (${p3.x},${p3.y})`);
+          debugCollisions.push(
+            `180° Fold: at (${p2.x},${p2.y}) turning back toward (${p3.x},${p3.y})`
+          );
         }
       }
 
@@ -940,9 +969,10 @@ export class ConnectionRenderer {
       let segments = [];
       for (let i = 0; i < pts.length - 1; i++) {
         segments.push({
-          p1: pts[i], p2: pts[i+1],
+          p1: pts[i],
+          p2: pts[i + 1],
           connId: conn.id,
-          channel: connIndex
+          channel: connIndex,
         });
       }
       this._allSegments.push(...segments);
@@ -968,8 +998,10 @@ export class ConnectionRenderer {
         let next = pts[i + 1];
         if (next) {
           // Determine if there's a turn at curr → need chamfer
-          let dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
-          let dx2 = next.x - curr.x, dy2 = next.y - curr.y;
+          let dx1 = curr.x - prev.x,
+            dy1 = curr.y - prev.y;
+          let dx2 = next.x - curr.x,
+            dy2 = next.y - curr.y;
           let isH1 = Math.abs(dx1) > Math.abs(dy1);
           let isH2 = Math.abs(dx2) > Math.abs(dy2);
 
@@ -985,11 +1017,13 @@ export class ConnectionRenderer {
             let c = Math.min(CHAMFER, len1 / 2, len2 / 2);
 
             // Pre-corner point
-            let nx1 = dx1 / len1, ny1 = dy1 / len1;
+            let nx1 = dx1 / len1,
+              ny1 = dy1 / len1;
             let preX = curr.x - nx1 * c;
             let preY = curr.y - ny1 * c;
             // Post-corner point
-            let nx2 = dx2 / len2, ny2 = dy2 / len2;
+            let nx2 = dx2 / len2,
+              ny2 = dy2 / len2;
             let postX = curr.x + nx2 * c;
             let postY = curr.y + ny2 * c;
 
@@ -1058,11 +1092,19 @@ export class ConnectionRenderer {
 
     // Wire type styling — thicker for exec, normal for data
     let fromSocketName = fromNode?.outputs[conn.out]?.socket?.name || 'data';
-    if (fromSocketName === 'exec' || fromSocketName === 'execution' || fromSocketName === 'trigger') {
+    if (
+      fromSocketName === 'exec' ||
+      fromSocketName === 'execution' ||
+      fromSocketName === 'trigger'
+    ) {
       path.setAttribute('data-wire-type', 'exec');
       path.style.strokeWidth = '3';
       path.style.strokeDasharray = '8 4';
-    } else if (fromSocketName === 'array' || fromSocketName === 'object' || fromSocketName === 'json') {
+    } else if (
+      fromSocketName === 'array' ||
+      fromSocketName === 'object' ||
+      fromSocketName === 'json'
+    ) {
       path.setAttribute('data-wire-type', 'data-heavy');
       path.style.strokeWidth = '2.5';
       path.style.strokeDasharray = '';
@@ -1127,9 +1169,10 @@ export class ConnectionRenderer {
               e.preventDefault();
               let dotX = parseFloat(dot.getAttribute('cx')) || 0;
               let dotY = parseFloat(dot.getAttribute('cy')) || 0;
-              let socketData = end === 'start'
-                ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
-                : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
+              let socketData =
+                end === 'start'
+                  ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
+                  : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
               this.#onDotDrag(socketData);
             });
           }
@@ -1175,7 +1218,7 @@ export class ConnectionRenderer {
     let p2 = tempPath.getPointAtLength(Math.min(totalLen, totalLen * 0.5 + delta));
     tempPath.remove();
 
-    let angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+    let angle = (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180) / Math.PI;
 
     let arrow = this.#svgLayer.querySelector(`[data-conn-arrow="${connId}"]`);
     if (!arrow) {
@@ -1274,12 +1317,12 @@ export class ConnectionRenderer {
       while (attempts < 24) {
         let testPos = shape.getEdgePoint(nudged, size);
         let tooClose = nodeEl._usedCoords.some(
-          c => Math.abs(testPos.x - c.x) < MIN_PIX && Math.abs(testPos.y - c.y) < MIN_PIX
+          (c) => Math.abs(testPos.x - c.x) < MIN_PIX && Math.abs(testPos.y - c.y) < MIN_PIX
         );
         if (!tooClose) break;
         attempts++;
         let offset = Math.ceil(attempts / 2) * step;
-        let dir = (attempts % 2 === 1) ? 1 : -1;
+        let dir = attempts % 2 === 1 ? 1 : -1;
         nudged = angle + dir * offset;
       }
 
@@ -1294,9 +1337,8 @@ export class ConnectionRenderer {
     inputKeys.forEach((key, i) => {
       if (connectedPorts.has(`input:${key}`)) return;
       let spread = Math.PI * 0.4;
-      let baseAngle = Math.PI + (inputKeys.length > 1
-        ? (i / (inputKeys.length - 1) - 0.5) * spread
-        : 0);
+      let baseAngle =
+        Math.PI + (inputKeys.length > 1 ? (i / (inputKeys.length - 1) - 0.5) * spread : 0);
       placeDot(key, 'input', baseAngle, node.inputs[key]);
     });
 
@@ -1305,9 +1347,8 @@ export class ConnectionRenderer {
     outputKeys.forEach((key, i) => {
       if (connectedPorts.has(`output:${key}`)) return;
       let spread = Math.PI * 0.4;
-      let baseAngle = 0 + (outputKeys.length > 1
-        ? (i / (outputKeys.length - 1) - 0.5) * spread
-        : 0);
+      let baseAngle =
+        0 + (outputKeys.length > 1 ? (i / (outputKeys.length - 1) - 0.5) * spread : 0);
       placeDot(key, 'output', baseAngle, node.outputs[key]);
     });
   }

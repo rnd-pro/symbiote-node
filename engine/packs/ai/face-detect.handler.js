@@ -28,22 +28,40 @@ export default {
 
   driver: {
     description: 'Face detection via HTTP API — tracking, mouth position, landmarks',
-    inputs: [
-      { name: 'mediaPath', type: 'string' },
-    ],
+    inputs: [{ name: 'mediaPath', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'detected', type: 'boolean' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'analyze', description: 'analyze | track | track-gpu | mouth | frames-gpu' },
-      endpoint: { type: 'string', default: 'http://localhost:5050', description: 'Face detection service URL' },
-      minCoverage: { type: 'number', default: 5, description: 'Minimum face coverage % (analyze mode)' },
+      operation: {
+        type: 'string',
+        default: 'analyze',
+        description: 'analyze | track | track-gpu | mouth | frames-gpu',
+      },
+      endpoint: {
+        type: 'string',
+        default: 'http://localhost:5050',
+        description: 'Face detection service URL',
+      },
+      minCoverage: {
+        type: 'number',
+        default: 5,
+        description: 'Minimum face coverage % (analyze mode)',
+      },
       step: { type: 'int', default: 3, description: 'Frame sampling interval (track modes)' },
       fps: { type: 'int', default: 30, description: 'FPS for frames-gpu mode' },
-      remoteHost: { type: 'string', default: 'mr-agent@mr-agent.rnd-pro.com', description: 'SSH host for SCP uploads' },
-      useRemotePath: { type: 'boolean', default: false, description: 'Send file path instead of uploading (when on same server)' },
+      remoteHost: {
+        type: 'string',
+        default: 'mr-agent@mr-agent.rnd-pro.com',
+        description: 'SSH host for SCP uploads',
+      },
+      useRemotePath: {
+        type: 'boolean',
+        default: false,
+        description: 'Send file path instead of uploading (when on same server)',
+      },
       timeout: { type: 'int', default: 120000, description: 'Max wait time (ms)' },
     },
   },
@@ -54,8 +72,7 @@ export default {
       return true;
     },
 
-    cacheKey: (inputs, params) =>
-      `face:${params.operation}:${params.step}:${inputs.mediaPath}`,
+    cacheKey: (inputs, params) => `face:${params.operation}:${params.step}:${inputs.mediaPath}`,
 
     execute: async (inputs, params) => {
       let { mediaPath } = inputs;
@@ -99,7 +116,8 @@ async function prepareRemotePath(localPath, host, params) {
   let remotePath = `/tmp/${filename}`;
 
   execSync(`scp -q "${path.resolve(localPath)}" "${host}:${remotePath}"`, {
-    stdio: 'pipe', timeout: 60000,
+    stdio: 'pipe',
+    timeout: 60000,
   });
 
   return { remotePath, cleanup: true };
@@ -113,9 +131,12 @@ async function prepareRemotePath(localPath, host, params) {
 function cleanupRemote(remotePath, host) {
   try {
     execSync(`ssh ${host} "rm -f ${remotePath}"`, {
-      stdio: 'pipe', timeout: 10000,
+      stdio: 'pipe',
+      timeout: 10000,
     });
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
@@ -253,7 +274,8 @@ async function framesGpu(mediaPath, params) {
       remotePath = `/tmp/${dirName}`;
 
       execSync(`rsync -az --quiet "${path.resolve(mediaPath)}/" "${host}:${remotePath}/"`, {
-        stdio: 'pipe', timeout: 120000,
+        stdio: 'pipe',
+        timeout: 120000,
       });
       cleanup = true;
     }
@@ -276,9 +298,12 @@ async function framesGpu(mediaPath, params) {
       if (cleanup) {
         try {
           execSync(`ssh ${host} "rm -rf ${remotePath}"`, {
-            stdio: 'pipe', timeout: 10000,
+            stdio: 'pipe',
+            timeout: 10000,
           });
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
     }
   } catch (err) {

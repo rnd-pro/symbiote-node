@@ -36,10 +36,18 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'process', description: 'Operation: process | batch | validate-tunnel' },
+      operation: {
+        type: 'string',
+        default: 'process',
+        description: 'Operation: process | batch | validate-tunnel',
+      },
       replicateToken: { type: 'string', default: '', description: 'Replicate API token' },
       publicBaseUrl: { type: 'string', default: '', description: 'Public URL for file server' },
-      outputDir: { type: 'string', default: '/tmp/replicate-lipsync', description: 'Output directory' },
+      outputDir: {
+        type: 'string',
+        default: '/tmp/replicate-lipsync',
+        description: 'Output directory',
+      },
       segmentId: { type: 'string', default: '', description: 'Segment identifier' },
       startTime: { type: 'number', default: 0, description: 'Audio start time (seconds)' },
       endTime: { type: 'number', default: 0, description: 'Audio end time (seconds)' },
@@ -80,7 +88,10 @@ export default {
 
         if (op === 'batch') {
           let results = await processBatch(inputs, params);
-          return { result: { processed: results.size, results: Object.fromEntries(results) }, error: null };
+          return {
+            result: { processed: results.size, results: Object.fromEntries(results) },
+            error: null,
+          };
         }
 
         return { result: null, error: `Unknown operation: ${op}` };
@@ -104,9 +115,9 @@ async function createPrediction(videoUrl, audioUrl, token) {
   let response = await fetch('https://api.replicate.com/v1/predictions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
-      'Prefer': 'wait',
+      Prefer: 'wait',
     },
     body: JSON.stringify({
       version: 'kwaivgi/kling-lip-sync',
@@ -138,7 +149,7 @@ async function pollPrediction(predictionId, token, maxWaitMs = 300000) {
 
   while (Date.now() - startTime < maxWaitMs) {
     let response = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!response.ok) {
@@ -151,10 +162,12 @@ async function pollPrediction(predictionId, token, maxWaitMs = 300000) {
       return prediction;
     }
     if (prediction.status === 'failed' || prediction.status === 'canceled') {
-      throw new Error(`Replicate prediction ${prediction.status}: ${prediction.error || 'Unknown'}`);
+      throw new Error(
+        `Replicate prediction ${prediction.status}: ${prediction.error || 'Unknown'}`
+      );
     }
 
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
+    await new Promise((resolve) => setTimeout(resolve, pollInterval));
   }
 
   throw new Error(`Replicate prediction timed out after ${maxWaitMs / 1000}s`);
@@ -209,7 +222,8 @@ function extractAudioClip(audioPath, startTime, endTime, outputPath) {
   if (existsSync(outputPath)) return outputPath;
 
   let duration = endTime - startTime;
-  let cmd = `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
+  let cmd =
+    `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
     `-c:a libmp3lame -q:a 2 "${outputPath}" 2>/dev/null`;
 
   execSync(cmd, { stdio: 'pipe' });
@@ -309,32 +323,31 @@ async function processBatch(inputs, params) {
   let results = new Map();
   let queue = [...segments];
 
-  let workers = Array(Math.min(concurrency, queue.length)).fill(null).map(async () => {
-    while (queue.length > 0) {
-      let segment = queue.shift();
-      if (!segment) break;
+  let workers = Array(Math.min(concurrency, queue.length))
+    .fill(null)
+    .map(async () => {
+      while (queue.length > 0) {
+        let segment = queue.shift();
+        if (!segment) break;
 
-      let videoUrl = videoMap[segment.promptId];
-      if (!videoUrl) continue;
+        let videoUrl = videoMap[segment.promptId];
+        if (!videoUrl) continue;
 
-      try {
-        let segParams = {
-          ...params,
-          segmentId: segment.promptId,
-          startTime: segment.start,
-          endTime: segment.end,
-        };
+        try {
+          let segParams = {
+            ...params,
+            segmentId: segment.promptId,
+            startTime: segment.start,
+            endTime: segment.end,
+          };
 
-        let result = await processSegment(
-          { videoUrl, audioPath: inputs.audioPath },
-          segParams,
-        );
-        results.set(segment.promptId, result.videoPath);
-      } catch (error) {
-        console.error(`🔴 [Replicate] Failed: ${segment.promptId} - ${error.message}`);
+          let result = await processSegment({ videoUrl, audioPath: inputs.audioPath }, segParams);
+          results.set(segment.promptId, result.videoPath);
+        } catch (error) {
+          console.error(`🔴 [Replicate] Failed: ${segment.promptId} - ${error.message}`);
+        }
       }
-    }
-  });
+    });
 
   await Promise.all(workers);
   return results;

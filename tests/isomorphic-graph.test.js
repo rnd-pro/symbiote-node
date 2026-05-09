@@ -21,17 +21,32 @@ function buildEditor() {
   const execSocket = new Socket('exec', { color: '#ffffff' });
   const dataSocket = new Socket('data', { color: '#4a9eff' });
 
-  const trigger = new Node('Job Trigger', { id: 'nd_trigger', type: 'queue/job-event', shape: 'circle', category: 'server' });
+  const trigger = new Node('Job Trigger', {
+    id: 'nd_trigger',
+    type: 'queue/job-event',
+    shape: 'circle',
+    category: 'server',
+  });
   trigger.addOutput('exec', new Output(execSocket, 'exec'));
   trigger.addOutput('data', new Output(dataSocket, 'payload'));
 
-  const process = new Node('AI Process', { id: 'nd_process', type: 'ai/llm', shape: 'rect', category: 'instance' });
+  const process = new Node('AI Process', {
+    id: 'nd_process',
+    type: 'ai/llm',
+    shape: 'rect',
+    category: 'instance',
+  });
   process.addInput('exec', new Input(execSocket, 'exec'));
   process.addInput('data', new Input(dataSocket, 'input'));
   process.addOutput('result', new Output(dataSocket, 'result'));
   process.params = { model: 'gpt-4', temperature: 0.7 };
 
-  const output = new Node('Send Result', { id: 'nd_output', type: 'io/http-response', shape: 'pill', category: 'server' });
+  const output = new Node('Send Result', {
+    id: 'nd_output',
+    type: 'io/http-response',
+    shape: 'pill',
+    category: 'server',
+  });
   output.addInput('data', new Input(dataSocket, 'response'));
 
   editor.addNode(trigger);
@@ -186,7 +201,11 @@ describe('Editor → Graph interop', () => {
     // Simulate server creating a graph
     const graph = new Graph();
     const id1 = graph.addNode('ai/llm', { model: 'gpt-4' }, { id: 'nd_llm', name: 'LLM' });
-    const id2 = graph.addNode('io/write-file', { path: '/tmp/out.txt' }, { id: 'nd_write', name: 'Write' });
+    const id2 = graph.addNode(
+      'io/write-file',
+      { path: '/tmp/out.txt' },
+      { id: 'nd_write', name: 'Write' }
+    );
     graph.connect(id1, 'result', id2, 'data');
 
     // Serialize from server side
@@ -228,7 +247,11 @@ describe('Executor duck-typing', () => {
     });
     registerNodeType({
       type: 'test/add-ten',
-      driver: { description: 'test', inputs: [{ name: 'value', type: 'any' }], outputs: [{ name: 'result', type: 'any' }] },
+      driver: {
+        description: 'test',
+        inputs: [{ name: 'value', type: 'any' }],
+        outputs: [{ name: 'result', type: 'any' }],
+      },
       process: (inputs) => ({ result: (inputs.value || 0) + 10 }),
     });
 

@@ -15,9 +15,7 @@ export default {
 
   driver: {
     description: 'Read file from disk (auto-parses JSON)',
-    inputs: [
-      { name: 'path', type: 'string' },
-    ],
+    inputs: [{ name: 'path', type: 'string' }],
     outputs: [
       { name: 'content', type: 'string' },
       { name: 'parsed', type: 'any' },
@@ -51,7 +49,6 @@ export default {
         }
 
         return { content, parsed, error: null };
-
       } catch (err) {
         return { content: null, parsed: null, error: err.message };
       }

@@ -50,4 +50,14 @@ export function registerShape(name, shape) {
   registry.set(name, shape);
 }
 
-export { NodeShape, RectShape, PillShape, CircleShape, DiamondShape, CommentShape, SVGShape, createSVGShape, SVG_PRESETS };
+export {
+  NodeShape,
+  RectShape,
+  PillShape,
+  CircleShape,
+  DiamondShape,
+  CommentShape,
+  SVGShape,
+  createSVGShape,
+  SVG_PRESETS,
+};

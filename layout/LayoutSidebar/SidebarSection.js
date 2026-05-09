@@ -118,18 +118,20 @@ export class SidebarSection extends Symbiote {
 }
 
 SidebarSection.template = html`
-<div class="sec-drag-handle">
-  <span class="material-symbols-outlined">drag_indicator</span>
-</div>
-<div class="sec-item" ${{ onclick: 'onSectionClick' }}>
-  <span class="material-symbols-outlined sec-icon" ${{ textContent: 'icon' }}></span>
-  <span class="sec-label" ${{ textContent: 'label' }}></span>
-  <span class="material-symbols-outlined sec-expand" ${{ onclick: 'onExpandToggle' }}>chevron_right</span>
-</div>
-<button class="sec-eye" ${{ onclick: 'onToggleVisibility' }}>
-  <span class="material-symbols-outlined" ${{ textContent: 'eyeIcon' }}></span>
-</button>
-<div class="sec-sub-panels" itemize="subPanels" item-tag="sidebar-sub-item"></div>
+  <div class="sec-drag-handle">
+    <span class="material-symbols-outlined">drag_indicator</span>
+  </div>
+  <div class="sec-item" ${{ onclick: 'onSectionClick' }}>
+    <span class="material-symbols-outlined sec-icon" ${{ textContent: 'icon' }}></span>
+    <span class="sec-label" ${{ textContent: 'label' }}></span>
+    <span class="material-symbols-outlined sec-expand" ${{ onclick: 'onExpandToggle' }}
+      >chevron_right</span
+    >
+  </div>
+  <button class="sec-eye" ${{ onclick: 'onToggleVisibility' }}>
+    <span class="material-symbols-outlined" ${{ textContent: 'eyeIcon' }}></span>
+  </button>
+  <div class="sec-sub-panels" itemize="subPanels" item-tag="sidebar-sub-item"></div>
 `;
 
 SidebarSection.reg('sidebar-section');
@@ -155,10 +157,12 @@ export class SidebarSubItem extends Symbiote {
       // Find the panel-layout and call joinPanels
       let sidebar = this.closest('layout-sidebar');
       if (sidebar) {
-        sidebar.dispatchEvent(new CustomEvent('panel-close', {
-          bubbles: true,
-          detail: { panelId },
-        }));
+        sidebar.dispatchEvent(
+          new CustomEvent('panel-close', {
+            bubbles: true,
+            detail: { panelId },
+          })
+        );
       }
     },
   };
@@ -171,13 +175,13 @@ export class SidebarSubItem extends Symbiote {
 }
 
 SidebarSubItem.template = html`
-<div class="sub-panel-item">
-  <span class="material-symbols-outlined" ${{ textContent: 'icon' }}></span>
-  <span ${{ textContent: 'title' }}></span>
-  <button class="sub-panel-close" ${{ onclick: 'onClose' }}>
-    <span class="material-symbols-outlined">close</span>
-  </button>
-</div>
+  <div class="sub-panel-item">
+    <span class="material-symbols-outlined" ${{ textContent: 'icon' }}></span>
+    <span ${{ textContent: 'title' }}></span>
+    <button class="sub-panel-close" ${{ onclick: 'onClose' }}>
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
 `;
 
 SidebarSubItem.reg('sidebar-sub-item');

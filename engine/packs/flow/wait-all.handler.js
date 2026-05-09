@@ -19,9 +19,7 @@ export default {
       { name: 'b', type: 'any' },
       { name: 'c', type: 'any' },
     ],
-    outputs: [
-      { name: 'output', type: 'object' },
-    ],
+    outputs: [{ name: 'output', type: 'object' }],
     params: {},
   },
 

@@ -36,12 +36,28 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'lipsync', description: 'Operation: identify-face | lipsync | poll | batch' },
+      operation: {
+        type: 'string',
+        default: 'lipsync',
+        description: 'Operation: identify-face | lipsync | poll | batch',
+      },
       accessKey: { type: 'string', default: '', description: 'Kling API access key' },
       secretKey: { type: 'string', default: '', description: 'Kling API secret key' },
-      baseUrl: { type: 'string', default: 'https://api.klingai.com', description: 'Kling API base URL' },
-      publicBaseUrl: { type: 'string', default: '', description: 'Public URL for file server (ngrok/cloudflared)' },
-      outputDir: { type: 'string', default: '/tmp/kling-lipsync', description: 'Output directory for results' },
+      baseUrl: {
+        type: 'string',
+        default: 'https://api.klingai.com',
+        description: 'Kling API base URL',
+      },
+      publicBaseUrl: {
+        type: 'string',
+        default: '',
+        description: 'Public URL for file server (ngrok/cloudflared)',
+      },
+      outputDir: {
+        type: 'string',
+        default: '/tmp/kling-lipsync',
+        description: 'Output directory for results',
+      },
       // For poll operation
       taskId: { type: 'string', default: '', description: 'Task ID to poll' },
       maxWaitMs: { type: 'int', default: 300000, description: 'Max poll wait time (ms)' },
@@ -50,7 +66,11 @@ export default {
       endTime: { type: 'number', default: 0, description: 'Audio end time (seconds)' },
       segmentId: { type: 'string', default: '', description: 'Segment identifier' },
       // For batch operation
-      segments: { type: 'any', default: null, description: 'Segments array with start/end/promptId' },
+      segments: {
+        type: 'any',
+        default: null,
+        description: 'Segments array with start/end/promptId',
+      },
       videoMap: { type: 'any', default: null, description: 'Map of promptId → videoPath' },
       concurrency: { type: 'int', default: 2, description: 'Max concurrent batch tasks' },
     },
@@ -95,7 +115,10 @@ export default {
 
         if (op === 'batch') {
           let results = await processBatch(inputs, params);
-          return { result: { processed: results.size, results: Object.fromEntries(results) }, error: null };
+          return {
+            result: { processed: results.size, results: Object.fromEntries(results) },
+            error: null,
+          };
         }
 
         return { result: null, error: `Unknown operation: ${op}` };
@@ -147,7 +170,7 @@ async function identifyFace(videoUrl, token, baseUrl) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ video_url: videoUrl }),
   });
@@ -176,24 +199,34 @@ async function identifyFace(videoUrl, token, baseUrl) {
  * @param {string} baseUrl
  * @returns {Promise<Object>}
  */
-async function createLipsyncTask(sessionId, faceId, soundFile, soundDurationMs, faceStartMs, token, baseUrl) {
+async function createLipsyncTask(
+  sessionId,
+  faceId,
+  soundFile,
+  soundDurationMs,
+  faceStartMs,
+  token,
+  baseUrl
+) {
   let response = await fetch(`${baseUrl}/v1/videos/advanced-lip-sync`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       session_id: sessionId,
-      face_choose: [{
-        face_id: faceId,
-        sound_file: soundFile,
-        sound_start_time: 0,
-        sound_end_time: soundDurationMs,
-        sound_insert_time: faceStartMs,
-        sound_volume: 1,
-        original_audio_volume: 0,
-      }],
+      face_choose: [
+        {
+          face_id: faceId,
+          sound_file: soundFile,
+          sound_start_time: 0,
+          sound_end_time: soundDurationMs,
+          sound_insert_time: faceStartMs,
+          sound_volume: 1,
+          original_audio_volume: 0,
+        },
+      ],
     }),
   });
 
@@ -228,7 +261,7 @@ async function pollTaskCompletion(taskId, token, params) {
 
     let response = await fetch(`${params.baseUrl}/v1/videos/advanced-lip-sync/${taskId}`, {
       method: 'GET',
-      headers: { 'Authorization': `Bearer ${freshToken}` },
+      headers: { Authorization: `Bearer ${freshToken}` },
     });
 
     if (!response.ok) {
@@ -250,7 +283,7 @@ async function pollTaskCompletion(taskId, token, params) {
       throw new Error(`Lipsync task failed: ${result.data?.task_status_msg || 'Unknown error'}`);
     }
 
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
+    await new Promise((resolve) => setTimeout(resolve, pollInterval));
   }
 
   throw new Error(`Lipsync task timed out after ${maxWaitMs / 1000}s`);
@@ -287,7 +320,8 @@ function extractAudioClip(audioPath, startTime, endTime, outputPath) {
   if (existsSync(outputPath)) return outputPath;
 
   let duration = endTime - startTime;
-  let cmd = `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
+  let cmd =
+    `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
     `-c:a libmp3lame -q:a 2 "${outputPath}" 2>/dev/null`;
 
   execSync(cmd, { stdio: 'pipe' });
@@ -352,7 +386,7 @@ async function processSegment(inputs, params) {
     audioDurationMs,
     face.start_time || 0,
     token,
-    baseUrl,
+    baseUrl
   );
 
   // 5. Poll
@@ -395,10 +429,7 @@ async function processBatch(inputs, params) {
           endTime: segment.end,
         };
 
-        let result = await processSegment(
-          { videoUrl, audioPath: inputs.audioPath },
-          segParams,
-        );
+        let result = await processSegment({ videoUrl, audioPath: inputs.audioPath }, segParams);
         return { promptId: segment.promptId, ...result };
       })
     );

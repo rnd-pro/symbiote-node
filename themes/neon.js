@@ -57,7 +57,8 @@ export let NEON_GLOW = {
     '--sn-node-bg': 'hsla(var(--sn-hue-base), var(--sn-sat), var(--sn-lit-surface), 0.9)',
     '--sn-node-border': 'hsl(var(--sn-hue-accent), 60%, 30%)',
     '--sn-node-radius': '8px',
-    '--sn-node-shadow': '0 0 12px hsla(var(--sn-hue-accent), var(--sn-sat-vivid), 50%, 0.15), 0 4px 16px rgba(0, 0, 0, 0.5)',
+    '--sn-node-shadow':
+      '0 0 12px hsla(var(--sn-hue-accent), var(--sn-sat-vivid), 50%, 0.15), 0 4px 16px rgba(0, 0, 0, 0.5)',
     '--sn-shadow-color': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), 50%, 0.15)',
     '--sn-node-selected': 'hsl(var(--sn-hue-accent), var(--sn-sat-vivid), 55%)',
     '--sn-node-hover': 'hsl(var(--sn-hue-base), 25%, var(--sn-lit-hover))',
@@ -101,7 +102,8 @@ export let NEON_GLOW = {
     '--sn-toolbar-color': 'hsl(var(--sn-hue-accent), 25%, 60%)',
     '--sn-toolbar-hover': 'hsla(var(--sn-hue-accent), var(--sn-sat-vivid), 50%, 0.18)',
     '--sn-toolbar-active': 'hsl(var(--sn-hue-accent), 40%, var(--sn-lit-text))',
-    '--sn-toolbar-danger': 'hsla(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent), 0.2)',
+    '--sn-toolbar-danger':
+      'hsla(var(--sn-hue-danger), var(--sn-sat-vivid), var(--sn-lit-accent), 0.2)',
     '--sn-toolbar-danger-color': 'hsl(var(--sn-hue-danger), var(--sn-sat-vivid), 60%)',
 
     // Shape fill/stroke — neon stroke glow

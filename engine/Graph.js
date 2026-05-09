@@ -32,7 +32,6 @@ import { areSocketsCompatible } from './SocketTypes.js';
  */
 
 export class Graph {
-
   /**
    * @param {object} [data] - Optional workflow JSON to load
    */
@@ -115,7 +114,7 @@ export class Graph {
   removeNode(id) {
     if (!this.nodes.has(id)) return false;
     this.nodes.delete(id);
-    this.connections = this.connections.filter(c => c.from !== id && c.to !== id);
+    this.connections = this.connections.filter((c) => c.from !== id && c.to !== id);
     delete this.ui.positions[id];
     return true;
   }
@@ -140,11 +139,13 @@ export class Graph {
     let toType = getNodeType(this.nodes.get(toNode).type);
 
     if (fromType?.driver?.outputs && toType?.driver?.inputs) {
-      let outDef = fromType.driver.outputs.find(o => o.name === fromSocket);
-      let inDef = toType.driver.inputs.find(i => i.name === toSocket);
+      let outDef = fromType.driver.outputs.find((o) => o.name === fromSocket);
+      let inDef = toType.driver.inputs.find((i) => i.name === toSocket);
 
       if (outDef && inDef && !areSocketsCompatible(outDef.type, inDef.type)) {
-        throw new Error(`Socket type mismatch: ${outDef.type} → ${inDef.type} (${fromNode}.${fromSocket} → ${toNode}.${toSocket})`);
+        throw new Error(
+          `Socket type mismatch: ${outDef.type} → ${inDef.type} (${fromNode}.${fromSocket} → ${toNode}.${toSocket})`
+        );
       }
     }
 
@@ -172,9 +173,8 @@ export class Graph {
    * @returns {boolean}
    */
   disconnect(fromNode, fromSocket, toNode, toSocket) {
-    let idx = this.connections.findIndex(c =>
-      c.from === fromNode && c.out === fromSocket &&
-      c.to === toNode && c.in === toSocket
+    let idx = this.connections.findIndex(
+      (c) => c.from === fromNode && c.out === fromSocket && c.to === toNode && c.in === toSocket
     );
     if (idx === -1) return false;
     this.connections.splice(idx, 1);
@@ -227,7 +227,7 @@ export class Graph {
       connected.add(c.from);
       connected.add(c.to);
     }
-    return [...this.nodes.values()].filter(n => !connected.has(n.id));
+    return [...this.nodes.values()].filter((n) => !connected.has(n.id));
   }
 
   /**
@@ -240,7 +240,7 @@ export class Graph {
       id: this.id,
       name: this.name,
       execution: this.execution,
-      nodes: [...this.nodes.values()].map(n => {
+      nodes: [...this.nodes.values()].map((n) => {
         let obj = { id: n.id, type: n.type, name: n.name, params: n.params };
         if (n.cacheMode && n.cacheMode !== 'auto') obj.cacheMode = n.cacheMode;
         if (n._output) obj._output = n._output;
@@ -273,8 +273,14 @@ export class Graph {
 
     // Load nodes
     this.nodes.clear();
-    for (const n of (data.nodes || [])) {
-      let node = { id: n.id, type: n.type, name: n.name, params: n.params || {}, cacheMode: n.cacheMode || 'auto' };
+    for (const n of data.nodes || []) {
+      let node = {
+        id: n.id,
+        type: n.type,
+        name: n.name,
+        params: n.params || {},
+        cacheMode: n.cacheMode || 'auto',
+      };
       if (n._output) node._output = n._output;
       if (n._meta) node._meta = n._meta;
       if (n.driver) node.driver = n.driver;
@@ -283,13 +289,14 @@ export class Graph {
     }
 
     // Load connections (handle both {out, in} and {fromSocket, toSocket} DB formats)
-    this.connections = (data.connections || []).map(c => {
+    this.connections = (data.connections || []).map((c) => {
       let conn = {
         from: c.from,
         out: c.out || c.fromSocket,
         to: c.to,
         in: c.in || c.toSocket,
-      };      if (c.type) conn.type = c.type;
+      };
+      if (c.type) conn.type = c.type;
       if (c.label) conn.label = c.label;
       return conn;
     });

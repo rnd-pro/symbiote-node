@@ -34,13 +34,15 @@ export class SubgraphManager {
    */
   initialize(canvas, rootEditor) {
     this.#canvas = canvas;
-    this.#stack = [{
-      editor: rootEditor,
-      positions: {},
-      transform: { panX: 0, panY: 0, zoom: 1 },
-      label: 'Root',
-      subgraphNodeId: null,
-    }];
+    this.#stack = [
+      {
+        editor: rootEditor,
+        positions: {},
+        transform: { panX: 0, panY: 0, zoom: 1 },
+        label: 'Root',
+        subgraphNodeId: null,
+      },
+    ];
   }
 
   /**

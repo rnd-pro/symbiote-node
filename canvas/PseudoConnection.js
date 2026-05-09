@@ -9,7 +9,6 @@
  */
 
 export class PseudoConnection {
-
   /** @type {SVGPathElement|null} */
   #path = null;
 
@@ -53,11 +52,15 @@ export class PseudoConnection {
       let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('r', '8');
       let h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      h.setAttribute('x1', '-4'); h.setAttribute('y1', '0');
-      h.setAttribute('x2', '4'); h.setAttribute('y2', '0');
+      h.setAttribute('x1', '-4');
+      h.setAttribute('y1', '0');
+      h.setAttribute('x2', '4');
+      h.setAttribute('y2', '0');
       let v = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      v.setAttribute('x1', '0'); v.setAttribute('y1', '-4');
-      v.setAttribute('x2', '0'); v.setAttribute('y2', '4');
+      v.setAttribute('x1', '0');
+      v.setAttribute('y1', '-4');
+      v.setAttribute('x2', '0');
+      v.setAttribute('y2', '4');
       g.appendChild(circle);
       g.appendChild(h);
       g.appendChild(v);

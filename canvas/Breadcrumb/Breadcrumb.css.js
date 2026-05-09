@@ -49,7 +49,9 @@ export let styles = css`
     padding: 3px 8px;
     border-radius: 4px;
     cursor: pointer;
-    transition: background 0.15s ease-out, color 0.15s ease-out;
+    transition:
+      background 0.15s ease-out,
+      color 0.15s ease-out;
     display: flex;
     align-items: center;
     gap: 4px;

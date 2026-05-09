@@ -54,7 +54,6 @@ export default {
         await fs.writeFile(inputs.path, data, params.encoding || 'utf8');
 
         return { success: true, path: inputs.path, error: null };
-
       } catch (err) {
         return { success: false, path: inputs.path, error: err.message };
       }

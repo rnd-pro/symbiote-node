@@ -9,7 +9,6 @@
  */
 
 export class NodeShape {
-
   /** @type {string} */
   name = 'base';
 

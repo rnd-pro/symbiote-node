@@ -18,11 +18,13 @@ export class PanelMenu extends Symbiote {
     onItemClick: (e) => {
       let type = e.target.closest('[data-type]')?.dataset.type;
       if (type) {
-        this.dispatchEvent(new CustomEvent('panel-type-select', {
-          bubbles: true,
-          composed: true,
-          detail: { panelId: this.$.panelId, type }
-        }));
+        this.dispatchEvent(
+          new CustomEvent('panel-type-select', {
+            bubbles: true,
+            composed: true,
+            detail: { panelId: this.$.panelId, type },
+          })
+        );
         this.hide();
       }
     },
@@ -30,22 +32,22 @@ export class PanelMenu extends Symbiote {
 
   /**
    * Show menu at position
-   * @param {number} x 
-   * @param {number} y 
-   * @param {string} panelId 
-   * @param {string} currentType 
-   * @param {Array<{type: string, title: string, icon: string}>} items 
+   * @param {number} x
+   * @param {number} y
+   * @param {string} panelId
+   * @param {string} currentType
+   * @param {Array<{type: string, title: string, icon: string}>} items
    */
   show(x, y, panelId, currentType, items) {
     this.$.panelId = panelId;
     this.$.currentType = currentType;
 
     // Transform items to include isActive flag for template binding
-    this.$.items = items.map(item => ({
+    this.$.items = items.map((item) => ({
       ...item,
       icon: item.icon || 'dashboard',
       title: item.title || item.type,
-      isActive: item.type === currentType
+      isActive: item.type === currentType,
     }));
 
     this.style.left = `${x}px`;
@@ -86,4 +88,3 @@ PanelMenu.template = template;
 PanelMenu.rootStyles = styles;
 
 PanelMenu.reg('panel-menu');
-

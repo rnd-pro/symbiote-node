@@ -34,9 +34,17 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      model: { type: 'string', default: 'deepseek/deepseek-v3.2', description: 'OpenRouter model ID' },
+      model: {
+        type: 'string',
+        default: 'deepseek/deepseek-v3.2',
+        description: 'OpenRouter model ID',
+      },
       provider: { type: 'string', default: 'openrouter', description: 'Model provider' },
-      opencodeUrl: { type: 'string', default: 'http://127.0.0.1:4096', description: 'OpenCode API URL' },
+      opencodeUrl: {
+        type: 'string',
+        default: 'http://127.0.0.1:4096',
+        description: 'OpenCode API URL',
+      },
       timeout: { type: 'int', default: 300000, description: 'Max wait time (ms)' },
       outputDir: { type: 'string', default: '', description: 'Workspace dir for file exchange' },
     },
@@ -53,13 +61,7 @@ export default {
 
     execute: async (inputs, params) => {
       let { prompt, context } = inputs;
-      let {
-        model,
-        provider,
-        opencodeUrl,
-        timeout,
-        outputDir,
-      } = params;
+      let { model, provider, opencodeUrl, timeout, outputDir } = params;
 
       let baseUrl = opencodeUrl || process.env.OPENCODE_URL || 'http://127.0.0.1:4096';
       let modelConfig = {
@@ -68,23 +70,35 @@ export default {
       };
 
       // Workspace for file-based communication
-      let workspace = outputDir || process.env.OPENCODE_WORKSPACE ||
-        path.join(os.tmpdir(), 'agi-graph-opencode');
+      let workspace =
+        outputDir || process.env.OPENCODE_WORKSPACE || path.join(os.tmpdir(), 'agi-graph-opencode');
       await fs.mkdir(workspace, { recursive: true });
 
       let taskPath = path.join(workspace, 'task.json');
       let outputPath = path.join(workspace, 'output.json');
 
       // Write task file with context
-      await fs.writeFile(taskPath, JSON.stringify({
-        type: 'agi-graph-ai',
-        prompt,
-        context,
-        timestamp: Date.now(),
-      }, null, 2), 'utf8');
+      await fs.writeFile(
+        taskPath,
+        JSON.stringify(
+          {
+            type: 'agi-graph-ai',
+            prompt,
+            context,
+            timestamp: Date.now(),
+          },
+          null,
+          2
+        ),
+        'utf8'
+      );
 
       // Clean previous output
-      try { await fs.unlink(outputPath); } catch { /* ignore */ }
+      try {
+        await fs.unlink(outputPath);
+      } catch {
+        /* ignore */
+      }
 
       try {
         // 1. Create session
@@ -151,11 +165,10 @@ Output format: { "result": <your_result> }`;
             // File not ready yet
           }
 
-          await new Promise(resolve => setTimeout(resolve, pollInterval));
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
         }
 
         return { result: null, error: `Timeout after ${timeout}ms waiting for AI response` };
-
       } catch (err) {
         return { result: null, error: err.message };
       }

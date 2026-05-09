@@ -28,12 +28,28 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'select', description: 'Operation: select | analyze | apply | mouth-positions' },
+      operation: {
+        type: 'string',
+        default: 'select',
+        description: 'Operation: select | analyze | apply | mouth-positions',
+      },
       apiKey: { type: 'string', default: '', description: 'OpenRouter API key' },
       model: { type: 'string', default: 'deepseek/deepseek-v3.2', description: 'AI model' },
-      apiBaseUrl: { type: 'string', default: 'https://openrouter.ai/api/v1', description: 'API base URL' },
-      minFaceCoverage: { type: 'number', default: 8, description: 'Minimum face coverage % for lipsync' },
-      selectedSegments: { type: 'any', default: null, description: 'For apply: selected segments array' },
+      apiBaseUrl: {
+        type: 'string',
+        default: 'https://openrouter.ai/api/v1',
+        description: 'API base URL',
+      },
+      minFaceCoverage: {
+        type: 'number',
+        default: 8,
+        description: 'Minimum face coverage % for lipsync',
+      },
+      selectedSegments: {
+        type: 'any',
+        default: null,
+        description: 'For apply: selected segments array',
+      },
       mouthPositions: { type: 'any', default: null, description: 'For apply: mouth positions map' },
     },
   },
@@ -58,7 +74,7 @@ export default {
             return { result: null, stats: null, error: 'apiKey is required for AI analysis' };
           }
           let analyzed = await analyzeWithAI(segments, inputs.lyrics, params);
-          let lipsyncCount = analyzed.filter(s => s.isLipSync).length;
+          let lipsyncCount = analyzed.filter((s) => s.isLipSync).length;
           return {
             result: analyzed,
             stats: { total: segments.length, lipsyncMarked: lipsyncCount },
@@ -77,7 +93,7 @@ export default {
           let applied = applySelection(segments, selected, mouthPos);
           return {
             result: applied,
-            stats: { total: applied.length, lipsync: applied.filter(s => s.isLipSync).length },
+            stats: { total: applied.length, lipsync: applied.filter((s) => s.isLipSync).length },
             error: null,
           };
         }
@@ -109,7 +125,7 @@ function selectLipsyncSegments(segments, params) {
     selected: 0,
   };
 
-  let lipsyncMarked = segments.filter(seg => seg.isLipSync === true);
+  let lipsyncMarked = segments.filter((seg) => seg.isLipSync === true);
   stats.markedForLipsync = lipsyncMarked.length;
 
   if (lipsyncMarked.length === 0) {
@@ -171,9 +187,9 @@ function selectLipsyncSegments(segments, params) {
  * @returns {Array}
  */
 function applySelection(segments, selectedSegments, mouthPositions = {}) {
-  let selectedIds = new Set(selectedSegments.map(s => s.promptId || s.id));
+  let selectedIds = new Set(selectedSegments.map((s) => s.promptId || s.id));
 
-  return segments.map(seg => {
+  return segments.map((seg) => {
     let id = seg.promptId || seg.id;
     let isLipSync = selectedIds.has(id);
     let mouthData = mouthPositions[id];
@@ -217,9 +233,12 @@ async function analyzeWithAI(segments, lyrics, params) {
  * @returns {string}
  */
 function buildAnalysisPrompt(lyrics, segmentSummary) {
-  let segmentsList = segmentSummary.map(s =>
-    `[${s.idx}] ${s.id} | ${s.section} | ${s.start}-${s.end}s | "${s.text.substring(0, 60)}${s.text.length > 60 ? '...' : ''}"`
-  ).join('\n');
+  let segmentsList = segmentSummary
+    .map(
+      (s) =>
+        `[${s.idx}] ${s.id} | ${s.section} | ${s.start}-${s.end}s | "${s.text.substring(0, 60)}${s.text.length > 60 ? '...' : ''}"`
+    )
+    .join('\n');
 
   return `You are a music video director analyzing which segments need LIPSYNC (mouth animation synced to vocals).
 
@@ -277,7 +296,7 @@ async function callAI(prompt, params) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${params.apiKey}`,
+        Authorization: `Bearer ${params.apiKey}`,
         'HTTP-Referer': 'https://symbiote-video.local',
         'X-Title': 'Symbiote Video - Lipsync Selector',
       },

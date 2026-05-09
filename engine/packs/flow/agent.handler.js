@@ -59,9 +59,7 @@ export default {
       try {
         let response = await Promise.race([
           bridge.run({ prompt, context, tools: allowedTools, model }),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Agent timeout')), timeout)
-          ),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Agent timeout')), timeout)),
         ]);
 
         return { result: response.data, error: null };

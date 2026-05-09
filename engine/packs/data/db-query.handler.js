@@ -17,17 +17,23 @@ export default {
 
   driver: {
     description: 'Execute SQL query with parameters from input data',
-    inputs: [
-      { name: 'data', type: 'any' },
-    ],
+    inputs: [{ name: 'data', type: 'any' }],
     outputs: [
       { name: 'rows', type: 'any' },
       { name: 'data', type: 'any' },
     ],
     params: {
       query: { type: 'text', default: '', description: 'SQL query with $1, $2... placeholders' },
-      paramFields: { type: 'string', default: '', description: 'Comma-separated field names from input data to use as query params' },
-      outputField: { type: 'string', default: 'queryResult', description: 'Field name to store rows in data output' },
+      paramFields: {
+        type: 'string',
+        default: '',
+        description: 'Comma-separated field names from input data to use as query params',
+      },
+      outputField: {
+        type: 'string',
+        default: 'queryResult',
+        description: 'Field name to store rows in data output',
+      },
     },
   },
 

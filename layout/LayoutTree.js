@@ -52,7 +52,7 @@ export function createPanel(panelType, panelState = {}) {
     type: 'panel',
     panelType,
     panelState,
-    collapsed: false
+    collapsed: false,
   };
 }
 
@@ -71,7 +71,7 @@ export function createSplit(direction, first, second, ratio = 0.5) {
     direction,
     ratio,
     first,
-    second
+    second,
   };
 }
 

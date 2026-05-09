@@ -27,13 +27,13 @@ export let CARBON = {
     '--sn-sat-muted': '0%',
 
     // Lightness levels
-    '--sn-lit-bg': '10%',       // #1a1a1a
-    '--sn-lit-surface': '13%',  // #222222
-    '--sn-lit-border': '17%',   // ~#2b2b2b
-    '--sn-lit-hover': '27%',    // #444444
-    '--sn-lit-text': '94%',     // #f0f0f0
+    '--sn-lit-bg': '10%', // #1a1a1a
+    '--sn-lit-surface': '13%', // #222222
+    '--sn-lit-border': '17%', // ~#2b2b2b
+    '--sn-lit-hover': '27%', // #444444
+    '--sn-lit-text': '94%', // #f0f0f0
     '--sn-lit-text-dim': '60%', // #999999
-    '--sn-lit-accent': '63%',   // blue accent
+    '--sn-lit-accent': '63%', // blue accent
 
     // Alpha levels
     '--sn-alpha-overlay': '0.95',

@@ -15,7 +15,6 @@ import { animateOut } from '@symbiotejs/symbiote';
 import { getShape } from '../shapes/index.js';
 
 export class NodeViewManager {
-
   /** @type {Map<string, HTMLElement>} */
   #nodeViews;
 
@@ -71,7 +70,19 @@ export class NodeViewManager {
    * @param {HTMLElement} config.nodesLayer
    * @param {Object} config.canvas - NodeCanvas reference for socket registration
    */
-  constructor({ nodeViews, editor, selector, snapGrid, getZoom, setNodePosition, animateNodeToPosition, onNodeClick, nodesLayer, canvas, onSvgShapeReady }) {
+  constructor({
+    nodeViews,
+    editor,
+    selector,
+    snapGrid,
+    getZoom,
+    setNodePosition,
+    animateNodeToPosition,
+    onNodeClick,
+    nodesLayer,
+    canvas,
+    onSvgShapeReady,
+  }) {
     this.#nodeViews = nodeViews;
     this.#editor = editor;
     this.#selector = selector;
@@ -104,7 +115,7 @@ export class NodeViewManager {
     if (!nodes || nodes.length === 0) return;
 
     let fragment = document.createDocumentFragment();
-    
+
     // 1. Create all elements and bind them (no DOM append yet)
     for (const node of nodes) {
       let el = this.#createNodeElement(node);
@@ -171,8 +182,8 @@ export class NodeViewManager {
           let rect = svg.getBoundingClientRect();
           let vb = svg.viewBox.baseVal;
           // Convert page coords to SVG viewBox coords
-          let sx = (e.clientX - rect.left) / rect.width * vb.width + vb.x;
-          let sy = (e.clientY - rect.top) / rect.height * vb.height + vb.y;
+          let sx = ((e.clientX - rect.left) / rect.width) * vb.width + vb.x;
+          let sy = ((e.clientY - rect.top) / rect.height) * vb.height + vb.y;
           let pt = new DOMPoint(sx, sy);
           return svgPath.isPointInFill(pt);
         },
@@ -194,7 +205,7 @@ export class NodeViewManager {
       }
     );
     el._drag = drag;
-    
+
     return el;
   }
 
@@ -232,11 +243,18 @@ export class NodeViewManager {
         let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('viewBox', shape.viewBox);
         svg.setAttribute('preserveAspectRatio', 'none');
-        svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible;';
+        svg.style.cssText =
+          'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible;';
         let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', shape.pathData);
-        path.setAttribute('fill', `var(--sn-shape-${shape.name}-fill, var(--sn-shape-fill, var(--sn-node-bg, #16213e)))`);
-        path.setAttribute('stroke', `var(--sn-shape-${shape.name}-stroke, var(--sn-shape-stroke, var(--sn-node-border, #2a2a4a)))`);
+        path.setAttribute(
+          'fill',
+          `var(--sn-shape-${shape.name}-fill, var(--sn-shape-fill, var(--sn-node-bg, #16213e)))`
+        );
+        path.setAttribute(
+          'stroke',
+          `var(--sn-shape-${shape.name}-stroke, var(--sn-shape-stroke, var(--sn-node-border, #2a2a4a)))`
+        );
         path.setAttribute('stroke-width', 'var(--sn-shape-stroke-width, 0.4)');
         path.setAttribute('stroke-linejoin', 'round');
         svg.appendChild(path);
@@ -266,8 +284,6 @@ export class NodeViewManager {
 
         // Notify canvas to render free dots for this SVG node
         if (this.#onSvgShapeReady) this.#onSvgShapeReady(node.id);
-
-
       } else if (shape) {
         // Standard shapes: apply border-radius
         let size = { width: el.offsetWidth || 180, height: el.offsetHeight || 60 };
@@ -333,9 +349,6 @@ export class NodeViewManager {
   }
 
   // --- Private helpers ---
-
-
-
 
   #autoSelectOnDragStart(nodeId, e) {
     if (!this.#selector.isNodeSelected(nodeId)) {
@@ -478,7 +491,10 @@ export class NodeViewManager {
       }
 
       // Calculate bounds
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
       for (const r of nodeRects) {
         minX = Math.min(minX, r.x);
         minY = Math.min(minY, r.y);
@@ -487,8 +503,10 @@ export class NodeViewManager {
       }
 
       let pad = 30;
-      minX -= pad; minY -= pad;
-      maxX += pad; maxY += pad;
+      minX -= pad;
+      minY -= pad;
+      maxX += pad;
+      maxY += pad;
 
       let graphW = maxX - minX;
       let graphH = maxY - minY;
@@ -502,8 +520,8 @@ export class NodeViewManager {
       // Draw connections as lines
       let conns = innerEditor.getConnections();
       for (const conn of conns) {
-        let src = nodeRects.find(r => r.id === conn.from);
-        let tgt = nodeRects.find(r => r.id === conn.to);
+        let src = nodeRects.find((r) => r.id === conn.from);
+        let tgt = nodeRects.find((r) => r.id === conn.to);
         if (src && tgt) {
           let sx = (src.x + src.w - minX) * scale + offsetX;
           let sy = (src.y + src.h / 2 - minY) * scale + offsetY;

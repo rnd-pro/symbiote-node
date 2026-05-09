@@ -12,13 +12,17 @@ import { template } from './TemplatePreview.tpl.js';
 import { styles } from './TemplatePreview.css.js';
 import { extractPlaceholders } from '../../engine/packs/transform/template-builder.handler.js';
 
-const DEFAULT_TEST_DATA = JSON.stringify({
-  status: 'created',
-  region: 'RU',
-  jobUid: '00c3b879-example',
-  details: 'Test delivery',
-  timestamp: new Date().toISOString(),
-}, null, 2);
+const DEFAULT_TEST_DATA = JSON.stringify(
+  {
+    status: 'created',
+    region: 'RU',
+    jobUid: '00c3b879-example',
+    details: 'Test delivery',
+    timestamp: new Date().toISOString(),
+  },
+  null,
+  2
+);
 
 export class TemplatePreview extends Symbiote {
   init$ = {

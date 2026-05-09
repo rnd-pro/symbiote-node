@@ -9,7 +9,6 @@
  */
 
 export class SnapGrid {
-
   /** @type {number} */
   #size;
 

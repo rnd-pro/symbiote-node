@@ -24,7 +24,11 @@ export default {
     ],
     params: {
       template: { type: 'textarea', default: '', description: 'Message template ({{var}} syntax)' },
-      replyMarkup: { type: 'textarea', default: '', description: 'Inline keyboard JSON (Telegram reply_markup)' },
+      replyMarkup: {
+        type: 'textarea',
+        default: '',
+        description: 'Inline keyboard JSON (Telegram reply_markup)',
+      },
     },
   },
 
@@ -32,8 +36,7 @@ export default {
     // No validate: template comes from params.template or inputs.template
     // Execute handles both cases
 
-    cacheKey: (inputs) =>
-      `tpl:${inputs.template}:${JSON.stringify(inputs.data)}`,
+    cacheKey: (inputs) => `tpl:${inputs.template}:${JSON.stringify(inputs.data)}`,
 
     execute: async (inputs, params) => {
       let template = params?.template || inputs.template;
@@ -48,7 +51,9 @@ export default {
         }, data);
 
         if (value === undefined) {
-          console.log(`🟡 [template] Missing variable "${trimmed}" in data keys: [${data ? Object.keys(data).join(', ') : 'NO DATA'}]`);
+          console.log(
+            `🟡 [template] Missing variable "${trimmed}" in data keys: [${data ? Object.keys(data).join(', ') : 'NO DATA'}]`
+          );
           return match;
         }
         if (typeof value === 'object') return JSON.stringify(value);

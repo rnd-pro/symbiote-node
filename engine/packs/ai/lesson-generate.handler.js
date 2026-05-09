@@ -27,7 +27,9 @@ async function loadMaterials(materialsDir) {
       let content = await readFile(path.join(materialsDir, entry), 'utf-8');
       materials[entry.replace('.md', '')] = content;
     }
-  } catch { /* no materials dir */ }
+  } catch {
+    /* no materials dir */
+  }
   return materials;
 }
 
@@ -136,7 +138,9 @@ function parseResponse(response) {
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]);
-    } catch { /* fallback */ }
+    } catch {
+      /* fallback */
+    }
   }
   return { error: 'Failed to parse AI response', raw: response };
 }
@@ -173,21 +177,36 @@ export default {
   icon: 'school',
 
   driver: {
-    description: 'AI-powered lesson generation from news content with vocabulary and podcast scripts',
-    inputs: [
-      { name: 'newsItems', type: 'any' },
-    ],
+    description:
+      'AI-powered lesson generation from news content with vocabulary and podcast scripts',
+    inputs: [{ name: 'newsItems', type: 'any' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'lesson', description: 'Operation: lesson | vocabulary | daily-digest | validate-style' },
-      apiKey: { type: 'string', default: null, description: 'OpenRouter API key (or OPENROUTER_API_KEY env)' },
-      model: { type: 'string', default: 'anthropic/claude-sonnet-4', description: 'AI model to use' },
+      operation: {
+        type: 'string',
+        default: 'lesson',
+        description: 'Operation: lesson | vocabulary | daily-digest | validate-style',
+      },
+      apiKey: {
+        type: 'string',
+        default: null,
+        description: 'OpenRouter API key (or OPENROUTER_API_KEY env)',
+      },
+      model: {
+        type: 'string',
+        default: 'anthropic/claude-sonnet-4',
+        description: 'AI model to use',
+      },
       focus: { type: 'string', default: null, description: 'Lesson focus/topic' },
       maxExamples: { type: 'int', default: 5, description: 'Maximum examples per lesson' },
-      materialsDir: { type: 'string', default: null, description: 'Path to educational materials for style reference' },
+      materialsDir: {
+        type: 'string',
+        default: null,
+        description: 'Path to educational materials for style reference',
+      },
       // daily-digest
       categories: { type: 'any', default: null, description: 'News items grouped by category' },
       // validate
@@ -217,9 +236,7 @@ export default {
       try {
         let opMap = {
           lesson: async () => {
-            let materials = params.materialsDir
-              ? await loadMaterials(params.materialsDir)
-              : {};
+            let materials = params.materialsDir ? await loadMaterials(params.materialsDir) : {};
 
             let prompt = buildLessonPrompt(newsItems, materials, focus, maxExamples);
 
@@ -227,7 +244,7 @@ export default {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
+                Authorization: `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
                 model,
@@ -254,13 +271,13 @@ export default {
             };
           },
           vocabulary: async () => {
-            let prompt = `Extract 10 key vocabulary items from these news headlines for A1 Spanish learners (Rioplatense dialect).\n\nNEWS:\n${newsItems.map(n => `- ${n.title}`).join('\n')}\n\nOUTPUT: JSON array of {"es": "word with article", "ru": "translation"}\nRules: nouns with el/la, no brands, no cognates, prefer regional vocabulary.`;
+            let prompt = `Extract 10 key vocabulary items from these news headlines for A1 Spanish learners (Rioplatense dialect).\n\nNEWS:\n${newsItems.map((n) => `- ${n.title}`).join('\n')}\n\nOUTPUT: JSON array of {"es": "word with article", "ru": "translation"}\nRules: nouns with el/la, no brands, no cognates, prefer regional vocabulary.`;
 
             let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
+                Authorization: `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
                 model,
@@ -287,7 +304,7 @@ export default {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
+                Authorization: `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
                 model,
@@ -311,7 +328,7 @@ export default {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
+                Authorization: `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
                 model,
@@ -327,7 +344,7 @@ export default {
             let validation = parseResponse(aiResponse);
 
             return { result: { validation, model } };
-          }
+          },
         };
 
         if (opMap[operation]) {

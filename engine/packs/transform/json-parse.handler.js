@@ -13,9 +13,7 @@ export default {
 
   driver: {
     description: 'Parse JSON string to object',
-    inputs: [
-      { name: 'input', type: 'string' },
-    ],
+    inputs: [{ name: 'input', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },

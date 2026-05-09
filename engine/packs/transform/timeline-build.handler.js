@@ -33,9 +33,21 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      minSegmentDuration: { type: 'number', default: 1.8, description: 'Min segment duration (seconds)' },
-      maxSegmentDuration: { type: 'number', default: 5.0, description: 'Max segment duration (seconds)' },
-      shortMergeThreshold: { type: 'number', default: 1.2, description: 'Merge lyrics segments shorter than this' },
+      minSegmentDuration: {
+        type: 'number',
+        default: 1.8,
+        description: 'Min segment duration (seconds)',
+      },
+      maxSegmentDuration: {
+        type: 'number',
+        default: 5.0,
+        description: 'Max segment duration (seconds)',
+      },
+      shortMergeThreshold: {
+        type: 'number',
+        default: 1.2,
+        description: 'Merge lyrics segments shorter than this',
+      },
       gapType: { type: 'string', default: 'beat', description: 'Type label for gap-fill segments' },
     },
   },
@@ -120,7 +132,7 @@ function buildPhrases(words) {
     // Split on sentence endings, commas, or long pauses
     let endsWithPunct = /[.!?;]$/.test(w.word);
     let nextWord = words[words.indexOf(w) + 1];
-    let hasGap = nextWord && (nextWord.start - w.end > 0.8);
+    let hasGap = nextWord && nextWord.start - w.end > 0.8;
 
     if (endsWithPunct || hasGap || current.words.length >= 12) {
       phrases.push({
@@ -264,7 +276,7 @@ function removeOverlaps(segments) {
   }
 
   // Remove zero/negative duration segments
-  return segments.filter(s => s.end - s.start > 0.05);
+  return segments.filter((s) => s.end - s.start > 0.05);
 }
 
 /**
@@ -370,21 +382,18 @@ function capMaxDuration(segments, maxDuration) {
  */
 function calculateStats(segments, audioDuration) {
   let totalSegments = segments.length;
-  let lyricsSegments = segments.filter(s => s.type === 'lyrics').length;
+  let lyricsSegments = segments.filter((s) => s.type === 'lyrics').length;
   let gapSegments = totalSegments - lyricsSegments;
 
   let coveredDuration = segments.reduce((sum, s) => sum + (s.end - s.start), 0);
   let lyricsDuration = segments
-    .filter(s => s.type === 'lyrics')
+    .filter((s) => s.type === 'lyrics')
     .reduce((sum, s) => sum + (s.end - s.start), 0);
 
-  let coverage = audioDuration > 0
-    ? Math.round((coveredDuration / audioDuration) * 100)
-    : 0;
+  let coverage = audioDuration > 0 ? Math.round((coveredDuration / audioDuration) * 100) : 0;
 
-  let avgDuration = totalSegments > 0
-    ? Math.round((coveredDuration / totalSegments) * 100) / 100
-    : 0;
+  let avgDuration =
+    totalSegments > 0 ? Math.round((coveredDuration / totalSegments) * 100) / 100 : 0;
 
   return {
     totalSegments,

@@ -83,12 +83,14 @@ before(() => {
 // ---- Tests ----
 
 describe('Connection-port consistency', () => {
-
   it('all connections reference valid output ports', () => {
     for (const conn of editor.getConnections()) {
       const fromNode = editor.getNode(conn.from);
       assert.ok(fromNode, `Source node ${conn.from} must exist`);
-      assert.ok(fromNode.outputs[conn.out], `Output port "${conn.out}" must exist on node "${fromNode.label}"`);
+      assert.ok(
+        fromNode.outputs[conn.out],
+        `Output port "${conn.out}" must exist on node "${fromNode.label}"`
+      );
     }
   });
 
@@ -96,7 +98,10 @@ describe('Connection-port consistency', () => {
     for (const conn of editor.getConnections()) {
       const toNode = editor.getNode(conn.to);
       assert.ok(toNode, `Target node ${conn.to} must exist`);
-      assert.ok(toNode.inputs[conn.in], `Input port "${conn.in}" must exist on node "${toNode.label}"`);
+      assert.ok(
+        toNode.inputs[conn.in],
+        `Input port "${conn.in}" must exist on node "${toNode.label}"`
+      );
     }
   });
 
@@ -106,8 +111,10 @@ describe('Connection-port consistency', () => {
       const toNode = editor.getNode(conn.to);
       const outSocket = fromNode.outputs[conn.out].socket;
       const inSocket = toNode.inputs[conn.in].socket;
-      assert.ok(outSocket.isCompatibleWith(inSocket),
-        `Socket types must be compatible: ${outSocket.name} → ${inSocket.name}`);
+      assert.ok(
+        outSocket.isCompatibleWith(inSocket),
+        `Socket types must be compatible: ${outSocket.name} → ${inSocket.name}`
+      );
     }
   });
 
@@ -128,7 +135,6 @@ describe('Connection-port consistency', () => {
 });
 
 describe('Bézier path properties', () => {
-
   it('cubic Bézier path roundtrips correctly', () => {
     const d = makeBezierPath(10, 20, 100, 80);
     const parsed = parseBezierPath(d);
@@ -179,7 +185,6 @@ describe('Bézier path properties', () => {
 });
 
 describe('Graph topology invariants', () => {
-
   it('all nodes have unique IDs', () => {
     const ids = new Set();
     for (const node of editor.getNodes()) {
@@ -205,9 +210,14 @@ describe('Graph topology invariants', () => {
 
     for (let i = 0; i < nodeList.length; i++) {
       for (let j = i + 1; j < nodeList.length; j++) {
-        const a = nodeList[i], b = nodeList[j];
-        const overlap = !(a.x + a.width < b.x || b.x + b.width < a.x ||
-          a.y + a.height < b.y || b.y + b.height < a.y);
+        const a = nodeList[i],
+          b = nodeList[j];
+        const overlap = !(
+          a.x + a.width < b.x ||
+          b.x + b.width < a.x ||
+          a.y + a.height < b.y ||
+          b.y + b.height < a.y
+        );
         assert.ok(!overlap, `Nodes "${a.label}" and "${b.label}" must not overlap`);
       }
     }
@@ -223,7 +233,6 @@ describe('Graph topology invariants', () => {
 });
 
 describe('Serialization round-trip', () => {
-
   it('toJSON preserves node count', () => {
     const data = editor.toJSON();
     assert.equal(data.nodes.length, 3);
@@ -236,7 +245,7 @@ describe('Serialization round-trip', () => {
 
   it('serialized connections reference valid node IDs', () => {
     const data = editor.toJSON();
-    const nodeIds = new Set(data.nodes.map(n => n.id));
+    const nodeIds = new Set(data.nodes.map((n) => n.id));
     for (const conn of data.connections) {
       assert.ok(nodeIds.has(conn.from), `Connection source ${conn.from} must be a valid node ID`);
       assert.ok(nodeIds.has(conn.to), `Connection target ${conn.to} must be a valid node ID`);
@@ -254,7 +263,6 @@ describe('Serialization round-trip', () => {
 });
 
 describe('Socket compatibility matrix', () => {
-
   it('same-type sockets are compatible', () => {
     assert.ok(numSocket.isCompatibleWith(numSocket));
     assert.ok(strSocket.isCompatibleWith(strSocket));
@@ -274,7 +282,6 @@ describe('Socket compatibility matrix', () => {
 });
 
 describe('Editor CRUD operations', () => {
-
   it('getNode returns correct node', () => {
     const found = editor.getNode(source.id);
     assert.equal(found.label, 'Campaign Input');
@@ -300,7 +307,6 @@ describe('Editor CRUD operations', () => {
 });
 
 describe('Node collapse/mute state', () => {
-
   it('collapsed defaults to false', () => {
     assert.equal(source.collapsed, false);
   });

@@ -73,7 +73,6 @@ export default {
         }
 
         return { response, status: res.status, error: null };
-
       } catch (err) {
         return { response: null, status: 0, error: err.message };
       }

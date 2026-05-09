@@ -53,10 +53,22 @@ export class RectShape extends NodeShape {
 
     let x, y;
     switch (side) {
-      case 'top':    x = size.width * effectiveT; y = 0; break;
-      case 'right':  x = size.width; y = size.height * effectiveT; break;
-      case 'bottom': x = size.width * effectiveT; y = size.height; break;
-      case 'left':   x = 0; y = size.height * effectiveT; break;
+      case 'top':
+        x = size.width * effectiveT;
+        y = 0;
+        break;
+      case 'right':
+        x = size.width;
+        y = size.height * effectiveT;
+        break;
+      case 'bottom':
+        x = size.width * effectiveT;
+        y = size.height;
+        break;
+      case 'left':
+        x = 0;
+        y = size.height * effectiveT;
+        break;
     }
 
     return { x, y, angle: NORMALS[side] };

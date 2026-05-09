@@ -13,15 +13,15 @@ export default {
 
   driver: {
     description: 'Log value to console and pass through',
-    inputs: [
-      { name: 'value', type: 'any' },
-    ],
-    outputs: [
-      { name: 'value', type: 'any' },
-    ],
+    inputs: [{ name: 'value', type: 'any' }],
+    outputs: [{ name: 'value', type: 'any' }],
     params: {
       label: { type: 'string', default: '', description: 'Log label prefix' },
-      level: { type: 'string', default: 'info', description: 'Log level: log | info | warn | error' },
+      level: {
+        type: 'string',
+        default: 'info',
+        description: 'Log level: log | info | warn | error',
+      },
     },
   },
 
@@ -30,12 +30,13 @@ export default {
     cacheKey: null,
 
     execute: async (inputs, params) => {
-      let label = params.label ? `[${params.label}]` : '[symbiote-node]';      const method = params.level || 'info';
+      let label = params.label ? `[${params.label}]` : '[symbiote-node]';
+      const method = params.level || 'info';
 
       let logFn = console[method] || console.log;
-      logFn(label, typeof inputs.value === 'object'
-        ? JSON.stringify(inputs.value, null, 2)
-        : inputs.value
+      logFn(
+        label,
+        typeof inputs.value === 'object' ? JSON.stringify(inputs.value, null, 2) : inputs.value
       );
 
       return { value: inputs.value };

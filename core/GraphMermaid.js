@@ -152,7 +152,7 @@ export function editorToMermaid(editor, options = {}) {
   } else {
     // Render subgraphs with their nodes
     for (const [frameId, nodes] of framedNodes) {
-      let frame = frames.find(f => f.id === frameId);
+      let frame = frames.find((f) => f.id === frameId);
       if (!frame) continue;
       lines.push('');
       lines.push(`  subgraph ${sanitizeId(frame.label)}["${frame.label}"]`);
@@ -267,8 +267,10 @@ export function mermaidToGraph(text) {
       let frame = {
         label: subMatch[2] || subMatch[1],
         color: '#4a9eff',
-        x: 0, y: 0,
-        width: 400, height: 300,
+        x: 0,
+        y: 0,
+        width: 400,
+        height: 300,
         _nodeIds: [],
       };
       frameStack.push(frame);
@@ -327,7 +329,12 @@ export function mermaidToGraph(text) {
       let parts = line.split(/\s*&\s*/);
       for (const part of parts) {
         let ref = parseNodeRef(part.trim());
-        if (ref.id && ref.id !== 'end' && !ref.id.startsWith('style') && !ref.id.startsWith('class')) {
+        if (
+          ref.id &&
+          ref.id !== 'end' &&
+          !ref.id.startsWith('style') &&
+          !ref.id.startsWith('class')
+        ) {
           registerNode(ref);
         }
       }
@@ -337,11 +344,13 @@ export function mermaidToGraph(text) {
   return {
     nodes: [...nodes.values()],
     connections,
-    frames: frames.map(f => ({
+    frames: frames.map((f) => ({
       label: f.label,
       color: f.color,
-      x: f.x, y: f.y,
-      width: f.width, height: f.height,
+      x: f.x,
+      y: f.y,
+      width: f.width,
+      height: f.height,
     })),
     direction,
   };

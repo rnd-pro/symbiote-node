@@ -31,18 +31,12 @@ import { loadHandlers, watchHandlers } from './HandlerLoader.js';
  * @returns {Promise<{server: import('http').Server, wss: WebSocketServer, graph: Graph, close: () => Promise<void>}>}
  */
 export async function createServer(options = {}) {
-  let {
-    port = 3100,
-    handlersDir,
-    workflowFile,
-    watchFiles = true,
-    verbose = false,
-  } = options;
+  let { port = 3100, handlersDir, workflowFile, watchFiles = true, verbose = false } = options;
 
   let graph = new Graph();
   let executor = new Executor();
   let watchers = [];
-  let log = verbose ? console.log.bind(console) : () => { };
+  let log = verbose ? console.log.bind(console) : () => {};
 
   // Load initial workflow
   if (workflowFile) {
@@ -178,14 +172,24 @@ export async function createServer(options = {}) {
   // ── WS Command Map ─────────────────────────────────
   // cmdMap[type]?.(payload, ws) — one-liner dispatch per BEST-PRACTICES §5
 
-  let UI_PASSTHROUGH = new Set(['ui:layout', 'ui:focus', 'ui:select', 'ui:navigate', 'ui:playback', 'ui:notify', 'ui:cursor']);
+  let UI_PASSTHROUGH = new Set([
+    'ui:layout',
+    'ui:focus',
+    'ui:select',
+    'ui:navigate',
+    'ui:playback',
+    'ui:notify',
+    'ui:cursor',
+  ]);
 
   let graphActionMap = {
     addNode: (payload, ws) => {
       let { data } = payload;
       let id = graph.addNode(data.type, data.params, data.options);
       broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
-      ws.send(JSON.stringify({ type: 'graph:actionResult', payload: { action: 'addNode', nodeId: id } }));
+      ws.send(
+        JSON.stringify({ type: 'graph:actionResult', payload: { action: 'addNode', nodeId: id } })
+      );
     },
     removeNode: (payload, ws) => {
       graph.removeNode(payload.nodeId);
@@ -209,7 +213,9 @@ export async function createServer(options = {}) {
     'graph:action': (payload, ws) => {
       let handler = graphActionMap[payload.action];
       if (handler) return handler(payload, ws);
-      ws.send(JSON.stringify({ type: 'error', payload: { message: `Unknown action: ${payload.action}` } }));
+      ws.send(
+        JSON.stringify({ type: 'error', payload: { message: `Unknown action: ${payload.action}` } })
+      );
     },
   };
 
@@ -230,7 +236,9 @@ export async function createServer(options = {}) {
     let handler = cmdMap[type];
     if (handler) return handler(payload, ws);
 
-    ws.send(JSON.stringify({ type: 'error', payload: { message: `Unknown message type: ${type}` } }));
+    ws.send(
+      JSON.stringify({ type: 'error', payload: { message: `Unknown message type: ${type}` } })
+    );
   }
 
   /**
@@ -250,7 +258,10 @@ export async function createServer(options = {}) {
       },
     });
 
-    broadcast({ type: 'graph:executed', payload: { totalTime: result.totalTime, log: result.log } });
+    broadcast({
+      type: 'graph:executed',
+      payload: { totalTime: result.totalTime, log: result.log },
+    });
 
     // Save to workflow file if configured
     if (workflowFile) {
@@ -272,12 +283,14 @@ export async function createServer(options = {}) {
     try {
       let result = await executeAndStream();
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        ok: true,
-        totalTime: result.totalTime,
-        outputs: result.outputs,
-        log: result.log,
-      }));
+      res.end(
+        JSON.stringify({
+          ok: true,
+          totalTime: result.totalTime,
+          outputs: result.outputs,
+          log: result.log,
+        })
+      );
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: err.message }));
@@ -343,7 +356,9 @@ export async function createServer(options = {}) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', (chunk) => { body += chunk; });
+    req.on('data', (chunk) => {
+      body += chunk;
+    });
     req.on('end', () => resolve(body));
     req.on('error', reject);
   });

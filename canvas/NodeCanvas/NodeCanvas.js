@@ -42,12 +42,12 @@ import '../Breadcrumb/Breadcrumb.js';
 import { computeAutoLayout } from '../AutoLayout.js';
 
 export class NodeCanvas extends Symbiote {
-
   init$ = {
     zoom: 1,
     panX: 0,
     panY: 0,
-    '+contentTransform': () => `translate(${this.$.panX}px, ${this.$.panY}px) scale(${this.$.zoom})`,
+    '+contentTransform': () =>
+      `translate(${this.$.panX}px, ${this.$.panY}px) scale(${this.$.zoom})`,
   };
 
   /** @type {import('../../core/Editor.js').NodeEditor|null} */
@@ -135,7 +135,10 @@ export class NodeCanvas extends Symbiote {
   _clearViews() {
     // Remove all node views and their preview timers
     for (const [, el] of this._nodeViews) {
-      if (el._previewRaf) { clearTimeout(el._previewRaf); el._previewRaf = null; }
+      if (el._previewRaf) {
+        clearTimeout(el._previewRaf);
+        el._previewRaf = null;
+      }
       if (el._drag) el._drag.destroy();
       el._redrawPreview = null;
       el.remove();
@@ -225,9 +228,17 @@ export class NodeCanvas extends Symbiote {
     let toolbar = this.ref.quickToolbar;
     if (toolbar) {
       let actionMap = {
-        delete: (nodeId) => { this._actions.deleteNode(nodeId); toolbar.hide(); },
-        duplicate: (nodeId) => { this._actions.cloneNode(nodeId); },
-        enter: (nodeId) => { this.drillDown(nodeId); toolbar.hide(); },
+        delete: (nodeId) => {
+          this._actions.deleteNode(nodeId);
+          toolbar.hide();
+        },
+        duplicate: (nodeId) => {
+          this._actions.cloneNode(nodeId);
+        },
+        enter: (nodeId) => {
+          this.drillDown(nodeId);
+          toolbar.hide();
+        },
         mute: (nodeId) => {
           this._actions.muteNode(nodeId);
           let nodeEl = this._nodeViews.get(nodeId);
@@ -240,10 +251,12 @@ export class NodeCanvas extends Symbiote {
           handler(nodeId);
         } else {
           // Custom actions — dispatch event for consumer (e.g. dep-graph explore)
-          this.dispatchEvent(new CustomEvent('toolbar-action', {
-            detail: { action, nodeId },
-            bubbles: true,
-          }));
+          this.dispatchEvent(
+            new CustomEvent('toolbar-action', {
+              detail: { action, nodeId },
+              bubbles: true,
+            })
+          );
           toolbar.hide();
         }
       };
@@ -317,7 +330,11 @@ export class NodeCanvas extends Symbiote {
         let menuX = x * this.$.zoom + this.$.panX;
         let menuY = y * this.$.zoom + this.$.panY;
         this.ref.contextMenu?.show(menuX, menuY, [
-          { label: 'Add Node', icon: 'add_box', action: () => this._editor?.emit('contextadd', { x, y }) },
+          {
+            label: 'Add Node',
+            icon: 'add_box',
+            action: () => this._editor?.emit('contextadd', { x, y }),
+          },
         ]);
       },
       findNearestDot: (wx, wy) => this._connRenderer?.findNearestDot(wx, wy),
@@ -387,7 +404,9 @@ export class NodeCanvas extends Symbiote {
   }
 
   /** @returns {ConnectFlow|null} */
-  getConnectFlow() { return this._connectFlow; }
+  getConnectFlow() {
+    return this._connectFlow;
+  }
 
   /**
    * Enable/disable snap to grid
@@ -442,29 +461,39 @@ export class NodeCanvas extends Symbiote {
    * Apply only color palette
    * @param {import('../../themes/Palette.js').PaletteDefinition} palette
    */
-  setPalette(palette) { applyPalette(this, palette); }
+  setPalette(palette) {
+    applyPalette(this, palette);
+  }
 
   /**
    * Apply only geometry skin
    * @param {import('../../themes/Skin.js').SkinDefinition} skin
    */
-  setSkin(skin) { applySkin(this, skin); }
+  setSkin(skin) {
+    applySkin(this, skin);
+  }
 
   /** @returns {string} */
-  getThemeName() { return this._themeName; }
+  getThemeName() {
+    return this._themeName;
+  }
 
   /**
    * Set data flow animation on a connection
    * @param {string} connId
    * @param {boolean} active
    */
-  setFlowing(connId, active) { this._connRenderer?.setFlowing(connId, active); }
+  setFlowing(connId, active) {
+    this._connRenderer?.setFlowing(connId, active);
+  }
 
   /**
    * Set data flow animation on all connections
    * @param {boolean} active
    */
-  setAllFlowing(active) { this._connRenderer?.setAllFlowing(active); }
+  setAllFlowing(active) {
+    this._connRenderer?.setAllFlowing(active);
+  }
 
   /**
    * Set connection path style (persists across setEditor/drill-down)
@@ -476,7 +505,9 @@ export class NodeCanvas extends Symbiote {
   }
 
   /** @returns {'bezier'|'orthogonal'|'straight'|'pcb'} */
-  getPathStyle() { return this._pathStyle; }
+  getPathStyle() {
+    return this._pathStyle;
+  }
 
   /**
    * Programmatically select a node by ID
@@ -490,7 +521,9 @@ export class NodeCanvas extends Symbiote {
    * Clear all connector caches and re-render.
    * Call after initial node positioning to settle SVG connectors.
    */
-  refreshConnections() { this._connRenderer?.refreshAll(); }
+  refreshConnections() {
+    this._connRenderer?.refreshAll();
+  }
 
   /**
    * Set error state on a node with frame-style error display
@@ -578,7 +611,6 @@ export class NodeCanvas extends Symbiote {
     return this._viewport?.flyToNode(nodeId, opts) || false;
   }
 
-
   /**
    * Measure actual DOM sizes of all rendered nodes.
    * Returns a plain object { [nodeId]: { w, h } } suitable for AutoLayout's nodeSizes option.
@@ -640,13 +672,17 @@ export class NodeCanvas extends Symbiote {
    * @param {string} nodeId
    * @returns {HTMLElement|undefined}
    */
-  _getNodeView(nodeId) { return this._nodeViews.get(nodeId); }
+  _getNodeView(nodeId) {
+    return this._nodeViews.get(nodeId);
+  }
 
-  /** 
-   * Alias for SubgraphManager 
+  /**
+   * Alias for SubgraphManager
    * @param {string} nodeId
    */
-  getNodeView(nodeId) { return this._nodeViews.get(nodeId); }
+  getNodeView(nodeId) {
+    return this._nodeViews.get(nodeId);
+  }
 
   /**
    * Highlight nodes sequentially based on execution trace.
@@ -739,10 +775,12 @@ export class NodeCanvas extends Symbiote {
     this._navigating = true;
     this._subgraphManager.drillDown(node);
     this._navigating = false;
-    this.dispatchEvent(new CustomEvent('subgraph-enter', {
-      detail: { node, nodeId },
-      bubbles: true,
-    }));
+    this.dispatchEvent(
+      new CustomEvent('subgraph-enter', {
+        detail: { node, nodeId },
+        bubbles: true,
+      })
+    );
   }
 
   /**
@@ -753,10 +791,12 @@ export class NodeCanvas extends Symbiote {
     this._navigating = true;
     this._subgraphManager.drillUp(level);
     this._navigating = false;
-    this.dispatchEvent(new CustomEvent('subgraph-exit', {
-      detail: { level },
-      bubbles: true,
-    }));
+    this.dispatchEvent(
+      new CustomEvent('subgraph-exit', {
+        detail: { level },
+        bubbles: true,
+      })
+    );
   }
 
   /**
@@ -939,8 +979,6 @@ export class NodeCanvas extends Symbiote {
     }
   }
 
-
-
   _handleConnectionClick(connId, e) {
     let accumulate = e.ctrlKey || e.metaKey;
     this._selector.selectConnection(connId, accumulate);
@@ -1009,25 +1047,30 @@ export class NodeCanvas extends Symbiote {
     // Zoom
     this._zoom = new Zoom(0.1);
     let interactingTimer = null;
-    this._zoom.initialize(container, content, (delta, ox, oy) => {
-      let k = this.$.zoom;
-      let newK = k * (1 + delta);
-      if (newK < 0.001 || newK > 5) return;
-      this.$.zoom = newK;
-      this.$.panX += ox;
-      this.$.panY += oy;
-      this._updateTransform();
-      this.dispatchEvent(new CustomEvent('manualviewport'));
+    this._zoom.initialize(
+      container,
+      content,
+      (delta, ox, oy) => {
+        let k = this.$.zoom;
+        let newK = k * (1 + delta);
+        if (newK < 0.001 || newK > 5) return;
+        this.$.zoom = newK;
+        this.$.panX += ox;
+        this.$.panY += oy;
+        this._updateTransform();
+        this.dispatchEvent(new CustomEvent('manualviewport'));
 
-      // Suppress CSS :hover on paths during active zoom
-      if (!this.hasAttribute('data-interacting')) {
-        this.setAttribute('data-interacting', '');
-      }
-      clearTimeout(interactingTimer);
-      interactingTimer = setTimeout(() => {
-        this.removeAttribute('data-interacting');
-      }, 150);
-    }, () => ({ x: this.$.panX, y: this.$.panY }));
+        // Suppress CSS :hover on paths during active zoom
+        if (!this.hasAttribute('data-interacting')) {
+          this.setAttribute('data-interacting', '');
+        }
+        clearTimeout(interactingTimer);
+        interactingTimer = setTimeout(() => {
+          this.removeAttribute('data-interacting');
+        }, 150);
+      },
+      () => ({ x: this.$.panX, y: this.$.panY })
+    );
 
     // Context menu + keyboard
     container.addEventListener('contextmenu', (e) => {
@@ -1057,7 +1100,6 @@ export class NodeCanvas extends Symbiote {
     });
 
     this._updateTransform();
-
 
     // Minimap — auto-show on viewport change, toggle button
     let minimap = this.ref.minimap;
@@ -1153,7 +1195,12 @@ export class NodeCanvas extends Symbiote {
           let result = [];
           if (this._editor) {
             for (const node of this._editor.getNodes()) {
-              result.push({ id: node.id, label: node.label, type: node.type, category: node.category });
+              result.push({
+                id: node.id,
+                label: node.label,
+                type: node.type,
+                category: node.category,
+              });
             }
           }
           return result;

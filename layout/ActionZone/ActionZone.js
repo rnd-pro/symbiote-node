@@ -1,7 +1,7 @@
 /**
  * @fileoverview ActionZone - Corner widget for split/join gestures
  * Inspired by Blender's AZONE_AREA implementation.
- * 
+ *
  * Triangular hit area at panel corners:
  * - Drag inward (mouse stays inside panel) → split panel
  * - Drag outward (mouse exits panel) → join panels
@@ -65,7 +65,7 @@ export class ActionZone extends Symbiote {
 
   /**
    * Start drag operation
-   * @param {PointerEvent} e 
+   * @param {PointerEvent} e
    */
   _onPointerDown(e) {
     e.preventDefault();
@@ -79,7 +79,7 @@ export class ActionZone extends Symbiote {
         left: rect.left,
         top: rect.top,
         right: rect.right,
-        bottom: rect.bottom
+        bottom: rect.bottom,
       };
     }
 
@@ -92,16 +92,18 @@ export class ActionZone extends Symbiote {
     this.setAttribute('dragging', '');
 
     // Notify parent to prepare for potential split/join
-    this.dispatchEvent(new CustomEvent('action-zone-start', {
-      bubbles: true,
-      composed: true,
-      detail: { panelId: this.$.panelId, corner: this.$['@corner'] }
-    }));
+    this.dispatchEvent(
+      new CustomEvent('action-zone-start', {
+        bubbles: true,
+        composed: true,
+        detail: { panelId: this.$.panelId, corner: this.$['@corner'] },
+      })
+    );
   }
 
   /**
    * Track drag and detect gesture
-   * @param {PointerEvent} e 
+   * @param {PointerEvent} e
    */
   _onPointerMove(e) {
     if (!this.$.isDragging) return;
@@ -122,22 +124,25 @@ export class ActionZone extends Symbiote {
       this.$.gestureType = gesture;
 
       // Notify parent to show preview
-      this.dispatchEvent(new CustomEvent('action-zone-gesture', {
-        bubbles: true,
-        composed: true,
-        detail: {
-          panelId: this.$.panelId,
-          corner: this.$['@corner'],
-          gesture: gesture,
-          dx, dy
-        }
-      }));
+      this.dispatchEvent(
+        new CustomEvent('action-zone-gesture', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            panelId: this.$.panelId,
+            corner: this.$['@corner'],
+            gesture: gesture,
+            dx,
+            dy,
+          },
+        })
+      );
     }
   }
 
   /**
    * Complete or cancel gesture
-   * @param {PointerEvent} e 
+   * @param {PointerEvent} e
    */
   _onPointerUp(e) {
     if (!this.$.isDragging) return;
@@ -157,15 +162,17 @@ export class ActionZone extends Symbiote {
 
     if (gesture) {
       // Execute the gesture
-      this.dispatchEvent(new CustomEvent('action-zone-execute', {
-        bubbles: true,
-        composed: true,
-        detail: {
-          panelId: this.$.panelId,
-          corner: this.$['@corner'],
-          gesture: gesture
-        }
-      }));
+      this.dispatchEvent(
+        new CustomEvent('action-zone-execute', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            panelId: this.$.panelId,
+            corner: this.$['@corner'],
+            gesture: gesture,
+          },
+        })
+      );
     }
 
     // Reset state
@@ -174,19 +181,21 @@ export class ActionZone extends Symbiote {
     this.$.panelBounds = null;
 
     // Hide preview
-    this.dispatchEvent(new CustomEvent('action-zone-end', {
-      bubbles: true,
-      composed: true,
-      detail: { panelId: this.$.panelId }
-    }));
+    this.dispatchEvent(
+      new CustomEvent('action-zone-end', {
+        bubbles: true,
+        composed: true,
+        detail: { panelId: this.$.panelId },
+      })
+    );
   }
 
   /**
    * Detect gesture type based on mouse position relative to panel bounds
-   * @param {number} mouseX 
-   * @param {number} mouseY 
-   * @param {number} dx 
-   * @param {number} dy 
+   * @param {number} mouseX
+   * @param {number} mouseY
+   * @param {number} dx
+   * @param {number} dy
    * @returns {'split-h' | 'split-v' | 'join' | null}
    */
   _detectGesture(mouseX, mouseY, dx, dy) {
@@ -196,12 +205,11 @@ export class ActionZone extends Symbiote {
       return this._detectGestureByDirection(dx, dy);
     }
 
-    let isOutside = (
+    let isOutside =
       mouseX < bounds.left ||
       mouseX > bounds.right ||
       mouseY < bounds.top ||
-      mouseY > bounds.bottom
-    );
+      mouseY > bounds.bottom;
 
     if (isOutside) {
       return 'join';
@@ -212,8 +220,8 @@ export class ActionZone extends Symbiote {
 
   /**
    * Detect gesture purely by drag direction
-   * @param {number} dx 
-   * @param {number} dy 
+   * @param {number} dx
+   * @param {number} dy
    * @returns {'split-h' | 'split-v' | 'join' | null}
    */
   _detectGestureByDirection(dx, dy) {
@@ -251,4 +259,3 @@ ActionZone.template = template;
 ActionZone.rootStyles = styles;
 
 ActionZone.reg('action-zone');
-

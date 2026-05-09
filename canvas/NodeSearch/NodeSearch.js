@@ -13,7 +13,6 @@ import { template, searchResultTemplate } from './NodeSearch.tpl.js';
 import { styles } from './NodeSearch.css.js';
 
 export class NodeSearch extends Symbiote {
-
   init$ = {
     query: '',
     results: [],
@@ -70,16 +69,20 @@ export class NodeSearch extends Symbiote {
     if (!this.#getNodes) return;
     let nodes = this.#getNodes();
     let q = query.toLowerCase();
-    let results = nodes.filter(n =>
-      n.label.toLowerCase().includes(q) ||
-      (n.type && n.type.toLowerCase().includes(q)) ||
-      (n.category && n.category.toLowerCase().includes(q))
-    ).slice(0, 10).map(n => ({
-      id: n.id,
-      label: n.label,
-      type: n.type || 'default',
-      category: n.category || 'default',
-    }));
+    let results = nodes
+      .filter(
+        (n) =>
+          n.label.toLowerCase().includes(q) ||
+          (n.type && n.type.toLowerCase().includes(q)) ||
+          (n.category && n.category.toLowerCase().includes(q))
+      )
+      .slice(0, 10)
+      .map((n) => ({
+        id: n.id,
+        label: n.label,
+        type: n.type || 'default',
+        category: n.category || 'default',
+      }));
     this.$.results = results;
   }
 
@@ -112,8 +115,6 @@ export class NodeSearch extends Symbiote {
       this.close();
     }
   }
-
-
 }
 
 // Result item for itemize

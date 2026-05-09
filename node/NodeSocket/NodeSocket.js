@@ -11,7 +11,6 @@ import Symbiote from '@symbiotejs/symbiote';
 import { template } from './NodeSocket.tpl.js';
 
 export class NodeSocket extends Symbiote {
-
   renderCallback() {
     this.sub('@data-socket-color', (val) => {
       if (val) {

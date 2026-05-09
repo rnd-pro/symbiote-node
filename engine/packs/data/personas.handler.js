@@ -67,7 +67,8 @@ const BUILT_IN_PRESETS = [
   {
     id: 'dj_sofia',
     name: 'Sofía',
-    personality: 'Young reporter, brings fresh perspectives, occasionally interrupts with excitement',
+    personality:
+      'Young reporter, brings fresh perspectives, occasionally interrupts with excitement',
     voiceInstruct: 'Youthful energetic voice, sometimes excited',
     speaker: 'vivian',
     pan: 0.1,
@@ -83,9 +84,7 @@ export default {
 
   driver: {
     description: 'Character persona registry — voice presets with personality for TTS',
-    inputs: [
-      { name: 'personaId', type: 'string' },
-    ],
+    inputs: [{ name: 'personaId', type: 'string' }],
     outputs: [
       { name: 'persona', type: 'any' },
       { name: 'personas', type: 'any' },
@@ -95,8 +94,16 @@ export default {
       operation: { type: 'string', default: 'get', description: 'get | list | random' },
       count: { type: 'int', default: 2, description: 'Number of personas for random operation' },
       filterGender: { type: 'string', default: '', description: 'Filter by gender: male | female' },
-      filterType: { type: 'string', default: '', description: 'Filter by type: dj | normal | meme' },
-      customPresets: { type: 'any', default: null, description: 'Custom persona array (overrides built-in)' },
+      filterType: {
+        type: 'string',
+        default: '',
+        description: 'Filter by type: dj | normal | meme',
+      },
+      customPresets: {
+        type: 'any',
+        default: null,
+        description: 'Custom persona array (overrides built-in)',
+      },
     },
   },
 
@@ -119,7 +126,7 @@ export default {
       let op = params.operation || 'get';
 
       if (op === 'get') {
-        let persona = presets.find(p => p.id === inputs.personaId);
+        let persona = presets.find((p) => p.id === inputs.personaId);
         if (!persona) {
           return { persona: null, personas: null, error: `Persona not found: ${inputs.personaId}` };
         }
@@ -129,10 +136,10 @@ export default {
       if (op === 'list') {
         let filtered = [...presets];
         if (params.filterGender) {
-          filtered = filtered.filter(p => p.gender === params.filterGender);
+          filtered = filtered.filter((p) => p.gender === params.filterGender);
         }
         if (params.filterType) {
-          filtered = filtered.filter(p => p.type === params.filterType);
+          filtered = filtered.filter((p) => p.type === params.filterType);
         }
         return { persona: null, personas: filtered, error: null };
       }
@@ -140,10 +147,10 @@ export default {
       if (op === 'random') {
         let pool = [...presets];
         if (params.filterGender) {
-          pool = pool.filter(p => p.gender === params.filterGender);
+          pool = pool.filter((p) => p.gender === params.filterGender);
         }
         if (params.filterType) {
-          pool = pool.filter(p => p.type === params.filterType);
+          pool = pool.filter((p) => p.type === params.filterType);
         }
         // Fisher-Yates shuffle
         for (let i = pool.length - 1; i > 0; i--) {

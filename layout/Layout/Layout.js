@@ -59,7 +59,7 @@ export class Layout extends Symbiote {
   registerPanelType(name, config) {
     this.$.panelTypes = {
       ...this.$.panelTypes,
-      [name]: config
+      [name]: config,
     };
   }
 
@@ -115,7 +115,9 @@ export class Layout extends Symbiote {
           requestAnimationFrame(() => {
             let allPanels = this.querySelectorAll('layout-node[node-type="panel"]');
             // Check if current fullscreen panel still exists
-            let panelExists = Array.from(allPanels).some(p => p.$.nodeId === this.$.fullscreenPanelId);
+            let panelExists = Array.from(allPanels).some(
+              (p) => p.$.nodeId === this.$.fullscreenPanelId
+            );
             if (panelExists) {
               this._updateTabItems(allPanels, this.$.fullscreenPanelId);
             } else {
@@ -123,7 +125,7 @@ export class Layout extends Symbiote {
               this.$.fullscreenPanelId = null;
               this.$.hasFullscreenTabs = false;
               this.$.tabItems = [];
-              allPanels.forEach(p => {
+              allPanels.forEach((p) => {
                 p.removeAttribute('fullscreen');
                 p.$.isFullscreen = false;
                 p.style.display = '';
@@ -191,7 +193,7 @@ export class Layout extends Symbiote {
 
   /**
    * Called when action zone drag starts
-   * @param {CustomEvent} e 
+   * @param {CustomEvent} e
    */
   _onActionZoneStart(e) {
     let { panelId, corner } = e.detail;
@@ -200,7 +202,7 @@ export class Layout extends Symbiote {
 
   /**
    * Called during action zone drag with gesture type
-   * @param {CustomEvent} e 
+   * @param {CustomEvent} e
    */
   _onActionZoneGesture(e) {
     let { panelId, gesture, dx, dy } = e.detail;
@@ -231,7 +233,7 @@ export class Layout extends Symbiote {
 
   /**
    * Called when action zone gesture is completed
-   * @param {CustomEvent} e 
+   * @param {CustomEvent} e
    */
   _onActionZoneExecute(e) {
     let { panelId, corner, gesture } = e.detail;
@@ -248,7 +250,7 @@ export class Layout extends Symbiote {
 
   /**
    * Called when action zone drag ends
-   * @param {CustomEvent} e 
+   * @param {CustomEvent} e
    */
   _onActionZoneEnd(e) {
     this.$.activeGesture = null;
@@ -262,7 +264,7 @@ export class Layout extends Symbiote {
 
   /**
    * Show panel type selection menu
-   * @param {CustomEvent} e 
+   * @param {CustomEvent} e
    */
   _onPanelTypeMenu(e) {
     let { panelId, currentType, x, y } = e.detail;
@@ -273,7 +275,7 @@ export class Layout extends Symbiote {
     let items = Object.entries(this.$.panelTypes).map(([type, config]) => ({
       type,
       title: config.title || type,
-      icon: config.icon || 'dashboard'
+      icon: config.icon || 'dashboard',
     }));
 
     menu.show(x, y, panelId, currentType, items);
@@ -281,7 +283,7 @@ export class Layout extends Symbiote {
 
   /**
    * Handle panel type change
-   * @param {CustomEvent} e 
+   * @param {CustomEvent} e
    */
   _onPanelTypeSelect(e) {
     let { panelId, type } = e.detail;
@@ -307,7 +309,7 @@ export class Layout extends Symbiote {
 
   /**
    * Toggle panel collapse state
-   * @param {CustomEvent} e 
+   * @param {CustomEvent} e
    */
   _onPanelCollapseToggle(e) {
     let { panelId, collapsed } = e.detail;
@@ -330,7 +332,10 @@ export class Layout extends Symbiote {
         if (panelNode) {
           // Find parent split container
           let container = panelNode.parentElement;
-          if (container?.classList.contains('split-first') || container?.classList.contains('split-second')) {
+          if (
+            container?.classList.contains('split-first') ||
+            container?.classList.contains('split-second')
+          ) {
             let siblingContainer = container.classList.contains('split-first')
               ? container.parentElement?.querySelector('.split-second')
               : container.parentElement?.querySelector('.split-first');
@@ -355,7 +360,7 @@ export class Layout extends Symbiote {
 
   /**
    * Toggle panel fullscreen
-   * @param {CustomEvent} e 
+   * @param {CustomEvent} e
    */
   _onPanelFullscreen(e) {
     let { panelId } = e.detail;
@@ -425,7 +430,7 @@ export class Layout extends Symbiote {
         panelId: p.$.nodeId,
         icon: typeConfig.icon || 'dashboard',
         title: typeConfig.title || panelType,
-        isActive: p.$.nodeId === activeId
+        isActive: p.$.nodeId === activeId,
       };
     });
   }
@@ -462,7 +467,7 @@ export class Layout extends Symbiote {
 
   /**
    * Find a panel node by ID
-   * @param {string} panelId 
+   * @param {string} panelId
    * @returns {HTMLElement|null}
    */
   _findPanelNode(panelId) {
@@ -477,9 +482,9 @@ export class Layout extends Symbiote {
 
   /**
    * Find the neighbor panel for join operation
-   * @param {string} panelId 
-   * @param {number} dx 
-   * @param {number} dy 
+   * @param {string} panelId
+   * @param {number} dx
+   * @param {number} dy
    * @returns {{id: string, direction: string}|null}
    */
   _findJoinTarget(panelId, dx, dy) {
@@ -501,7 +506,7 @@ export class Layout extends Symbiote {
 
   /**
    * Get the first panel ID from a node (handles nested splits)
-   * @param {Object} node 
+   * @param {Object} node
    * @returns {string}
    */
   _getFirstPanelId(node) {
@@ -509,7 +514,6 @@ export class Layout extends Symbiote {
     // For split nodes, recursively get first panel
     return this._getFirstPanelId(node.first);
   }
-
 
   // Public API
 
@@ -540,10 +544,7 @@ export class Layout extends Symbiote {
    * @param {string} panelToRemove - Panel ID to remove
    */
   joinPanels(panelToRemove) {
-    let newTree = LayoutTree.joinPanels(
-      LayoutTree.clone(this.$.layoutTree),
-      panelToRemove
-    );
+    let newTree = LayoutTree.joinPanels(LayoutTree.clone(this.$.layoutTree), panelToRemove);
 
     if (newTree) {
       this.$.layoutTree = newTree;
@@ -619,4 +620,3 @@ Layout.template = template;
 Layout.rootStyles = styles;
 
 Layout.reg('panel-layout');
-

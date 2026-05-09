@@ -213,10 +213,8 @@ export class SVGShape extends NodeShape {
     let pathEl = this.#getPathElement();
 
     if (!pathEl) {
-      let y = size.height * (index + 1) / (total + 1);
-      let result = side === 'input'
-        ? { x: 0, y, angle: 180 }
-        : { x: size.width, y, angle: 0 };
+      let y = (size.height * (index + 1)) / (total + 1);
+      let result = side === 'input' ? { x: 0, y, angle: 180 } : { x: size.width, y, angle: 0 };
       this.#posCache.set(key, result);
       return result;
     }
@@ -240,22 +238,32 @@ export class SVGShape extends NodeShape {
     // Compute outward surface normal (same as getEdgePoint)
     let totalLen = pathEl.getTotalLength();
     let center = this.#getCenter();
-    let bestLen = 0, bestDist = Infinity;
+    let bestLen = 0,
+      bestDist = Infinity;
     const SCAN = 128;
     for (let i = 0; i <= SCAN; i++) {
       let len = (totalLen * i) / SCAN;
       let p = pathEl.getPointAtLength(len);
       let dist = (p.x - pt.x) ** 2 + (p.y - pt.y) ** 2;
-      if (dist < bestDist) { bestDist = dist; bestLen = len; }
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestLen = len;
+      }
     }
     let delta = 0.5;
     let prevPt = pathEl.getPointAtLength(Math.max(0, bestLen - delta));
     let nextPt = pathEl.getPointAtLength(Math.min(totalLen, bestLen + delta));
-    let tx = nextPt.x - prevPt.x, ty = nextPt.y - prevPt.y;
-    let nx = -ty, ny = tx;
-    let radX = pt.x - center.x, radY = pt.y - center.y;
-    if (nx * radX + ny * radY < 0) { nx = ty; ny = -tx; }
-    let angleDeg = Math.atan2(ny, nx) * 180 / Math.PI;
+    let tx = nextPt.x - prevPt.x,
+      ty = nextPt.y - prevPt.y;
+    let nx = -ty,
+      ny = tx;
+    let radX = pt.x - center.x,
+      radY = pt.y - center.y;
+    if (nx * radX + ny * radY < 0) {
+      nx = ty;
+      ny = -tx;
+    }
+    let angleDeg = (Math.atan2(ny, nx) * 180) / Math.PI;
 
     let result = { x: scaled.x, y: scaled.y, angle: angleDeg };
     this.#posCache.set(key, result);
@@ -280,7 +288,11 @@ export class SVGShape extends NodeShape {
     if (!pathEl) {
       let cx = size.width / 2;
       let cy = size.height / 2;
-      return { x: cx + Math.cos(angle) * cx, y: cy + Math.sin(angle) * cy, angle: angle * 180 / Math.PI };
+      return {
+        x: cx + Math.cos(angle) * cx,
+        y: cy + Math.sin(angle) * cy,
+        angle: (angle * 180) / Math.PI,
+      };
     }
 
     let pt = this.#findPointAtAngle(angle, pathEl);
@@ -293,13 +305,17 @@ export class SVGShape extends NodeShape {
     let center = this.#getCenter();
 
     // Find the path length for this point (re-use findPointAtAngle's logic)
-    let bestLen = 0, bestDist = Infinity;
+    let bestLen = 0,
+      bestDist = Infinity;
     const SCAN = 128;
     for (let i = 0; i <= SCAN; i++) {
       let len = (totalLen * i) / SCAN;
       let p = pathEl.getPointAtLength(len);
       let dist = (p.x - pt.x) ** 2 + (p.y - pt.y) ** 2;
-      if (dist < bestDist) { bestDist = dist; bestLen = len; }
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestLen = len;
+      }
     }
 
     // Sample neighbors to get tangent vector
@@ -315,15 +331,17 @@ export class SVGShape extends NodeShape {
 
     // Normal = tangent rotated 90° (two candidates: +90° and -90°)
     // Pick the one pointing outward (away from center)
-    let nx = -ty, ny = tx; // candidate 1: rotate -90°
+    let nx = -ty,
+      ny = tx; // candidate 1: rotate -90°
     let radX = pt.x - center.x;
     let radY = pt.y - center.y;
     // Dot product with radial vector — if negative, flip
     if (nx * radX + ny * radY < 0) {
-      nx = ty; ny = -tx; // candidate 2: rotate +90°
+      nx = ty;
+      ny = -tx; // candidate 2: rotate +90°
     }
 
-    let angleDeg = Math.atan2(ny, nx) * 180 / Math.PI;
+    let angleDeg = (Math.atan2(ny, nx) * 180) / Math.PI;
 
     let result = { x: scaled.x, y: scaled.y, angle: angleDeg };
 
@@ -338,10 +356,10 @@ export class SVGShape extends NodeShape {
 
   /**
    * Get a pin position on a specific side of the shape.
-   * 
+   *
    * Side-based placement: pins are placed along a side edge (top/right/bottom/left).
    * The position within the side is controlled by t (0 = start, 1 = end).
-   * 
+   *
    * @param {'top'|'right'|'bottom'|'left'} side - which side to place pin on
    * @param {number} t - position along the side (0..1), 0.5 = center
    * @param {{ width: number, height: number }} size - element dimensions
@@ -362,17 +380,17 @@ export class SVGShape extends NodeShape {
       // Angular ranges for each side (radians, screen coords)
       // Generous ranges that cover the flat + diagonal edges
       const RANGES = {
-        right:  { from: -Math.PI / 4,     to: Math.PI / 4 },
-        bottom: { from: Math.PI / 4,      to: 3 * Math.PI / 4 },
-        left:   { from: 3 * Math.PI / 4,  to: 5 * Math.PI / 4 },
-        top:    { from: -3 * Math.PI / 4, to: -Math.PI / 4 },
+        right: { from: -Math.PI / 4, to: Math.PI / 4 },
+        bottom: { from: Math.PI / 4, to: (3 * Math.PI) / 4 },
+        left: { from: (3 * Math.PI) / 4, to: (5 * Math.PI) / 4 },
+        top: { from: (-3 * Math.PI) / 4, to: -Math.PI / 4 },
       };
 
       let range = RANGES[side];
       // Use side-level caching for points to prevent SVG DOM explosion
       let sideKey = `sidepts|${side}|${size.width}|${size.height}`;
       let sidePoints;
-      
+
       if (this.#posCache.has(sideKey)) {
         sidePoints = this.#posCache.get(sideKey);
       } else {
@@ -406,10 +424,22 @@ export class SVGShape extends NodeShape {
     // Fallback for shapes without path: rectangle approximation
     let x, y;
     switch (side) {
-      case 'top':    x = size.width * (0.2 + t * 0.6); y = 0; break;
-      case 'right':  x = size.width; y = size.height * (0.2 + t * 0.6); break;
-      case 'bottom': x = size.width * (0.2 + t * 0.6); y = size.height; break;
-      case 'left':   x = 0; y = size.height * (0.2 + t * 0.6); break;
+      case 'top':
+        x = size.width * (0.2 + t * 0.6);
+        y = 0;
+        break;
+      case 'right':
+        x = size.width;
+        y = size.height * (0.2 + t * 0.6);
+        break;
+      case 'bottom':
+        x = size.width * (0.2 + t * 0.6);
+        y = size.height;
+        break;
+      case 'left':
+        x = 0;
+        y = size.height * (0.2 + t * 0.6);
+        break;
     }
 
     let result = { x, y, angle: angleDeg };
@@ -466,7 +496,8 @@ export let SVG_PRESETS = {
   star: 'M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26Z',
 
   // Cloud
-  cloud: 'M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z',
+  cloud:
+    'M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z',
 
   // Shield
   shield: 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z',
@@ -484,11 +515,13 @@ export let SVG_PRESETS = {
   cylinder: 'M4 6C4 4 8 2 12 2S20 4 20 6V18C20 20 16 22 12 22S4 20 4 18Z',
 
   // Database
-  database: 'M12 3C7.58 3 4 4.79 4 7V17C4 19.21 7.59 21 12 21S20 19.21 20 17V7C20 4.79 16.42 3 12 3Z',
+  database:
+    'M12 3C7.58 3 4 4.79 4 7V17C4 19.21 7.59 21 12 21S20 19.21 20 17V7C20 4.79 16.42 3 12 3Z',
 
   // Lightning bolt
   bolt: 'M7 2V13H10V22L17 10H13L17 2Z',
 
   // Heart
-  heart: 'M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z',
+  heart:
+    'M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z',
 };

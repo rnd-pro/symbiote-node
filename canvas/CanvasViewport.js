@@ -73,10 +73,15 @@ export class CanvasViewport {
       this.#viewManager.addViews(editor.getNodes());
     } else {
       // Large graph — start all as phantom, promote visible ones after layout
-      let defaultW = 180, defaultH = 60;
+      let defaultW = 180,
+        defaultH = 60;
       for (const [id, node] of this.#allNodes) {
         this.#phantomData.set(id, {
-          id, x: 0, y: 0, w: defaultW, h: defaultH,
+          id,
+          x: 0,
+          y: 0,
+          w: defaultW,
+          h: defaultH,
           degree: this.#nodeDegrees.get(id) || 0,
           color: null,
           label: node.label || id,
@@ -92,8 +97,14 @@ export class CanvasViewport {
     this.#allNodes.clear();
     this.#phantomData.clear();
     this.#nodeDegrees.clear();
-    if (this.#virtTimer) { clearTimeout(this.#virtTimer); this.#virtTimer = null; }
-    if (this.#panAnimFrame) { cancelAnimationFrame(this.#panAnimFrame); this.#panAnimFrame = null; }
+    if (this.#virtTimer) {
+      clearTimeout(this.#virtTimer);
+      this.#virtTimer = null;
+    }
+    if (this.#panAnimFrame) {
+      cancelAnimationFrame(this.#panAnimFrame);
+      this.#panAnimFrame = null;
+    }
   }
 
   /**
@@ -104,8 +115,14 @@ export class CanvasViewport {
     this.#allNodes.set(node.id, node);
     if (this.#phantomData.size > 0) {
       this.#phantomData.set(node.id, {
-        id: node.id, x: 0, y: 0, w: 180, h: 60,
-        degree: 0, color: null, label: node.label || node.id,
+        id: node.id,
+        x: 0,
+        y: 0,
+        w: 180,
+        h: 60,
+        degree: 0,
+        color: null,
+        label: node.label || node.id,
       });
     } else {
       this.#viewManager.addView(node);
@@ -133,7 +150,8 @@ export class CanvasViewport {
   updateTransform() {
     // Sync grid dots with pan/zoom
     if (this.#canvas._gridBase === undefined) {
-      this.#canvas._gridBase = parseInt(getComputedStyle(this.#canvas).getPropertyValue('--sn-grid-size')) || 20;
+      this.#canvas._gridBase =
+        parseInt(getComputedStyle(this.#canvas).getPropertyValue('--sn-grid-size')) || 20;
     }
     let gridBase = this.#canvas._gridBase;
     let zoom = this.#canvas.$.zoom;
@@ -172,7 +190,7 @@ export class CanvasViewport {
     let zoom = this.#canvas.$.zoom;
     let panX = this.#canvas.$.panX;
     let panY = this.#canvas.$.panY;
-    let margin = 300; 
+    let margin = 300;
 
     let lod = zoom < 0.5 ? 'medium' : 'full';
     this.#canvas._currentLod = lod;
@@ -204,8 +222,11 @@ export class CanvasViewport {
       let w = el._cachedW * zoom;
       let h = el._cachedH * zoom;
 
-      let visible = (screenX + w > -margin) && (screenX < cw + margin) &&
-                      (screenY + h > -margin) && (screenY < ch + margin);
+      let visible =
+        screenX + w > -margin &&
+        screenX < cw + margin &&
+        screenY + h > -margin &&
+        screenY < ch + margin;
 
       if (isVirtualized && FAR_ZOOM) {
         toDemote.push(id);
@@ -227,15 +248,21 @@ export class CanvasViewport {
         let w = (pd.w || 180) * zoom;
         let h = (pd.h || 60) * zoom;
 
-        let visible = (screenX + w > -margin) && (screenX < cw + margin) &&
-                        (screenY + h > -margin) && (screenY < ch + margin);
+        let visible =
+          screenX + w > -margin &&
+          screenX < cw + margin &&
+          screenY + h > -margin &&
+          screenY < ch + margin;
 
         if (visible) toPromote.push(id);
       }
     }
 
     if (FAR_ZOOM && toDemote.length > 0) {
-      if (this.#virtTimer) { clearTimeout(this.#virtTimer); this.#virtTimer = null; }
+      if (this.#virtTimer) {
+        clearTimeout(this.#virtTimer);
+        this.#virtTimer = null;
+      }
       for (const id of toDemote) this.#demoteNode(id);
       this.#syncPhantomToRenderer();
     } else if (toPromote.length > 0 || toDemote.length > 0) {
@@ -291,8 +318,10 @@ export class CanvasViewport {
       let node = this.#allNodes.get(nodeId);
       this.#phantomData.set(nodeId, {
         id: nodeId,
-        x: dims.x, y: dims.y,
-        w: dims.w, h: dims.h,
+        x: dims.x,
+        y: dims.y,
+        w: dims.w,
+        h: dims.h,
         degree: this.#nodeDegrees.get(nodeId) || 0,
         color,
         label: node?.label || nodeId,
@@ -324,8 +353,11 @@ export class CanvasViewport {
    */
   fitView() {
     if (this.#nodeViews.size === 0 && this.#phantomData.size === 0) return;
-    
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
 
     for (const [, el] of this.#nodeViews) {
       if (!el._position) continue;
@@ -345,13 +377,13 @@ export class CanvasViewport {
       if (pd.x + pd.w > maxX) maxX = pd.x + pd.w;
       if (pd.y + pd.h > maxY) maxY = pd.y + pd.h;
     }
-    
+
     if (minX === Infinity) return;
 
     let graphW = maxX - minX;
     let graphH = maxY - minY;
     let canvasRect = this.#canvas.ref.canvasContainer.getBoundingClientRect();
-    
+
     let visibleWidth = canvasRect.width;
     let inspector = this.#canvas.ref.inspector || this.#canvas.querySelector('inspector-panel');
     if (inspector && !inspector.hasAttribute('hidden')) {
@@ -366,7 +398,7 @@ export class CanvasViewport {
     let centerY = (minY + maxY) / 2;
 
     this.#canvas.$.zoom = scale;
-    this.#canvas.$.panX = (visibleWidth / 2) - centerX * scale;
+    this.#canvas.$.panX = visibleWidth / 2 - centerX * scale;
     this.#canvas.$.panY = canvasRect.height / 2 - centerY * scale;
     this.updateTransform();
   }
@@ -387,32 +419,34 @@ export class CanvasViewport {
     }
     if (!el) return false;
 
-    let pos = el._position || (() => {
-      let pd = this.#phantomData.get(nodeId);
-      return pd ? { x: pd.x, y: pd.y } : { x: 0, y: 0 };
-    })();
+    let pos =
+      el._position ||
+      (() => {
+        let pd = this.#phantomData.get(nodeId);
+        return pd ? { x: pd.x, y: pd.y } : { x: 0, y: 0 };
+      })();
 
     let canvasRect = this.#canvas.ref.canvasContainer.getBoundingClientRect();
     let visibleWidth = canvasRect.width;
-    
+
     let inspector = this.#canvas.ref.inspector || this.#canvas.querySelector('inspector-panel');
     if (inspector && !inspector.hasAttribute('hidden') && inspector.offsetWidth > 20) {
-        visibleWidth -= inspector.offsetWidth;
+      visibleWidth -= inspector.offsetWidth;
     }
 
     let elWidth = el._cachedW || el.offsetWidth || 150;
     let elHeight = el._cachedH || el.offsetHeight || 40;
 
-    let nodeX = pos.x + (elWidth / 2);
-    let nodeY = pos.y + (elHeight / 2);
+    let nodeX = pos.x + elWidth / 2;
+    let nodeY = pos.y + elHeight / 2;
 
-    let newPanX = (visibleWidth / 2) - nodeX * zoom;
+    let newPanX = visibleWidth / 2 - nodeX * zoom;
     let newPanY = canvasRect.height / 2 - nodeY * zoom;
 
     let dz = Math.abs(this.#canvas.$.zoom - zoom);
     let dx = Math.abs(this.#canvas.$.panX - newPanX);
     let dy = Math.abs(this.#canvas.$.panY - newPanY);
-    
+
     if (dz < 0.01 && dx < 2 && dy < 2) {
       this.#canvas.selectNode(nodeId);
       if (!this.#canvas._cullingScheduled) {

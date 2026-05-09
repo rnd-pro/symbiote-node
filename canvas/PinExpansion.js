@@ -2,7 +2,7 @@
 export class PinExpansion {
   /** @type {import('./NodeCanvas/NodeCanvas.js').NodeCanvas} */
   #canvas;
-  
+
   /** @type {Map<string, Array<object>>} Cache of pins per nodeId */
   #pinCache = new Map();
 
@@ -21,8 +21,8 @@ export class PinExpansion {
 
   /**
    * Add pins data for a specific node
-   * @param {string} nodeId 
-   * @param {Array<object>} pins 
+   * @param {string} nodeId
+   * @param {Array<object>} pins
    */
   setPins(nodeId, pins) {
     if (pins && pins.length > 0) {
@@ -38,7 +38,7 @@ export class PinExpansion {
 
   /**
    * Remove pins and overlay for a node
-   * @param {string} nodeId 
+   * @param {string} nodeId
    */
   removePins(nodeId) {
     this.#pinCache.delete(nodeId);
@@ -50,7 +50,7 @@ export class PinExpansion {
 
   /**
    * Apply LOD state to render or hide pins
-   * @param {'expanded'|'collapsed'} lod 
+   * @param {'expanded'|'collapsed'} lod
    */
   applyLOD(lod) {
     if (!this.#canvas) return;
@@ -70,8 +70,8 @@ export class PinExpansion {
 
   /**
    * Render pin labels around a node element's border
-   * @param {HTMLElement} el 
-   * @param {Array<object>} pins 
+   * @param {HTMLElement} el
+   * @param {Array<object>} pins
    */
   #renderPinsForNode(el, pins) {
     if (!pins || pins.length === 0) return;
@@ -103,7 +103,8 @@ export class PinExpansion {
 
         if (pin.interactable !== false) {
           pinEl.style.cursor = 'pointer';
-          pinEl.title = pin.tooltip || (pin.line ? `${pin.file || ''}:${pin.line}` : (pin.file || ''));
+          pinEl.title =
+            pin.tooltip || (pin.line ? `${pin.file || ''}:${pin.line}` : pin.file || '');
           pinEl.addEventListener('click', (e) => {
             e.stopPropagation();
             this.#onPinClick(pin, nodeId);

@@ -14,7 +14,6 @@ import { template } from './Minimap.tpl.js';
 import { styles } from './Minimap.css.js';
 
 export class Minimap extends Symbiote {
-
   init$ = {
     visible: true,
   };
@@ -75,18 +74,19 @@ export class Minimap extends Symbiote {
 
     // Read theme colors from CSS variables
     let cs = getComputedStyle(this);
-    let bgColor = cs.getPropertyValue('--sn-minimap-bg').trim()
-      || cs.getPropertyValue('--sn-bg').trim()
-      || 'rgba(20, 20, 35, 0.85)';
-    let nodeColor = cs.getPropertyValue('--sn-minimap-node').trim()
-      || 'rgba(80, 130, 200, 0.6)';
-    let nodeStroke = cs.getPropertyValue('--sn-minimap-node-stroke').trim()
-      || cs.getPropertyValue('--sn-node-border').trim()
-      || 'rgba(120, 170, 255, 0.3)';
-    let vpStroke = cs.getPropertyValue('--sn-minimap-viewport').trim()
-      || 'rgba(255, 255, 255, 0.6)';
-    let vpFill = cs.getPropertyValue('--sn-minimap-viewport-fill').trim()
-      || 'rgba(255, 255, 255, 0.04)';
+    let bgColor =
+      cs.getPropertyValue('--sn-minimap-bg').trim() ||
+      cs.getPropertyValue('--sn-bg').trim() ||
+      'rgba(20, 20, 35, 0.85)';
+    let nodeColor = cs.getPropertyValue('--sn-minimap-node').trim() || 'rgba(80, 130, 200, 0.6)';
+    let nodeStroke =
+      cs.getPropertyValue('--sn-minimap-node-stroke').trim() ||
+      cs.getPropertyValue('--sn-node-border').trim() ||
+      'rgba(120, 170, 255, 0.3)';
+    let vpStroke =
+      cs.getPropertyValue('--sn-minimap-viewport').trim() || 'rgba(255, 255, 255, 0.6)';
+    let vpFill =
+      cs.getPropertyValue('--sn-minimap-viewport-fill').trim() || 'rgba(255, 255, 255, 0.04)';
 
     // Clear
     ctx.clearRect(0, 0, w, h);
@@ -98,7 +98,10 @@ export class Minimap extends Symbiote {
     if (nodes.length === 0) return;
 
     // Calculate bounds of all nodes
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
     for (const n of nodes) {
       minX = Math.min(minX, n.x);
       minY = Math.min(minY, n.y);
@@ -108,8 +111,10 @@ export class Minimap extends Symbiote {
 
     // Add padding
     let pad = 100;
-    minX -= pad; minY -= pad;
-    maxX += pad; maxY += pad;
+    minX -= pad;
+    minY -= pad;
+    maxX += pad;
+    maxY += pad;
 
     let graphW = maxX - minX;
     let graphH = maxY - minY;
@@ -192,10 +197,12 @@ export class Minimap extends Symbiote {
     let newY = -(graphY * zoom - state.containerSize.height / 2);
 
     // Dispatch event so NodeCanvas can update its transform
-    this.dispatchEvent(new CustomEvent('minimap-navigate', {
-      detail: { x: newX, y: newY },
-      bubbles: true,
-    }));
+    this.dispatchEvent(
+      new CustomEvent('minimap-navigate', {
+        detail: { x: newX, y: newY },
+        bubbles: true,
+      })
+    );
   }
 
   destroyCallback() {

@@ -12,7 +12,6 @@
 const TWITCH_THRESHOLD = 4;
 
 export class Selector {
-
   /** @type {Set<string>} */
   #selectedNodes = new Set();
 

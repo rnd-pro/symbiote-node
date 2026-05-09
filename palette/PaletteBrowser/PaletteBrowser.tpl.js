@@ -10,7 +10,15 @@ export let template = html`
     Components
   </div>
   <div class="pal-search">
-    <input ref="palSearch" type="text" placeholder="Search components..." ${{ oninput: 'onSearchInput' }} />
+    <input
+      ref="palSearch"
+      type="text"
+      placeholder="Search components..."
+      ${{ oninput: 'onSearchInput' }}
+    />
   </div>
-  <div class="pal-list" ${{ itemize: 'categories', 'item-tag': 'pal-category', onclick: 'onItemClick' }}></div>
+  <div
+    class="pal-list"
+    ${{ itemize: 'categories', 'item-tag': 'pal-category', onclick: 'onItemClick' }}
+  ></div>
 `;

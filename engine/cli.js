@@ -126,18 +126,18 @@ async function cmdRun(filePath, options) {
   console.log(`\n🚀 symbiote-node run: ${filePath}\n`);
   // Load packs
   if (options.pack) {
-    await loadPacks(/** @type {string} */(options.pack));
+    await loadPacks(/** @type {string} */ (options.pack));
   }
 
   // Load handler files
   if (options.handlers) {
-    let dir = resolve(/** @type {string} */(options.handlers));
+    let dir = resolve(/** @type {string} */ (options.handlers));
     let types = await loadHandlers(dir);
     if (verbose) console.log(`  🔧 Loaded ${types.length} handler(s) from ${options.handlers}`);
   }
 
   // Load secrets
-  let secrets = await loadSecrets(/** @type {string|undefined} */(options.secrets));
+  let secrets = await loadSecrets(/** @type {string|undefined} */ (options.secrets));
   if (Object.keys(secrets).length > 0 && verbose) {
     console.log(`  🔑 Secrets loaded: ${Object.keys(secrets).join(', ')}`);
   }
@@ -179,12 +179,15 @@ async function cmdRun(filePath, options) {
       console.log('\n  Outputs:');
       for (const [nodeId, output] of Object.entries(result.outputs)) {
         let nodeData = graph.getNode(nodeId);
-        console.log(`    ${nodeData?.name || nodeId}:`, JSON.stringify(output, null, 2).slice(0, 200));
+        console.log(
+          `    ${nodeData?.name || nodeId}:`,
+          JSON.stringify(output, null, 2).slice(0, 200)
+        );
       }
     }
 
     // Summary
-    let outputNodes = result.executionOrder.filter(id => {
+    let outputNodes = result.executionOrder.filter((id) => {
       let node = graph.getNode(id);
       return node?.type?.startsWith('output/');
     });
@@ -198,7 +201,6 @@ async function cmdRun(filePath, options) {
     }
 
     console.log(`\n✅ Done\n`);
-
   } catch (err) {
     let elapsed = (performance.now() - t0).toFixed(1);
     console.error(`\n  ✖ Execution failed after ${elapsed}ms: ${err.message}\n`);
@@ -214,11 +216,11 @@ async function cmdRun(filePath, options) {
 async function cmdValidate(filePath, options) {
   console.log(`\n🔍 symbiote-node validate: ${filePath}\n`);
   if (options.pack) {
-    await loadPacks(/** @type {string} */(options.pack));
+    await loadPacks(/** @type {string} */ (options.pack));
   }
 
   if (options.handlers) {
-    let dir = resolve(/** @type {string} */(options.handlers));
+    let dir = resolve(/** @type {string} */ (options.handlers));
     await loadHandlers(dir);
   }
 
@@ -229,7 +231,7 @@ async function cmdValidate(filePath, options) {
   let warnings = 0;
 
   // Check all node types exist
-  for (const node of (data.nodes || [])) {
+  for (const node of data.nodes || []) {
     let typeDef = getNodeType(node.type);
     if (!typeDef) {
       console.error(`  ✖ Unknown node type: ${node.type} (node: ${node.id})`);
@@ -248,8 +250,8 @@ async function cmdValidate(filePath, options) {
   }
 
   // Check connections reference valid nodes
-  let nodeIds = new Set((data.nodes || []).map(n => n.id));
-  for (const conn of (data.connections || [])) {
+  let nodeIds = new Set((data.nodes || []).map((n) => n.id));
+  for (const conn of data.connections || []) {
     if (!nodeIds.has(conn.from)) {
       console.error(`  ✖ Connection references unknown source node: ${conn.from}`);
       errors++;
@@ -262,11 +264,11 @@ async function cmdValidate(filePath, options) {
 
   // Check for nodes with no connections (orphans)
   let connectedNodes = new Set();
-  for (const conn of (data.connections || [])) {
+  for (const conn of data.connections || []) {
     connectedNodes.add(conn.from);
     connectedNodes.add(conn.to);
   }
-  for (const node of (data.nodes || [])) {
+  for (const node of data.nodes || []) {
     if (!connectedNodes.has(node.id)) {
       console.warn(`  ⚠ Orphan node: ${node.id} (${node.type})`);
       warnings++;
@@ -277,7 +279,9 @@ async function cmdValidate(filePath, options) {
   if (errors === 0) {
     console.log(`  ✅ Valid (${warnings} warning${warnings !== 1 ? 's' : ''})\n`);
   } else {
-    console.error(`  ❌ ${errors} error${errors !== 1 ? 's' : ''}, ${warnings} warning${warnings !== 1 ? 's' : ''}\n`);
+    console.error(
+      `  ❌ ${errors} error${errors !== 1 ? 's' : ''}, ${warnings} warning${warnings !== 1 ? 's' : ''}\n`
+    );
     process.exit(1);
   }
 }
@@ -289,11 +293,11 @@ async function cmdValidate(filePath, options) {
 async function cmdList(options) {
   console.log(`\n📋 symbiote-node node types\n`);
   if (options.pack) {
-    await loadPacks(/** @type {string} */(options.pack));
+    await loadPacks(/** @type {string} */ (options.pack));
   }
 
   if (options.handlers) {
-    let dir = resolve(/** @type {string} */(options.handlers));
+    let dir = resolve(/** @type {string} */ (options.handlers));
     await loadHandlers(dir);
   }
 
@@ -329,7 +333,7 @@ async function cmdInspect(filePath) {
 
   // Nodes
   console.log(`  Nodes (${data.nodes?.length || 0}):`);
-  for (const node of (data.nodes || [])) {
+  for (const node of data.nodes || []) {
     let paramKeys = Object.keys(node.params || {});
     let paramStr = paramKeys.length > 0 ? ` {${paramKeys.join(', ')}}` : '';
     console.log(`    ${node.id}  [${node.type}]  ${node.name || ''}${paramStr}`);
@@ -337,7 +341,7 @@ async function cmdInspect(filePath) {
 
   // Connections
   console.log(`\n  Connections (${data.connections?.length || 0}):`);
-  for (const conn of (data.connections || [])) {
+  for (const conn of data.connections || []) {
     console.log(`    ${conn.from}.${conn.out} → ${conn.to}.${conn.in}`);
   }
 
@@ -371,18 +375,27 @@ let { command, target, options } = parseArgs(process.argv);
 
 let cliMap = {
   run: async () => {
-    if (!target) { console.error('Usage: symbiote-node run <file.workflow.json>'); process.exit(1); }
+    if (!target) {
+      console.error('Usage: symbiote-node run <file.workflow.json>');
+      process.exit(1);
+    }
     await cmdRun(target, options);
   },
   validate: async () => {
-    if (!target) { console.error('Usage: symbiote-node validate <file.workflow.json>'); process.exit(1); }
+    if (!target) {
+      console.error('Usage: symbiote-node validate <file.workflow.json>');
+      process.exit(1);
+    }
     await cmdValidate(target, options);
   },
   list: async () => {
     await cmdList(options);
   },
   inspect: async () => {
-    if (!target) { console.error('Usage: symbiote-node inspect <file.workflow.json>'); process.exit(1); }
+    if (!target) {
+      console.error('Usage: symbiote-node inspect <file.workflow.json>');
+      process.exit(1);
+    }
     await cmdInspect(target);
   },
   serve: async () => {
@@ -403,4 +416,3 @@ if (handler) {
 } else {
   console.log(HELP);
 }
-

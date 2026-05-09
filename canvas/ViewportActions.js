@@ -10,7 +10,6 @@
  */
 
 export class ViewportActions {
-
   /** @type {import('../core/Editor.js').NodeEditor} */
   #editor;
 
@@ -148,10 +147,14 @@ export class ViewportActions {
   }
 
   /** @param {string} nodeId */
-  collapseNode(nodeId) { this.#toggleNodeState(nodeId, 'collapsed', 'data-collapsed', 'nodecollapse'); }
+  collapseNode(nodeId) {
+    this.#toggleNodeState(nodeId, 'collapsed', 'data-collapsed', 'nodecollapse');
+  }
 
   /** @param {string} nodeId */
-  muteNode(nodeId) { this.#toggleNodeState(nodeId, 'muted', 'data-muted', 'nodemute'); }
+  muteNode(nodeId) {
+    this.#toggleNodeState(nodeId, 'muted', 'data-muted', 'nodemute');
+  }
 
   /** Delete a single connection */
   deleteConnection(connId) {
@@ -188,24 +191,42 @@ export class ViewportActions {
     } else if (connTarget) {
       let connId = connTarget.getAttribute('data-conn-id');
       contextMenuEl.show(menuX, menuY, [
-        { label: 'Delete Connection', icon: 'link_off', action: () => this.deleteConnection(connId) },
+        {
+          label: 'Delete Connection',
+          icon: 'link_off',
+          action: () => this.deleteConnection(connId),
+        },
       ]);
     } else {
       let graphX = (e.clientX - rect.left - transform.panX) / transform.zoom;
       let graphY = (e.clientY - rect.top - transform.panY) / transform.zoom;
       contextMenuEl.show(menuX, menuY, [
-        { label: 'Add Node', icon: 'add_box', action: () => this.#editor?.emit('contextadd', { x: graphX, y: graphY }) },
-        { label: 'Add Comment', icon: 'sticky_note_2', action: () => this.#editor?.emit('contextaddcomment', { x: graphX, y: graphY }) },
-        { label: 'Add Frame', icon: 'dashboard', action: () => this.#editor?.emit('contextaddframe', { x: graphX, y: graphY }) },
+        {
+          label: 'Add Node',
+          icon: 'add_box',
+          action: () => this.#editor?.emit('contextadd', { x: graphX, y: graphY }),
+        },
+        {
+          label: 'Add Comment',
+          icon: 'sticky_note_2',
+          action: () => this.#editor?.emit('contextaddcomment', { x: graphX, y: graphY }),
+        },
+        {
+          label: 'Add Frame',
+          icon: 'dashboard',
+          action: () => this.#editor?.emit('contextaddframe', { x: graphX, y: graphY }),
+        },
         { label: 'Paste', icon: 'content_paste', action: () => this.#pasteNodes(graphX, graphY) },
         { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
         { label: 'Fit View', icon: 'fit_screen', action: () => this.#canvas?.fitView() },
-        { label: 'Auto Layout', icon: 'auto_fix_high', action: () => this.#editor?.emit('autolayout') },
+        {
+          label: 'Auto Layout',
+          icon: 'auto_fix_high',
+          action: () => this.#editor?.emit('autolayout'),
+        },
       ]);
     }
   }
-
-
 
   /**
    * Highlight sockets compatible with picked socket
@@ -254,7 +275,9 @@ export class ViewportActions {
    * @param {HTMLElement} nodesLayer
    */
   clearSocketHighlights(nodesLayer) {
-    let all = nodesLayer.querySelectorAll('.sn-socket[data-compatible], .sn-socket[data-incompatible]');
+    let all = nodesLayer.querySelectorAll(
+      '.sn-socket[data-compatible], .sn-socket[data-incompatible]'
+    );
     for (const sock of all) {
       sock.removeAttribute('data-compatible');
       sock.removeAttribute('data-incompatible');
@@ -295,7 +318,9 @@ export class ViewportActions {
     if (!pickedNode) return new Set();
 
     let isOutput = socketData.side === 'output';
-    let pickedPort = isOutput ? pickedNode.outputs[socketData.key] : pickedNode.inputs[socketData.key];
+    let pickedPort = isOutput
+      ? pickedNode.outputs[socketData.key]
+      : pickedNode.inputs[socketData.key];
     if (!pickedPort) return new Set();
 
     let pickedSocket = pickedPort.socket;
@@ -342,7 +367,8 @@ export class ViewportActions {
     let socketType = port?.socket?.type || 'any';
 
     this.#editor.emit('dropinempty', {
-      x, y,
+      x,
+      y,
       sourceNodeId: socketData.nodeId,
       sourceKey: socketData.key,
       sourceSide: socketData.side,
@@ -356,19 +382,21 @@ export class ViewportActions {
     let selected = this.#selector.getSelectedNodes();
     if (selected.length === 0) return;
 
-    this.#clipboard = selected.map(nodeId => {
-      let node = this.#editor.getNode(nodeId);
-      let el = this.#nodeViews.get(nodeId);
-      if (!node) return null;
-      return {
-        label: node.label,
-        type: node.type,
-        category: node.category,
-        shape: node.shape,
-        params: { ...node.params },
-        position: el?._position ? { ...el._position } : { x: 0, y: 0 },
-      };
-    }).filter(Boolean);
+    this.#clipboard = selected
+      .map((nodeId) => {
+        let node = this.#editor.getNode(nodeId);
+        let el = this.#nodeViews.get(nodeId);
+        if (!node) return null;
+        return {
+          label: node.label,
+          type: node.type,
+          category: node.category,
+          shape: node.shape,
+          params: { ...node.params },
+          position: el?._position ? { ...el._position } : { x: 0, y: 0 },
+        };
+      })
+      .filter(Boolean);
   }
 
   /**

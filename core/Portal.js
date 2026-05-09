@@ -53,8 +53,8 @@ export class PortalManager {
    */
   removeNode(nodeId) {
     for (const [, ch] of this.#channels) {
-      ch.senders = ch.senders.filter(s => s.nodeId !== nodeId);
-      ch.receivers = ch.receivers.filter(r => r.nodeId !== nodeId);
+      ch.senders = ch.senders.filter((s) => s.nodeId !== nodeId);
+      ch.receivers = ch.receivers.filter((r) => r.nodeId !== nodeId);
     }
   }
 

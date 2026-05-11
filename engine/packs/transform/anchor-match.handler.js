@@ -208,21 +208,7 @@ function editDistance(s1, s2) {
   return dp[m][n];
 }
 
-/**
- * Check word similarity (fuzzy match)
- * @param {string} word1
- * @param {string} word2
- * @returns {boolean}
- */
-function wordsSimilar(word1, word2) {
-  let w1 = word1.toLowerCase().replace(/[^a-záéíóúñü]/g, '');
-  let w2 = word2.toLowerCase().replace(/[^a-záéíóúñü]/g, '');
-  if (w1 === w2) return true;
-  if (w1.length < 3 || w2.length < 3) return w1 === w2;
-  if (w1.includes(w2) || w2.includes(w1)) return true;
-  let maxErrors = Math.floor(Math.max(w1.length, w2.length) / 4);
-  return editDistance(w1, w2) <= maxErrors;
-}
+
 
 /**
  * Infer section from timestamp

@@ -23,6 +23,16 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 
+async function cleanupLocalFile(filePath) {
+  try {
+    await fs.unlink(filePath);
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.warn(`[ai/tts] Failed to remove temp file ${filePath}: ${err.message}`);
+    }
+  }
+}
+
 export default {
   type: 'ai/tts',
   category: 'ai',
@@ -198,7 +208,7 @@ async function executeSSH(text, params) {
       });
 
       // Cleanup batch + remote output
-      await fs.unlink(batchFile).catch(() => {});
+      await cleanupLocalFile(batchFile);
       execSync(`ssh ${host} "rm -f ${remoteBatch} ${remoteOut}"`, {
         encoding: 'utf-8',
         stdio: 'pipe',
@@ -207,7 +217,7 @@ async function executeSSH(text, params) {
 
       return { audioPath: localWav, error: null };
     } catch (err) {
-      await fs.unlink(batchFile).catch(() => {});
+      await cleanupLocalFile(batchFile);
       return { audioPath: null, error: err.message };
     }
   } catch (err) {

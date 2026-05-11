@@ -3,6 +3,7 @@
  * Injects into page context to access Grok's WebSocket connections
  * Can send commands and receive results via the existing WS connection
  */
+/* global window */
 
 (function () {
   'use strict';
@@ -189,7 +190,6 @@
       }, 60000);
 
       let results = [];
-      let imageBlobs = []; // Preview images
       let finalResult = null;
 
       function handler(event) {
@@ -217,8 +217,10 @@
               });
             }
           }
-        } catch (e) {
-          // Ignore parse errors for binary data
+        } catch (parseError) {
+          if (typeof event.data === 'string') {
+            console.debug('[WS-Injector] Ignored non-JSON message:', parseError.message);
+          }
         }
       }
 
@@ -267,7 +269,7 @@
           if (data.type === 'image' && data.url && data.percentage_complete === 100) {
             completedImages.push(data);
             console.log(
-              `[WS-Injector] Image complete: ${data.job_id} (${completedImages.length} total)`
+              `[WS-Injector] Image complete: ${data.job_id} (${completedImages.length} total)`,
             );
 
             // Wait a bit for potential additional images, then resolve
@@ -282,8 +284,10 @@
               });
             }, 2000); // Wait 2s for additional images
           }
-        } catch (e) {
-          // Ignore parse errors for binary data
+        } catch (parseError) {
+          if (typeof event.data === 'string') {
+            console.debug('[WS-Injector] Ignored non-JSON message:', parseError.message);
+          }
         }
       }
 
@@ -373,7 +377,7 @@
               previewCount: result.imageBlobs?.length || 0,
             },
           },
-        })
+        }),
       );
     } catch (error) {
       window.dispatchEvent(
@@ -383,7 +387,7 @@
             success: false,
             error: error.message,
           },
-        })
+        }),
       );
     }
   });
@@ -403,7 +407,7 @@
             success: true,
             result,
           },
-        })
+        }),
       );
     } catch (error) {
       window.dispatchEvent(
@@ -413,7 +417,7 @@
             success: false,
             error: error.message,
           },
-        })
+        }),
       );
     }
   });
@@ -448,7 +452,9 @@
               logEntry.formData[key] = value instanceof File ? `[File: ${value.name}]` : value;
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn('[WS-Injector] Failed to capture fetch body:', e.message);
+        }
       }
 
       fetchLogs.push(logEntry);
@@ -456,7 +462,7 @@
 
       console.log(
         `[Fetch] ${method} ${url.substring(0, 80)}`,
-        logEntry.body ? logEntry.body.substring(0, 100) : ''
+        logEntry.body ? logEntry.body.substring(0, 100) : '',
       );
 
       // Dispatch event for capture
@@ -547,14 +553,14 @@
       window.dispatchEvent(
         new CustomEvent('grok-video-result', {
           detail: { commandId, success: true, result },
-        })
+        }),
       );
     } catch (error) {
       console.error('[WS-Injector] Video command error:', error);
       window.dispatchEvent(
         new CustomEvent('grok-video-result', {
           detail: { commandId, success: false, error: error.message },
-        })
+        }),
       );
     }
   });
@@ -562,7 +568,7 @@
   console.log('[WS-Injector] Ready!');
   console.log('[WS-Injector] API: generateGrokImage(prompt, {aspectRatio, enableNsfw})');
   console.log(
-    '[WS-Injector] API: grokImageToVideo({assetId, assetUrl, prompt, mode, aspectRatio, videoLength})'
+    '[WS-Injector] API: grokImageToVideo({assetId, assetUrl, prompt, mode, aspectRatio, videoLength})',
   );
   console.log('[WS-Injector] API: grokUpscaleVideo(videoId)');
   console.log('[WS-Injector] API: getGrokWebSocketConnections()');

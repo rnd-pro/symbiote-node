@@ -1,7 +1,14 @@
 // Background service worker v6 - Download + Network Monitoring
 // Handles sidepanel, downloads, and API request capture
+/* global chrome */
 
 const SERVER_URL = 'http://localhost:3333';
+
+function logBridgeError(context) {
+  return (error) => {
+    console.warn(`[GrokBridge] ${context}:`, error.message || error);
+  };
+}
 
 // Track pending downloads
 let pendingDownloads = new Map();
@@ -58,10 +65,10 @@ chrome.webRequest.onBeforeRequest.addListener(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestData),
-    }).catch(() => {});
+    }).catch(logBridgeError('Failed to send captured request'));
   },
   { urls: ['*://grok.com/*', '*://*.grok.com/*'] },
-  ['requestBody']
+  ['requestBody'],
 );
 
 // Capture response headers
@@ -89,10 +96,10 @@ chrome.webRequest.onHeadersReceived.addListener(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(responseData),
-    }).catch(() => {});
+    }).catch(logBridgeError('Failed to send captured response'));
   },
   { urls: ['*://grok.com/*', '*://*.grok.com/*'] },
-  ['responseHeaders']
+  ['responseHeaders'],
 );
 
 // ===== DOWNLOAD MONITORING =====
@@ -127,7 +134,7 @@ chrome.downloads.onChanged.addListener((delta) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Forward log events from content to sidepanel
   if (request.action === 'logEvent') {
-    chrome.runtime.sendMessage(request).catch(() => {});
+    chrome.runtime.sendMessage(request).catch(logBridgeError('Failed to forward log event'));
   }
 
   // Get captured requests
@@ -151,7 +158,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           pendingDownloads.set(downloadId, { started: Date.now() });
           sendResponse({ success: true, downloadId });
         }
-      }
+      },
     );
     return true;
   }
@@ -177,7 +184,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // Log cookie names for debugging
       console.log(
         `[GrokBridge] Exporting ${unique.length} cookies:`,
-        unique.map((c) => c.name).join(', ')
+        unique.map((c) => c.name).join(', '),
       );
 
       // Send to server

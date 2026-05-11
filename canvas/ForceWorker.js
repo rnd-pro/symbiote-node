@@ -1,4 +1,5 @@
 /* eslint-env worker */
+/* globals self */
 /**
  * ForceWorker — Force-directed layout in a Web Worker.
  *
@@ -40,14 +41,7 @@
  * Adaptive quadtree supporting both charge computation and collision detection.
  * Each leaf stores a linked list of bodies at same position (handles coincident nodes).
  */
-class Quad {
-  constructor(x0, y0, x1, y1) {
-    this.x0 = x0; // min x
-    this.y0 = y0; // min y
-    this.x1 = x1; // max x
-    this.y1 = y1; // max y
-  }
-}
+
 
 function quadtreeCreate(nodes) {
   let x0 = Infinity,
@@ -258,7 +252,7 @@ function applyChargeForce(nodes, strength, theta) {
   }
   let distMin2 = Math.max(1, avgSize * avgSize * 0.25);
   for (const body of nodes) {
-    qtVisit(tree, (node, x0, y0, x1, y1) => {
+    qtVisit(tree, (node, x0, y0, x1) => {
       if (!node.value) return true; // skip empty
 
       let dx = node.x - body.x;
@@ -501,60 +495,7 @@ function countOverlaps(nodes) {
  * Small random displacement breaks deadlocks in post-convergence cleanup.
  * @param {Array<Object>} nodes
  */
-function jitterOverlappingNodes(nodes) {
-  let maxW = 260,
-    maxH = 40;
-  for (const n of nodes) {
-    if (n.w > maxW) maxW = n.w;
-    if (n.h > maxH) maxH = n.h;
-  }
-  let cellW = maxW * 1.5;
-  let cellH = maxH * 3;
-  let grid = new Map();
 
-  for (let i = 0; i < nodes.length; i++) {
-    let n = nodes[i];
-    let key = `${Math.floor(n.x / cellW)},${Math.floor(n.y / cellH)}`;
-    if (!grid.has(key)) grid.set(key, []);
-    grid.get(key).push(i);
-  }
-
-  for (let i = 0; i < nodes.length; i++) {
-    let a = nodes[i];
-    let gx = Math.floor(a.x / cellW);
-    let gy = Math.floor(a.y / cellH);
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        let neighbors = grid.get(`${gx + dx},${gy + dy}`);
-        if (!neighbors) continue;
-        for (const j of neighbors) {
-          if (j <= i) continue;
-          let b = nodes[j];
-          let hwA = a.w / 2,
-            hhA = a.h / 2;
-          let hwB = b.w / 2,
-            hhB = b.h / 2;
-          let ox = hwA + hwB - Math.abs(a.x - b.x);
-          let oy = hhA + hhB - Math.abs(a.y - b.y);
-          if (ox > 0 && oy > 0) {
-            // Push apart along minimum-overlap axis + small random to break symmetry
-            if (ox < oy) {
-              let sign = a.x < b.x ? -1 : a.x > b.x ? 1 : Math.random() < 0.5 ? -1 : 1;
-              let push = ox / 2 + 5 + Math.random() * 10;
-              a.x += sign * push;
-              b.x -= sign * push;
-            } else {
-              let sign = a.y < b.y ? -1 : a.y > b.y ? 1 : Math.random() < 0.5 ? -1 : 1;
-              let push = oy / 2 + 3 + Math.random() * 6;
-              a.y += sign * push;
-              b.y -= sign * push;
-            }
-          }
-        }
-      }
-    }
-  }
-}
 
 /**
  * Spring force (Hooke's law) for linked nodes.
@@ -599,29 +540,7 @@ function applyLinkForce(nodes, edges, alpha) {
  * @param {number} [bx=0]
  * @param {number} [by=0]
  */
-function applyCenterForce(nodes, strength, attractors, bx = 0, by = 0) {
-  for (const n of nodes) {
-    let targetX, targetY;
 
-    if (n.parentId) {
-      // Internal node → pull toward parent center (+ optional attractor offset)
-      if (attractors && n.type && attractors[n.type]) {
-        targetX = bx + attractors[n.type].x;
-        targetY = by + attractors[n.type].y;
-      } else {
-        targetX = bx;
-        targetY = by;
-      }
-    } else {
-      // External node → pull toward global centroid
-      targetX = 0;
-      targetY = 0;
-    }
-
-    n.vx -= (n.x - targetX) * strength * 0.1;
-    n.vy -= (n.y - targetY) * strength * 0.1;
-  }
-}
 
 /**
  * Boundary force: pushes nodes back if they escape the boundary circle.
@@ -632,24 +551,7 @@ function applyCenterForce(nodes, strength, attractors, bx = 0, by = 0) {
  * @param {number} by
  * @param {string} activeGroupId
  */
-function applyBoundaryForce(nodes, radius, strength, bx, by, activeGroupId) {
-  if (!radius) return;
-  let rSq = radius * radius;
-  for (const n of nodes) {
-    if (n.parentId !== activeGroupId) continue; // Only constrain internal nodes
-    let dx = n.x - bx;
-    let dy = n.y - by;
-    let distSq = dx * dx + dy * dy;
-    if (distSq > rSq) {
-      let dist = Math.sqrt(distSq);
-      let overlap = dist - radius;
-      let nx = dx / dist;
-      let ny = dy / dist;
-      n.vx -= nx * overlap * strength;
-      n.vy -= ny * overlap * strength;
-    }
-  }
-}
+
 
 // =====================================================================
 // 3. SIMULATION
@@ -659,9 +561,6 @@ let nodes = [];
 let edges = [];
 let running = false;
 let paused = false;
-let alpha = 1;
-let iteration = 0;
-let cachedActiveGroupNode = null;
 let galacticSuns = []; // Hub nodes (high-degree or groups)
 let planets = []; // Leaf nodes assigned to a sun
 let simMode = 'converge'; // 'converge' | 'continuous'
@@ -709,8 +608,6 @@ function initSimulation(data) {
   Object.assign(config, options);
   simMode = options.mode || 'converge';
 
-  // Will be populated after nodes array is built
-  cachedActiveGroupNode = null;
 
   // Initialize nodes — two-pass for hierarchy
   nodes = rawNodes.map((n, i) => {
@@ -838,10 +735,6 @@ function initSimulation(data) {
     e.bias = ds / (ds + dt);
   }
 
-  // Cache active group
-  if (config.activeGroupId) {
-    cachedActiveGroupNode = nodes.find((n) => n.id === config.activeGroupId) || null;
-  }
 
   // ── Compute Gravity Wells ──
   computeGravityWells(degree);
@@ -1401,7 +1294,7 @@ function startContinuousLoop() {
         energy: energy,
         iteration: continuousIteration,
       },
-      [packed.buffer]
+      [packed.buffer],
     );
 
     // Send a 'done' message once when the layout has mostly settled so the UI can restore view state

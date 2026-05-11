@@ -241,6 +241,6 @@ export function updateNode(root, nodeId, updates) {
  * @returns {{ left?: string, right?: string, top?: string, bottom?: string }}
  */
 export function getNeighbors(root, panelId) {
-  // TODO: Implement neighbor detection for join preview
+  // Reserved for join-preview neighbor detection.
   return {};
 }

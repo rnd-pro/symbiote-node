@@ -22,6 +22,7 @@ import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
 
 async function cleanupLocalFile(filePath) {
   try {
@@ -193,10 +194,9 @@ async function executeSSH(text, params) {
       let scriptPath = `${remotePath}/utils/generate_qwen3tts_batch.py`;
       let cmd = `source "${venv}/bin/activate" && "${pythonCmd}" "${scriptPath}" --batch "${remoteBatch}" --device "${device}"`;
 
-      execSync(`ssh ${host} '${cmd}'`, {
-        encoding: 'utf-8',
+      await runCommandWithWatchdog(`ssh ${host} '${cmd}'`, {
         maxBuffer: 50 * 1024 * 1024,
-        timeout: params.timeout || 120000,
+        inactivityMs: params.timeout || 120000,
       });
 
       // Download result

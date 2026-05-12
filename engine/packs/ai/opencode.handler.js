@@ -88,16 +88,18 @@ export default {
             timestamp: Date.now(),
           },
           null,
-          2
+          2,
         ),
-        'utf8'
+        'utf8',
       );
 
       // Clean previous output
       try {
         await fs.unlink(outputPath);
-      } catch {
-        /* ignore */
+      } catch (err) {
+        if (err.code !== 'ENOENT') {
+          throw new Error(`Failed to clean previous OpenCode output ${outputPath}: ${err.message}`);
+        }
       }
 
       try {
@@ -150,19 +152,39 @@ Output format: { "result": <your_result> }`;
         let pollInterval = 3000;
 
         while (Date.now() - startTime < timeout) {
-          try {
-            let content = await fs.readFile(outputPath, 'utf8');
-            let parsed = JSON.parse(content);
+          let content;
 
-            if (parsed.result !== undefined) {
-              return { result: parsed.result, error: null };
+          try {
+            content = await fs.readFile(outputPath, 'utf8');
+          } catch (err) {
+            if (err.code !== 'ENOENT') {
+              return {
+                result: null,
+                error: `Failed to read OpenCode output ${outputPath}: ${err.message}`,
+              };
             }
-            // If the file exists but has no result key, return entire content
-            if (Object.keys(parsed).length > 0) {
-              return { result: parsed, error: null };
-            }
-          } catch {
-            // File not ready yet
+
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+            continue;
+          }
+
+          let parsed;
+
+          try {
+            parsed = JSON.parse(content);
+          } catch (err) {
+            return {
+              result: null,
+              error: `Invalid JSON in OpenCode output ${outputPath}: ${err.message}`,
+            };
+          }
+
+          if (parsed.result !== undefined) {
+            return { result: parsed.result, error: null };
+          }
+          // If the file exists but has no result key, return entire content
+          if (Object.keys(parsed).length > 0) {
+            return { result: parsed, error: null };
           }
 
           await new Promise((resolve) => setTimeout(resolve, pollInterval));

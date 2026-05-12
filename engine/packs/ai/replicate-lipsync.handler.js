@@ -163,7 +163,7 @@ async function pollPrediction(predictionId, token, maxWaitMs = 300000) {
     }
     if (prediction.status === 'failed' || prediction.status === 'canceled') {
       throw new Error(
-        `Replicate prediction ${prediction.status}: ${prediction.error || 'Unknown'}`
+        `Replicate prediction ${prediction.status}: ${prediction.error || 'Unknown'}`,
       );
     }
 
@@ -321,6 +321,7 @@ async function processBatch(inputs, params) {
   let videoMap = params.videoMap || {};
   let concurrency = params.concurrency;
   let results = new Map();
+  let failures = [];
   let queue = [...segments];
 
   let workers = Array(Math.min(concurrency, queue.length))
@@ -331,7 +332,10 @@ async function processBatch(inputs, params) {
         if (!segment) break;
 
         let videoUrl = videoMap[segment.promptId];
-        if (!videoUrl) continue;
+        if (!videoUrl) {
+          failures.push(`${segment.promptId}: missing videoUrl`);
+          continue;
+        }
 
         try {
           let segParams = {
@@ -344,11 +348,16 @@ async function processBatch(inputs, params) {
           let result = await processSegment({ videoUrl, audioPath: inputs.audioPath }, segParams);
           results.set(segment.promptId, result.videoPath);
         } catch (error) {
-          console.error(`🔴 [Replicate] Failed: ${segment.promptId} - ${error.message}`);
+          failures.push(`${segment.promptId}: ${error.message}`);
         }
       }
     });
 
   await Promise.all(workers);
+
+  if (failures.length > 0) {
+    throw new Error(`Replicate batch failed for ${failures.length} segment(s): ${failures.join('; ')}`);
+  }
+
   return results;
 }

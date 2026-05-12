@@ -16,6 +16,7 @@
 import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
 
 export default {
   type: 'ai/whisper',
@@ -134,10 +135,9 @@ async function executeSSH(audioPath, params) {
       let cmd = `"${pythonCmd}" "${whisperScript}" "${remoteAudioPath}" "${language}" --model "${model}" --device "${device}"`;
       let fullCmd = `ssh ${host} '${cmd}'`;
 
-      let output = execSync(fullCmd, {
-        encoding: 'utf-8',
+      let output = await runCommandWithWatchdog(fullCmd, {
         maxBuffer: 50 * 1024 * 1024,
-        timeout: params.timeout || 300000,
+        inactivityMs: params.timeout || 300000,
       });
 
       let words = JSON.parse(output);
@@ -153,8 +153,8 @@ async function executeSSH(audioPath, params) {
           stdio: 'pipe',
           timeout: 5000,
         });
-      } catch {
-        /* ignore */
+      } catch (cleanupError) {
+        console.warn(`Failed to cleanup remote Whisper audio ${remoteAudioPath}: ${cleanupError.message}`);
       }
     }
   } catch (err) {

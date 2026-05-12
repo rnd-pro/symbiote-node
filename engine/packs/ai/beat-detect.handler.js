@@ -21,7 +21,7 @@
 import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
-import os from 'os';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
 
 export default {
   type: 'ai/beat-detect',
@@ -161,8 +161,10 @@ async function executeSSH(audioPath, params) {
         stdio: 'pipe',
         timeout: 10000,
       });
-    } catch {
-      // Script might already be on remote, try using module path
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw new Error(`Failed to upload beat detection script: ${error.message}`);
+      }
       remoteScript = `${remotePath}/utils/beat-detection.py`;
     }
 
@@ -172,10 +174,9 @@ async function executeSSH(audioPath, params) {
       let cmd = `"${pythonCmd}" "${remoteScript}" "${remoteAudio}" --sr ${sr} --hop ${hop} --pps ${pps}`;
       let fullCmd = `ssh ${host} '${cmd}'`;
 
-      let output = execSync(fullCmd, {
-        encoding: 'utf-8',
+      let output = await runCommandWithWatchdog(fullCmd, {
         maxBuffer: 50 * 1024 * 1024,
-        timeout: params.timeout || 180000,
+        inactivityMs: params.timeout || 180000,
       });
 
       let result = JSON.parse(output);

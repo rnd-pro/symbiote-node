@@ -536,12 +536,19 @@ async function triggerUpscale(bridge, workerId) {
  */
 async function waitForHD(bridge, timeout = 120000, workerId = null, sdUrl = null) {
   let start = Date.now();
+  let lastError = null;
 
   while (Date.now() - start < timeout) {
     await bridge.sleep(3000);
 
     try {
-      let hdExists = await bridge.waitFor(SEL.hdButton, 5000, workerId).catch(() => null);
+      let hdExists = null;
+      try {
+        hdExists = await bridge.waitFor(SEL.hdButton, 5000, workerId);
+      } catch (error) {
+        lastError = error;
+      }
+
       if (hdExists) {
         let result = await bridge.getAttribute(SEL.video, 'src', workerId);
         if (result.value?.includes('.mp4')) return result.value;
@@ -551,12 +558,14 @@ async function waitForHD(bridge, timeout = 120000, workerId = null, sdUrl = null
         let result = await bridge.getAttribute(SEL.video, 'src', workerId);
         if (result.value?.includes('.mp4') && result.value !== sdUrl) return result.value;
       }
-    } catch {
-      /* not yet */
+    } catch (error) {
+      lastError = error;
     }
   }
 
-  throw new Error('Timeout waiting for HD video');
+  throw new Error(
+    `Timeout waiting for HD video${lastError ? `. Last error: ${lastError.message}` : ''}`,
+  );
 }
 
 // --- Batch processing ---

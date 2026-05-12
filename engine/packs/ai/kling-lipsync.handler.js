@@ -206,7 +206,7 @@ async function createLipsyncTask(
   soundDurationMs,
   faceStartMs,
   token,
-  baseUrl
+  baseUrl,
 ) {
   let response = await fetch(`${baseUrl}/v1/videos/advanced-lip-sync`, {
     method: 'POST',
@@ -386,7 +386,7 @@ async function processSegment(inputs, params) {
     audioDurationMs,
     face.start_time || 0,
     token,
-    baseUrl
+    baseUrl,
   );
 
   // 5. Poll
@@ -413,6 +413,7 @@ async function processBatch(inputs, params) {
   let videoMap = params.videoMap || {};
   let concurrency = params.concurrency;
   let results = new Map();
+  let failures = [];
 
   for (let i = 0; i < segments.length; i += concurrency) {
     let batch = segments.slice(i, i + concurrency);
@@ -420,7 +421,9 @@ async function processBatch(inputs, params) {
     let batchResults = await Promise.allSettled(
       batch.map(async (segment) => {
         let videoUrl = videoMap[segment.promptId];
-        if (!videoUrl) return null;
+        if (!videoUrl) {
+          throw new Error(`${segment.promptId}: missing videoUrl`);
+        }
 
         let segParams = {
           ...params,
@@ -431,14 +434,20 @@ async function processBatch(inputs, params) {
 
         let result = await processSegment({ videoUrl, audioPath: inputs.audioPath }, segParams);
         return { promptId: segment.promptId, ...result };
-      })
+      }),
     );
 
     for (const result of batchResults) {
       if (result.status === 'fulfilled' && result.value) {
         results.set(result.value.promptId, result.value.videoPath);
+      } else if (result.status === 'rejected') {
+        failures.push(result.reason.message);
       }
     }
+  }
+
+  if (failures.length > 0) {
+    throw new Error(`Kling batch failed for ${failures.length} segment(s): ${failures.join('; ')}`);
   }
 
   return results;

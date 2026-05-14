@@ -18,10 +18,16 @@
  * @module agi-graph/packs/ai/beat-detect
  */
 
-import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'ai/beat-detect',
@@ -137,17 +143,15 @@ async function executeSSH(audioPath, params) {
     let remoteAudio = `${remoteTmpDir}/${filename}`;
 
     // Setup remote directory
-    execSync(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      timeout: 10000,
+    await runCommandWithWatchdog(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
+      inactivityMs: 10000,
+      timeoutMs: 10000,
     });
 
     // Upload audio
-    execSync(`scp "${audioPath}" "${host}:${remoteAudio}"`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      timeout: 60000,
+    await runCommandWithWatchdog(`scp "${audioPath}" "${host}:${remoteAudio}"`, {
+      inactivityMs: 60000,
+      timeoutMs: 60000,
     });
 
     // Upload or locate beat detection script
@@ -156,10 +160,9 @@ async function executeSSH(audioPath, params) {
 
     try {
       await fs.access(localScript);
-      execSync(`scp "${localScript}" "${host}:${remoteScript}"`, {
-        encoding: 'utf-8',
-        stdio: 'pipe',
-        timeout: 10000,
+      await runCommandWithWatchdog(`scp "${localScript}" "${host}:${remoteScript}"`, {
+        inactivityMs: 10000,
+        timeoutMs: 10000,
       });
     } catch (error) {
       if (error.code !== 'ENOENT') {
@@ -177,6 +180,7 @@ async function executeSSH(audioPath, params) {
       let output = await runCommandWithWatchdog(fullCmd, {
         maxBuffer: 50 * 1024 * 1024,
         inactivityMs: params.timeout || 180000,
+        timeoutMs: params.timeout || 180000,
       });
 
       let result = JSON.parse(output);
@@ -193,11 +197,10 @@ async function executeSSH(audioPath, params) {
       };
     } finally {
       // Cleanup remote audio
-      execSync(`ssh ${host} "rm -f ${remoteAudio}"`, {
-        encoding: 'utf-8',
-        stdio: 'pipe',
-        timeout: 5000,
-      }).toString();
+      await runCommandWithWatchdog(`ssh ${host} "rm -f ${remoteAudio}"`, {
+        inactivityMs: 5000,
+        timeoutMs: 5000,
+      });
     }
   } catch (err) {
     return { ...EMPTY, error: err.message };
@@ -226,7 +229,7 @@ async function executeHTTP(audioPath, params) {
     let response = await fetch(`${endpoint}/analyze`, {
       method: 'POST',
       body: formData,
-      signal: AbortSignal.timeout(params.timeout || 180000),
+      signal: requestSignal(params.timeout || 180000, params.signal),
     });
 
     if (!response.ok) {

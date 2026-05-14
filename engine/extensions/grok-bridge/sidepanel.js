@@ -7,12 +7,19 @@ let statusText = document.getElementById('statusText');
 
 let events = [];
 
+function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+  return fetch(url, {
+    ...options,
+    signal: options.signal || AbortSignal.timeout(timeoutMs),
+  });
+}
+
 /**
  * Check server and page connection
  */
 async function checkStatus() {
   try {
-    let res = await fetch(`${SERVER_URL}/health`);
+    let res = await fetchWithTimeout(`${SERVER_URL}/health`, {}, 3000);
     let data = await res.json();
     statusDot.className = 'status-dot connected';
     statusText.textContent = `Bridge connected (${data.pendingCommands || 0} pending)`;
@@ -150,7 +157,7 @@ generateBtn.addEventListener('click', async () => {
 
   try {
     // Send command to server
-    let res = await fetch(`${SERVER_URL}/command`, {
+    let res = await fetchWithTimeout(`${SERVER_URL}/command`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -160,7 +167,7 @@ generateBtn.addEventListener('click', async () => {
           options: { aspectRatio: aspectRatio.value },
         },
       }),
-    });
+    }, 10000);
 
     if (!res.ok) throw new Error('Failed to send command');
     let { id } = await res.json();
@@ -175,7 +182,7 @@ generateBtn.addEventListener('click', async () => {
     while (Date.now() - startTime < timeout) {
       await new Promise((r) => setTimeout(r, 1000));
 
-      let resultRes = await fetch(`${SERVER_URL}/result/${id}`);
+      let resultRes = await fetchWithTimeout(`${SERVER_URL}/result/${id}`, {}, 5000);
       if (!resultRes.ok) continue;
 
       let data = await resultRes.json();
@@ -232,11 +239,11 @@ showZonesBtn.addEventListener('click', async () => {
   try {
     if (zonesVisible) {
       // Hide zones
-      let res = await fetch(`${SERVER_URL}/command`, {
+      let res = await fetchWithTimeout(`${SERVER_URL}/command`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'hideZones', params: {} }),
-      });
+      }, 10000);
       if (res.ok) {
         showZonesBtn.textContent = '🎯 Show Zones';
         showZonesBtn.style.background = '#ff6b6b';
@@ -245,17 +252,17 @@ showZonesBtn.addEventListener('click', async () => {
       }
     } else {
       // Show zones
-      let res = await fetch(`${SERVER_URL}/command`, {
+      let res = await fetchWithTimeout(`${SERVER_URL}/command`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'showClickableZones', params: {} }),
-      });
+      }, 10000);
       if (res.ok) {
         let { id } = await res.json();
 
         // Wait for result
         await new Promise((r) => setTimeout(r, 1000));
-        let resultRes = await fetch(`${SERVER_URL}/result/${id}`);
+        let resultRes = await fetchWithTimeout(`${SERVER_URL}/result/${id}`, {}, 5000);
         let data = await resultRes.json();
 
         if (data.result?.zones) {
@@ -285,15 +292,15 @@ document.querySelectorAll('.layer-btn').forEach((btn) => {
   btn.addEventListener('click', async () => {
     let layer = btn.dataset.layer;
     try {
-      let res = await fetch(`${SERVER_URL}/command`, {
+      let res = await fetchWithTimeout(`${SERVER_URL}/command`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'showClickableZones', params: { layer } }),
-      });
+      }, 10000);
       if (res.ok) {
         let { id } = await res.json();
         await new Promise((r) => setTimeout(r, 1000));
-        let resultRes = await fetch(`${SERVER_URL}/result/${id}`);
+        let resultRes = await fetchWithTimeout(`${SERVER_URL}/result/${id}`, {}, 5000);
         let data = await resultRes.json();
         if (data.result?.zones) {
           addEvent({

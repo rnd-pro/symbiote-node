@@ -16,6 +16,13 @@
  */
 let cache = new Map();
 
+function requestSignal(params, fallbackMs = 120000) {
+  let timeoutSignal = AbortSignal.timeout(params.timeout || fallbackMs);
+  return params.signal && AbortSignal.any
+    ? AbortSignal.any([params.signal, timeoutSignal])
+    : timeoutSignal;
+}
+
 /**
  * Simple hash for caching
  * @param {string} str
@@ -212,6 +219,7 @@ export default {
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0.7,
               }),
+              signal: requestSignal(params),
             });
 
             if (!response.ok) {

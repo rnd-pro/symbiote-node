@@ -7,6 +7,13 @@
  * @module agi-graph/packs/io/http-request
  */
 
+function requestSignal(timeout, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeout);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
+
 export default {
   type: 'io/http-request',
   category: 'io',
@@ -48,7 +55,7 @@ export default {
         let fetchOptions = {
           method: method || 'GET',
           headers: { ...headers },
-          signal: AbortSignal.timeout(timeout),
+          signal: requestSignal(timeout, params.signal),
         };
 
         if (body && method !== 'GET' && method !== 'HEAD') {

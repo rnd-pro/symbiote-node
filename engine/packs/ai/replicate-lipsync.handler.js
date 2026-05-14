@@ -17,8 +17,15 @@
 
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
-import { execSync } from 'child_process';
 import path from 'path';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'ai/replicate-lipsync',
@@ -111,7 +118,7 @@ export default {
  * @param {string} token
  * @returns {Promise<Object>}
  */
-async function createPrediction(videoUrl, audioUrl, token) {
+async function createPrediction(videoUrl, audioUrl, token, signal) {
   let response = await fetch('https://api.replicate.com/v1/predictions', {
     method: 'POST',
     headers: {
@@ -126,6 +133,7 @@ async function createPrediction(videoUrl, audioUrl, token) {
         audio: audioUrl,
       },
     }),
+    signal: requestSignal(120000, signal),
   });
 
   if (!response.ok) {
@@ -143,13 +151,14 @@ async function createPrediction(videoUrl, audioUrl, token) {
  * @param {number} maxWaitMs
  * @returns {Promise<Object>}
  */
-async function pollPrediction(predictionId, token, maxWaitMs = 300000) {
+async function pollPrediction(predictionId, token, maxWaitMs = 300000, signal) {
   let startTime = Date.now();
   let pollInterval = 5000;
 
   while (Date.now() - startTime < maxWaitMs) {
     let response = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
       headers: { Authorization: `Bearer ${token}` },
+      signal: requestSignal(30000, signal),
     });
 
     if (!response.ok) {
@@ -179,8 +188,10 @@ async function pollPrediction(predictionId, token, maxWaitMs = 300000) {
  * @param {string} outputPath
  * @returns {Promise<string>}
  */
-async function downloadResult(videoUrl, outputPath) {
-  let response = await fetch(videoUrl);
+async function downloadResult(videoUrl, outputPath, signal) {
+  let response = await fetch(videoUrl, {
+    signal: requestSignal(120000, signal),
+  });
   if (!response.ok) {
     throw new Error(`Failed to download: ${response.status}`);
   }
@@ -218,7 +229,7 @@ async function fileToDataUri(filePath) {
  * @param {string} outputPath
  * @returns {string}
  */
-function extractAudioClip(audioPath, startTime, endTime, outputPath) {
+async function extractAudioClip(audioPath, startTime, endTime, outputPath) {
   if (existsSync(outputPath)) return outputPath;
 
   let duration = endTime - startTime;
@@ -226,7 +237,10 @@ function extractAudioClip(audioPath, startTime, endTime, outputPath) {
     `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
     `-c:a libmp3lame -q:a 2 "${outputPath}" 2>/dev/null`;
 
-  execSync(cmd, { stdio: 'pipe' });
+  await runCommandWithWatchdog(cmd, {
+    inactivityMs: 120000,
+    timeoutMs: 120000,
+  });
   return outputPath;
 }
 
@@ -281,7 +295,7 @@ async function processSegment(inputs, params) {
 
   // Extract audio clip
   let clipPath = path.join(clipsDir, `${segmentId}.mp3`);
-  extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
+  await extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
 
   // Get audio data URI or public URL
   let audioUrl;
@@ -292,12 +306,12 @@ async function processSegment(inputs, params) {
   }
 
   // Create prediction
-  let prediction = await createPrediction(inputs.videoUrl, audioUrl, replicateToken);
+  let prediction = await createPrediction(inputs.videoUrl, audioUrl, replicateToken, params.signal);
 
   // Poll if not already complete
   let result = prediction;
   if (prediction.status !== 'succeeded') {
-    result = await pollPrediction(prediction.id, replicateToken, params.maxWaitMs);
+    result = await pollPrediction(prediction.id, replicateToken, params.maxWaitMs, params.signal);
   }
 
   // Download result
@@ -306,7 +320,7 @@ async function processSegment(inputs, params) {
     throw new Error('No output URL in prediction result');
   }
 
-  await downloadResult(resultUrl, outputPath);
+  await downloadResult(resultUrl, outputPath, params.signal);
   return { videoPath: outputPath, predictionId: prediction.id, cached: false };
 }
 

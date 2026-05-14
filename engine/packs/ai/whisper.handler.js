@@ -13,10 +13,16 @@
  * @module agi-graph/packs/ai/whisper
  */
 
-import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'ai/whisper',
@@ -114,17 +120,15 @@ async function executeSSH(audioPath, params) {
     let remoteAudioPath = `${remoteTmpDir}/${filename}`;
 
     // Ensure remote dir
-    execSync(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      timeout: 10000,
+    await runCommandWithWatchdog(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
+      inactivityMs: 10000,
+      timeoutMs: 10000,
     });
 
     // Upload audio
-    execSync(`scp "${audioPath}" "${host}:${remoteAudioPath}"`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      timeout: 60000,
+    await runCommandWithWatchdog(`scp "${audioPath}" "${host}:${remoteAudioPath}"`, {
+      inactivityMs: 60000,
+      timeoutMs: 60000,
     });
 
     try {
@@ -138,6 +142,7 @@ async function executeSSH(audioPath, params) {
       let output = await runCommandWithWatchdog(fullCmd, {
         maxBuffer: 50 * 1024 * 1024,
         inactivityMs: params.timeout || 300000,
+        timeoutMs: params.timeout || 300000,
       });
 
       let words = JSON.parse(output);
@@ -148,10 +153,9 @@ async function executeSSH(audioPath, params) {
     } finally {
       // Cleanup remote file
       try {
-        execSync(`ssh ${host} "rm -f ${remoteAudioPath}"`, {
-          encoding: 'utf-8',
-          stdio: 'pipe',
-          timeout: 5000,
+        await runCommandWithWatchdog(`ssh ${host} "rm -f ${remoteAudioPath}"`, {
+          inactivityMs: 5000,
+          timeoutMs: 5000,
         });
       } catch (cleanupError) {
         console.warn(`Failed to cleanup remote Whisper audio ${remoteAudioPath}: ${cleanupError.message}`);
@@ -188,7 +192,7 @@ async function executeHTTP(audioPath, params) {
     let response = await fetch(`${endpoint}/transcribe`, {
       method: 'POST',
       body: formData,
-      signal: AbortSignal.timeout(params.timeout || 300000),
+      signal: requestSignal(params.timeout || 300000, params.signal),
     });
 
     if (!response.ok) {

@@ -11,7 +11,7 @@ import Symbiote, { html } from '@symbiotejs/symbiote';
 import { navigate } from '../LayoutRouter/LayoutRouter.js';
 
 export class SidebarSection extends Symbiote {
-  isoMode = true;
+  static isoMode = true;
 
   init$ = {
     sectionId: '',
@@ -141,7 +141,7 @@ SidebarSection.reg('sidebar-section');
  * Shows close button for non-master panels (isMaster=false)
  */
 export class SidebarSubItem extends Symbiote {
-  isoMode = true;
+  static isoMode = true;
 
   init$ = {
     title: '',

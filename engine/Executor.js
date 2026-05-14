@@ -40,10 +40,20 @@ export class Executor {
    * @param {function} [options.onNodeComplete] - Callback(nodeId, output, timeMs)
    * @param {function} [options.onNodeSkipped] - Callback(nodeId) for cached nodes
    * @param {function} [options.onNodeCached] - Callback(nodeId, cacheHash) for lifecycle-cached
+   * @param {AbortSignal} [options.signal] - Optional cancellation signal for lifecycle handlers
+   * @param {number} [options.deadline] - Optional absolute deadline timestamp
    * @returns {Promise<{outputs: object, executionOrder: string[], log: Array, totalTime: number}>}
    */
   async run(graph, options = {}) {
-    let { cache = false, onNodeStart, onNodeComplete, onNodeSkipped, onNodeCached } = options;
+    let {
+      cache = false,
+      onNodeStart,
+      onNodeComplete,
+      onNodeSkipped,
+      onNodeCached,
+      signal,
+      deadline,
+    } = options;
     let nodes = graph.nodes;
     // Duck-typing: Editor has connections as Map, Graph has array
     let connections =
@@ -57,6 +67,13 @@ export class Executor {
     this.executionLog = [];
 
     for (const nodeId of order) {
+      if (signal?.aborted) {
+        throw new Error('Execution aborted');
+      }
+      if (deadline && Date.now() > deadline) {
+        throw new Error('Execution deadline exceeded');
+      }
+
       let node = nodes.get(nodeId);
 
       // Skip cached clean nodes
@@ -107,7 +124,10 @@ export class Executor {
           nodeId,
         };
 
-        let lifecycleResult = await runLifecycle(lifecycleHooks, inputs, node.params, cacheState);
+        let lifecycleResult = await runLifecycle(lifecycleHooks, inputs, node.params, cacheState, {
+          signal,
+          deadline,
+        });
 
         if (lifecycleResult.error) {
           node._output = { _error: lifecycleResult.error };
@@ -137,7 +157,7 @@ export class Executor {
         let processFn = node.process || typeDef?.process;
 
         if (typeof processFn === 'function') {
-          output = await processFn(inputs, node.params);
+          output = await processFn(inputs, { ...node.params, signal, deadline });
         } else {
           // Passthrough: merge params with inputs
           output = { ...node.params, ...inputs };

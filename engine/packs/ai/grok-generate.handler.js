@@ -22,6 +22,13 @@ import { readFile, writeFile, mkdir, rename } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
+
 export default {
   type: 'ai/grok-generate',
   category: 'ai',
@@ -412,7 +419,9 @@ async function generateVideo(bridge, params) {
   let outputName = filename || `grok-video-${Date.now()}`;
   let outputPath = path.join(outputDir, `${outputName}.mp4`);
 
-  let videoResponse = await fetch(videoUrl);
+  let videoResponse = await fetch(videoUrl, {
+    signal: requestSignal(120000, params.signal),
+  });
   if (!videoResponse.ok) throw new Error(`Failed to download video: ${videoResponse.status}`);
   let buffer = await videoResponse.arrayBuffer();
   await writeFile(outputPath, Buffer.from(buffer));
@@ -426,7 +435,9 @@ async function generateVideo(bridge, params) {
       let hdUrl = await waitForHD(bridge, 120000, workerId || null, videoUrl);
 
       let hdPath = path.join(outputDir, `${outputName}_hd.mp4`);
-      let hdResponse = await fetch(hdUrl);
+      let hdResponse = await fetch(hdUrl, {
+        signal: requestSignal(120000, params.signal),
+      });
       if (hdResponse.ok) {
         let hdBuffer = await hdResponse.arrayBuffer();
         await writeFile(hdPath, Buffer.from(hdBuffer));

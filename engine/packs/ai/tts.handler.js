@@ -18,11 +18,17 @@
  * @module agi-graph/packs/ai/tts
  */
 
-import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 async function cleanupLocalFile(filePath) {
   try {
@@ -175,17 +181,15 @@ async function executeSSH(text, params) {
     await fs.writeFile(batchFile, JSON.stringify(batchTask, null, 2));
 
     // Ensure remote dir + upload batch
-    execSync(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      timeout: 10000,
+    await runCommandWithWatchdog(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
+      inactivityMs: 10000,
+      timeoutMs: 10000,
     });
 
     let remoteBatch = `${remoteTmpDir}/${taskId}_batch.json`;
-    execSync(`scp "${batchFile}" "${host}:${remoteBatch}"`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      timeout: 30000,
+    await runCommandWithWatchdog(`scp "${batchFile}" "${host}:${remoteBatch}"`, {
+      inactivityMs: 30000,
+      timeoutMs: 30000,
     });
 
     try {
@@ -197,23 +201,22 @@ async function executeSSH(text, params) {
       await runCommandWithWatchdog(`ssh ${host} '${cmd}'`, {
         maxBuffer: 50 * 1024 * 1024,
         inactivityMs: params.timeout || 120000,
+        timeoutMs: params.timeout || 120000,
       });
 
       // Download result
       let remoteOut = `${remoteTmpDir}/${taskId}.wav`;
-      execSync(`scp "${host}:${remoteOut}" "${localWav}"`, {
-        encoding: 'utf-8',
-        stdio: 'pipe',
-        timeout: 30000,
+      await runCommandWithWatchdog(`scp "${host}:${remoteOut}" "${localWav}"`, {
+        inactivityMs: 30000,
+        timeoutMs: 30000,
       });
 
       // Cleanup batch + remote output
       await cleanupLocalFile(batchFile);
-      execSync(`ssh ${host} "rm -f ${remoteBatch} ${remoteOut}"`, {
-        encoding: 'utf-8',
-        stdio: 'pipe',
-        timeout: 5000,
-      }).toString();
+      await runCommandWithWatchdog(`ssh ${host} "rm -f ${remoteBatch} ${remoteOut}"`, {
+        inactivityMs: 5000,
+        timeoutMs: 5000,
+      });
 
       return { audioPath: localWav, error: null };
     } catch (err) {
@@ -258,7 +261,7 @@ async function executeHTTP(text, params) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(params.timeout || 120000),
+      signal: requestSignal(params.timeout || 120000, params.signal),
     });
 
     if (!response.ok) {

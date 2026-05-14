@@ -18,6 +18,13 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
+
 export default {
   type: 'ai/opencode',
   category: 'ai',
@@ -108,6 +115,7 @@ export default {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: `agi-graph ${Date.now()}` }),
+          signal: requestSignal(30000, params.signal),
         });
 
         if (!sessionRes.ok) {
@@ -140,7 +148,7 @@ Output format: { "result": <your_result> }`;
             model: modelConfig,
             parts: [{ type: 'text', text: fullPrompt }],
           }),
-          signal: AbortSignal.timeout(120000),
+          signal: requestSignal(120000, params.signal),
         });
 
         if (!msgRes.ok) {
@@ -152,6 +160,10 @@ Output format: { "result": <your_result> }`;
         let pollInterval = 3000;
 
         while (Date.now() - startTime < timeout) {
+          if (params.signal?.aborted) {
+            return { result: null, error: 'OpenCode request aborted' };
+          }
+
           let content;
 
           try {

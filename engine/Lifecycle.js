@@ -55,9 +55,10 @@ function defaultCacheKey(inputs, params) {
  * @param {object} inputs - Resolved inputs from upstream
  * @param {object} params - Node parameters
  * @param {CacheState} cacheState - Cache state for this node
+ * @param {{signal?: AbortSignal, deadline?: number}} [executionContext] - Execution cancellation context
  * @returns {Promise<LifecycleResult>}
  */
-export async function runLifecycle(hooks, inputs, params, cacheState) {
+export async function runLifecycle(hooks, inputs, params, cacheState, executionContext = {}) {
   let { mode = 'auto', store, nodeId } = cacheState;
 
   // Step 1: Validate
@@ -102,7 +103,7 @@ export async function runLifecycle(hooks, inputs, params, cacheState) {
 
   let outputs;
   try {
-    outputs = await executeFn(inputs, params);
+    outputs = await executeFn(inputs, { ...params, ...executionContext });
   } catch (err) {
     return { outputs: null, cached: false, error: `Execution error: ${err.message}`, cacheHash };
   }

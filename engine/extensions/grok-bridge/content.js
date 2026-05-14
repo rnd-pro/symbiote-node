@@ -10,6 +10,13 @@ function logBridgeError(context) {
   };
 }
 
+function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+  return fetch(url, {
+    ...options,
+    signal: options.signal || AbortSignal.timeout(timeoutMs),
+  });
+}
+
 // Persist worker ID across reloads
 let workerId = sessionStorage.getItem('GROK_WORKER_ID');
 if (!workerId) {
@@ -88,7 +95,7 @@ function performCoordinateClick(el) {
  */
 async function pollForCommands() {
   try {
-    let res = await fetch(`${SERVER_URL}/commands/pending?workerId=${WORKER_ID}`);
+    let res = await fetchWithTimeout(`${SERVER_URL}/commands/pending?workerId=${WORKER_ID}`);
     if (!res.ok) return;
 
     let { commands } = await res.json();
@@ -419,7 +426,7 @@ async function pollForCommands() {
           result = { navigated: true, url: cmd.params.url };
 
           // Report success immediately
-          await fetch(`${SERVER_URL}/commands/result`, {
+          await fetchWithTimeout(`${SERVER_URL}/commands/result`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: cmd.id, result }),
@@ -440,7 +447,7 @@ async function pollForCommands() {
           result = { refreshed: true, url: window.location.href };
 
           // Report success immediately
-          await fetch(`${SERVER_URL}/commands/result`, {
+          await fetchWithTimeout(`${SERVER_URL}/commands/result`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: cmd.id, result }),
@@ -672,12 +679,12 @@ async function pollForCommands() {
 
         case 'fetchImage':
           // Download image via browser (with authenticated cookies)
-          let imgRes = await fetch(cmd.params.url, {
+          let imgRes = await fetchWithTimeout(cmd.params.url, {
             credentials: 'include',
             headers: {
               Referer: 'https://grok.com/imagine',
             },
-          });
+          }, cmd.params.timeout || 60000);
           if (!imgRes.ok) throw new Error(`Fetch failed: ${imgRes.status}`);
           let imgBlob = await imgRes.blob();
           let imgArrayBuffer = await imgBlob.arrayBuffer();
@@ -728,7 +735,7 @@ async function pollForCommands() {
         case 'uploadImage':
           // Upload image to Grok and get asset ID
           // params: { base64, fileName, mimeType }
-          let uploadRes = await fetch('https://grok.com/rest/app-chat/upload-file', {
+          let uploadRes = await fetchWithTimeout('https://grok.com/rest/app-chat/upload-file', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -737,7 +744,7 @@ async function pollForCommands() {
               fileMimeType: cmd.params.mimeType || 'image/jpeg',
               content: cmd.params.base64,
             }),
-          });
+          }, cmd.params.timeout || 60000);
           if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
           let uploadData = await uploadRes.json();
           // Response has fileMetadataId, not fileId
@@ -756,7 +763,7 @@ async function pollForCommands() {
           // Create media post from uploaded asset
           // params: { assetId, mediaType }
           let assetUrl = `https://assets.grok.com/users/${cmd.params.userId}/${cmd.params.assetId}/content`;
-          let postRes = await fetch('https://grok.com/rest/media/post/create', {
+          let postRes = await fetchWithTimeout('https://grok.com/rest/media/post/create', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -764,7 +771,7 @@ async function pollForCommands() {
               mediaType: cmd.params.mediaType || 'MEDIA_POST_TYPE_IMAGE',
               mediaUrl: assetUrl,
             }),
-          });
+          }, cmd.params.timeout || 60000);
           if (!postRes.ok) throw new Error(`Create post failed: ${postRes.status}`);
           result = { success: true, data: await postRes.json() };
           break;
@@ -1181,7 +1188,7 @@ async function pollForCommands() {
         }
 
         // Report success
-        await fetch(`${SERVER_URL}/commands/result`, {
+        await fetchWithTimeout(`${SERVER_URL}/commands/result`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: cmd.id, result }),
@@ -1189,7 +1196,7 @@ async function pollForCommands() {
         logEvent('result', { id: cmd.id, success: true });
       } catch (err) {
         console.error(`[GrokBridge] Error:`, err);
-        await fetch(`${SERVER_URL}/commands/result`, {
+        await fetchWithTimeout(`${SERVER_URL}/commands/result`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: cmd.id, error: err.message }),

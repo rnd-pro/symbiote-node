@@ -19,7 +19,7 @@ export let template = html`
 `;
 
 export let searchResultTemplate = html`
-  <div class="search-result" data-node-id="{{id}}" ${{ onclick: '^onResultClick' }}>
+  <div class="search-result" ${{ onclick: '^onResultClick', '@data-node-id': 'id' }}>
     <span class="search-result-label">{{label}}</span>
     <span class="search-result-type">{{type}}</span>
   </div>

@@ -8,6 +8,13 @@
  *
  * @module symbiote-node/packs/data/rss-feed */
 
+function requestSignal(timeout, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeout);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
+
 /**
  * Simple hash for dedup
  * @param {string} str
@@ -273,7 +280,7 @@ export default {
         let opMap = {
           fetch: async () => {
             let response = await fetch(inputs.url, {
-              signal: AbortSignal.timeout(timeout),
+              signal: requestSignal(timeout, params.signal),
               headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },
             });
             if (!response.ok) return { error: `HTTP ${response.status}: ${response.statusText}` };
@@ -300,7 +307,7 @@ export default {
             for (const url of params.urls) {
               try {
                 let response = await fetch(url, {
-                  signal: AbortSignal.timeout(timeout),
+                  signal: requestSignal(timeout, params.signal),
                   headers: { 'User-Agent': 'symbiote-node/rss-feed/1.0' },
                 });
                 if (!response.ok) {

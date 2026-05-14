@@ -17,8 +17,15 @@
 import { createHmac } from 'crypto';
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
-import { execSync } from 'child_process';
 import path from 'path';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'ai/kling-lipsync',
@@ -99,7 +106,7 @@ export default {
         let token = generateJWT(params.accessKey, params.secretKey);
 
         if (op === 'identify-face') {
-          let data = await identifyFace(inputs.videoUrl, token, params.baseUrl);
+          let data = await identifyFace(inputs.videoUrl, token, params.baseUrl, params.signal);
           return { result: data, error: null };
         }
 
@@ -165,7 +172,7 @@ function generateJWT(accessKey, secretKey) {
  * @param {string} baseUrl
  * @returns {Promise<Object>}
  */
-async function identifyFace(videoUrl, token, baseUrl) {
+async function identifyFace(videoUrl, token, baseUrl, signal) {
   let response = await fetch(`${baseUrl}/v1/videos/identify-face`, {
     method: 'POST',
     headers: {
@@ -173,6 +180,7 @@ async function identifyFace(videoUrl, token, baseUrl) {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ video_url: videoUrl }),
+    signal: requestSignal(120000, signal),
   });
 
   if (!response.ok) {
@@ -207,6 +215,7 @@ async function createLipsyncTask(
   faceStartMs,
   token,
   baseUrl,
+  signal,
 ) {
   let response = await fetch(`${baseUrl}/v1/videos/advanced-lip-sync`, {
     method: 'POST',
@@ -228,6 +237,7 @@ async function createLipsyncTask(
         },
       ],
     }),
+    signal: requestSignal(120000, signal),
   });
 
   if (!response.ok) {
@@ -262,6 +272,7 @@ async function pollTaskCompletion(taskId, token, params) {
     let response = await fetch(`${params.baseUrl}/v1/videos/advanced-lip-sync/${taskId}`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${freshToken}` },
+      signal: requestSignal(30000, params.signal),
     });
 
     if (!response.ok) {
@@ -295,8 +306,10 @@ async function pollTaskCompletion(taskId, token, params) {
  * @param {string} outputPath
  * @returns {Promise<string>}
  */
-async function downloadResult(videoUrl, outputPath) {
-  let response = await fetch(videoUrl);
+async function downloadResult(videoUrl, outputPath, signal) {
+  let response = await fetch(videoUrl, {
+    signal: requestSignal(120000, signal),
+  });
   if (!response.ok) {
     throw new Error(`Failed to download video: ${response.status}`);
   }
@@ -316,7 +329,7 @@ async function downloadResult(videoUrl, outputPath) {
  * @param {string} outputPath
  * @returns {string}
  */
-function extractAudioClip(audioPath, startTime, endTime, outputPath) {
+async function extractAudioClip(audioPath, startTime, endTime, outputPath) {
   if (existsSync(outputPath)) return outputPath;
 
   let duration = endTime - startTime;
@@ -324,7 +337,10 @@ function extractAudioClip(audioPath, startTime, endTime, outputPath) {
     `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
     `-c:a libmp3lame -q:a 2 "${outputPath}" 2>/dev/null`;
 
-  execSync(cmd, { stdio: 'pipe' });
+  await runCommandWithWatchdog(cmd, {
+    inactivityMs: 120000,
+    timeoutMs: 120000,
+  });
   return outputPath;
 }
 
@@ -361,7 +377,7 @@ async function processSegment(inputs, params) {
 
   // 1. Extract audio clip
   let clipPath = path.join(clipsDir, `${segmentId}.mp3`);
-  extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
+  await extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
   let audioDurationMs = Math.round((endTime - startTime) * 1000);
 
   // 2. Convert to base64
@@ -369,7 +385,7 @@ async function processSegment(inputs, params) {
 
   // 3. Identify face
   let token = generateJWT(accessKey, secretKey);
-  let faceData = await identifyFace(inputs.videoUrl, token, baseUrl);
+  let faceData = await identifyFace(inputs.videoUrl, token, baseUrl, params.signal);
 
   if (!faceData.face_data || faceData.face_data.length === 0) {
     throw new Error('No face detected in video');
@@ -387,6 +403,7 @@ async function processSegment(inputs, params) {
     face.start_time || 0,
     token,
     baseUrl,
+    params.signal,
   );
 
   // 5. Poll
@@ -398,7 +415,7 @@ async function processSegment(inputs, params) {
     throw new Error('No video URL in task result');
   }
 
-  await downloadResult(resultVideoUrl, outputPath);
+  await downloadResult(resultVideoUrl, outputPath, params.signal);
   return { videoPath: outputPath, taskId: task.task_id, cached: false };
 }
 

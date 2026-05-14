@@ -57,10 +57,29 @@ export default {
       }
 
       try {
-        let response = await Promise.race([
-          bridge.run({ prompt, context, tools: allowedTools, model }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Agent timeout')), timeout)),
-        ]);
+        let controller = new AbortController();
+        let timeoutId = setTimeout(() => controller.abort(new Error('Agent timeout')), timeout);
+        let parentSignal = params.signal;
+        let abortFromParent = () => controller.abort(parentSignal.reason || new Error('Agent aborted'));
+
+        if (parentSignal) {
+          if (parentSignal.aborted) abortFromParent();
+          else parentSignal.addEventListener('abort', abortFromParent, { once: true });
+        }
+
+        let response;
+        try {
+          response = await bridge.run({
+            prompt,
+            context,
+            tools: allowedTools,
+            model,
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+          parentSignal?.removeEventListener('abort', abortFromParent);
+        }
 
         return { result: response.data, error: null };
       } catch (err) {

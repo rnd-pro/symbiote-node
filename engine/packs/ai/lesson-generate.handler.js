@@ -13,6 +13,13 @@
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
+function requestSignal(params, fallbackMs = 120000) {
+  let timeoutSignal = AbortSignal.timeout(params.timeout || fallbackMs);
+  return params.signal && AbortSignal.any
+    ? AbortSignal.any([params.signal, timeoutSignal])
+    : timeoutSignal;
+}
+
 /**
  * Load educational materials for context
  * @param {string} materialsDir
@@ -251,6 +258,7 @@ export default {
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0.7,
               }),
+              signal: requestSignal(params),
             });
 
             if (!response.ok) return { error: `API error: HTTP ${response.status}` };
@@ -284,6 +292,7 @@ export default {
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0.5,
               }),
+              signal: requestSignal(params),
             });
 
             if (!response.ok) return { error: `API error: HTTP ${response.status}` };
@@ -311,6 +320,7 @@ export default {
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0.7,
               }),
+              signal: requestSignal(params),
             });
 
             if (!response.ok) return { error: `API error: HTTP ${response.status}` };
@@ -335,6 +345,7 @@ export default {
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0.3,
               }),
+              signal: requestSignal(params),
             });
 
             if (!response.ok) return { error: `API error: HTTP ${response.status}` };

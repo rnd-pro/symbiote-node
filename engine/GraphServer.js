@@ -57,11 +57,13 @@ export async function createServer(options = {}) {
     log(`🔧 Loaded ${registered.length} handler(s) from ${handlersDir}`);
 
     if (watchFiles) {
-      let stopWatch = watchHandlers(dir, (type) => {
-        log(`♻️  Handler reloaded: ${type}`);
-        broadcast({ type: 'registry:add', payload: { type, category: type.split('/')[0] } });
+      let handlerWatcher = watchHandlers(dir, {
+        onRegister: (type) => {
+          log(`♻️  Handler reloaded: ${type}`);
+          broadcast({ type: 'registry:add', payload: { type, category: type.split('/')[0] } });
+        },
       });
-      watchers.push(stopWatch);
+      watchers.push(() => handlerWatcher.close());
     }
   }
 
@@ -101,7 +103,7 @@ export async function createServer(options = {}) {
       }
 
       if (url.pathname === '/api/graph/execute' && req.method === 'POST') {
-        await executeGraph(res);
+        await executeGraph(req, res);
         return;
       }
 
@@ -204,8 +206,15 @@ export async function createServer(options = {}) {
       graph.updateParams(payload.nodeId, payload.data.params);
       broadcast({ type: 'graph:update', payload: graph.toJSON() }, ws);
     },
-    execute: async () => {
-      await executeAndStream();
+    execute: async (_payload, ws) => {
+      let ac = new AbortController();
+      let abort = () => ac.abort(new Error('WebSocket client disconnected'));
+      ws.once('close', abort);
+      try {
+        await executeAndStream({ signal: ac.signal });
+      } finally {
+        ws.off('close', abort);
+      }
     },
   };
 
@@ -244,8 +253,10 @@ export async function createServer(options = {}) {
   /**
    * Execute graph and stream progress via WebSocket
    */
-  async function executeAndStream() {
+  async function executeAndStream(options = {}) {
     let result = await executor.run(graph, {
+      signal: options.signal,
+      deadline: options.deadline,
       onNodeStart: (nodeId) => {
         broadcast({ type: 'node:progress', payload: { nodeId, progress: 0, phase: 'start' } });
       },
@@ -277,11 +288,17 @@ export async function createServer(options = {}) {
 
   /**
    * Execute graph via HTTP and return result
+   * @param {import('http').IncomingMessage} req
    * @param {import('http').ServerResponse} res
    */
-  async function executeGraph(res) {
+  async function executeGraph(req, res) {
+    let ac = new AbortController();
+    let abort = () => {
+      if (!res.writableEnded) ac.abort(new Error('HTTP client disconnected'));
+    };
+    req.on('close', abort);
     try {
-      let result = await executeAndStream();
+      let result = await executeAndStream({ signal: ac.signal });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
         JSON.stringify({
@@ -294,6 +311,8 @@ export async function createServer(options = {}) {
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: err.message }));
+    } finally {
+      req.off('close', abort);
     }
   }
 

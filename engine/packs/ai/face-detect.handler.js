@@ -16,9 +16,16 @@
  * @module agi-graph/packs/ai/face-detect
  */
 
-import { execSync } from 'child_process';
 import path from 'path';
 import os from 'os';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'ai/face-detect',
@@ -114,9 +121,9 @@ async function prepareRemotePath(localPath, host, params) {
   let filename = `face_${Date.now()}_${path.basename(localPath)}`;
   let remotePath = `/tmp/${filename}`;
 
-  execSync(`scp -q "${path.resolve(localPath)}" "${host}:${remotePath}"`, {
-    stdio: 'pipe',
-    timeout: 60000,
+  await runCommandWithWatchdog(`scp -q "${path.resolve(localPath)}" "${host}:${remotePath}"`, {
+    inactivityMs: 60000,
+    timeoutMs: 60000,
   });
 
   return { remotePath, cleanup: true };
@@ -127,11 +134,11 @@ async function prepareRemotePath(localPath, host, params) {
  * @param {string} remotePath
  * @param {string} host
  */
-function cleanupRemote(remotePath, host) {
+async function cleanupRemote(remotePath, host) {
   try {
-    execSync(`ssh ${host} "rm -f ${remotePath}"`, {
-      stdio: 'pipe',
-      timeout: 10000,
+    await runCommandWithWatchdog(`ssh ${host} "rm -f ${remotePath}"`, {
+      inactivityMs: 10000,
+      timeoutMs: 10000,
     });
   } catch {
     /* ignore */
@@ -151,7 +158,7 @@ async function analyze(mediaPath, params) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: path.resolve(mediaPath) }),
-        signal: AbortSignal.timeout(params.timeout || 120000),
+        signal: requestSignal(params.timeout || 120000, params.signal),
       });
       let result = await response.json();
       return { result, detected: result.suitable || false, error: null };
@@ -164,12 +171,12 @@ async function analyze(mediaPath, params) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: remotePath }),
-        signal: AbortSignal.timeout(params.timeout || 120000),
+        signal: requestSignal(params.timeout || 120000, params.signal),
       });
       let result = await response.json();
       return { result, detected: result.suitable || false, error: null };
     } finally {
-      if (cleanup) cleanupRemote(remotePath, host);
+      if (cleanup) await cleanupRemote(remotePath, host);
     }
   } catch (err) {
     return { result: null, detected: false, error: err.message };
@@ -190,13 +197,13 @@ async function track(mediaPath, params) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: remotePath, step: params.step || 3 }),
-        signal: AbortSignal.timeout(params.timeout || 120000),
+        signal: requestSignal(params.timeout || 120000, params.signal),
       });
       let result = await response.json();
       result.detected = (result.detectedFrames || 0) > 0;
       return { result, detected: result.detected, error: null };
     } finally {
-      if (cleanup) cleanupRemote(remotePath, host);
+      if (cleanup) await cleanupRemote(remotePath, host);
     }
   } catch (err) {
     return { result: null, detected: false, error: err.message };
@@ -217,13 +224,13 @@ async function trackGpu(mediaPath, params) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: remotePath, step: params.step || 1 }),
-        signal: AbortSignal.timeout(params.timeout || 120000),
+        signal: requestSignal(params.timeout || 120000, params.signal),
       });
       let result = await response.json();
       result.detected = (result.detectedFrames || 0) > 0;
       return { result, detected: result.detected, error: null };
     } finally {
-      if (cleanup) cleanupRemote(remotePath, host);
+      if (cleanup) await cleanupRemote(remotePath, host);
     }
   } catch (err) {
     return { result: null, detected: false, error: err.message };
@@ -244,12 +251,12 @@ async function mouth(mediaPath, params) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ video_path: remotePath }),
-        signal: AbortSignal.timeout(params.timeout || 120000),
+        signal: requestSignal(params.timeout || 120000, params.signal),
       });
       let result = await response.json();
       return { result, detected: result.detected || false, error: null };
     } finally {
-      if (cleanup) cleanupRemote(remotePath, host);
+      if (cleanup) await cleanupRemote(remotePath, host);
     }
   } catch (err) {
     return { result: null, detected: false, error: err.message };
@@ -272,9 +279,9 @@ async function framesGpu(mediaPath, params) {
       let dirName = `face_frames_${Date.now()}`;
       remotePath = `/tmp/${dirName}`;
 
-      execSync(`rsync -az --quiet "${path.resolve(mediaPath)}/" "${host}:${remotePath}/"`, {
-        stdio: 'pipe',
-        timeout: 120000,
+      await runCommandWithWatchdog(`rsync -az --quiet "${path.resolve(mediaPath)}/" "${host}:${remotePath}/"`, {
+        inactivityMs: 120000,
+        timeoutMs: 120000,
       });
       cleanup = true;
     }
@@ -288,7 +295,7 @@ async function framesGpu(mediaPath, params) {
           fps: params.fps || 30,
           step: params.step || 1,
         }),
-        signal: AbortSignal.timeout(params.timeout || 120000),
+        signal: requestSignal(params.timeout || 120000, params.signal),
       });
       let result = await response.json();
       result.detected = (result.detectedFrames || 0) > 0;
@@ -296,9 +303,9 @@ async function framesGpu(mediaPath, params) {
     } finally {
       if (cleanup) {
         try {
-          execSync(`ssh ${host} "rm -rf ${remotePath}"`, {
-            stdio: 'pipe',
-            timeout: 10000,
+          await runCommandWithWatchdog(`ssh ${host} "rm -rf ${remotePath}"`, {
+            inactivityMs: 10000,
+            timeoutMs: 10000,
           });
         } catch {
           /* ignore */

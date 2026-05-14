@@ -3,11 +3,19 @@
 /* global chrome */
 
 const SERVER_URL = 'http://localhost:3333';
+const DEFAULT_FETCH_TIMEOUT_MS = 10000;
 
 function logBridgeError(context) {
   return (error) => {
     console.warn(`[GrokBridge] ${context}:`, error.message || error);
   };
+}
+
+function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_FETCH_TIMEOUT_MS) {
+  return fetch(url, {
+    ...options,
+    signal: AbortSignal.timeout(timeoutMs),
+  });
 }
 
 // Track pending downloads
@@ -61,7 +69,7 @@ chrome.webRequest.onBeforeRequest.addListener(
     if (capturedRequests.length > 50) capturedRequests.shift();
 
     // Send to server
-    fetch(`${SERVER_URL}/network/request`, {
+    fetchWithTimeout(`${SERVER_URL}/network/request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestData),
@@ -92,7 +100,7 @@ chrome.webRequest.onHeadersReceived.addListener(
     }
 
     // Send to server
-    fetch(`${SERVER_URL}/network/response`, {
+    fetchWithTimeout(`${SERVER_URL}/network/response`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(responseData),
@@ -114,7 +122,7 @@ chrome.downloads.onChanged.addListener((delta) => {
         console.log('[GrokBridge] Download complete:', download.filename);
 
         // Notify server about completed download
-        fetch(`${SERVER_URL}/downloads/complete`, {
+        fetchWithTimeout(`${SERVER_URL}/downloads/complete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -188,7 +196,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       );
 
       // Send to server
-      fetch(`${SERVER_URL}/cookies`, {
+      fetchWithTimeout(`${SERVER_URL}/cookies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(unique),

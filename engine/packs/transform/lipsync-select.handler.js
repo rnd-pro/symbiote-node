@@ -290,6 +290,12 @@ Return ONLY valid JSON. Include ALL ${segmentSummary.length} segments.`;
 async function callAI(prompt, params) {
   let controller = new AbortController();
   let timeoutId = setTimeout(() => controller.abort(), 60000);
+  let abortFromParent = () => controller.abort(params.signal.reason || new Error('AI request aborted'));
+
+  if (params.signal) {
+    if (params.signal.aborted) abortFromParent();
+    else params.signal.addEventListener('abort', abortFromParent, { once: true });
+  }
 
   try {
     let response = await fetch(`${params.apiBaseUrl}/chat/completions`, {
@@ -321,6 +327,8 @@ async function callAI(prompt, params) {
   } catch (error) {
     clearTimeout(timeoutId);
     throw error;
+  } finally {
+    params.signal?.removeEventListener('abort', abortFromParent);
   }
 }
 

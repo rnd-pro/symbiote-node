@@ -19,6 +19,8 @@ import { areSocketsCompatible } from './SocketTypes.js';
  * @property {'auto'|'freeze'|'force'} [cacheMode='auto'] - Cache behavior mode
  * @property {object} [_output] - Cached execution output
  * @property {object} [_meta] - Metadata (variant flags, etc.)
+ * @property {object} [driver] - Inline custom driver definition
+ * @property {object} [subgraph] - Inline compound sub-graph definition
  */
 
 /**

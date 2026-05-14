@@ -13,6 +13,16 @@ import { getNodeType } from './Registry.js';
 import { Graph } from './Graph.js';
 import { runLifecycle } from './Lifecycle.js';
 
+/**
+ * @typedef {import('./Graph.js').Connection} Connection
+ * @typedef {import('./Graph.js').GraphNode & {
+ *   process?: (inputs: object, params?: object) => any|Promise<any>,
+ *   _cacheHash?: string,
+ *   _dynamicSockets?: any[]
+ * }} ExecutableNode
+ * @typedef {{nodeId: string, time: number, skipped: boolean, branchSkipped?: boolean, cached?: boolean, error?: string|null}} ExecutionLogEntry
+ */
+
 export class Executor {
   constructor() {
     /** @type {Map<string, any>} Cached outputs per node ID */
@@ -27,7 +37,7 @@ export class Executor {
     /** @type {string|null} Currently executing node ID */
     this.currentNode = null;
 
-    /** @type {Array<{nodeId: string, time: number, skipped: boolean, cached?: boolean, error?: string|null}>} */
+    /** @type {ExecutionLogEntry[]} */
     this.executionLog = [];
   }
 
@@ -74,7 +84,7 @@ export class Executor {
         throw new Error('Execution deadline exceeded');
       }
 
-      let node = nodes.get(nodeId);
+      let node = /** @type {ExecutableNode} */ (nodes.get(nodeId));
 
 
       if (cache && !this._dirty.has(nodeId) && this._cache.has(nodeId)) {
@@ -335,7 +345,7 @@ export class Executor {
   /**
    * Find output nodes (no outgoing connections)
    * @param {Map<string, object>} nodes
-   * @param {Array<{from: string}>} connections
+   * @param {Array<{from: string, to: string}>} connections
    * @returns {string[]}
    * @private
    */
@@ -364,7 +374,8 @@ export class Executor {
     let subGraph = new Graph(subGraphData);
 
 
-    for (const node of subGraph.nodes.values()) {
+    for (const rawNode of subGraph.nodes.values()) {
+      let node = /** @type {ExecutableNode} */ (rawNode);
       if (node.type === 'compound/input') {
         let injectedOutput = { ...parentInputs, ...parentParams };
         node._output = injectedOutput;

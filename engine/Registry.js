@@ -13,6 +13,7 @@ import { areSocketsCompatible, registerSocketTypes } from './SocketTypes.js';
  * @typedef {object} SocketDef
  * @property {string} name - Socket name
  * @property {string} type - Socket type (must be registered in SocketTypes)
+ * @property {string} [label] - Human-readable socket label
  * @property {boolean} [required] - Whether this input is required
  * @property {string} [description] - Human-readable description for AI
  */
@@ -36,6 +37,7 @@ import { areSocketsCompatible, registerSocketTypes } from './SocketTypes.js';
  * @property {SocketDef[]} outputs - Output socket definitions
  * @property {Record<string, ParamDef>} [params] - Parameter definitions
  * @property {object} [dynamicOutputs] - Dynamic socket pattern definition
+ * @property {object} [testData] - Test payload defaults for dry-run/event simulation
  * @property {object} [constraints] - Requirements (secrets, SSH, etc.)
  */
 
@@ -44,6 +46,16 @@ import { areSocketsCompatible, registerSocketTypes } from './SocketTypes.js';
  * @property {string} type - Unique node type identifier (e.g., 'ai/llm')
  * @property {Driver} driver - Self-describing driver manifest
  * @property {function} [process] - Execution function: (inputs, params) => outputs
+ * @property {object} [lifecycle] - Lifecycle hooks for execution
+ * @property {string} [icon] - Material icon name for UI
+ * @property {string} [category] - Category for UI grouping
+ * @property {string} [shape] - Shape name for UI rendering
+ */
+
+/**
+ * @typedef {object} DriverListEntry
+ * @property {string} type - Unique node type identifier
+ * @property {Driver} driver - Self-describing driver manifest
  * @property {string} [icon] - Material icon name for UI
  * @property {string} [category] - Category for UI grouping
  */
@@ -96,7 +108,7 @@ export function getNodeType(type) {
 
 /**
  * List all registered node types
- * @returns {Array<{type: string, driver: Driver}>}
+ * @returns {DriverListEntry[]}
  */
 export function listDrivers() {
   return [..._nodeTypes.values()].map((def) => ({

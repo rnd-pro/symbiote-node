@@ -18,14 +18,14 @@
 export let MODERN_SKIN = {
   name: 'modern',
   geometry: {
-    // === Spacing scale (atomic — AI changes these) ===
+
     '--sn-space-xs': '4px',
     '--sn-space-sm': '8px',
     '--sn-space-md': '12px',
     '--sn-space-lg': '16px',
     '--sn-space-xl': '24px',
 
-    // === Semantic geometry (references scale) ===
+
     '--sn-node-radius': 'var(--sn-space-md)',
     '--sn-comment-radius': 'var(--sn-space-sm)',
     '--sn-socket-size': 'var(--sn-space-md)',
@@ -33,11 +33,11 @@ export let MODERN_SKIN = {
     '--sn-grid-size': 'var(--sn-space-xl)',
     '--sn-conn-width': '2',
 
-    // === Typography ===
+
     '--sn-font': "'Inter', sans-serif",
     '--sn-font-size': '13px',
 
-    // === Shadow geometry (color comes from Palette) ===
+
     '--sn-shadow-geometry': '0 4px 16px',
     '--sn-node-shadow': 'var(--sn-shadow-geometry) var(--sn-shadow-color, rgba(0, 0, 0, 0.3))',
   },
@@ -47,14 +47,14 @@ export let MODERN_SKIN = {
 export let COMPACT_SKIN = {
   name: 'compact',
   geometry: {
-    // === Spacing scale ===
+
     '--sn-space-xs': '3px',
     '--sn-space-sm': '5px',
     '--sn-space-md': '8px',
     '--sn-space-lg': '12px',
     '--sn-space-xl': '16px',
 
-    // === Semantic geometry ===
+
     '--sn-node-radius': 'var(--sn-space-md)',
     '--sn-comment-radius': 'var(--sn-space-sm)',
     '--sn-socket-size': 'var(--sn-space-md)',
@@ -62,11 +62,11 @@ export let COMPACT_SKIN = {
     '--sn-grid-size': 'var(--sn-space-xl)',
     '--sn-conn-width': '1.5',
 
-    // === Typography ===
+
     '--sn-font': "'Inter', sans-serif",
     '--sn-font-size': '12px',
 
-    // === Shadow geometry ===
+
     '--sn-shadow-geometry': '0 2px 8px',
     '--sn-node-shadow': 'var(--sn-shadow-geometry) var(--sn-shadow-color, rgba(0, 0, 0, 0.2))',
   },
@@ -76,26 +76,26 @@ export let COMPACT_SKIN = {
 export let ROUNDED_SKIN = {
   name: 'rounded',
   geometry: {
-    // === Spacing scale ===
+
     '--sn-space-xs': '5px',
     '--sn-space-sm': '10px',
     '--sn-space-md': '14px',
     '--sn-space-lg': '20px',
     '--sn-space-xl': '28px',
 
-    // === Semantic geometry ===
-    '--sn-node-radius': 'var(--sn-space-lg)', // larger radius for "rounded" feel
+
+    '--sn-node-radius': 'var(--sn-space-lg)',
     '--sn-comment-radius': 'var(--sn-space-md)',
     '--sn-socket-size': 'var(--sn-space-md)',
     '--sn-socket-border-width': '2.5px',
     '--sn-grid-size': 'var(--sn-space-xl)',
     '--sn-conn-width': '2.5',
 
-    // === Typography ===
+
     '--sn-font': "'Space Grotesk', sans-serif",
     '--sn-font-size': '14px',
 
-    // === Shadow geometry ===
+
     '--sn-shadow-geometry': '0 6px 24px',
     '--sn-node-shadow': 'var(--sn-shadow-geometry) var(--sn-shadow-color, rgba(0, 0, 0, 0.25))',
   },

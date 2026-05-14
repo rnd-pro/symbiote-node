@@ -1,5 +1,5 @@
-// Background service worker v6 - Download + Network Monitoring
-// Handles sidepanel, downloads, and API request capture
+
+
 /* global chrome */
 
 const SERVER_URL = 'http://localhost:3333';
@@ -18,23 +18,21 @@ function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_FETCH_TIMEOUT_M
   });
 }
 
-// Track pending downloads
+
 let pendingDownloads = new Map();
 
-// Captured API requests (for analysis)
+
 let capturedRequests = [];
 
-// Open sidepanel on action click
+
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .catch((error) => console.error('Side panel setup error:', error));
 
-// ===== NETWORK REQUEST CAPTURE =====
 
-// Capture request details including body
 chrome.webRequest.onBeforeRequest.addListener(
   (details) => {
-    // Only capture POST/PUT requests to grok.com API
+
     if (!details.url.includes('/api/') && !details.url.includes('imagine')) return;
 
     let requestData = {
@@ -45,10 +43,10 @@ chrome.webRequest.onBeforeRequest.addListener(
       tabId: details.tabId,
     };
 
-    // Capture request body if present
+
     if (details.requestBody) {
       if (details.requestBody.raw) {
-        // Binary data - decode to string
+
         let decoder = new TextDecoder();
         let body = details.requestBody.raw
           .map((part) => {
@@ -56,7 +54,7 @@ chrome.webRequest.onBeforeRequest.addListener(
             return '';
           })
           .join('');
-        requestData.body = body.substring(0, 5000); // Limit size
+        requestData.body = body.substring(0, 5000);
       } else if (details.requestBody.formData) {
         requestData.formData = details.requestBody.formData;
       }
@@ -65,10 +63,10 @@ chrome.webRequest.onBeforeRequest.addListener(
     capturedRequests.push(requestData);
     console.log('[GrokBridge] Captured request:', details.method, details.url);
 
-    // Keep only last 50 requests
+
     if (capturedRequests.length > 50) capturedRequests.shift();
 
-    // Send to server
+
     fetchWithTimeout(`${SERVER_URL}/network/request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -79,7 +77,7 @@ chrome.webRequest.onBeforeRequest.addListener(
   ['requestBody'],
 );
 
-// Capture response headers
+
 chrome.webRequest.onHeadersReceived.addListener(
   (details) => {
     if (!details.url.includes('/api/') && !details.url.includes('imagine')) return;
@@ -91,7 +89,7 @@ chrome.webRequest.onHeadersReceived.addListener(
       headers: {},
     };
 
-    // Extract relevant headers
+
     for (const header of details.responseHeaders || []) {
       let name = header.name.toLowerCase();
       if (['content-type', 'content-length', 'x-request-id', 'cf-ray'].includes(name)) {
@@ -99,7 +97,7 @@ chrome.webRequest.onHeadersReceived.addListener(
       }
     }
 
-    // Send to server
+
     fetchWithTimeout(`${SERVER_URL}/network/response`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -110,18 +108,16 @@ chrome.webRequest.onHeadersReceived.addListener(
   ['responseHeaders'],
 );
 
-// ===== DOWNLOAD MONITORING =====
 
-// Monitor download completion
 chrome.downloads.onChanged.addListener((delta) => {
   if (delta.state?.current === 'complete') {
-    // Get download info
+
     chrome.downloads.search({ id: delta.id }, (results) => {
       if (results && results.length > 0) {
         let download = results[0];
         console.log('[GrokBridge] Download complete:', download.filename);
 
-        // Notify server about completed download
+
         fetchWithTimeout(`${SERVER_URL}/downloads/complete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -138,20 +134,20 @@ chrome.downloads.onChanged.addListener((delta) => {
   }
 });
 
-// Listen for messages
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  // Forward log events from content to sidepanel
+
   if (request.action === 'logEvent') {
     chrome.runtime.sendMessage(request).catch(logBridgeError('Failed to forward log event'));
   }
 
-  // Get captured requests
+
   if (request.action === 'getCapturedRequests') {
     sendResponse({ requests: capturedRequests });
     return;
   }
 
-  // Download file silently
+
   if (request.action === 'downloadFile') {
     chrome.downloads.download(
       {
@@ -170,17 +166,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     );
     return true;
   }
-  // Export all cookies for grok.com
+
   if (request.action === 'exportCookies') {
-    // Get cookies from the actual URL to capture all including cf_clearance
+
     chrome.cookies.getAll({ url: 'https://grok.com' }, async (urlCookies) => {
-      // Also try domain variations
+
       let domainCookies = await chrome.cookies.getAll({ domain: 'grok.com' });
       let dotCookies = await chrome.cookies.getAll({ domain: '.grok.com' });
 
       let allCookies = [...urlCookies, ...domainCookies, ...dotCookies];
 
-      // Remove duplicates
+
       let seen = new Set();
       let unique = allCookies.filter((c) => {
         let key = `${c.name}:${c.domain}`;
@@ -189,13 +185,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
       });
 
-      // Log cookie names for debugging
+
       console.log(
         `[GrokBridge] Exporting ${unique.length} cookies:`,
         unique.map((c) => c.name).join(', '),
       );
 
-      // Send to server
+
       fetchWithTimeout(`${SERVER_URL}/cookies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

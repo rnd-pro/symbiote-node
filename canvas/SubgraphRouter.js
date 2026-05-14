@@ -61,7 +61,7 @@ export class SubgraphRouter {
       let nodeId = e.detail?.nodeId;
       if (!nodeId) return;
 
-      // Find the path string for this node ID
+
       let path = null;
       for (const [key, id] of this.#config.dirNodeMap.entries()) {
         if (id === nodeId) {
@@ -85,7 +85,7 @@ export class SubgraphRouter {
 
         params.set('in', '1');
 
-        // Preserve symbol if it exists and path is drillable
+
         if (!params.has('symbol') || !this.#config.drillableFiles.has(path)) {
           params.delete('symbol');
         }
@@ -98,22 +98,22 @@ export class SubgraphRouter {
     let handleExit = (e) => {
       let level = e.detail?.level;
       this.#canvasDepth = typeof level === 'number' ? level : Math.max(0, this.#canvasDepth - 1);
-      if (this.#isAutoRouting) return; // Prevent erasing URL when popping out to find hidden nested paths
+      if (this.#isAutoRouting) return;
 
-      // Extract the path we were drilled into BEFORE modifying the URL
+
       let hashPath = window.location.hash
         .replace(`#${this.#config.hashPrefix}/`, '')
         .split('?')[0]
         .split('&')[0];
 
-      // Find the directory path we just exited from (to focus on it)
+
       let exitedDirPath = hashPath;
       if (this.#config.fileMap?.has(hashPath)) {
         let parts = hashPath.split('/');
         parts.pop();
         exitedDirPath = parts.join('/') + '/';
       }
-      // Walk up to find the nearest known directory
+
       if (exitedDirPath && !this.#config.dirNodeMap?.has(exitedDirPath)) {
         let segments = exitedDirPath.replace(/\/$/, '').split('/');
         while (segments.length > 0) {
@@ -140,7 +140,7 @@ export class SubgraphRouter {
         if (setFocus) params.set('focus', setFocus);
         else params.delete('focus');
 
-        params.delete('symbol'); // always clear symbol on exit
+        params.delete('symbol');
 
         let newQuery = params.toString();
         let newHash = newQuery ? `${newBase}?${newQuery}` : newBase;
@@ -148,14 +148,14 @@ export class SubgraphRouter {
       };
 
       if (this.#canvasDepth > 0) {
-        // Still inside a subgraph — update URL to parent context
+
         if (this.#config.dirNodeMap?.has(exitedDirPath)) {
           updateUrl(exitedDirPath, true, null);
         } else if (exitedDirPath) {
           updateUrl(exitedDirPath, false, null);
         }
       } else {
-        // Back at root
+
         if (exitedDirPath) {
           updateUrl(null, false, exitedDirPath);
         } else {
@@ -163,7 +163,7 @@ export class SubgraphRouter {
         }
       }
 
-      // Fly to the exited group node at ANY level
+
       if (exitedDirPath) {
         requestAnimationFrame(() => {
           let nodeId =
@@ -209,24 +209,23 @@ export class SubgraphRouter {
     let prefix = `#${this.#config.hashPrefix}`;
     if (!hash.startsWith(prefix)) return;
 
-    let afterPrefix = hash.slice(prefix.length); // e.g. '/src/analysis/?in=1&focus=file.js' or '?focus=src/analysis/'
+    let afterPrefix = hash.slice(prefix.length);
 
-    // Parse query parameters from the hash
+
     let qIdx = afterPrefix.indexOf('?');
-    let pathPart = qIdx >= 0 ? afterPrefix.slice(0, qIdx) : afterPrefix; // '/src/analysis/' or ''
+    let pathPart = qIdx >= 0 ? afterPrefix.slice(0, qIdx) : afterPrefix;
     let queryStr = qIdx >= 0 ? afterPrefix.slice(qIdx + 1) : '';
     let params = new URLSearchParams(queryStr);
 
-    let drillPath = pathPart.replace(/^\//, ''); // strip leading /
+    let drillPath = pathPart.replace(/^\//, '');
     let hasDrillFlag = params.get('in') === '1';
     let focusParam = params.get('focus');
     let symbolParam = params.get('symbol');
 
-    // Case 0: bare #graph — pop all subgraph layers and reset to root view
+
     if (!drillPath && !focusParam && !hasDrillFlag && !symbolParam) {
-      // Event-driven pop: wait for each subgraph-exit before the next drillUp.
-      // rAF-polling was unreliable because canvasDepth updates only AFTER the exit
-      // event fires — which happens asynchronously during the canvas animation.
+
+
       this.#isAutoRouting = true;
       let safetyCounter = 10;
       let doPopStep = () => {
@@ -235,10 +234,10 @@ export class SubgraphRouter {
           this.#canvas.fitView?.();
           return;
         }
-        // Register exit listener FIRST, then trigger drillUp
+
         let onExit = () => {
           this.#canvas.removeEventListener('subgraph-exit', onExit);
-          // canvasDepth is now decremented by the main handler; recurse
+
           requestAnimationFrame(doPopStep);
         };
         this.#canvas.addEventListener('subgraph-exit', onExit);
@@ -248,17 +247,17 @@ export class SubgraphRouter {
       return;
     }
 
-    // Case 1: #graph?focus=src/analysis/ (root-level focus, no path)
+
     if (!drillPath && focusParam) {
       this.navigateTo(decodeURIComponent(focusParam), 0, false);
       return;
     }
 
-    // Case 2: #graph/path?in=1 (drill into path)
+
     if (drillPath && hasDrillFlag) {
       let drilled = this.#restoreDrillDown(drillPath, editor, true);
 
-      // After drilling, handle &focus= (select node inside group)
+
       if (drilled && focusParam) {
         let fullFocusPath = drillPath + decodeURIComponent(focusParam);
         requestAnimationFrame(() => {
@@ -266,7 +265,7 @@ export class SubgraphRouter {
         });
       }
 
-      // Handle &symbol= (focus symbol inside file subgraph)
+
       if (drilled && symbolParam) {
         requestAnimationFrame(() => {
           this.restoreSymbolFocus(drillPath);
@@ -275,7 +274,7 @@ export class SubgraphRouter {
       return;
     }
 
-    // Case 3: #graph/path (legacy — just focus the node at root)
+
     if (drillPath) {
       this.navigateTo(drillPath, 0, false);
     }
@@ -284,13 +283,13 @@ export class SubgraphRouter {
   #restoreDrillDown(targetPath, editor, autoDrill = false) {
     if (!this.#canvas) return false;
 
-    // Try to find a directory SubgraphNode matching the path
+
     for (const node of editor.getNodes()) {
       if (!node._isSubgraph) continue;
       let nodePath = node.params?.path;
       if (!nodePath) continue;
 
-      // Exact directory match (e.g. 'src/core/')
+
       if (nodePath === targetPath) {
         if (autoDrill) {
           this.#runAutoRouting(() => {
@@ -300,18 +299,18 @@ export class SubgraphRouter {
             requestAnimationFrame(() => this.#canvas.fitView());
           }
         } else {
-          // Just focus on the directory node without drilling in
+
           this.#canvas.flyToNode?.(node.id, { zoom: 0.8 }) || this.#canvas.selectNode?.(node.id);
         }
         return true;
       }
 
-      // File inside this directory — drill into dir, then focus file
+
       if (targetPath.startsWith(nodePath)) {
         this.#runAutoRouting(() => {
           this.#canvas.drillDown(node.id);
         });
-        // After transition, specifically focus the exact nested file node
+
         requestAnimationFrame(() => {
           this.navigateTo(targetPath, 0, autoDrill);
         });
@@ -351,7 +350,7 @@ export class SubgraphRouter {
   navigateTo(targetPath, depth = 0, autoDrill = false) {
     if (this.#destroyed || !this.#canvas || !this.#config.fileMap || depth > 5) return false;
 
-    // Find node ID by file path string or directory path string
+
     let targetId = null;
     let isFile = true;
     if (this.#config.fileMap.has(targetPath)) {
@@ -367,27 +366,27 @@ export class SubgraphRouter {
       typeof this.#canvas.getPositions === 'function' ? this.#canvas.getPositions() : {};
     let pos = positions[targetId];
 
-    // Auto-traversal engine: if target is not visible on current canvas layer
+
     if (!pos && typeof this.#canvas.drillDown === 'function') {
       if (this.#config.dirNodeMap) {
-        // Case 1: Target is a file or directory hidden inside a deeper subgraph.
-        // Walk up the path hierarchy to find the nearest visible ancestor directory.
+
+
         let searchPath = targetPath;
         if (isFile) {
-          // Start from the file's parent directory
+
           let parts = targetPath.split('/');
           parts.pop();
           searchPath = parts.join('/') + '/';
           if (searchPath === '/') searchPath = './';
         }
 
-        // Walk UP the directory tree to find the nearest visible ancestor
+
         let segments = searchPath.replace(/\/$/, '').split('/');
         while (segments.length > 0) {
           let candidateDir = segments.join('/') + '/';
           let dirId = this.#config.dirNodeMap.get(candidateDir);
           if (dirId && positions[dirId]) {
-            // Found a visible ancestor — drill into it
+
             this.#runAutoRouting(() => {
               this.#canvas.drillDown(dirId);
             });
@@ -396,7 +395,7 @@ export class SubgraphRouter {
           }
           segments.pop();
         }
-        // Also try "./" as root
+
         let rootId = this.#config.dirNodeMap.get('./');
         if (rootId && positions[rootId]) {
           this.#runAutoRouting(() => {
@@ -406,7 +405,7 @@ export class SubgraphRouter {
           return true;
         }
 
-        // Case 2: Target is completely off-scope (we are inside wrong group). Drill UP to root.
+
         if (this.#canvasDepth > 0) {
           this.#runAutoRouting(() => {
             this.#canvas.drillUp?.();
@@ -415,27 +414,27 @@ export class SubgraphRouter {
           return true;
         }
       }
-      return false; // Unable to locate on any layer
+      return false;
     }
 
-    // We found the node on the current layer. If target is a subgraph file and we are commanded to drill into it, do it.
+
     if (autoDrill && isFile && this.#config.drillableFiles?.has(targetPath)) {
       this.#runAutoRouting(() => {
         this.#canvas.drillDown?.(targetId);
       });
       requestAnimationFrame(() => {
         if (this.#canvas.fitView) this.#canvas.fitView();
-        // Restore &symbol= focus from deep-link URL
+
         this.restoreSymbolFocus(targetPath);
       });
       return true;
     }
 
-    // SubgraphRouter delegates raw center/fly animations up to Canvas if possible
+
     if (this.#canvas.flyToNode) {
       this.#canvas.flyToNode(targetId, { zoom: 0.8 });
     } else {
-      // Safe fallback just in case
+
       this.#canvas.selectNode?.(targetId);
     }
 

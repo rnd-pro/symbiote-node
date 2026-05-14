@@ -122,7 +122,7 @@ export class ConnectFlow {
    * @param {SocketData} data
    */
   pickSocket(data) {
-    // Ensure this socket is in the registry for snap targeting
+
     if (!this.#sockets.has(data)) {
       this.#sockets.add(data);
     }
@@ -141,13 +141,13 @@ export class ConnectFlow {
 
     let startPos = this.#getSocketWorldPosition(this.#picked);
     let t = this.#getTransform();
-    // Use clientX/Y minus container rect for accurate positioning
+
     let endX = (e.clientX - t.rect.left - t.x) / t.k;
     let endY = (e.clientY - t.rect.top - t.y) / t.k;
 
     if (this.#onPseudoMove) this.#onPseudoMove(startPos.x, startPos.y, endX, endY);
 
-    // Throttle to ~60fps
+
     let now = performance.now();
     if (this.#onCompatibleMove && now - this.#lastMoveTime > 16) {
       this.#lastMoveTime = now;
@@ -158,7 +158,7 @@ export class ConnectFlow {
   #onUp = (e) => {
     if (!this.#picked) return;
 
-    // Find nearest compatible socket within snap distance
+
     let t = this.#getTransform();
     let pointerX = (e.clientX - t.rect.left - t.x) / t.k;
     let pointerY = (e.clientY - t.rect.top - t.y) / t.k;
@@ -167,7 +167,7 @@ export class ConnectFlow {
     if (target && this.#canConnect(this.#picked, target)) {
       this.#makeConnection(this.#picked, target);
     } else if (this.#findNearestDot) {
-      // Fallback: check SVG dots as drop target
+
       let dotTarget = this.#findNearestDot(pointerX, pointerY);
       if (dotTarget) {
         let dotSocket = { nodeId: dotTarget.nodeId, key: dotTarget.key, side: dotTarget.side };
@@ -180,7 +180,7 @@ export class ConnectFlow {
         this.#onDropEmpty(pointerX, pointerY, this.#picked);
       }
     } else if (this.#onDropEmpty) {
-      // No target found — emit drop-in-empty event
+
       this.#onDropEmpty(pointerX, pointerY, this.#picked);
     }
 
@@ -194,7 +194,7 @@ export class ConnectFlow {
    * @returns {{ x: number, y: number }}
    */
   #getSocketWorldPosition(data) {
-    // Direct world coordinates (from overlay dot drag)
+
     if (data.worldX !== undefined && data.worldY !== undefined) {
       return { x: data.worldX, y: data.worldY };
     }
@@ -208,14 +208,14 @@ export class ConnectFlow {
         let t = this.#getTransform();
         let nodeRect = graphNode.getBoundingClientRect();
         let socketRect = data.element.getBoundingClientRect();
-        // Divide by zoom to get unscaled offset within the node
+
         let offsetX = (socketRect.left - nodeRect.left + socketRect.width / 2) / t.k;
         let offsetY = (socketRect.top - nodeRect.top + socketRect.height / 2) / t.k;
         return { x: pos.x + offsetX, y: pos.y + offsetY };
       }
     }
 
-    // Fallback: edge center
+
     let size = this.#getNodeSize(data.nodeId);
     if (!size) return { x: 0, y: 0 };
     return {
@@ -232,12 +232,12 @@ export class ConnectFlow {
    * @returns {SocketData|null}
    */
   #findNearestSocket(worldX, worldY) {
-    const SNAP_DISTANCE = 30; // pixels in graph space
+    const SNAP_DISTANCE = 30;
     let nearest = null;
     let nearestDist = SNAP_DISTANCE;
 
     for (const socket of this.#sockets) {
-      // Skip same socket as picked
+
       if (socket === this.#picked) continue;
 
       let pos = this.#getSocketWorldPosition(socket);

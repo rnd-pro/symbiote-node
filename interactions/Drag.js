@@ -63,9 +63,9 @@ export class Drag {
 
   #down = (e) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    // Skip if event originates from a socket (ConnectFlow handles those)
+
     if (e.target.closest && e.target.closest('.sn-socket')) return;
-    // Optional hit-test: allow caller to reject drag (e.g. SVG perimeter check)
+
     if (this.#shouldStart && !this.#shouldStart(e)) return;
     e.stopPropagation();
     this.#pointerStart = { x: e.pageX, y: e.pageY };

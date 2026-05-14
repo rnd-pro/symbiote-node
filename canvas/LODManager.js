@@ -40,7 +40,7 @@ export class LODManager {
     this.#currentLod = initialZoom >= this.#threshold ? 'expanded' : 'collapsed';
 
     this.#canvas.sub('zoom', (zoom) => {
-      if (!this.#attached) return; // guard after destroy
+      if (!this.#attached) return;
       let newLod = zoom >= this.#threshold ? 'expanded' : 'collapsed';
       if (newLod === this.#currentLod) return;
 
@@ -67,7 +67,7 @@ export class LODManager {
    */
   onLodChange(callback) {
     this.#listeners.push(callback);
-    // Immediately notify new listener of current state
+
     if (this.#attached) {
       callback(this.#currentLod);
     }
@@ -80,8 +80,8 @@ export class LODManager {
   }
 
   destroy() {
-    // Symbiote sub() auto-cleans on component disconnect.
-    // We just disable the guard flag so the callback becomes a no-op.
+
+
     this.#listeners = [];
     this.#attached = false;
   }

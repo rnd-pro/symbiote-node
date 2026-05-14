@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+
 
 /**
  * cli.js - AGI-Graph command-line runner
@@ -34,7 +34,6 @@ import {
 
 let __dirname = dirname(fileURLToPath(import.meta.url));
 
-// ─── Argument Parsing ────────────────────────────────────────────────────────
 
 /**
  * Parse CLI arguments into command and options
@@ -66,7 +65,6 @@ function parseArgs(argv) {
   return { command, target, options };
 }
 
-// ─── Secrets Loader ──────────────────────────────────────────────────────────
 
 /**
  * Load secrets from JSON file
@@ -75,7 +73,7 @@ function parseArgs(argv) {
  */
 async function loadSecrets(secretsPath) {
   if (!secretsPath) {
-    // Try default location
+
     let defaultPath = resolve(process.cwd(), 'secrets.json');
     try {
       let data = await readFile(defaultPath, 'utf-8');
@@ -94,7 +92,6 @@ async function loadSecrets(secretsPath) {
   }
 }
 
-// ─── Pack Loader ─────────────────────────────────────────────────────────────
 
 /**
  * Load domain packs by name
@@ -114,7 +111,6 @@ async function loadPacks(packs) {
   }
 }
 
-// ─── Commands ────────────────────────────────────────────────────────────────
 
 /**
  * Run a workflow JSON file
@@ -124,25 +120,25 @@ async function loadPacks(packs) {
 async function cmdRun(filePath, options) {
   let verbose = !!options.verbose;
   console.log(`\n🚀 symbiote-node run: ${filePath}\n`);
-  // Load packs
+
   if (options.pack) {
     await loadPacks(/** @type {string} */ (options.pack));
   }
 
-  // Load handler files
+
   if (options.handlers) {
     let dir = resolve(/** @type {string} */ (options.handlers));
     let types = await loadHandlers(dir);
     if (verbose) console.log(`  🔧 Loaded ${types.length} handler(s) from ${options.handlers}`);
   }
 
-  // Load secrets
+
   let secrets = await loadSecrets(/** @type {string|undefined} */ (options.secrets));
   if (Object.keys(secrets).length > 0 && verbose) {
     console.log(`  🔑 Secrets loaded: ${Object.keys(secrets).join(', ')}`);
   }
 
-  // Load workflow
+
   let raw = await readFile(resolve(filePath), 'utf-8');
   let workflowData = JSON.parse(raw);
 
@@ -151,10 +147,10 @@ async function cmdRun(filePath, options) {
   console.log(`  🔗 Connections: ${workflowData.connections?.length || 0}`);
   console.log();
 
-  // Deserialize into Graph
+
   let graph = deserialize(raw);
 
-  // Execute
+
   let executor = new Executor();
   let t0 = performance.now();
 
@@ -186,7 +182,7 @@ async function cmdRun(filePath, options) {
       }
     }
 
-    // Summary
+
     let outputNodes = result.executionOrder.filter((id) => {
       let node = graph.getNode(id);
       return node?.type?.startsWith('output/');
@@ -230,7 +226,7 @@ async function cmdValidate(filePath, options) {
   let errors = 0;
   let warnings = 0;
 
-  // Check all node types exist
+
   for (const node of data.nodes || []) {
     let typeDef = getNodeType(node.type);
     if (!typeDef) {
@@ -239,7 +235,7 @@ async function cmdValidate(filePath, options) {
       continue;
     }
 
-    // Validate params
+
     let validation = validateParams(node.type, node.params || {});
     if (!validation.valid) {
       for (const err of validation.errors) {
@@ -249,7 +245,7 @@ async function cmdValidate(filePath, options) {
     }
   }
 
-  // Check connections reference valid nodes
+
   let nodeIds = new Set((data.nodes || []).map((n) => n.id));
   for (const conn of data.connections || []) {
     if (!nodeIds.has(conn.from)) {
@@ -262,7 +258,7 @@ async function cmdValidate(filePath, options) {
     }
   }
 
-  // Check for nodes with no connections (orphans)
+
   let connectedNodes = new Set();
   for (const conn of data.connections || []) {
     connectedNodes.add(conn.from);
@@ -331,7 +327,7 @@ async function cmdInspect(filePath) {
   console.log(`  Version: ${data.version || '(none)'}`);
   console.log();
 
-  // Nodes
+
   console.log(`  Nodes (${data.nodes?.length || 0}):`);
   for (const node of data.nodes || []) {
     let paramKeys = Object.keys(node.params || {});
@@ -339,13 +335,13 @@ async function cmdInspect(filePath) {
     console.log(`    ${node.id}  [${node.type}]  ${node.name || ''}${paramStr}`);
   }
 
-  // Connections
+
   console.log(`\n  Connections (${data.connections?.length || 0}):`);
   for (const conn of data.connections || []) {
     console.log(`    ${conn.from}.${conn.out} → ${conn.to}.${conn.in}`);
   }
 
-  // Execution
+
   if (data.execution) {
     console.log(`\n  Execution: mode=${data.execution.mode}, cache=${data.execution.cache}`);
   }
@@ -353,7 +349,6 @@ async function cmdInspect(filePath) {
   console.log();
 }
 
-// ─── Main ────────────────────────────────────────────────────────────────────
 
 const HELP = `
 symbiote-node CLI — Universal node-based workflow runner

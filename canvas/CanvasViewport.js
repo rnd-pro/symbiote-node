@@ -18,7 +18,7 @@ export class CanvasViewport {
   /** @type {function(): import('./ConnectionRenderer.js').ConnectionRenderer} */
   #getConnRenderer;
 
-  // ─── Virtualization (Canvas LOD) ───
+
   /** All node data objects from editor — the full set regardless of DOM state */
   #allNodes = new Map();
   /** Position + size cache for nodes without DOM (phantom rendering on Canvas) */
@@ -69,10 +69,10 @@ export class CanvasViewport {
 
     const VIRT_THRESHOLD = 200;
     if (this.#allNodes.size <= VIRT_THRESHOLD) {
-      // Small graph — create all DOM nodes immediately
+
       this.#viewManager.addViews(editor.getNodes());
     } else {
-      // Large graph — start all as phantom, promote visible ones after layout
+
       let defaultW = 180,
         defaultH = 60;
       for (const [id, node] of this.#allNodes) {
@@ -148,7 +148,7 @@ export class CanvasViewport {
    * Update viewport transform and schedule culling
    */
   updateTransform() {
-    // Sync grid dots with pan/zoom
+
     if (this.#canvas._gridBase === undefined) {
       this.#canvas._gridBase =
         parseInt(getComputedStyle(this.#canvas).getPropertyValue('--sn-grid-size')) || 20;
@@ -160,14 +160,14 @@ export class CanvasViewport {
     this.#canvas.style.backgroundSize = `${gridSize}px ${gridSize}px`;
     this.#canvas.style.backgroundPosition = `${this.#canvas.$.panX}px ${this.#canvas.$.panY}px`;
 
-    // Sync toolbar position
+
     let toolbar = this.#canvas.ref.quickToolbar;
     if (toolbar) {
       toolbar._transform = { zoom, panX: this.#canvas.$.panX, panY: this.#canvas.$.panY };
       if (toolbar._nodeEl) toolbar.updatePosition(toolbar._nodeEl);
     }
 
-    // Viewport culling + LOD
+
     if (!this.#canvas._cullingScheduled) {
       this.#canvas._cullingScheduled = true;
       requestAnimationFrame(() => {

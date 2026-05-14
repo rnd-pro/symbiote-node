@@ -16,14 +16,13 @@
 export let PCB_DARK = {
   name: 'pcb-dark',
   tokens: {
-    // === Base: Carbon dark palette ===
 
-    // Canvas
+
     '--sn-bg': '#1a1a1a',
     '--sn-grid-dot': 'rgba(255, 255, 255, 0.04)',
     '--sn-grid-size': '20px',
 
-    // Node / Panels — Carbon surfaces (keep default geometry)
+
     '--sn-node-bg': '#222222',
     '--sn-node-border': 'rgba(255, 255, 255, 0.12)',
     '--sn-node-shadow': '0 1px 4px rgba(0, 0, 0, 0.5)',
@@ -32,58 +31,58 @@ export let PCB_DARK = {
     '--sn-node-selected': '#d4a04a',
     '--sn-node-hover': '#2d2d2d',
 
-    // Typography — keep default (Inter)
+
     '--sn-text': '#e0e0e0',
     '--sn-text-dim': '#888888',
 
-    // Sockets — pin style
+
     '--sn-socket-size': '10px',
     '--sn-socket-border-width': '2px',
 
-    // Connections — copper traces with square caps (PCB)
+
     '--sn-conn-color': '#c87533',
     '--sn-conn-width': '1.5',
     '--sn-conn-selected': '#d4a04a',
     '--sn-conn-linecap': 'square',
     '--sn-conn-linejoin': 'miter',
 
-    // Connection dots — solder pads
+
     '--sn-conn-dot-fill': '#c87533',
     '--sn-conn-dot-stroke': '#222222',
     '--sn-conn-dot-stroke-width': '1',
     '--sn-conn-dot-r': '3.5',
 
-    // Frames — subdued zones
+
     '--sn-frame-border-style': 'dashed',
     '--sn-frame-border-width': '1px',
     '--sn-frame-radius': '6px',
 
-    // Category accent colors
-    '--sn-cat-server': '#c87533', // copper — server/routing
-    '--sn-cat-instance': '#4caf50', // green — active
-    '--sn-cat-control': '#d4a04a', // gold — control/hub
-    '--sn-cat-data': '#5c8dbf', // cool blue — data flow
-    '--sn-cat-default': '#555555', // neutral
-    // Codebase-specific categories
-    '--sn-cat-directory': '#f0b840', // amber — folder
-    '--sn-cat-file': '#5cb8ff', // sky blue — JS file
-    '--sn-cat-function': '#4ade80', // green — function
-    '--sn-cat-class': '#a78bfa', // purple — class
-    '--sn-cat-module': '#ff6b9d', // pink — entry/index
-    '--sn-cat-asset': '#8b8b8b', // gray — non-source asset (.css, .html, .json, .md)
 
-    // Context menu — matches Carbon
+    '--sn-cat-server': '#c87533',
+    '--sn-cat-instance': '#4caf50',
+    '--sn-cat-control': '#d4a04a',
+    '--sn-cat-data': '#5c8dbf',
+    '--sn-cat-default': '#555555',
+
+    '--sn-cat-directory': '#f0b840',
+    '--sn-cat-file': '#5cb8ff',
+    '--sn-cat-function': '#4ade80',
+    '--sn-cat-class': '#a78bfa',
+    '--sn-cat-module': '#ff6b9d',
+    '--sn-cat-asset': '#8b8b8b',
+
+
     '--sn-ctx-bg': '#2a2a2a',
     '--sn-ctx-border': 'rgba(255, 255, 255, 0.1)',
     '--sn-ctx-color': '#e0e0e0',
     '--sn-ctx-hover': 'rgba(200, 117, 51, 0.15)',
 
-    // Comments
+
     '--sn-comment-bg': 'rgba(255, 255, 255, 0.03)',
     '--sn-comment-border': 'rgba(255, 255, 255, 0.06)',
     '--sn-comment-radius': '2px',
 
-    // Toolbar — Carbon base with copper accent
+
     '--sn-toolbar-bg': 'rgba(34, 34, 34, 0.95)',
     '--sn-toolbar-border': 'rgba(255, 255, 255, 0.08)',
     '--sn-toolbar-color': '#888888',
@@ -92,17 +91,17 @@ export let PCB_DARK = {
     '--sn-toolbar-danger': 'rgba(244, 67, 54, 0.22)',
     '--sn-toolbar-danger-color': '#f44336',
 
-    // Shape fill/stroke
+
     '--sn-shape-fill': 'var(--sn-node-bg)',
     '--sn-shape-stroke': 'var(--sn-node-border)',
     '--sn-shape-stroke-width': '0.5',
 
-    // Semantic state
+
     '--sn-danger-color': '#f44336',
     '--sn-success-color': '#4caf50',
     '--sn-warning-color': '#ff9800',
 
-    // Atomic hue tokens
+
     '--sn-hue-base': '0',
     '--sn-hue-accent': '28',
     '--sn-hue-success': '122',
@@ -124,8 +123,7 @@ export let PCB_DARK = {
     '--sn-alpha-faint': '0.04',
   },
 
-  // PCB-specific CSS that can't be expressed as tokens
-  // (pseudo-elements, structural selectors, behavioral modes)
+
   extraCSS: `
     /* ── IC Chip Decorations (SVG shape nodes only) ── */
 

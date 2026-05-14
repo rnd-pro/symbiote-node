@@ -61,7 +61,7 @@ function defaultCacheKey(inputs, params) {
 export async function runLifecycle(hooks, inputs, params, cacheState, executionContext = {}) {
   let { mode = 'auto', store, nodeId } = cacheState;
 
-  // Step 1: Validate
+
   if (hooks.validate) {
     try {
       let valid = hooks.validate(inputs);
@@ -78,11 +78,11 @@ export async function runLifecycle(hooks, inputs, params, cacheState, executionC
     }
   }
 
-  // Step 2: Compute cache key
+
   let cacheKeyFn = hooks.cacheKey || defaultCacheKey;
   let cacheHash = cacheKeyFn(inputs, params);
 
-  // Step 3: Check cache based on mode
+
   let cached = store.get(nodeId);
 
   if (mode === 'freeze' && cached) {
@@ -93,9 +93,7 @@ export async function runLifecycle(hooks, inputs, params, cacheState, executionC
     return { outputs: cached.outputs, cached: true, error: null, cacheHash };
   }
 
-  // mode === 'force' → skip cache check entirely
 
-  // Step 4: Execute
   let executeFn = hooks.execute;
   if (!executeFn) {
     return { outputs: null, cached: false, error: 'No execute hook defined', cacheHash };
@@ -108,7 +106,7 @@ export async function runLifecycle(hooks, inputs, params, cacheState, executionC
     return { outputs: null, cached: false, error: `Execution error: ${err.message}`, cacheHash };
   }
 
-  // Step 5: PostProcess
+
   if (hooks.postProcess) {
     try {
       outputs = hooks.postProcess(outputs);
@@ -122,7 +120,7 @@ export async function runLifecycle(hooks, inputs, params, cacheState, executionC
     }
   }
 
-  // Step 6: Store in cache
+
   store.set(nodeId, { key: cacheHash, outputs });
 
   return { outputs, cached: false, error: null, cacheHash };

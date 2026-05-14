@@ -112,7 +112,7 @@ export class EventLog extends Symbiote {
     const entries = this.ref.entries;
     entries.appendChild(entry);
 
-    // Auto-scroll to bottom
+
     requestAnimationFrame(() => {
       entries.scrollTop = entries.scrollHeight;
     });

@@ -35,7 +35,6 @@ export class NodeEditor {
     this._listeners = {};
   }
 
-  // --- Event System ---
 
   /**
    * Subscribe to editor event
@@ -73,7 +72,6 @@ export class NodeEditor {
     this._listeners = {};
   }
 
-  // --- Node CRUD ---
 
   /**
    * Get node by ID
@@ -115,7 +113,7 @@ export class NodeEditor {
     if (!node) throw new Error('node not found');
     if (!this.emit('noderemove', node)) return false;
 
-    // Remove all connections to/from this node
+
     for (const [connId, conn] of this.connections) {
       if (conn.from === id || conn.to === id) {
         this.removeConnection(connId);
@@ -127,7 +125,6 @@ export class NodeEditor {
     return true;
   }
 
-  // --- Connection CRUD ---
 
   /**
    * Get connection by ID
@@ -182,7 +179,6 @@ export class NodeEditor {
     return true;
   }
 
-  // --- Bulk Operations ---
 
   /**
    * Clear all nodes and connections
@@ -200,7 +196,6 @@ export class NodeEditor {
     return true;
   }
 
-  // --- Frame CRUD ---
 
   /**
    * Get frame by ID
@@ -246,7 +241,6 @@ export class NodeEditor {
     return true;
   }
 
-  // --- Serialization (agi-graph isomorphic bridge) ---
 
   /**
    * Serialize editor state to agi-graph workflow JSON format.
@@ -269,7 +263,7 @@ export class NodeEditor {
         if (n.icon) obj.icon = n.icon;
         if (n.cacheMode && n.cacheMode !== 'auto') obj.cacheMode = n.cacheMode;
 
-        // Serialize port definitions for round-trip
+
         let inputs = Object.entries(n.inputs);
         if (inputs.length > 0) {
           obj.inputs = inputs.map(([key, inp]) => ({
@@ -319,12 +313,12 @@ export class NodeEditor {
    * @returns {NodeEditor} this
    */
   fromJSON(data, positionsOut) {
-    // Clear existing state (bypass events for bulk load)
+
     this.nodes.clear();
     this.connections.clear();
     this.frames.clear();
 
-    // Restore nodes
+
     for (const nd of data.nodes || []) {
       let node = new Node(nd.name || nd.type, {
         id: nd.id,
@@ -336,8 +330,7 @@ export class NodeEditor {
       node.params = { ...nd.params };
       if (nd.cacheMode) node.cacheMode = nd.cacheMode;
 
-      // Auto-create InputControls from params for Inspector display
-      // Merge driver defaults into params (fills missing keys from handler definitions)
+
       let driverParams = nd.driver?.params;
       if (driverParams && !nd.params) nd.params = {};
       if (driverParams) {
@@ -355,7 +348,7 @@ export class NodeEditor {
           let displayValue = value;
           let controlOptions = [];
 
-          // Use driver metadata for richer control type detection
+
           let paramMeta = driverParams?.[key];
           if (paramMeta?.type === 'boolean' || typeof value === 'boolean') {
             controlType = 'boolean';
@@ -368,7 +361,7 @@ export class NodeEditor {
             displayValue = JSON.stringify(value, null, 2);
           }
 
-          // Select type from driver options
+
           if (paramMeta?.options) {
             controlType = 'select';
             controlOptions = paramMeta.options;
@@ -385,7 +378,7 @@ export class NodeEditor {
         }
       }
 
-      // Restore ports from serialized definitions
+
       if (nd.inputs) {
         for (const inp of nd.inputs) {
           node.addInput(inp.name, new Input(new Socket(inp.type || 'any'), inp.label || ''));
@@ -400,13 +393,13 @@ export class NodeEditor {
       this.nodes.set(node.id, node);
     }
 
-    // Restore connections
+
     for (const cd of data.connections || []) {
       let srcNode = this.nodes.get(cd.from);
       let tgtNode = this.nodes.get(cd.to);
       if (!srcNode || !tgtNode) continue;
 
-      // Ensure ports exist (auto-create if coming from engine format without port defs)
+
       if (!srcNode.outputs[cd.out]) {
         srcNode.addOutput(cd.out, new Output(new Socket('any'), cd.out));
       }
@@ -419,7 +412,7 @@ export class NodeEditor {
       this.connections.set(conn.id, conn);
     }
 
-    // Restore frames
+
     for (const fd of data.frames || []) {
       let frame = new Frame(fd.label, {
         id: fd.id,
@@ -432,7 +425,7 @@ export class NodeEditor {
       this.frames.set(frame.id, frame);
     }
 
-    // Extract positions
+
     if (positionsOut && data.ui?.positions) {
       Object.assign(positionsOut, data.ui.positions);
     }

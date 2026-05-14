@@ -47,7 +47,7 @@ export default {
         description: 'Whisper model: tiny, base, small, medium, large-v3',
       },
       device: { type: 'string', default: 'cuda', description: 'cuda | cpu' },
-      // SSH params
+
       remoteHost: {
         type: 'string',
         default: 'mr-agent@mr-agent.rnd-pro.com',
@@ -63,7 +63,7 @@ export default {
         default: '/home/mr-agent/automations/argentine-spanish-bot/venv',
         description: 'Remote Python venv',
       },
-      // HTTP params
+
       endpoint: {
         type: 'string',
         default: 'http://localhost:5001',
@@ -113,26 +113,26 @@ async function executeSSH(audioPath, params) {
   let remoteTmpDir = '/tmp/agi-graph-whisper';
 
   try {
-    // Verify file exists
+
     await fs.access(audioPath);
 
     let filename = path.basename(audioPath);
     let remoteAudioPath = `${remoteTmpDir}/${filename}`;
 
-    // Ensure remote dir
+
     await runCommandWithWatchdog(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
       inactivityMs: 10000,
       timeoutMs: 10000,
     });
 
-    // Upload audio
+
     await runCommandWithWatchdog(`scp "${audioPath}" "${host}:${remoteAudioPath}"`, {
       inactivityMs: 60000,
       timeoutMs: 60000,
     });
 
     try {
-      // Run Whisper
+
       let pythonCmd = `${venv}/bin/python3`;
       let whisperScript = `${remotePath}/utils/whisper-word-timing.py`;
 
@@ -151,7 +151,7 @@ async function executeSSH(audioPath, params) {
 
       return { text, words, duration, error: null };
     } finally {
-      // Cleanup remote file
+
       try {
         await runCommandWithWatchdog(`ssh ${host} "rm -f ${remoteAudioPath}"`, {
           inactivityMs: 5000,

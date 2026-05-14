@@ -54,7 +54,7 @@ async function findHandlerFiles(dir) {
  */
 async function loadHandler(filePath) {
   let fileUrl = pathToFileURL(filePath).href;
-  // Cache-bust for hot reload
+
   let url = `${fileUrl}?t=${Date.now()}`;
 
   let module = await import(url);
@@ -64,7 +64,7 @@ async function loadHandler(filePath) {
     throw new Error(`Handler file ${filePath} missing 'type' field in default export`);
   }
 
-  // Build node type definition from handler
+
   let nodeDef = {
     type: handler.type,
     category: handler.category || handler.type.split('/')[0],
@@ -72,12 +72,12 @@ async function loadHandler(filePath) {
     driver: handler.driver || {},
   };
 
-  // Attach lifecycle hooks if present
+
   if (handler.lifecycle) {
     nodeDef.lifecycle = handler.lifecycle;
   }
 
-  // Attach process function if present (legacy mode)
+
   if (handler.process) {
     nodeDef.process = handler.process;
   }
@@ -127,11 +127,11 @@ export function watchHandlers(dir, options = {}) {
 
     let filePath = join(dir, filename);
 
-    // Verify file exists (could be a delete event)
+
     try {
       await stat(filePath);
     } catch {
-      return; // File deleted, ignore
+      return;
     }
 
     try {

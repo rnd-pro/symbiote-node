@@ -60,10 +60,10 @@ export default {
       filename: { type: 'string', default: '', description: 'Output filename (without extension)' },
       enableUpscale: { type: 'boolean', default: false, description: 'HD upscale for videos' },
       workerId: { type: 'string', default: '', description: 'Worker ID for multi-tab' },
-      // Batch params
+
       segments: { type: 'any', default: null, description: 'Segments for batch operations' },
       workers: { type: 'int', default: 1, description: 'Parallel workers for batch' },
-      // Image params
+
       imagePath: { type: 'string', default: '', description: 'Source image for video gen' },
       videoPrompt: { type: 'string', default: '', description: 'Camera movement prompt for video' },
     },
@@ -126,7 +126,6 @@ export default {
   },
 };
 
-// --- Bridge Client ---
 
 /**
  * Create bridge client for communication with grok-bridge Chrome extension
@@ -165,7 +164,7 @@ function createBridgeClient(baseUrl) {
         if (data.result !== undefined) return data.result;
       } catch (e) {
         if (e.message !== 'Result not found or not ready') {
-          // Connection issue — retry poll
+
         }
       }
     }
@@ -185,7 +184,7 @@ function createBridgeClient(baseUrl) {
       }
     },
 
-    // Atomic actions
+
     async navigate(url, workerId) {
       return sendCommand('navigate', { url }, 30000, workerId);
     },
@@ -214,7 +213,7 @@ function createBridgeClient(baseUrl) {
       return sendCommand('refresh', {}, 30000, workerId);
     },
 
-    // WebSocket-based direct generation
+
     async generateImageWS(prompt, options, workerId) {
       return sendCommand('generateImage', { prompt, options }, 90000, workerId);
     },
@@ -225,7 +224,7 @@ function createBridgeClient(baseUrl) {
       return sendCommand('waitForImageComplete', { timeout }, timeout + 5000, workerId);
     },
 
-    // Zone-based interaction
+
     async showZones(layer = 'all', workerId) {
       return sendCommand('showClickableZones', { layer }, 30000, workerId);
     },
@@ -238,7 +237,6 @@ function createBridgeClient(baseUrl) {
   };
 }
 
-// --- Selectors ---
 
 const SEL = {
   promptEditor: '.tiptap.ProseMirror',
@@ -255,7 +253,6 @@ const SEL = {
   hdButton: 'button .text-\\[10px\\].font-bold',
 };
 
-// --- Workflows ---
 
 /**
  * Navigate to /imagine page (skip if already there)
@@ -277,7 +274,7 @@ async function ensureOnImagine(bridge, workerId) {
       }
     }
   } catch {
-    /* not on page */
+
   }
 
   await bridge.navigate('https://grok.com/imagine', workerId);
@@ -298,17 +295,17 @@ async function generateImage(bridge, prompt, params) {
 
   await mkdir(outputDir, { recursive: true });
 
-  // Generate via WebSocket
+
   let wsResult = await bridge.generateImageWS(fullPrompt, {}, workerId || null);
 
   if (!wsResult?.imageUrl) {
     throw new Error('No image URL from WebSocket generation');
   }
 
-  // Download image via bridge (authenticated)
+
   let imageData = await bridge.fetchImage(wsResult.imageUrl, workerId || null);
 
-  // Save to file
+
   let outputName = filename || `grok-${Date.now()}`;
   let outputPath = path.join(outputDir, `${outputName}.png`);
 
@@ -334,10 +331,10 @@ async function editImage(bridge, prompt, referencePath, params) {
   let { outputDir, filename, workerId } = params;
   await mkdir(outputDir, { recursive: true });
 
-  // Navigate to /imagine
+
   await ensureOnImagine(bridge, workerId || null);
 
-  // Upload reference image
+
   let imageBuffer = await readFile(path.resolve(referencePath));
   let base64 = imageBuffer.toString('base64');
   let ext = path.extname(referencePath).toLowerCase();
@@ -346,21 +343,21 @@ async function editImage(bridge, prompt, referencePath, params) {
   await bridge.uploadFile(base64, mimeType, `image${ext}`, workerId || null);
   await bridge.sleep(2000);
 
-  // Enter edit prompt
+
   await bridge.waitFor(SEL.editPrompt, 15000, workerId || null);
   await bridge.type(SEL.editPrompt, prompt, workerId || null);
 
-  // Submit
+
   await bridge.click(SEL.sendBtn, workerId || null);
 
-  // Wait for result via WebSocket
+
   let wsResult = await bridge.waitForImageComplete(120000, workerId || null);
 
   if (!wsResult?.firstUrl) {
     throw new Error('No image from edit generation');
   }
 
-  // Download
+
   let imageData = await bridge.fetchImage(wsResult.firstUrl, workerId || null);
   let outputName = filename || `grok-edit-${Date.now()}`;
   let outputPath = path.join(outputDir, `${outputName}.png`);
@@ -381,10 +378,10 @@ async function generateVideo(bridge, params) {
   let { imagePath, videoPrompt, outputDir, filename, enableUpscale, workerId } = params;
   await mkdir(outputDir, { recursive: true });
 
-  // Navigate to /imagine
+
   await ensureOnImagine(bridge, workerId || null);
 
-  // Upload image
+
   let imageBuffer = await readFile(path.resolve(imagePath));
   let base64 = imageBuffer.toString('base64');
   let ext = path.extname(imagePath).toLowerCase();
@@ -393,29 +390,29 @@ async function generateVideo(bridge, params) {
   await bridge.uploadFile(base64, mimeType, `image${ext}`, workerId || null);
   await bridge.sleep(3000);
 
-  // Enter video prompt
+
   if (videoPrompt) {
     await bridge.waitFor(SEL.videoPrompt, 15000, workerId || null);
     await bridge.type(SEL.videoPrompt, videoPrompt, workerId || null);
     await bridge.sleep(500);
   }
 
-  // Show zones and submit
+
   await bridge.showZones('all', workerId || null);
   await bridge.sleep(500);
 
-  // Find and click submit button (zone-based)
+
   await bridge.click(SEL.sendBtn, workerId || null);
   try {
     await bridge.hideZones(workerId || null);
   } catch {
-    /* ignore */
+
   }
 
-  // Wait for video
+
   let videoUrl = await waitForVideo(bridge, 90000, workerId || null);
 
-  // Download video
+
   let outputName = filename || `grok-video-${Date.now()}`;
   let outputPath = path.join(outputDir, `${outputName}.mp4`);
 
@@ -428,7 +425,7 @@ async function generateVideo(bridge, params) {
 
   let result = { videoPath: outputPath, videoUrl };
 
-  // HD upscale if requested
+
   if (enableUpscale) {
     try {
       await triggerUpscale(bridge, workerId || null);
@@ -452,7 +449,6 @@ async function generateVideo(bridge, params) {
   return result;
 }
 
-// --- Helper workflows ---
 
 /**
  * Wait for video element with mp4 src
@@ -468,7 +464,7 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
   while (Date.now() - start < timeout) {
     await bridge.sleep(3000);
 
-    // Check rate limit
+
     try {
       let errors = await bridge.queryAll(SEL.errorToast, workerId);
       if (errors.count > 0) throw new Error('RATE_LIMIT_REACHED');
@@ -476,7 +472,7 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
       if (e.message === 'RATE_LIMIT_REACHED') throw e;
     }
 
-    // Check content moderation
+
     try {
       let moderated = await bridge.queryAll(SEL.moderatedContent, workerId);
       if (moderated.count > 0) throw new Error('CONTENT_MODERATED');
@@ -484,7 +480,7 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
       if (e.message === 'CONTENT_MODERATED') throw e;
     }
 
-    // Check preference selection (A/B test) — refresh to skip
+
     try {
       let prefs = await bridge.queryAll(SEL.preferenceBtn, workerId);
       if (prefs.count >= 2) {
@@ -493,10 +489,10 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
         continue;
       }
     } catch {
-      /* ignore */
+
     }
 
-    // Check for video
+
     try {
       let result = await bridge.getAttribute(SEL.video, 'src', workerId);
       let videoUrl = result.value;
@@ -505,7 +501,7 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
         return videoUrl;
       }
     } catch {
-      /* not yet */
+
     }
   }
 
@@ -520,20 +516,20 @@ async function waitForVideo(bridge, timeout = 90000, workerId = null, prevUrl = 
 async function triggerUpscale(bridge, workerId) {
   await bridge.showZones('all', workerId);
   await bridge.sleep(500);
-  // Menu button→upscale is zone-dependent, use click by text as fallback
+
   try {
     await bridge.click('[aria-label="Больше опций"]', workerId);
     await bridge.sleep(1000);
-    // Click 5th menu item (upscale)
+
     await bridge.click('[role="menuitem"]:nth-child(5)', workerId);
   } catch {
-    // Fallback
+
     await bridge.sendCommand('clickByText', { text: 'Улучшить' }, 30000, workerId);
   }
   try {
     await bridge.hideZones(workerId);
   } catch {
-    /* ignore */
+
   }
 }
 
@@ -579,7 +575,6 @@ async function waitForHD(bridge, timeout = 120000, workerId = null, sdUrl = null
   );
 }
 
-// --- Batch processing ---
 
 /**
  * Batch image generation

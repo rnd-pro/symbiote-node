@@ -13,7 +13,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
-// Non-local patterns to filter out
+
 const NON_LOCAL_PATTERNS = ['en eeuu', 'desde estados unidos'];
 const HOROSCOPE_PATTERNS = [
   'horóscopo',
@@ -122,7 +122,6 @@ async function saveStore(storePath, data) {
   await writeFile(storePath, JSON.stringify(data, null, 2));
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'data/news-accumulate',
@@ -142,10 +141,10 @@ export default {
         default: 'get',
         description: 'Operation: add | get | mark-processed | new-period | stats',
       },
-      // add
+
       newsItem: { type: 'any', default: null, description: 'News item to add' },
       newsItems: { type: 'any', default: null, description: 'Array of news items to add (batch)' },
-      // get filters
+
       categories: { type: 'any', default: null, description: 'Filter by categories array' },
       since: { type: 'string', default: null, description: 'Get news since ISO date' },
       filterLocal: {
@@ -159,7 +158,7 @@ export default {
         description: 'Filter out horoscope content',
       },
       maxItems: { type: 'int', default: 100, description: 'Maximum items to return' },
-      // mark-processed
+
       newsIds: { type: 'any', default: null, description: 'Array of news IDs to mark processed' },
     },
   },
@@ -169,7 +168,7 @@ export default {
       return typeof inputs.storePath === 'string' && inputs.storePath.length > 0;
     },
 
-    cacheKey: () => null, // mutable state
+    cacheKey: () => null,
 
     execute: async (inputs, params) => {
       let { storePath } = inputs;
@@ -199,7 +198,7 @@ export default {
               existingIds.add(item.id);
               added++;
 
-              // Update category counts
+
               let catId = typeof item.category === 'object' ? item.category.id : item.category;
               store.categoryCounts[catId] = (store.categoryCounts[catId] || 0) + 1;
             }
@@ -216,13 +215,13 @@ export default {
           get: () => {
             let items = store.news.filter((n) => !n.processed);
 
-            // Date filter
+
             if (params.since) {
               let sinceDate = new Date(params.since);
               items = items.filter((n) => new Date(n.addedAt) >= sinceDate);
             }
 
-            // Category filter
+
             if (Array.isArray(params.categories) && params.categories.length > 0) {
               items = items.filter((n) => {
                 let catId = typeof n.category === 'object' ? n.category.id : n.category;
@@ -230,7 +229,7 @@ export default {
               });
             }
 
-            // Content filters
+
             if (params.filterLocal) items = filterArgentinaOnly(items);
             if (params.filterHoroscopes) items = filterOutHoroscopes(items);
 

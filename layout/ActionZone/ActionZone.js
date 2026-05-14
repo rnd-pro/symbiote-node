@@ -20,31 +20,31 @@ export class ActionZone extends Symbiote {
   static isoMode = true;
 
   init$ = {
-    // Position: 'tl' | 'tr' | 'bl' | 'br'
+
     '@corner': 'tl',
 
-    // Panel ID (inherited from parent node)
+
     panelId: '',
 
-    // Drag state
+
     isDragging: false,
     dragStartX: 0,
     dragStartY: 0,
-    gestureType: null, // 'split-h' | 'split-v' | 'join'
+    gestureType: null,
 
-    // Panel bounds at drag start (for zone checking)
+
     panelBounds: null,
   };
 
   renderCallback() {
-    // Bind pointer events directly to component
+
     this.onpointerdown = (e) => this._onPointerDown(e);
     this.onpointermove = (e) => this._onPointerMove(e);
     this.onpointerup = (e) => this._onPointerUp(e);
     this.onpointercancel = (e) => this._onPointerUp(e);
     this.onlostpointercapture = (e) => this._onPointerUp(e);
 
-    // Global fallback for touchpad edge cases
+
     this._globalPointerUp = (e) => {
       if (this.$.isDragging) {
         this._onPointerUp(e);
@@ -71,7 +71,7 @@ export class ActionZone extends Symbiote {
     e.preventDefault();
     e.stopPropagation();
 
-    // Get panel bounds at drag start
+
     let panelNode = this.closest('layout-node');
     if (panelNode) {
       let rect = panelNode.getBoundingClientRect();
@@ -91,7 +91,7 @@ export class ActionZone extends Symbiote {
     this.setPointerCapture(e.pointerId);
     this.setAttribute('dragging', '');
 
-    // Notify parent to prepare for potential split/join
+
     this.dispatchEvent(
       new CustomEvent('action-zone-start', {
         bubbles: true,
@@ -117,13 +117,13 @@ export class ActionZone extends Symbiote {
       return;
     }
 
-    // Detect gesture based on current mouse position relative to panel bounds
+
     let gesture = this._detectGesture(e.clientX, e.clientY, dx, dy);
 
     if (gesture !== this.$.gestureType) {
       this.$.gestureType = gesture;
 
-      // Notify parent to show preview
+
       this.dispatchEvent(
         new CustomEvent('action-zone-gesture', {
           bubbles: true,
@@ -147,13 +147,13 @@ export class ActionZone extends Symbiote {
   _onPointerUp(e) {
     if (!this.$.isDragging) return;
 
-    // Safe release - may fail if pointerId is invalid from global fallback
+
     try {
       if (e?.pointerId !== undefined) {
         this.releasePointerCapture(e.pointerId);
       }
     } catch (err) {
-      // Ignore - pointer may already be released
+
     }
 
     this.removeAttribute('dragging');
@@ -161,7 +161,7 @@ export class ActionZone extends Symbiote {
     let gesture = this.$.gestureType;
 
     if (gesture) {
-      // Execute the gesture
+
       this.dispatchEvent(
         new CustomEvent('action-zone-execute', {
           bubbles: true,
@@ -175,12 +175,12 @@ export class ActionZone extends Symbiote {
       );
     }
 
-    // Reset state
+
     this.$.isDragging = false;
     this.$.gestureType = null;
     this.$.panelBounds = null;
 
-    // Hide preview
+
     this.dispatchEvent(
       new CustomEvent('action-zone-end', {
         bubbles: true,

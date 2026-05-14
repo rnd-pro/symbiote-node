@@ -43,7 +43,7 @@ function extractImageUrl(item) {
   return null;
 }
 
-// Category definitions for topic classification
+
 const CATEGORIES = [
   {
     id: 'politica',
@@ -227,7 +227,6 @@ function parseRssXml(xml) {
   return items;
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'data/rss-feed',
@@ -250,7 +249,7 @@ export default {
       urls: { type: 'any', default: null, description: 'Array of URLs for fetch-multi' },
       maxItems: { type: 'int', default: 20, description: 'Maximum items to return per feed' },
       timeout: { type: 'int', default: 10000, description: 'Fetch timeout in ms' },
-      // categorize
+
       items: {
         type: 'any',
         default: null,
@@ -335,7 +334,7 @@ export default {
               }
             }
 
-            // Deduplicate by ID
+
             let seen = new Set();
             let unique = allItems.filter((item) => {
               if (seen.has(item.id)) return false;
@@ -353,7 +352,7 @@ export default {
               category: categorizeTopic(item.title || '', item.content || item.description || ''),
             }));
 
-            // Group by category
+
             let grouped = {};
             for (const item of categorized) {
               let key = item.category.id;

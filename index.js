@@ -6,7 +6,7 @@
  * @module symbiote-node
  */
 
-// Core
+
 export { NodeEditor } from './core/Editor.js';
 export { Node } from './core/Node.js';
 export { Connection } from './core/Connection.js';
@@ -15,21 +15,21 @@ export { Socket, Port, Input, Output, Control, InputControl, uid } from './core/
 export { editorToText, textToGraph, textToEditor } from './core/GraphText.js';
 export { editorToMermaid, mermaidToGraph } from './core/GraphMermaid.js';
 
-// Canvas
+
 export { NodeCanvas } from './canvas/NodeCanvas/NodeCanvas.js';
 
-// Node components
+
 export { GraphNode } from './node/GraphNode/GraphNode.js';
 export { NodeSocket } from './node/NodeSocket/NodeSocket.js';
 
-// Interactions
+
 export { Drag } from './interactions/Drag.js';
 export { Zoom } from './interactions/Zoom.js';
 export { Selector } from './interactions/Selector.js';
 export { SnapGrid } from './interactions/SnapGrid.js';
 export { ConnectFlow } from './interactions/ConnectFlow.js';
 
-// Shapes
+
 export {
   NodeShape,
   RectShape,
@@ -44,7 +44,7 @@ export {
   SVG_PRESETS,
 } from './shapes/index.js';
 
-// Themes (unified)
+
 export {
   applyTheme,
   extractTheme,
@@ -55,7 +55,7 @@ export {
   NEON_GLOW,
 } from './themes/Theme.js';
 
-// Palette (color-only)
+
 export {
   applyPalette,
   DARK_PALETTE,
@@ -64,27 +64,27 @@ export {
   GREY_PALETTE,
 } from './themes/Palette.js';
 
-// Skin (geometry-only)
+
 export { applySkin, MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN } from './themes/Skin.js';
 
-// Plugins
+
 export { Readonly } from './plugins/Readonly.js';
 export { History } from './plugins/History.js';
 
-// Toolbar
+
 export { QuickToolbar } from './toolbar/QuickToolbar/QuickToolbar.js';
 export { FlowSimulator } from './canvas/FlowSimulator.js';
 
-// Inspector
+
 export { InspectorPanel } from './inspector/InspectorPanel/InspectorPanel.js';
 
-// Minimap
+
 export { Minimap } from './canvas/Minimap/Minimap.js';
 
-// Search
+
 export { NodeSearch } from './canvas/NodeSearch/NodeSearch.js';
 
-// Layout (panel workspace)
+
 export { Layout } from './layout/Layout/Layout.js';
 export { LayoutNode } from './layout/LayoutNode/LayoutNode.js';
 export { LayoutSidebar } from './layout/LayoutSidebar/LayoutSidebar.js';
@@ -102,35 +102,31 @@ export {
 } from './layout/LayoutRouter/LayoutRouter.js';
 export { syncWithRouter } from './layout/LayoutRouter/routerSync.js';
 
-// Auto Layout
+
 export { computeAutoLayout, computeTreeLayout } from './canvas/AutoLayout.js';
 
-// Portals (Named Reroutes)
+
 export { PortalManager } from './core/Portal.js';
 
-// Palette Browser
+
 export { PaletteBrowser } from './palette/PaletteBrowser/PaletteBrowser.js';
 
-// Tabs
+
 export { GraphTabs } from './canvas/GraphTabs/GraphTabs.js';
 
-// Subgraphs
+
 export { SubgraphNode } from './core/SubgraphNode.js';
 export { SubgraphManager } from './canvas/SubgraphManager.js';
 export { SubgraphRouter } from './canvas/SubgraphRouter.js';
 export { Breadcrumb } from './canvas/Breadcrumb/Breadcrumb.js';
 
-// Canvas utilities
+
 export { LODManager } from './canvas/LODManager.js';
 export { PinExpansion } from './canvas/PinExpansion.js';
 export { ForceLayout } from './canvas/ForceLayout.js';
 
-// Additional themes (not in base Theme.js barrel)
+
 export { CARBON, CARBON_PALETTE } from './themes/carbon.js';
 export { PCB_DARK } from './themes/pcb.js';
 export { EBOOK, EBOOK_PALETTE } from './themes/ebook.js';
 export { NEON_PALETTE } from './themes/neon.js';
-
-// Engine (server-side graph runtime)
-// Usage: import * as Engine from 'symbiote-node/engine'
-// Or: import { Graph, Executor } from 'symbiote-node/engine'

@@ -163,7 +163,7 @@ export function registerCustomDrivers(customDrivers) {
       type: cd.type,
       driver: cd.driver,
       category: cd.type.split('/')[0],
-      // Process stored as string in JSON — needs eval (sandboxed in production)
+
       process: cd.process ? new Function('inputs', 'params', cd.process) : null,
     });
   }
@@ -224,7 +224,7 @@ export function listPacks() {
 export function clearRegistry() {
   _nodeTypes.clear();
   _packs.clear();
-  // Re-register built-in types
+
   _registerBuiltins();
 }
 
@@ -262,5 +262,5 @@ function _registerBuiltins() {
   });
 }
 
-// Register built-ins on module load
+
 _registerBuiltins();

@@ -75,28 +75,28 @@ export default {
           return { segments: null, stats: null, error: 'No whisper words provided' };
         }
 
-        // Step 1: Build phrases from words
+
         let segments = buildPhrases(words);
 
-        // Step 2: Fill gaps with beat-snapped segments
+
         segments = fillGaps(segments, beats, duration, params);
 
-        // Step 3: Remove overlaps
+
         segments = removeOverlaps(segments);
 
-        // Step 4: Merge short segments
+
         segments = mergeShort(segments, params.shortMergeThreshold || 1.2);
 
-        // Step 5: Enforce min duration
+
         segments = enforceMinDuration(segments, params.minSegmentDuration || 1.8);
 
-        // Step 6: Cap max duration
+
         segments = capMaxDuration(segments, params.maxSegmentDuration || 5.0);
 
-        // Sort final
+
         segments.sort((a, b) => a.start - b.start);
 
-        // Stats
+
         let stats = calculateStats(segments, duration);
 
         return { segments, stats, error: null };
@@ -129,7 +129,7 @@ function buildPhrases(words) {
       current.words.push(w.word);
     }
 
-    // Split on sentence endings, commas, or long pauses
+
     let endsWithPunct = /[.!?;]$/.test(w.word);
     let nextWord = words[words.indexOf(w) + 1];
     let hasGap = nextWord && nextWord.start - w.end > 0.8;
@@ -146,7 +146,7 @@ function buildPhrases(words) {
     }
   }
 
-  // Close last phrase
+
   if (current && current.words.length > 0) {
     phrases.push({
       start: current.start,
@@ -181,7 +181,7 @@ function snapToBeat(time, beats) {
     if (beat > time + minDist) break;
   }
 
-  // Only snap if within 0.3s of a beat
+
   return minDist < 0.3 ? closest : time;
 }
 
@@ -199,7 +199,7 @@ function fillGaps(segments, beats, duration, params) {
   let result = [];
   let gapType = params.gapType || 'beat';
 
-  // Gap at start?
+
   if (segments[0].start > 0.1) {
     result.push({
       start: 0,
@@ -213,7 +213,7 @@ function fillGaps(segments, beats, duration, params) {
   for (let i = 0; i < segments.length; i++) {
     result.push(segments[i]);
 
-    // Gap to next segment?
+
     let next = segments[i + 1];
     if (next) {
       let gapStart = segments[i].end;
@@ -232,7 +232,7 @@ function fillGaps(segments, beats, duration, params) {
     }
   }
 
-  // Gap at end?
+
   let lastEnd = segments[segments.length - 1].end;
   if (duration > 0 && duration - lastEnd > 0.2) {
     result.push({
@@ -262,7 +262,7 @@ function removeOverlaps(segments) {
     let curr = segments[i];
 
     if (curr.start < prev.end) {
-      // Overlap: trim the gap segment, or split at midpoint
+
       if (prev.type !== 'lyrics' && curr.type === 'lyrics') {
         prev.end = curr.start;
       } else if (prev.type === 'lyrics' && curr.type !== 'lyrics') {
@@ -275,7 +275,7 @@ function removeOverlaps(segments) {
     }
   }
 
-  // Remove zero/negative duration segments
+
   return segments.filter((s) => s.end - s.start > 0.05);
 }
 
@@ -295,7 +295,7 @@ function mergeShort(segments, threshold) {
     let prev = result[result.length - 1];
     let currDuration = curr.end - curr.start;
 
-    // Merge short lyrics into previous
+
     if (curr.type === 'lyrics' && currDuration < threshold && prev.type === 'lyrics') {
       prev.end = curr.end;
       prev.text = prev.text + ' ' + curr.text;
@@ -324,7 +324,7 @@ function enforceMinDuration(segments, minDuration) {
     let prevDuration = prev.end - prev.start;
 
     if (prevDuration < minDuration) {
-      // Extend previous to absorb current
+
       prev.end = segments[i].end;
       if (segments[i].text) {
         prev.text = (prev.text ? prev.text + ' ' : '') + segments[i].text;
@@ -355,7 +355,7 @@ function capMaxDuration(segments, maxDuration) {
       continue;
     }
 
-    // Split evenly
+
     let parts = Math.ceil(duration / maxDuration);
     let partDuration = duration / parts;
 

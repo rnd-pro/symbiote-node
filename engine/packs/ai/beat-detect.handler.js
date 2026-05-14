@@ -52,7 +52,7 @@ export default {
       peaksPerSecond: { type: 'int', default: 10, description: 'Waveform peaks resolution' },
       sampleRate: { type: 'int', default: 22050, description: 'Audio sample rate for analysis' },
       hopLength: { type: 'int', default: 512, description: 'Hop length for beat tracking' },
-      // SSH params
+
       remoteHost: {
         type: 'string',
         default: 'mr-agent@mr-agent.rnd-pro.com',
@@ -73,7 +73,7 @@ export default {
         default: '',
         description: 'Local path to beat-detection.py (auto-resolved)',
       },
-      // HTTP params
+
       endpoint: {
         type: 'string',
         default: 'http://localhost:5009',
@@ -136,25 +136,25 @@ async function executeSSH(audioPath, params) {
   let remoteTmpDir = '/tmp/agi-graph-beat';
 
   try {
-    // Verify local file exists
+
     await fs.access(audioPath);
 
     let filename = path.basename(audioPath);
     let remoteAudio = `${remoteTmpDir}/${filename}`;
 
-    // Setup remote directory
+
     await runCommandWithWatchdog(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
       inactivityMs: 10000,
       timeoutMs: 10000,
     });
 
-    // Upload audio
+
     await runCommandWithWatchdog(`scp "${audioPath}" "${host}:${remoteAudio}"`, {
       inactivityMs: 60000,
       timeoutMs: 60000,
     });
 
-    // Upload or locate beat detection script
+
     let remoteScript = `${remoteTmpDir}/beat-detection.py`;
     let localScript = params.scriptPath || path.join(process.cwd(), 'utils/beat-detection.py');
 
@@ -172,7 +172,7 @@ async function executeSSH(audioPath, params) {
     }
 
     try {
-      // Run beat detection
+
       let pythonCmd = `${venv}/bin/python3`;
       let cmd = `"${pythonCmd}" "${remoteScript}" "${remoteAudio}" --sr ${sr} --hop ${hop} --pps ${pps}`;
       let fullCmd = `ssh ${host} '${cmd}'`;
@@ -196,7 +196,7 @@ async function executeSSH(audioPath, params) {
         error: null,
       };
     } finally {
-      // Cleanup remote audio
+
       await runCommandWithWatchdog(`ssh ${host} "rm -f ${remoteAudio}"`, {
         inactivityMs: 5000,
         timeoutMs: 5000,

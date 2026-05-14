@@ -14,7 +14,6 @@
  * @module symbiote-node/core/GraphMermaid
  */
 
-// --- Shape mapping ---
 
 const SHAPE_TO_MERMAID = {
   circle: (id, label) => `${id}((${label}))`,
@@ -37,7 +36,6 @@ const MERMAID_SHAPE_PATTERNS = [
   { re: /^(\w+)\[(.+?)\]$/, shape: 'rect' },
 ];
 
-// --- Mermaid Arrow patterns ---
 
 /**
  * Arrow patterns with optional label.
@@ -45,11 +43,11 @@ const MERMAID_SHAPE_PATTERNS = [
  * @type {Array<{re: RegExp}>}
  */
 const ARROW_PATTERNS = [
-  // nodeA -->|label| nodeB
+
   /^(.+?)\s*-->\|([^|]*)\|\s*(.+)$/,
-  // nodeA -- label --> nodeB
+
   /^(.+?)\s*--\s+(.+?)\s+-->\s*(.+)$/,
-  // nodeA --> nodeB (no label)
+
   /^(.+?)\s*-->\s*(.+)$/,
 ];
 
@@ -65,7 +63,7 @@ function parseNodeRef(raw) {
     let m = trimmed.match(re);
     if (m) return { id: m[1], label: m[2], shape };
   }
-  // Plain id reference
+
   return { id: trimmed, label: null, shape: null };
 }
 
@@ -83,30 +81,22 @@ export function editorToMermaid(editor, options = {}) {
 
   lines.push(`graph ${direction}`);
 
-  // Collect which nodes belong to which frame (by spatial containment)
+
   let frames = editor.getFrames();
   let nodeToFrame = new Map();
 
-  // We don't have positions in editor, so we rely on frame data
-  // Frames are matched by checking if any connection links nodes in the frame
-  // For simplicity, use frame label as subgraph name
 
-  // Build node declarations grouped by frame
-  let framedNodes = new Map(); // frameId -> [node]
+  let framedNodes = new Map();
   let freeNodes = [];
 
-  // If frames exist, check node positions (stored in frame data)
-  // Since we don't have positions here, we serialize frames
-  // and let the user define membership via subgraph
 
-  // Collect all nodes
   let allNodes = editor.getNodes();
   let allConnections = editor.getConnections();
 
-  // Render nodes inside subgraphs (frames)
+
   if (frames.length) {
-    // Frames without spatial data — output as subgraphs with all nodes listed
-    // In practice, frame membership is defined externally
+
+
     for (const frame of frames) {
       let nodeIds = frame._nodeIds || [];
       if (nodeIds.length) {
@@ -117,7 +107,7 @@ export function editorToMermaid(editor, options = {}) {
     }
   }
 
-  // Separate framed vs free nodes
+
   for (const node of allNodes) {
     if (nodeToFrame.has(node.id)) {
       let frame = nodeToFrame.get(node.id);
@@ -128,21 +118,20 @@ export function editorToMermaid(editor, options = {}) {
     }
   }
 
-  // Render free nodes first
+
   for (const node of freeNodes) {
     lines.push('  ' + nodeToMermaid(node));
   }
 
-  // If no frame membership data, put all nodes as free and create
-  // empty subgraphs as comments
+
   if (framedNodes.size === 0 && frames.length > 0) {
-    // Output all nodes first
+
     if (freeNodes.length === 0) {
       for (const node of allNodes) {
         lines.push('  ' + nodeToMermaid(node));
       }
     }
-    // Frames as subgraphs with node references
+
     for (const frame of frames) {
       lines.push('');
       lines.push(`  subgraph ${sanitizeId(frame.label)}["${frame.label}"]`);
@@ -150,7 +139,7 @@ export function editorToMermaid(editor, options = {}) {
       lines.push('  end');
     }
   } else {
-    // Render subgraphs with their nodes
+
     for (const [frameId, nodes] of framedNodes) {
       let frame = frames.find((f) => f.id === frameId);
       if (!frame) continue;
@@ -164,7 +153,7 @@ export function editorToMermaid(editor, options = {}) {
     }
   }
 
-  // Render connections
+
   lines.push('');
   for (const conn of allConnections) {
     let label = conn.out === 'exec' ? '' : conn.out;
@@ -205,10 +194,10 @@ function sanitizeId(str) {
  * @returns {{ nodes: Array, connections: Array, frames: Array, direction: string }}
  */
 export function mermaidToGraph(text) {
-  let nodes = new Map(); // id -> { id, name, shape, category }
+  let nodes = new Map();
   let connections = [];
   let frames = [];
-  let frameStack = []; // for nested subgraphs
+  let frameStack = [];
 
   let direction = 'LR';
 
@@ -226,14 +215,14 @@ export function mermaidToGraph(text) {
         category: 'default',
       });
     } else if (ref.label && !nodes.get(ref.id).name) {
-      // Update label if first seen was bare reference
+
       let existing = nodes.get(ref.id);
       if (existing.name === existing.id) {
         existing.name = ref.label;
       }
       if (ref.shape) existing.shape = ref.shape;
     }
-    // Track frame membership
+
     if (frameStack.length > 0) {
       let currentFrame = frameStack[frameStack.length - 1];
       if (!currentFrame._nodeIds) currentFrame._nodeIds = [];
@@ -245,23 +234,23 @@ export function mermaidToGraph(text) {
 
   for (const rawLine of text.split('\n')) {
     let line = rawLine.trim();
-    if (!line || line.startsWith('%%')) continue; // skip empty and comments
+    if (!line || line.startsWith('%%')) continue;
 
-    // Graph direction
+
     let dirMatch = line.match(/^graph\s+(LR|RL|TB|BT|TD)\s*$/);
     if (dirMatch) {
       direction = dirMatch[1] === 'TD' ? 'TB' : dirMatch[1];
       continue;
     }
 
-    // Flowchart direction (alias)
+
     let flowMatch = line.match(/^flowchart\s+(LR|RL|TB|BT|TD)\s*$/);
     if (flowMatch) {
       direction = flowMatch[1] === 'TD' ? 'TB' : flowMatch[1];
       continue;
     }
 
-    // Subgraph start
+
     let subMatch = line.match(/^subgraph\s+(\w+)(?:\["(.+?)"\])?\s*$/);
     if (subMatch) {
       let frame = {
@@ -278,23 +267,23 @@ export function mermaidToGraph(text) {
       continue;
     }
 
-    // Subgraph end
+
     if (line === 'end') {
       frameStack.pop();
       continue;
     }
 
-    // Direction inside subgraph
+
     if (line.match(/^direction\s+(LR|RL|TB|BT|TD)$/)) continue;
 
-    // Try arrow patterns (connection lines)
+
     let matched = false;
     for (const pattern of ARROW_PATTERNS) {
       let m = line.match(pattern);
       if (m) {
         matched = true;
         if (m.length === 4) {
-          // With label: source, label, target
+
           let source = parseNodeRef(m[1]);
           let label = m[2].trim();
           let target = parseNodeRef(m[3]);
@@ -307,7 +296,7 @@ export function mermaidToGraph(text) {
             in: 'exec',
           });
         } else if (m.length === 3) {
-          // No label: source, target
+
           let source = parseNodeRef(m[1]);
           let target = parseNodeRef(m[2]);
           registerNode(source);
@@ -323,9 +312,9 @@ export function mermaidToGraph(text) {
       }
     }
 
-    // If not a connection, try as standalone node declaration
+
     if (!matched) {
-      // Handle "nodeA & nodeB & nodeC" syntax
+
       let parts = line.split(/\s*&\s*/);
       for (const part of parts) {
         let ref = parseNodeRef(part.trim());

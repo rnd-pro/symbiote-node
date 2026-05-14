@@ -78,7 +78,7 @@ export class Graph {
 
     let typeDef = getNodeType(type);
 
-    // Merge defaults from driver
+
     let mergedParams = { ...params };
     if (typeDef?.driver?.params) {
       for (const [key, paramDef] of Object.entries(typeDef.driver.params)) {
@@ -134,7 +134,7 @@ export class Graph {
     if (!this.nodes.has(fromNode)) throw new Error(`Source node "${fromNode}" not found`);
     if (!this.nodes.has(toNode)) throw new Error(`Target node "${toNode}" not found`);
 
-    // Validate socket compatibility if drivers available
+
     let fromType = getNodeType(this.nodes.get(fromNode).type);
     let toType = getNodeType(this.nodes.get(toNode).type);
 
@@ -266,12 +266,12 @@ export class Graph {
     this.execution = data.execution || { mode: 'sync', cache: true };
     this.ui = data.ui || { positions: {}, zoom: 1.0, pan: [0, 0] };
 
-    // Register custom drivers if present
+
     if (data.customDrivers) {
       registerCustomDrivers(data.customDrivers);
     }
 
-    // Load nodes
+
     this.nodes.clear();
     for (const n of data.nodes || []) {
       let node = {
@@ -288,7 +288,7 @@ export class Graph {
       this.nodes.set(n.id, node);
     }
 
-    // Load connections (handle both {out, in} and {fromSocket, toSocket} DB formats)
+
     this.connections = (data.connections || []).map((c) => {
       let conn = {
         from: c.from,

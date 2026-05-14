@@ -46,14 +46,14 @@ export default {
       let data = inputs.data || {};
       let query = params.query;
 
-      // Extract param values from input data
+
       let paramNames = (params.paramFields || '')
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
       let paramValues = paramNames.map((field) => data[field]);
 
-      // Execute via context.db (injected by host)
+
       if (!context?.db) {
         return {
           rows: [],

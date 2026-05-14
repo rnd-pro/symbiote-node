@@ -50,7 +50,7 @@ export default {
         return { data: items };
       }
 
-      // Default: 'first' — first non-null input
+
       let data = inputs.a != null ? inputs.a : inputs.b;
       return { data };
     },

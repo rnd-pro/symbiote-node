@@ -19,22 +19,22 @@ function evaluateCondition(value, expression) {
   if (typeof expression === 'string') {
     let trimmed = expression.trim();
 
-    // Direct boolean strings
+
     if (trimmed === 'true') return true;
     if (trimmed === 'false') return false;
 
-    // Null checks
+
     if (trimmed === 'data != null' || trimmed === 'data !== null') return value != null;
     if (trimmed === 'data == null' || trimmed === 'data === null') return value == null;
 
-    // Comparison operators
+
     let match = trimmed.match(/^(.+?)\s*(===|!==|==|!=|>=|<=|>|<)\s*(.+)$/);
     if (match) {
       let [, left, op, right] = match;
       left = left.trim();
       right = right.trim();
 
-      // Resolve left side
+
       let leftVal = left === 'data' || left === 'value' ? value : parseValueLiteral(left);
       let rightVal = parseValueLiteral(right);
 
@@ -55,7 +55,7 @@ function evaluateCondition(value, expression) {
     }
   }
 
-  // Fallback: truthy check
+
   return !!value;
 }
 

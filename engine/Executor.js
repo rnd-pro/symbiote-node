@@ -55,14 +55,14 @@ export class Executor {
       deadline,
     } = options;
     let nodes = graph.nodes;
-    // Duck-typing: Editor has connections as Map, Graph has array
+
     let connections =
       graph.connections instanceof Map ? [...graph.connections.values()] : graph.connections;
 
-    // Topological sort
+
     let order = this._topologicalSort(nodes, connections);
 
-    // Execute in order
+
     let results = new Map();
     this.executionLog = [];
 
@@ -76,7 +76,7 @@ export class Executor {
 
       let node = nodes.get(nodeId);
 
-      // Skip cached clean nodes
+
       if (cache && !this._dirty.has(nodeId) && this._cache.has(nodeId)) {
         results.set(nodeId, this._cache.get(nodeId));
         this.executionLog.push({ nodeId, time: 0, skipped: true });
@@ -88,17 +88,16 @@ export class Executor {
       this.currentNode = nodeId;
       let startTime = performance.now();
 
-      // Resolve inputs from upstream connections
+
       let inputs = this._resolveInputs(nodeId, connections, results);
 
-      // P22: Branch skipping — if node has incoming connections and
-      // all connected inputs are null, this node is on an inactive branch
+
       let incomingConns = connections.filter((c) => c.to === nodeId);
       if (incomingConns.length > 0) {
         let allNull = incomingConns.every(
           (c) => inputs[c.in] === null || inputs[c.in] === undefined
         );
-        // Skip merge nodes — they expect null from one branch
+
         let isMergeType = node.type === 'flow/merge' || node.type === 'flow/wait-all';
         if (allNull && !isMergeType) {
           node._output = null;
@@ -110,14 +109,13 @@ export class Executor {
         }
       }
 
-      // Execute node processor
-      // Check for lifecycle hooks first, then fall back to process()
+
       let output;
       let typeDef = getNodeType(node.type);
       let lifecycleHooks = typeDef?.lifecycle;
 
       if (lifecycleHooks) {
-        // Lifecycle path: validate → cache → execute → postProcess
+
         let cacheState = {
           mode: node.cacheMode || 'auto',
           store: this._lifecycleCache,
@@ -152,29 +150,29 @@ export class Executor {
           if (onNodeCached) onNodeCached(nodeId, lifecycleResult.cacheHash);
         }
       } else {
-        // Legacy path: direct process() call
-        // Node-level process overrides type-level (for per-instance composition)
+
+
         let processFn = node.process || typeDef?.process;
 
         if (typeof processFn === 'function') {
           output = await processFn(inputs, { ...node.params, signal, deadline });
         } else {
-          // Passthrough: merge params with inputs
+
           output = { ...node.params, ...inputs };
         }
       }
 
-      // Compound node: execute sub-graph if returned
+
       if (output && output._subGraph) {
         output = await this._executeSubGraph(output._subGraph, inputs, node.params);
       }
 
-      // Dynamic sockets: process exposes runtime-generated outputs
+
       if (output && output.dynamicOutputs && Array.isArray(output.dynamicOutputs)) {
         node._dynamicSockets = output.dynamicOutputs;
       }
 
-      // Store output in node
+
       node._output = output;
 
       results.set(nodeId, output);
@@ -189,7 +187,7 @@ export class Executor {
 
     this.currentNode = null;
 
-    // Collect output nodes (no outgoing connections)
+
     let outputNodeIds = this._findOutputNodes(nodes, connections);
     let outputs = {};
     for (const id of outputNodeIds) {
@@ -240,17 +238,17 @@ export class Executor {
     let inDegree = new Map();
     let adjacency = new Map();
 
-    // Only include connected nodes (skip orphans)
+
     let connectedIds = new Set();
     for (const conn of connections) {
       connectedIds.add(conn.from);
       connectedIds.add(conn.to);
     }
 
-    // Include source nodes (no incoming connections but exist in graph)
+
     for (const id of nodes.keys()) {
       if (connectedIds.has(id) || !connections.some((c) => c.to === id || c.from === id)) {
-        // Include connected nodes; orphans are skipped
+
       }
     }
 
@@ -260,7 +258,7 @@ export class Executor {
       adjacency.set(id, []);
     }
 
-    // Also include source nodes (nodes with outgoing but no incoming)
+
     for (const id of nodes.keys()) {
       if (!connectedIds.has(id)) continue;
       if (!inDegree.has(id)) {
@@ -275,7 +273,7 @@ export class Executor {
       inDegree.set(conn.to, (inDegree.get(conn.to) || 0) + 1);
     }
 
-    // Kahn's algorithm
+
     let queue = [];
     for (const [id, degree] of inDegree) {
       if (degree === 0) queue.push(id);
@@ -292,7 +290,7 @@ export class Executor {
       }
     }
 
-    // Cycle detection
+
     let connectedCount = inDegree.size;
     if (result.length < connectedCount) {
       let remaining = [...inDegree.keys()].filter((id) => !result.includes(id));
@@ -321,13 +319,13 @@ export class Executor {
       if (upstream && typeof upstream === 'object' && conn.out in upstream) {
         value = upstream[conn.out];
       } else if (upstream && typeof upstream === 'object' && upstream.dynamicOutputs) {
-        // Dynamic routing node (switch): missing key = inactive branch
+
         value = null;
       } else {
         value = upstream;
       }
 
-      // Multiple connections to same input: first non-null wins
+
       if (inputs[conn.in] !== undefined && inputs[conn.in] !== null) continue;
       inputs[conn.in] = value;
     }
@@ -365,7 +363,7 @@ export class Executor {
   async _executeSubGraph(subGraphData, parentInputs, parentParams) {
     let subGraph = new Graph(subGraphData);
 
-    // Inject parent inputs into sub-graph input nodes
+
     for (const node of subGraph.nodes.values()) {
       if (node.type === 'compound/input') {
         let injectedOutput = { ...parentInputs, ...parentParams };
@@ -374,11 +372,11 @@ export class Executor {
       }
     }
 
-    // Execute sub-graph with a fresh executor
+
     let subExecutor = new Executor();
     let result = await subExecutor.run(subGraph);
 
-    // Merge all output node results
+
     let merged = {};
     for (const [id, output] of Object.entries(result.outputs)) {
       let node = subGraph.getNode(id);
@@ -387,7 +385,7 @@ export class Executor {
       }
     }
 
-    // Include dynamic socket info if sub-graph produces segments
+
     if (Object.keys(merged).length > 0) {
       merged.dynamicOutputs = Object.keys(merged);
     }

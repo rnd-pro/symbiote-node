@@ -17,7 +17,7 @@ function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
   });
 }
 
-// Persist worker ID across reloads
+
 let workerId = sessionStorage.getItem('GROK_WORKER_ID');
 if (!workerId) {
   workerId = `worker_${Math.random().toString(36).substring(2, 9)}`;
@@ -27,7 +27,7 @@ const WORKER_ID = workerId;
 
 console.log(`[GrokBridge] v${VERSION} loaded (Worker: ${WORKER_ID})`);
 
-// Event log for sidepanel (stores last N events)
+
 let eventLog = [];
 const MAX_LOG_ENTRIES = 50;
 
@@ -45,7 +45,7 @@ function logEvent(type, data) {
   eventLog.unshift(entry);
   if (eventLog.length > MAX_LOG_ENTRIES) eventLog.pop();
 
-  // Broadcast to sidepanel
+
   chrome.runtime
     .sendMessage({ action: 'logEvent', event: entry })
     .catch(logBridgeError('Failed to send sidepanel log event'));
@@ -58,15 +58,15 @@ function logEvent(type, data) {
  * @returns {{x: number, y: number}} - Click coordinates
  */
 function performCoordinateClick(el) {
-  // Get element center coordinates
+
   let rect = el.getBoundingClientRect();
   let centerX = rect.left + rect.width / 2;
   let centerY = rect.top + rect.height / 2;
 
-  // Focus first
+
   el.focus();
 
-  // Create events with coordinates
+
   let eventInit = {
     bubbles: true,
     cancelable: true,
@@ -79,7 +79,7 @@ function performCoordinateClick(el) {
     buttons: 1,
   };
 
-  // Dispatch pointer and mouse events for maximum compatibility
+
   el.dispatchEvent(new PointerEvent('pointerdown', { ...eventInit, pointerType: 'mouse' }));
   el.dispatchEvent(new MouseEvent('mousedown', eventInit));
   el.dispatchEvent(new PointerEvent('pointerup', { ...eventInit, pointerType: 'mouse' }));
@@ -113,10 +113,10 @@ async function pollForCommands() {
         );
 
         switch (action) {
-        // === Direct DOM Commands (no eval needed) ===
+
 
         case 'click':
-          // Click element by selector using coordinate-based click
+
           let clickEl = document.querySelector(cmd.params.selector);
           if (!clickEl) throw new Error(`Element not found: ${cmd.params.selector}`);
           let coords = performCoordinateClick(clickEl);
@@ -124,9 +124,9 @@ async function pollForCommands() {
           break;
 
         case 'clickByText':
-          // Click element containing text (more robust search)
+
           let searchText = cmd.params.text.toLowerCase().trim();
-          // Search almost everything that could be a button or menu item
+
           let candidates = document.querySelectorAll(
             'button, [role="button"], [role="menuitem"], span, a, div, li',
           );
@@ -135,10 +135,10 @@ async function pollForCommands() {
           for (const el of candidates) {
             let elText = el.textContent?.toLowerCase().trim() || '';
             if (elText.includes(searchText)) {
-              // If it's a small element (like span or div inside a button),
-              // we might want the parent if the parent is a button
+
+
               let target = el;
-              // Simple heuristic: if we hit a span/div inside a button-like thing, use the button-like thing
+
               let parentButton = el.closest('button, [role="button"], [role="menuitem"]');
               if (parentButton) target = parentButton;
 
@@ -161,11 +161,11 @@ async function pollForCommands() {
           break;
 
         case 'clickAtCoords':
-          // Click at arbitrary screen coordinates
+
           let x = cmd.params.x;
           let y = cmd.params.y;
 
-          // Find element at coordinates
+
           let targetEl = document.elementFromPoint(x, y);
 
           let coordEventInit = {
@@ -180,7 +180,7 @@ async function pollForCommands() {
             buttons: 1,
           };
 
-          // Dispatch to document if no element found
+
           let dispatchTarget = targetEl || document.body;
           dispatchTarget.dispatchEvent(
             new PointerEvent('pointerdown', { ...coordEventInit, pointerType: 'mouse' }),
@@ -199,8 +199,8 @@ async function pollForCommands() {
           break;
 
         case 'clickNear':
-          // Click near an anchor element with offset
-          // Useful when button is next to known element (like submit button next to textarea)
+
+
           let anchorEl = document.querySelector(cmd.params.anchor);
           if (!anchorEl) throw new Error(`Anchor not found: ${cmd.params.anchor}`);
 
@@ -208,7 +208,7 @@ async function pollForCommands() {
           let offsetX = cmd.params.offsetX || 0;
           let offsetY = cmd.params.offsetY || 0;
 
-          // Calculate target point (default: right edge center + offset)
+
           let nearX = anchorRect.right + offsetX;
           let nearY = anchorRect.top + anchorRect.height / 2 + offsetY;
 
@@ -227,12 +227,12 @@ async function pollForCommands() {
           break;
 
         case 'clickSibling':
-          // Click a sibling/nearby button relative to an anchor element
-          // Finds anchor, goes up to container, finds button in same container
+
+
           let sibAnchor = document.querySelector(cmd.params.anchor);
           if (!sibAnchor) throw new Error(`Anchor not found: ${cmd.params.anchor}`);
 
-          // Try multiple container levels
+
           let sibBtn = null;
           let container = sibAnchor.parentElement;
           for (let i = 0; i < 5 && !sibBtn && container; i++) {
@@ -256,29 +256,29 @@ async function pollForCommands() {
           break;
 
         case 'findButtonNear':
-          // Smart visual element matching - finds button by position/size/content
-          // Much more reliable than CSS selectors!
+
+
           let visualAnchor = document.querySelector(cmd.params.anchor);
           if (!visualAnchor) throw new Error(`Anchor not found: ${cmd.params.anchor}`);
 
           let anchorBox = visualAnchor.getBoundingClientRect();
-          let position = cmd.params.position || 'right'; // right/left/above/below
+          let position = cmd.params.position || 'right';
           let maxDistance = cmd.params.maxDistance || 100;
           let minSize = cmd.params.minSize || 20;
           let maxSize = cmd.params.maxSize || 60;
           let excludeText = cmd.params.excludeText || [];
           let requireIcon = cmd.params.requireIcon ?? true;
 
-          // Collect all potential buttons
+
           let allButtons = document.querySelectorAll('button, [role="button"]');
           let bestMatch = null;
           let bestScore = -1;
 
           for (const btn of allButtons) {
             let btnRect = btn.getBoundingClientRect();
-            if (btnRect.width < 1 || btnRect.height < 1) continue; // invisible
+            if (btnRect.width < 1 || btnRect.height < 1) continue;
 
-            // Check position relative to anchor
+
             let positionOk = false;
             let distance = 0;
 
@@ -295,7 +295,7 @@ async function pollForCommands() {
               positionOk = btnRect.bottom <= anchorBox.top + 10;
               distance = anchorBox.top - btnRect.bottom;
             } else if (position === 'any') {
-              // Any direction - calculate euclidean distance from anchor center
+
               let anchorCenterX = anchorBox.left + anchorBox.width / 2;
               let anchorCenterY = anchorBox.top + anchorBox.height / 2;
               let btnCenterX = btnRect.left + btnRect.width / 2;
@@ -303,25 +303,25 @@ async function pollForCommands() {
               distance = Math.sqrt(
                 Math.pow(btnCenterX - anchorCenterX, 2) + Math.pow(btnCenterY - anchorCenterY, 2),
               );
-              positionOk = true; // Allow any position
+              positionOk = true;
             }
 
             if (!positionOk || distance < 0 || distance > maxDistance) continue;
 
-            // Check size
+
             let size = Math.max(btnRect.width, btnRect.height);
             if (size < minSize || size > maxSize) continue;
 
-            // Check for excluded text
+
             let btnText = btn.textContent?.toLowerCase() || '';
             if (excludeText.some((t) => btnText.includes(t.toLowerCase()))) continue;
 
-            // Check for icon
+
             let hasIcon = btn.querySelector('svg') !== null;
             if (requireIcon && !hasIcon) continue;
 
-            // Score: prefer closer buttons with matching size
-            let sizeScore = 1 - Math.abs(40 - size) / 40; // prefer ~40px
+
+            let sizeScore = 1 - Math.abs(40 - size) / 40;
             let distScore = 1 - distance / maxDistance;
             let score = sizeScore * 0.4 + distScore * 0.6;
 
@@ -352,15 +352,15 @@ async function pollForCommands() {
           break;
 
         case 'type':
-          // Type text into element (supports input/textarea and contenteditable)
+
           let typeEl = document.querySelector(cmd.params.selector);
           if (!typeEl) throw new Error(`Element not found: ${cmd.params.selector}`);
           typeEl.focus();
           if (typeEl.contentEditable === 'true') {
-            // Contenteditable div
+
             typeEl.textContent = cmd.params.text;
           } else {
-            // Regular input/textarea
+
             typeEl.value = cmd.params.text;
           }
           typeEl.dispatchEvent(new Event('input', { bubbles: true }));
@@ -368,7 +368,7 @@ async function pollForCommands() {
           break;
 
         case 'getAttribute':
-          // Get attribute from element
+
           let attrEl = document.querySelector(cmd.params.selector);
           if (!attrEl) throw new Error(`Element not found: ${cmd.params.selector}`);
           result = {
@@ -377,7 +377,7 @@ async function pollForCommands() {
           break;
 
         case 'querySelector':
-          // Query selector and return element info
+
           let qEl = document.querySelector(cmd.params.selector);
           result = qEl
             ? {
@@ -394,7 +394,7 @@ async function pollForCommands() {
           break;
 
         case 'querySelectorAll':
-          // Query all matching elements
+
           let qEls = document.querySelectorAll(cmd.params.selector);
           result = {
             count: qEls.length,
@@ -412,7 +412,7 @@ async function pollForCommands() {
           break;
 
         case 'navigate':
-          // Check if already on the target URL (ignoring hash/fragments)
+
           let targetUrl = new URL(cmd.params.url).href.replace(/#.*$/, '');
           let currentUrl = window.location.href.replace(/#.*$/, '');
 
@@ -422,10 +422,10 @@ async function pollForCommands() {
             break;
           }
 
-          // Navigate to URL - send result FIRST, then navigate after delay
+
           result = { navigated: true, url: cmd.params.url };
 
-          // Report success immediately
+
           await fetchWithTimeout(`${SERVER_URL}/commands/result`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -433,20 +433,20 @@ async function pollForCommands() {
           }).catch(logBridgeError('Failed to send navigation result'));
           logEvent('result', { id: cmd.id, success: true });
 
-          // Then navigate after brief delay
+
           setTimeout(() => {
             window.location.href = cmd.params.url;
           }, 300);
 
-          // Skip normal result reporting (already done above)
+
           continue;
 
         case 'refresh':
-          // Refresh page - used to recover from browser throttling
-          // Send result FIRST, then reload after delay
+
+
           result = { refreshed: true, url: window.location.href };
 
-          // Report success immediately
+
           await fetchWithTimeout(`${SERVER_URL}/commands/result`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -455,21 +455,21 @@ async function pollForCommands() {
           logEvent('result', { id: cmd.id, success: true });
           console.log('[GrokBridge] Refreshing page to recover from throttling...');
 
-          // Then reload after brief delay
+
           setTimeout(() => {
             window.location.reload();
           }, 100);
 
-          // Skip normal result reporting (already done above)
+
           continue;
 
         case 'uploadFile':
-          // Upload file via base64 data
+
           let base64 = cmd.params.base64;
           let mimeType = cmd.params.mimeType || 'image/jpeg';
           let filename = cmd.params.filename || 'image.jpg';
 
-          // Convert base64 to Blob
+
           let byteChars = atob(base64);
           let bytes = new Uint8Array(byteChars.length);
           for (let i = 0; i < byteChars.length; i++) {
@@ -478,22 +478,22 @@ async function pollForCommands() {
           let blob = new Blob([bytes], { type: mimeType });
           let file = new File([blob], filename, { type: mimeType });
 
-          // Find file input
+
           let fileInput = document.querySelector('input[type="file"]');
           if (!fileInput) throw new Error('File input not found');
 
-          // Create DataTransfer and set files
+
           let dt = new DataTransfer();
           dt.items.add(file);
           fileInput.files = dt.files;
 
-          // Trigger change event
+
           fileInput.dispatchEvent(new Event('change', { bubbles: true }));
           result = { uploaded: true, filename, size: bytes.length };
           break;
 
         case 'waitForSelector':
-          // Wait for element to appear
+
           result = await new Promise((resolve, reject) => {
             let timeout = cmd.params.timeout || 30000;
             let start = Date.now();
@@ -552,7 +552,7 @@ async function pollForCommands() {
           let allElements = document.querySelectorAll('*');
           let list = [];
           for (const el of all) {
-            // Find index in allElements
+
             let index = -1;
             for (let i = 0; i < allElements.length; i++) {
               if (allElements[i] === el) {
@@ -612,7 +612,7 @@ async function pollForCommands() {
               });
             }
           }
-          result = { count: matches.length, matches: matches.slice(-10) }; // Return last matches (usually leaf nodes)
+          result = { count: matches.length, matches: matches.slice(-10) };
           break;
         }
 
@@ -621,28 +621,28 @@ async function pollForCommands() {
           break;
 
         case 'getImageUrls':
-          // Extract CDN URLs from visible images (generated images)
+
           let allImgs = document.querySelectorAll('img');
           let imgUrls = [];
-          let debugUrls = []; // For debugging
+          let debugUrls = [];
           for (const img of allImgs) {
             let src = img.src || '';
-            // Log first 5 image srcs for debugging
+
             if (debugUrls.length < 5 && src.length > 10) {
               debugUrls.push(src.substring(0, 80));
             }
-            // Match imagine-public CDN URLs (HQ generated images)
+
             if (src.includes('imagine-public.x.ai') || src.includes('imagine-public')) {
               imgUrls.push(src);
             }
           }
           console.log('[getImageUrls] Debug - sample URLs:', debugUrls);
-          // Dedupe and return
+
           result = { urls: [...new Set(imgUrls)], count: imgUrls.length, debug: debugUrls };
           break;
 
         case 'generateImage':
-          // Generate image via WebSocket (uses injected WS interceptor)
+
           result = await new Promise((resolve, reject) => {
             let commandId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             let timeout = setTimeout(() => {
@@ -664,7 +664,7 @@ async function pollForCommands() {
 
             window.addEventListener('grok-generate-result', handler);
 
-            // Dispatch command to page context
+
             window.dispatchEvent(
               new CustomEvent('grok-generate-command', {
                 detail: {
@@ -678,7 +678,7 @@ async function pollForCommands() {
           break;
 
         case 'fetchImage':
-          // Download image via browser (with authenticated cookies)
+
           let imgRes = await fetchWithTimeout(cmd.params.url, {
             credentials: 'include',
             headers: {
@@ -698,8 +698,8 @@ async function pollForCommands() {
           break;
 
         case 'waitForImageComplete':
-          // Wait for image generation to complete via WebSocket
-          // Uses event-based communication with injected script
+
+
           result = await new Promise((resolve, reject) => {
             let commandId = `wait_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             let timeout = cmd.params.timeout || 120000;
@@ -707,7 +707,7 @@ async function pollForCommands() {
             let timeoutId = setTimeout(() => {
               window.removeEventListener('grok-wait-image-result', handler);
               reject(new Error('Timeout waiting for image completion'));
-            }, timeout + 5000); // Extra buffer for WS timeout
+            }, timeout + 5000);
 
             function handler(event) {
               if (event.detail.commandId !== commandId) return;
@@ -723,7 +723,7 @@ async function pollForCommands() {
 
             window.addEventListener('grok-wait-image-result', handler);
 
-            // Dispatch command to page context
+
             window.dispatchEvent(
               new CustomEvent('grok-wait-image-command', {
                 detail: { commandId, timeout },
@@ -733,8 +733,8 @@ async function pollForCommands() {
           break;
 
         case 'uploadImage':
-          // Upload image to Grok and get asset ID
-          // params: { base64, fileName, mimeType }
+
+
           let uploadRes = await fetchWithTimeout('https://grok.com/rest/app-chat/upload-file', {
             method: 'POST',
             credentials: 'include',
@@ -747,7 +747,7 @@ async function pollForCommands() {
           }, cmd.params.timeout || 60000);
           if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
           let uploadData = await uploadRes.json();
-          // Response has fileMetadataId, not fileId
+
           let assetId = uploadData.fileMetadataId;
           let userId = uploadData.fileUri?.split('/')[1];
           result = {
@@ -760,8 +760,8 @@ async function pollForCommands() {
           break;
 
         case 'createMediaPost':
-          // Create media post from uploaded asset
-          // params: { assetId, mediaType }
+
+
           let assetUrl = `https://assets.grok.com/users/${cmd.params.userId}/${cmd.params.assetId}/content`;
           let postRes = await fetchWithTimeout('https://grok.com/rest/media/post/create', {
             method: 'POST',
@@ -777,8 +777,8 @@ async function pollForCommands() {
           break;
 
         case 'imageToVideo':
-          // Generate video from uploaded image (via page context to bypass anti-bot)
-          // params: { assetId, assetUrl, prompt, aspectRatio, videoLength, mode }
+
+
           result = await new Promise((resolve, reject) => {
             let videoCommandId = `video_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -795,7 +795,7 @@ async function pollForCommands() {
 
             window.addEventListener('grok-video-result', handler);
 
-            // Timeout
+
             setTimeout(() => {
               window.removeEventListener('grok-video-result', handler);
               reject(new Error('Video generation timeout (120s)'));
@@ -815,8 +815,8 @@ async function pollForCommands() {
           break;
 
         case 'upscaleVideo':
-          // Upscale a generated video (via page context to bypass anti-bot)
-          // params: { videoId }
+
+
           result = await new Promise((resolve, reject) => {
             let upscaleCommandId = `upscale_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -852,9 +852,8 @@ async function pollForCommands() {
           break;
 
         case 'showClickableZones':
-          // Show numbered overlay on all clickable elements
-          // Helps identify which zone to click
-          // layer param: 'all' (default), 'buttons', 'inputs', 'images'
+
+
           let layer = cmd.params?.layer || 'all';
           let existingOverlay = document.getElementById('grok-zones-overlay');
           if (existingOverlay) existingOverlay.remove();
@@ -880,12 +879,12 @@ async function pollForCommands() {
             : [];
           let zones = [];
 
-          // Separate counters for each type
+
           let btnNum = 1;
           let inputNum = 1;
           let imgNum = 1;
 
-          // Add clickable elements (red) - B1, B2, B3...
+
           clickables.forEach((el) => {
             let rect = el.getBoundingClientRect();
             if (rect.width < 10 || rect.height < 10) return;
@@ -926,7 +925,7 @@ async function pollForCommands() {
             btnNum++;
           });
 
-          // Add input elements (green) - I1, I2, I3...
+
           inputEls.forEach((el) => {
             let rect = el.getBoundingClientRect();
             if (rect.width < 10 || rect.height < 10) return;
@@ -967,7 +966,7 @@ async function pollForCommands() {
             inputNum++;
           });
 
-          // Add image elements (blue - clickable images in galleries)
+
           let images = showImages
             ? document.querySelectorAll(
               'img[src*="imagine"], img[src*="grok"], img[alt*="image"], div.group\\/media-post-masonry-card img',
@@ -1015,28 +1014,28 @@ async function pollForCommands() {
 
           document.body.appendChild(overlay);
 
-          // Store zones in window for clickZone command
+
           window._grokClickZones = zones;
 
-          // Auto-hide after 30 seconds
+
           setTimeout(() => overlay.remove(), 30000);
 
           result = { zones: zones.slice(0, 50), total: zones.length };
           break;
 
         case 'clickZone':
-          // Click element by zone ID from showClickableZones
-          // Supports both string IDs (B13, I2, M1) and legacy number format
+
+
           let clickZoneId = cmd.params.zone;
           if (!window._grokClickZones) throw new Error('Run showClickableZones first');
 
-          // Find by id (string like 'B13') or num (number like 13 for legacy)
+
           let clickZone = window._grokClickZones.find(
             (z) => z.id === clickZoneId || z.id === String(clickZoneId) || z.num === clickZoneId,
           );
           if (!clickZone) throw new Error(`Zone ${clickZoneId} not found`);
 
-          // Find element at zone coordinates
+
           let clickZoneEl = document.elementFromPoint(clickZone.x, clickZone.y);
           if (clickZoneEl) {
             let clickZoneCoords = performCoordinateClick(clickZoneEl);
@@ -1053,7 +1052,7 @@ async function pollForCommands() {
           break;
 
         case 'hideZones':
-          // Remove zones overlay
+
           let zoneOverlay = document.getElementById('grok-zones-overlay');
           if (zoneOverlay) zoneOverlay.remove();
           delete window._grokClickZones;
@@ -1061,14 +1060,14 @@ async function pollForCommands() {
           break;
 
         case 'waitForZone':
-          // Wait for a specific zone to appear by periodically refreshing zones
-          // Returns when the zone is found
+
+
           let waitZoneId = cmd.params.zone;
           let waitTimeout = cmd.params.timeout || 30000;
           let waitStart = Date.now();
 
           while (Date.now() - waitStart < waitTimeout) {
-            // Refresh zones list
+
             let showButtons = true;
             let showInputs = true;
             let showImages = true;
@@ -1124,7 +1123,7 @@ async function pollForCommands() {
 
             let foundZone = foundZones.find((z) => z.id === waitZoneId);
             if (foundZone) {
-              // Store zones for subsequent clickZone calls
+
               window._grokClickZones = foundZones;
               result = { found: true, zone: waitZoneId, elapsed: Date.now() - waitStart };
               break;
@@ -1139,13 +1138,13 @@ async function pollForCommands() {
           break;
 
         case 'typeInZone':
-          // Type text into input zone
-          // Supports string IDs (I1, I2) and legacy numbers
+
+
           let zoneTypeId = cmd.params.zone;
           let zoneTypeText = cmd.params.text;
           if (!window._grokClickZones) throw new Error('Run showClickableZones first');
 
-          // Find by id (string like 'I1') or num (number for legacy)
+
           let zoneForType = window._grokClickZones.find(
             (z) => z.id === zoneTypeId || z.id === String(zoneTypeId) || z.num === zoneTypeId,
           );
@@ -1156,14 +1155,14 @@ async function pollForCommands() {
 
           zoneInputEl.focus();
 
-          // Handle both regular inputs and contenteditable elements
+
           if (zoneInputEl.tagName === 'INPUT' || zoneInputEl.tagName === 'TEXTAREA') {
             zoneInputEl.value = zoneTypeText;
           } else if (zoneInputEl.contentEditable === 'true' || zoneInputEl.isContentEditable) {
-            // For contenteditable (like TipTap ProseMirror)
+
             zoneInputEl.textContent = zoneTypeText;
           } else {
-            // Fallback - try both approaches
+
             if ('value' in zoneInputEl) {
               zoneInputEl.value = zoneTypeText;
             } else {
@@ -1187,7 +1186,7 @@ async function pollForCommands() {
           throw new Error(`Unknown action: ${cmd.action}`);
         }
 
-        // Report success
+
         await fetchWithTimeout(`${SERVER_URL}/commands/result`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1205,10 +1204,9 @@ async function pollForCommands() {
       }
     }
   } catch (err) {
-    // Server not available - silent
+
   }
 }
-
 
 
 /**
@@ -1220,7 +1218,7 @@ function serializeResult(value) {
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
     return value;
 
-  // DOM Element
+
   if (value instanceof Element) {
     return {
       _type: 'Element',
@@ -1232,17 +1230,17 @@ function serializeResult(value) {
     };
   }
 
-  // NodeList / HTMLCollection
+
   if (value instanceof NodeList || value instanceof HTMLCollection) {
     return Array.from(value).map(serializeResult);
   }
 
-  // Array
+
   if (Array.isArray(value)) {
     return value.map(serializeResult);
   }
 
-  // Object
+
   if (typeof value === 'object') {
     try {
       return JSON.parse(JSON.stringify(value));
@@ -1254,37 +1252,34 @@ function serializeResult(value) {
   return String(value);
 }
 
-// === ANTI-THROTTLING POLLING ===
-// Chrome throttles setInterval in background tabs. Using recursive setTimeout
-// with visibility detection helps diagnose throttling issues.
 
 let lastPollTime = Date.now();
 let pollCount = 0;
 let isTabVisible = !document.hidden;
 
-// Track visibility changes
+
 document.addEventListener('visibilitychange', () => {
   isTabVisible = !document.hidden;
   console.log(`[GrokBridge] Tab visibility: ${isTabVisible ? 'VISIBLE' : 'HIDDEN'}`);
   if (isTabVisible) {
-    // Tab became visible - check if we missed polls
+
     let elapsed = Date.now() - lastPollTime;
     if (elapsed > 5000) {
       console.log(
         `[GrokBridge] ⚠️ Missed polls! Last poll ${Math.round(elapsed / 1000)}s ago. Chrome throttled us.`,
       );
     }
-    // Force immediate poll when tab becomes visible
+
     pollForCommands();
   }
 });
 
-// Recursive polling with heartbeat logging
+
 function startPolling() {
   pollCount++;
   lastPollTime = Date.now();
 
-  // Log heartbeat every 30 polls (~30s) to confirm we're alive
+
   if (pollCount % 30 === 0) {
     console.log(
       `[GrokBridge] ♥ Heartbeat #${pollCount}, tab ${isTabVisible ? 'visible' : 'hidden'}`,
@@ -1295,10 +1290,10 @@ function startPolling() {
   setTimeout(startPolling, POLL_INTERVAL);
 }
 
-// Start polling
+
 startPolling();
 
-// Listen for messages from sidepanel
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getPageInfo') {
     sendResponse({
@@ -1314,8 +1309,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 logEvent('info', 'DOM Gateway initialized');
 
-// === ACTION RECORDING ===
-// Capture user clicks and send to server for analysis
 
 /**
  * Get a unique CSS selector for an element
@@ -1323,7 +1316,7 @@ logEvent('info', 'DOM Gateway initialized');
 function getSelector(el) {
   if (!el || el === document.body) return 'body';
 
-  // Priority: aria-label > id > unique class > nth-child
+
   if (el.getAttribute('aria-label')) {
     return `[aria-label="${el.getAttribute('aria-label')}"]`;
   }
@@ -1331,7 +1324,7 @@ function getSelector(el) {
     return `#${el.id}`;
   }
 
-  // Build path
+
   let path = [];
   while (el && el !== document.body) {
     let selector = el.tagName.toLowerCase();
@@ -1353,7 +1346,7 @@ function getSelector(el) {
 /**
  * Record user actions
  */
-let recordingEnabled = true; // Always on for now
+let recordingEnabled = true;
 
 document.addEventListener(
   'click',
@@ -1364,14 +1357,14 @@ document.addEventListener(
     let rect = el.getBoundingClientRect();
     let computed = window.getComputedStyle(el);
 
-    // Get parent button if clicking inside one (svg/path inside button)
+
     let parentBtn = el.closest('button, [role="button"]');
     let parentRect = parentBtn ? parentBtn.getBoundingClientRect() : null;
 
     let action = {
       type: 'click',
       timestamp: Date.now(),
-      // Basic info
+
       tag: el.tagName,
       id: el.id || null,
       className: el.className || null,
@@ -1380,22 +1373,22 @@ document.addEventListener(
       role: el.getAttribute('role'),
       selector: getSelector(el),
       url: window.location.href,
-      // IMG/A specific - capture actual file URLs
+
       src: el.tagName === 'IMG' ? el.src : null,
       href: el.tagName === 'A' ? el.href : null,
-      // Size and position
+
       rect: {
         x: Math.round(rect.x),
         y: Math.round(rect.y),
         width: Math.round(rect.width),
         height: Math.round(rect.height),
       },
-      // Shape analysis
+
       shape:
         rect.width === rect.height ? 'square' : rect.width > rect.height * 1.5 ? 'wide' : 'tall',
-      // Content type
+
       hasIcon: el.querySelector('svg') !== null || el.tagName === 'SVG' || el.tagName === 'path',
-      // Parent button info (if clicking svg inside button)
+
       parentButton: parentBtn
         ? {
           tag: parentBtn.tagName,
@@ -1411,14 +1404,14 @@ document.addEventListener(
             : null,
         }
         : null,
-      // Display info
+
       display: computed.display,
       visibility: computed.visibility,
     };
 
     console.log('[GrokBridge] Action:', action.type, action.selector);
 
-    // Send to server
+
     fetch(`${SERVER_URL}/actions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1430,7 +1423,7 @@ document.addEventListener(
   true,
 );
 
-// Input/change events
+
 document.addEventListener(
   'input',
   (e) => {
@@ -1446,7 +1439,7 @@ document.addEventListener(
       url: window.location.href,
     };
 
-    // Debounce: only send after pause
+
     clearTimeout(el._inputTimeout);
     el._inputTimeout = setTimeout(() => {
       fetch(`${SERVER_URL}/actions`, {
@@ -1463,8 +1456,7 @@ document.addEventListener(
 
 console.log('[GrokBridge] Action recording enabled');
 
-// === WEBSOCKET INTERCEPTOR ===
-// Inject via external script file to bypass CSP (no inline scripts allowed)
+
 (function injectWebSocketInterceptorSync() {
   let script = document.createElement('script');
   script.src = chrome.runtime.getURL('websocket-interceptor.js');
@@ -1476,7 +1468,7 @@ console.log('[GrokBridge] Action recording enabled');
   (document.documentElement || document.head || document.body).appendChild(script);
 })();
 
-// Listen for WebSocket messages from injected script
+
 window.addEventListener('grok-ws-message', (event) => {
   let message = event.detail;
   console.log(
@@ -1484,7 +1476,7 @@ window.addEventListener('grok-ws-message', (event) => {
     message.data?.substring?.(0, 200) || message.data,
   );
 
-  // Send to server for analysis
+
   fetch(`${SERVER_URL}/websocket`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1494,12 +1486,12 @@ window.addEventListener('grok-ws-message', (event) => {
   });
 });
 
-// Listen for Fetch API calls from injected script
+
 window.addEventListener('grok-fetch', (event) => {
   let logEntry = event.detail;
   console.log(`[GrokBridge] Fetch: ${logEntry.method} ${logEntry.url}`);
 
-  // Send to server for analysis
+
   fetch(`${SERVER_URL}/fetch`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -64,7 +64,7 @@ export class Zoom {
   #wheel = (e) => {
     e.preventDefault();
     let rect = this.#getRect();
-    // Normalize delta: trackpads send small frequent deltas, mice send large ones
+
     let absDelta = Math.min(Math.abs(e.deltaY), 10) / 10;
     let sign = e.deltaY < 0 ? 1 : -1;
     let delta = sign * this.intensity * absDelta;

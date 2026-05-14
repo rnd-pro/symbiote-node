@@ -14,7 +14,7 @@ import { SVGShape, createSVGShape, SVG_PRESETS } from './SVGShape.js';
 /** @type {Map<string, NodeShape>} */
 let registry = new Map();
 
-// Register built-in shapes
+
 const RECT = new RectShape();
 const PILL = new PillShape();
 const CIRCLE = new CircleShape();
@@ -27,7 +27,7 @@ registry.set('circle', CIRCLE);
 registry.set('diamond', DIAMOND);
 registry.set('comment', COMMENT);
 
-// Register SVG preset shapes
+
 for (const [name, pathData] of Object.entries(SVG_PRESETS)) {
   registry.set(name, createSVGShape(name, pathData));
 }

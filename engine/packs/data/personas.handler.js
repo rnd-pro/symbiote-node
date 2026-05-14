@@ -117,7 +117,7 @@ export default {
     cacheKey: (inputs, params) => {
       let op = params.operation || 'get';
       if (op === 'get') return `personas:get:${inputs.personaId}`;
-      if (op === 'random') return null; // Never cache random
+      if (op === 'random') return null;
       return `personas:list:${params.filterGender}:${params.filterType}`;
     },
 
@@ -152,7 +152,7 @@ export default {
         if (params.filterType) {
           pool = pool.filter((p) => p.type === params.filterType);
         }
-        // Fisher-Yates shuffle
+
         for (let i = pool.length - 1; i > 0; i--) {
           let j = Math.floor(Math.random() * (i + 1));
           [pool[i], pool[j]] = [pool[j], pool[i]];

@@ -42,7 +42,7 @@ export class PanelMenu extends Symbiote {
     this.$.panelId = panelId;
     this.$.currentType = currentType;
 
-    // Transform items to include isActive flag for template binding
+
     this.$.items = items.map((item) => ({
       ...item,
       icon: item.icon || 'dashboard',
@@ -54,7 +54,7 @@ export class PanelMenu extends Symbiote {
     this.style.top = `${y}px`;
     this.$.visible = true;
 
-    // Close on outside click
+
     if (typeof setTimeout !== 'undefined') {
       setTimeout(() => {
         if (typeof document !== 'undefined') {

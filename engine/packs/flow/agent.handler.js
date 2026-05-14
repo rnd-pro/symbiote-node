@@ -41,10 +41,10 @@ export default {
       let { prompt, context } = inputs;
       let { timeout, allowedTools, model } = params;
 
-      // Check if agentBridge is available (injected via params or global)
+
       let bridge = params._agentBridge || globalThis.__symbioteNodeAgentBridge;
       if (!bridge) {
-        // No bridge available — return pending marker
+
         return {
           result: {
             _agentPending: true,

@@ -37,16 +37,16 @@ export default {
 
       for (const [key, rawValue] of Object.entries(params.fields || {})) {
         if (typeof rawValue === 'string' && rawValue.startsWith('={{') && rawValue.endsWith('}}')) {
-          // Expression: resolve from input data
+
           let expr = rawValue.slice(3, -2).trim();
-          // Simple dot-path resolution
+
           let value = expr.split('.').reduce((obj, k) => {
             if (obj === null || obj === undefined) return undefined;
             return obj[k];
           }, inputData);
           base[key] = value;
         } else {
-          // Static value
+
           base[key] = rawValue;
         }
       }

@@ -47,7 +47,7 @@ export class SubgraphNode extends Node {
    * Inner nodes with `_exposed: 'output'` become subgraph outputs.
    */
   syncPorts() {
-    // Clear existing auto-ports (keep manually added ones)
+
     for (const key of Object.keys(this.inputs)) {
       if (key.startsWith('sg_')) this.removeInput(key);
     }
@@ -57,7 +57,7 @@ export class SubgraphNode extends Node {
 
     let anySocket = new Socket('any', { color: '#94a3b8' });
 
-    // Find exposed inner nodes
+
     for (const innerNode of this.innerEditor.getNodes()) {
       if (innerNode._exposed === 'input') {
         for (const [key, output] of Object.entries(innerNode.outputs)) {

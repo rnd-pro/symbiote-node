@@ -50,7 +50,7 @@ export class History {
     this.#getCanvas = options.getCanvas || null;
     this.#classes = options.classes || {};
 
-    // Track node additions
+
     this.#unsubs.push(
       editor.on('nodecreated', (node) => {
         if (this.#isApplying) return;
@@ -63,13 +63,13 @@ export class History {
       })
     );
 
-    // Track node removals
+
     this.#unsubs.push(
       editor.on('noderemove', (node) => {
         if (this.#isApplying) return;
         let canvas = this.#getCanvas?.();
         let pos = canvas ? this.#getNodePosition(canvas, node.id) : [0, 0];
-        // Capture connections that will be removed with this node
+
         let conns = editor.getNodeConnections(node.id).map((c) => this.#serializeConnection(c));
         this.#push({
           type: 'removeNode',
@@ -78,7 +78,7 @@ export class History {
       })
     );
 
-    // Track node moves
+
     this.#unsubs.push(
       editor.on('nodepicked', (node) => {
         if (this.#isApplying) return;
@@ -97,7 +97,7 @@ export class History {
         let canvas = this.#getCanvas?.();
         let endPos = canvas ? this.#getNodePosition(canvas, id) : [0, 0];
         let startPos = node._historyStartPos;
-        // Only record if position actually changed
+
         if (startPos[0] !== endPos[0] || startPos[1] !== endPos[1]) {
           this.#push({
             type: 'moveNode',
@@ -108,7 +108,7 @@ export class History {
       })
     );
 
-    // Track connections
+
     this.#unsubs.push(
       editor.on('connectioncreated', (conn) => {
         if (this.#isApplying) return;
@@ -129,7 +129,7 @@ export class History {
       })
     );
 
-    // Track frames
+
     this.#unsubs.push(
       editor.on('framecreated', (frame) => {
         if (this.#isApplying) return;
@@ -223,12 +223,11 @@ export class History {
     this.#editor = null;
   }
 
-  // --- Private ---
 
   #push(action) {
     this.#undoStack.push(action);
     if (this.#undoStack.length > MAX_STACK) this.#undoStack.shift();
-    this.#redoStack = []; // new action invalidates redo
+    this.#redoStack = [];
   }
 
   #applyReverse(action) {
@@ -254,7 +253,7 @@ export class History {
           try {
             editor.addConnection(conn);
           } catch {
-            /* node may not exist */
+
           }
         }
       },
@@ -273,7 +272,7 @@ export class History {
         try {
           editor.addConnection(conn);
         } catch {
-          /* already exists */
+
         }
       },
       addFrame: () => editor.removeFrame(action.data.frame.id),
@@ -314,7 +313,7 @@ export class History {
         try {
           editor.addConnection(conn);
         } catch {
-          /* already exists */
+
         }
       },
       removeConnection: () => editor.removeConnection(action.data.connection.id),

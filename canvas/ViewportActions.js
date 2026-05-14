@@ -68,25 +68,25 @@ export class ViewportActions {
       this.#selector.unselectAll();
     }
 
-    // Copy selected nodes
+
     if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       this.#copySelected();
     }
 
-    // Paste nodes
+
     if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       this.#pasteNodes();
     }
 
-    // Align horizontal
+
     if (e.key === 'h' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
       e.preventDefault();
       this.alignSelectedHorizontal();
     }
 
-    // Align vertical
+
     if (e.key === 'j' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
       e.preventDefault();
       this.alignSelectedVertical();
@@ -376,7 +376,6 @@ export class ViewportActions {
     });
   }
 
-  // --- Copy/Paste ---
 
   #copySelected() {
     let selected = this.#selector.getSelectedNodes();
@@ -422,7 +421,6 @@ export class ViewportActions {
     }
   }
 
-  // --- Align Tools ---
 
   /** Align selected nodes horizontally (same Y) */
   alignSelectedHorizontal() {

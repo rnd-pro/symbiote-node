@@ -38,7 +38,7 @@ export async function createServer(options = {}) {
   let watchers = [];
   let log = verbose ? console.log.bind(console) : () => {};
 
-  // Load initial workflow
+
   if (workflowFile) {
     try {
       let json = await readFile(resolve(workflowFile), 'utf-8');
@@ -50,7 +50,7 @@ export async function createServer(options = {}) {
     }
   }
 
-  // Load handler files
+
   if (handlersDir) {
     let dir = resolve(handlersDir);
     let registered = await loadHandlers(dir);
@@ -67,12 +67,11 @@ export async function createServer(options = {}) {
     }
   }
 
-  // ─── HTTP Server ────────────────────────────────────
 
   let httpServer = createHttpServer(async (req, res) => {
     let url = new URL(req.url, `http://localhost:${port}`);
 
-    // CORS headers
+
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -114,7 +113,7 @@ export async function createServer(options = {}) {
         return;
       }
 
-      // Health check
+
       if (url.pathname === '/api/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'ok', nodes: graph.nodes.size }));
@@ -129,7 +128,6 @@ export async function createServer(options = {}) {
     }
   });
 
-  // ─── WebSocket Server ────────────────────────────────
 
   let wss = new WebSocketServer({ server: httpServer });
   /** @type {Set<import('ws').WebSocket>} */
@@ -139,7 +137,7 @@ export async function createServer(options = {}) {
     clients.add(ws);
     log(`🔌 Client connected (${clients.size} total)`);
 
-    // Send current state on connect
+
     ws.send(JSON.stringify({ type: 'graph:update', payload: graph.toJSON() }));
 
     ws.on('message', async (data) => {
@@ -171,8 +169,6 @@ export async function createServer(options = {}) {
     }
   }
 
-  // ── WS Command Map ─────────────────────────────────
-  // cmdMap[type]?.(payload, ws) — one-liner dispatch per BEST-PRACTICES §5
 
   let UI_PASSTHROUGH = new Set([
     'ui:layout',
@@ -236,7 +232,7 @@ export async function createServer(options = {}) {
   async function handleWsMessage(msg, ws) {
     let { type, payload } = msg;
 
-    // UI passthrough — forward to all other clients
+
     if (UI_PASSTHROUGH.has(type)) {
       broadcast(msg, ws);
       return;
@@ -274,7 +270,7 @@ export async function createServer(options = {}) {
       payload: { totalTime: result.totalTime, log: result.log },
     });
 
-    // Save to workflow file if configured
+
     if (workflowFile) {
       try {
         await writeFile(resolve(workflowFile), JSON.stringify(graph.toJSON(), null, 2));
@@ -316,7 +312,6 @@ export async function createServer(options = {}) {
     }
   }
 
-  // ─── File Watching ────────────────────────────────
 
   if (watchFiles && workflowFile) {
     let wfPath = resolve(workflowFile);
@@ -348,7 +343,6 @@ export async function createServer(options = {}) {
     watchers.push(() => ac.abort());
   }
 
-  // ─── Start & Close ────────────────────────────────
 
   await new Promise((resolve) => httpServer.listen(port, resolve));
   log(`🚀 symbiote-node server on http://localhost:${port}`);

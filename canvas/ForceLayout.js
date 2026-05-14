@@ -64,14 +64,14 @@ export class ForceLayout {
     this.#worker.onmessage = (e) => {
       let msg = e.data;
 
-      // Continuous mode: receive node ID order once for Float32Array unpacking
+
       if (msg.type === 'nodeIds') {
         this.#nodeIds = msg.ids;
         return;
       }
 
       if (msg.type === 'tick') {
-        // Unpack Float32Array if present (continuous mode)
+
         if (msg.packed && this.#nodeIds) {
           let buf = new Float32Array(msg.packed);
           let positions = {};
@@ -83,7 +83,7 @@ export class ForceLayout {
           }
           this.#latestPositions = positions;
         } else {
-          // Converge mode: positions as plain object
+
           this.#latestPositions = msg.positions;
         }
         this.#scheduleRender();
@@ -92,9 +92,8 @@ export class ForceLayout {
       if (msg.type === 'done') {
         this.#latestPositions = msg.positions;
         this.#flushRender();
-        // Do NOT terminate the worker or set running=false.
-        // In continuous mode, the worker stays alive to respond to drag (pin/unpin) interactions.
-        // It will auto-sleep and wake up as needed.
+
+
         this.onDone?.(msg.positions, msg.iteration);
       }
     };

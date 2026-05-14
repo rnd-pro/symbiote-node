@@ -16,7 +16,6 @@ import { Node } from '../core/Node.js';
 import { Connection } from '../core/Connection.js';
 import { Socket, Input, Output, InputControl } from '../core/Socket.js';
 
-// ---- Bézier parser ----
 
 /**
  * Parse SVG cubic Bézier path `d` attribute
@@ -48,7 +47,6 @@ function makeBezierPath(sx, sy, ex, ey) {
   return `M ${sx} ${sy} C ${sx + dx} ${sy}, ${ex - dx} ${ey}, ${ex} ${ey}`;
 }
 
-// ---- Test fixtures ----
 
 let editor, source, processor, output;
 let numSocket, strSocket;
@@ -80,7 +78,6 @@ before(() => {
   editor.addConnection(new Connection(processor, 'result', output, 'input'));
 });
 
-// ---- Tests ----
 
 describe('Connection-port consistency', () => {
   it('all connections reference valid output ports', () => {

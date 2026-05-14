@@ -19,7 +19,7 @@ const CATEGORY_ICONS = {
   instance: 'memory',
   control: 'tune',
   data: 'database',
-  // Codebase-specific
+
   directory: 'folder',
   file: 'description',
   function: 'functions',
@@ -49,7 +49,7 @@ export class GraphNode extends Symbiote {
       this.$.nodeIcon = CATEGORY_ICONS[val] || CATEGORY_ICONS.default;
     });
 
-    // Populate ports from node data
+
     if (this._nodeData) {
       this.#populateFromNodeData(this._nodeData);
     }

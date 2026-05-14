@@ -23,7 +23,7 @@ import path from 'node:path';
 async function processTemplate(template, context, baseDir) {
   let result = template;
 
-  // Process file includes: {{file.md}} or {{path/to/file.md}}
+
   let fileIncludeRegex = /\{\{([a-zA-Z0-9_\-\/\.]+\.md)\}\}/g;
   let match;
 
@@ -33,7 +33,7 @@ async function processTemplate(template, context, baseDir) {
 
     try {
       let includeContent = await readFile(path.join(baseDir, filePath), 'utf-8');
-      // Recursively process included content
+
       includeContent = await processTemplate(
         includeContent,
         context,
@@ -41,11 +41,11 @@ async function processTemplate(template, context, baseDir) {
       );
       result = result.replace(fullMatch, includeContent);
     } catch {
-      // Leave placeholder as is
+
     }
   }
 
-  // Process variables: {{VARIABLE_NAME}}
+
   let variableRegex = /\{\{([A-Z_][A-Z0-9_]*)\}\}/g;
 
   result = result.replace(variableRegex, (fullMatch, varName) => {
@@ -94,7 +94,6 @@ async function listPromptTemplates(dir) {
   }
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'data/prompt-loader',
@@ -117,9 +116,9 @@ export default {
       },
       context: { type: 'any', default: {}, description: 'Variables map for template substitution' },
       baseDir: { type: 'string', default: '.', description: 'Base directory for file includes' },
-      // load-multi
+
       templates: { type: 'any', default: null, description: 'Map of {name: path} for load-multi' },
-      // load from file
+
       filePath: {
         type: 'string',
         default: null,
@@ -135,13 +134,13 @@ export default {
       if (op === 'load-multi')
         return typeof params.templates === 'object' && params.templates !== null;
       if (op === 'validate') return typeof inputs.template === 'string';
-      // load
+
       return typeof inputs.template === 'string' || typeof params.filePath === 'string';
     },
 
     cacheKey: (inputs, params) => {
       if (params.operation === 'list') return `prompt-list:${params.baseDir}`;
-      return null; // templates change with context
+      return null;
     },
 
     execute: async (inputs, params) => {

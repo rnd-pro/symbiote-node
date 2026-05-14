@@ -62,10 +62,10 @@ export class QuickToolbar extends Symbiote {
 
     this.#positionAtNode(nodeEl);
 
-    // Update collapse icon based on current state
+
     this.#updateIcons(nodeEl);
 
-    // Show/hide enter button for subgraph nodes
+
     let enterBtn = this.querySelector('[data-action="enter"]');
     if (enterBtn) {
       enterBtn.hidden = nodeEl.getAttribute('node-type') !== 'subgraph';

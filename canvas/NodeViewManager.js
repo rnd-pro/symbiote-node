@@ -116,17 +116,17 @@ export class NodeViewManager {
 
     let fragment = document.createDocumentFragment();
 
-    // 1. Create all elements and bind them (no DOM append yet)
+
     for (const node of nodes) {
       let el = this.#createNodeElement(node);
       fragment.appendChild(el);
       this.#nodeViews.set(node.id, el);
     }
 
-    // 2. Single batch insert into live DOM
+
     this.#nodesLayer.appendChild(fragment);
 
-    // 3. Post-processing (SVG injection, preview canvas) requires elements to be in DOM
+
     for (const node of nodes) {
       let el = this.#nodeViews.get(node.id);
       if (el) this.#postProcessNodeView(node, el);
@@ -175,13 +175,13 @@ export class NodeViewManager {
       },
       {
         shouldStart: (e) => {
-          // SVG shapes: only start drag if click is inside the SVG path
+
           let svgPath = el.querySelector('svg > path');
-          if (!svgPath) return true; // not an SVG shape node
+          if (!svgPath) return true;
           let svg = svgPath.ownerSVGElement;
           let rect = svg.getBoundingClientRect();
           let vb = svg.viewBox.baseVal;
-          // Convert page coords to SVG viewBox coords
+
           let sx = ((e.clientX - rect.left) / rect.width) * vb.width + vb.x;
           let sy = ((e.clientY - rect.top) / rect.height) * vb.height + vb.y;
           let pt = new DOMPoint(sx, sy);
@@ -216,16 +216,16 @@ export class NodeViewManager {
    * @param {HTMLElement} el
    */
   #postProcessNodeView(node, el) {
-    // Apply shape visuals: SVG background layer instead of clip-path
-    // Clip-path clips content (labels, ports). SVG bg preserves them.
+
+
     let shape = getShape(node.shape);
     if (shape && shape.pathData) {
-      // Set explicit element dimensions to match SVG viewBox aspect ratio
-      // This ensures correct proportions and reliable offsetWidth/Height
+
+
       let vb = shape.viewBox.split(' ').map(Number);
       let vbW = vb[2];
       let vbH = vb[3];
-      let baseSize = 120; // base dimension
+      let baseSize = 120;
       let aspect = vbW / vbH;
       let nodeW = aspect >= 1 ? baseSize : Math.round(baseSize * aspect);
       let nodeH = aspect >= 1 ? Math.round(baseSize / aspect) : baseSize;
@@ -239,7 +239,7 @@ export class NodeViewManager {
       if (shape && shape.pathData) {
         let size = { width: el.offsetWidth, height: el.offsetHeight };
 
-        // 1. Inject SVG background — element is properly proportioned
+
         let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('viewBox', shape.viewBox);
         svg.setAttribute('preserveAspectRatio', 'none');
@@ -261,19 +261,19 @@ export class NodeViewManager {
         el.prepend(svg);
         el.setAttribute('data-svg-shape', shape.name);
 
-        // Make node background transparent — SVG provides the shape
+
         el.style.background = 'transparent';
         el.style.border = 'none';
         el.style.boxShadow = 'none';
         el.style.borderRadius = '0';
         el.style.overflow = 'visible';
 
-        // Elevate content above SVG layer
+
         for (const child of el.children) {
           if (child !== svg) child.style.position = 'relative';
         }
 
-        // Watermark icon — large pale category icon centered inside shape
+
         let iconEl = el.querySelector('.sn-node-icon');
         if (iconEl) {
           let watermark = document.createElement('span');
@@ -282,10 +282,10 @@ export class NodeViewManager {
           el.appendChild(watermark);
         }
 
-        // Notify canvas to render free dots for this SVG node
+
         if (this.#onSvgShapeReady) this.#onSvgShapeReady(node.id);
       } else if (shape) {
-        // Standard shapes: apply border-radius
+
         let size = { width: el.offsetWidth || 180, height: el.offsetHeight || 60 };
         let radius = shape.getBorderRadius(size);
         if (radius && radius !== 'var(--sn-node-radius, 10px)') {
@@ -294,9 +294,7 @@ export class NodeViewManager {
       }
     });
 
-    // Subgraph preview canvas — inject DOM element synchronously so
-    // measureNodeSizes() includes the 80px canvas in offsetHeight.
-    // Only the drawing is deferred to rAF (needs inner editor data).
+
     if (node._isSubgraph) {
       let body = el.querySelector('.sn-node-body');
       if (body) {
@@ -348,7 +346,6 @@ export class NodeViewManager {
     return { x: pos.x, y: pos.y, w, h };
   }
 
-  // --- Private helpers ---
 
   #autoSelectOnDragStart(nodeId, e) {
     if (!this.#selector.isNodeSelected(nodeId)) {
@@ -429,7 +426,7 @@ export class NodeViewManager {
   }
 
   #handleDrop(nodeId, el, e, dragStart) {
-    // Static snap on drop
+
     if (this.#snapEnabled && !this.#snapGrid.isDynamic) {
       let selected = this.#selector.getSelectedNodes();
       let targets = selected.size > 0 && selected.has(nodeId) ? selected : new Set([nodeId]);
@@ -441,15 +438,15 @@ export class NodeViewManager {
       }
     }
 
-    // Clean up start positions
+
     for (const [, nodeEl] of this.#nodeViews) {
       delete nodeEl._dragStartPos;
     }
 
-    // Remove lift effect
+
     this.#removeLift(el);
 
-    // Click vs drag detection
+
     if (dragStart && e && Selector.isTwitch(dragStart, { x: e.pageX, y: e.pageY })) {
       this.#onNodeClick(nodeId, e);
     }
@@ -479,7 +476,7 @@ export class NodeViewManager {
       let nodes = innerEditor.getNodes();
       if (nodes.length === 0) return;
 
-      // Get positions (from saved or auto-grid)
+
       let positions = node.innerPositions;
       let nodeRects = [];
 
@@ -490,7 +487,7 @@ export class NodeViewManager {
         nodeRects.push({ x, y, w: 160, h: 60, id: n.id });
       }
 
-      // Calculate bounds
+
       let minX = Infinity,
         minY = Infinity,
         maxX = -Infinity,
@@ -514,10 +511,10 @@ export class NodeViewManager {
       let offsetX = (w - graphW * scale) / 2;
       let offsetY = (h - graphH * scale) / 2;
 
-      // Flow state map: nodeId -> 'processing' | 'completed'
+
       let states = el._innerFlowStates || {};
 
-      // Draw connections as lines
+
       let conns = innerEditor.getConnections();
       for (const conn of conns) {
         let src = nodeRects.find((r) => r.id === conn.from);
@@ -528,7 +525,7 @@ export class NodeViewManager {
           let tx = (tgt.x - minX) * scale + offsetX;
           let ty = (tgt.y + tgt.h / 2 - minY) * scale + offsetY;
 
-          // Flowing connection: source completed
+
           let srcState = states[conn.from];
           if (srcState === 'completed') {
             ctx.strokeStyle = 'rgba(92, 216, 122, 0.5)';
@@ -545,7 +542,7 @@ export class NodeViewManager {
         }
       }
 
-      // Draw node rectangles with flow state
+
       for (const r of nodeRects) {
         let rx = (r.x - minX) * scale + offsetX;
         let ry = (r.y - minY) * scale + offsetY;
@@ -554,7 +551,7 @@ export class NodeViewManager {
         let state = states[r.id];
         let radius = 4;
 
-        // Rounded rect helper
+
         ctx.beginPath();
         ctx.moveTo(rx + radius, ry);
         ctx.lineTo(rx + rw - radius, ry);
@@ -573,7 +570,7 @@ export class NodeViewManager {
           ctx.strokeStyle = 'rgba(74, 158, 255, 0.8)';
           ctx.lineWidth = 1.5;
           ctx.stroke();
-          // Glow effect
+
           ctx.shadowColor = 'rgba(74, 158, 255, 0.6)';
           ctx.shadowBlur = 8;
           ctx.stroke();
@@ -594,10 +591,10 @@ export class NodeViewManager {
       }
     };
 
-    // Expose redraw for external triggering (FlowSimulator)
+
     el._redrawPreview = drawPreview;
 
-    // Draw once. Re-draw on demand via el._redrawPreview().
+
     drawPreview();
   }
 }

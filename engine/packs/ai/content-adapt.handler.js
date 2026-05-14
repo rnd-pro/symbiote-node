@@ -83,13 +83,13 @@ function createAdaptationPrompt(content, contentType, targetLevel, options) {
  * @returns {Object}
  */
 function parseAiResponse(responseText) {
-  // Try to extract JSON from response
+
   let jsonMatch = responseText.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]);
     } catch {
-      /* fallback */
+
     }
   }
   return { adaptedContent: responseText, vocabulary: [], grammarNotes: [] };
@@ -106,12 +106,11 @@ function calculateComplexity(content) {
   let sentenceCount = content.split(/[.!?]+/).filter(Boolean).length;
   let avgSentenceLength = words.length / sentenceCount;
 
-  // Simple score 0-1 based on word and sentence length
+
   let score = Math.min(1, (avgWordLength / 10 + avgSentenceLength / 30) / 2);
   return Math.round(score * 100) / 100;
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'ai/content-adapt',
@@ -147,10 +146,10 @@ export default {
         default: 'A1',
         description: 'Target language level (A1, A2, B1, B2)',
       },
-      // Content metadata
+
       title: { type: 'string', default: null, description: 'Content title (for news/trending)' },
       sourceUrl: { type: 'string', default: null, description: 'Source URL' },
-      // Options
+
       includeVocabulary: {
         type: 'boolean',
         default: true,
@@ -158,7 +157,7 @@ export default {
       },
       includeGrammarNotes: { type: 'boolean', default: true, description: 'Include grammar notes' },
       includeLesson: { type: 'boolean', default: true, description: 'Include micro-lesson' },
-      // Rate limiting
+
       maxRetries: { type: 'int', default: 3, description: 'Maximum retry attempts' },
     },
   },
@@ -181,14 +180,14 @@ export default {
       let apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
 
       try {
-        // Check cache
+
         let cacheKey = `${operation}:${hashStr(content.slice(0, 200))}`;
         let cached = cache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < 3600000) {
           return { result: { ...cached.data, cached: true } };
         }
 
-        // Determine content type
+
         let contentType =
           operation === 'adapt-news'
             ? 'news'
@@ -204,7 +203,7 @@ export default {
           includeLesson: params.includeLesson,
         });
 
-        // Make API request with retry
+
         let lastError;
         for (let attempt = 0; attempt < maxRetries; attempt++) {
           try {
@@ -247,7 +246,7 @@ export default {
               sourceUrl: params.sourceUrl,
             };
 
-            // Update cache
+
             cache.set(cacheKey, { data: result, timestamp: Date.now() });
 
             return { result };

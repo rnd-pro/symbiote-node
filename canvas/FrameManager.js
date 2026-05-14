@@ -123,22 +123,22 @@ export class FrameManager {
     el._frameData = frame;
     el.setAttribute('frame-id', frame.id);
 
-    // Set frame color directly as CSS variable
+
     el.style.setProperty('--frame-color', frame.color);
 
-    // Wait for Symbiote render, then set state
+
     requestAnimationFrame(() => {
       if (el.$) {
         el.$.label = frame.label;
         el.$.color = frame.color;
       } else {
-        // Fallback: set label text directly
+
         let labelEl = el.querySelector('.sn-frame-label');
         if (labelEl) labelEl.textContent = frame.label;
       }
     });
 
-    // Frame drag — moves child nodes too
+
     let drag = new Drag();
     let childStartPositions = null;
     let frameStartPos = null;
@@ -152,7 +152,7 @@ export class FrameManager {
       {
         onStart: () => {
           frameStartPos = { ...el._position };
-          // Capture positions of nodes that are inside this frame
+
           let nodeIds = this.#getNodesInFrame(frame.id);
           childStartPositions = new Map();
           for (const nid of nodeIds) {
@@ -161,7 +161,7 @@ export class FrameManager {
           }
         },
         onTranslate: (x, y) => {
-          // Move child nodes by delta from frame start
+
           if (childStartPositions && frameStartPos) {
             let dx = x - frameStartPos.x;
             let dy = y - frameStartPos.y;
@@ -179,7 +179,7 @@ export class FrameManager {
     );
     el._drag = drag;
 
-    // Resize handle
+
     requestAnimationFrame(() => {
       let handle = el.ref?.resizeHandle;
       if (handle) {

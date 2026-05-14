@@ -116,19 +116,18 @@ export function findParent(root, id) {
 export function splitPanel(root, panelId, direction, ratio = 0.5, newPanelType) {
   let node = findNode(root, panelId);
   if (!node || node.type !== 'panel') {
-    console.log(`🟡 Cannot split: panel ${panelId} not found`);
     return root;
   }
 
   let newPanel = createPanel(newPanelType || node.panelType);
   let splitNode = createSplit(direction, node, newPanel, ratio);
 
-  // If splitting the root
+
   if (root.id === panelId) {
     return splitNode;
   }
 
-  // Find parent and replace
+
   let parentInfo = findParent(root, panelId);
   if (parentInfo) {
     parentInfo.parent[parentInfo.which] = splitNode;
@@ -146,21 +145,19 @@ export function splitPanel(root, panelId, direction, ratio = 0.5, newPanelType) 
 export function joinPanels(root, panelToRemove) {
   let parentInfo = findParent(root, panelToRemove);
   if (!parentInfo) {
-    // Trying to remove root - not allowed
-    console.log('🟡 Cannot join: panel is root');
     return root;
   }
 
   let { parent, which } = parentInfo;
   let survivor = which === 'first' ? parent.second : parent.first;
 
-  // If parent is root, survivor becomes new root
+
   let grandparentInfo = findParent(root, parent.id);
   if (!grandparentInfo) {
     return survivor;
   }
 
-  // Replace parent with survivor in grandparent
+
   grandparentInfo.parent[grandparentInfo.which] = survivor;
   return root;
 }
@@ -175,7 +172,6 @@ export function joinPanels(root, panelToRemove) {
 export function resizeSplit(root, splitId, ratio) {
   let node = findNode(root, splitId);
   if (!node || node.type !== 'split') {
-    console.log(`🟡 Cannot resize: split ${splitId} not found`);
     return root;
   }
 
@@ -241,6 +237,6 @@ export function updateNode(root, nodeId, updates) {
  * @returns {{ left?: string, right?: string, top?: string, bottom?: string }}
  */
 export function getNeighbors(root, panelId) {
-  // Reserved for join-preview neighbor detection.
+
   return {};
 }

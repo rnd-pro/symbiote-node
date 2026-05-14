@@ -65,11 +65,11 @@ export class SidebarSection extends Symbiote {
       let has = panels && panels.length > 0;
       this.$.hasSubPanels = has;
       this.toggleAttribute('data-has-sub', has);
-      // Collapse if no sub-panels
+
       if (!has) this.$.isExpanded = false;
     });
 
-    // Drag support
+
     this.setAttribute('draggable', 'true');
 
     this.addEventListener('dragstart', (e) => {
@@ -154,7 +154,7 @@ export class SidebarSubItem extends Symbiote {
       let panelId = this.$.panelId;
       if (!panelId) return;
 
-      // Find the panel-layout and call joinPanels
+
       let sidebar = this.closest('layout-sidebar');
       if (sidebar) {
         sidebar.dispatchEvent(

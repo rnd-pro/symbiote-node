@@ -12,9 +12,8 @@
 export let EBOOK = {
   name: 'ebook',
   tokens: {
-    // === Atomic tokens ===
 
-    // Hues — warm, muted palette
+
     '--sn-hue-base': '35',
     '--sn-hue-accent': '210',
     '--sn-hue-success': '150',
@@ -22,12 +21,12 @@ export let EBOOK = {
     '--sn-hue-danger': '4',
     '--sn-hue-data': '250',
 
-    // Saturation — deliberately low for reading comfort
+
     '--sn-sat': '20%',
     '--sn-sat-vivid': '55%',
     '--sn-sat-muted': '12%',
 
-    // Lightness — warm paper tones
+
     '--sn-lit-bg': '93%',
     '--sn-lit-surface': '97%',
     '--sn-lit-border': '82%',
@@ -36,24 +35,22 @@ export let EBOOK = {
     '--sn-lit-text-dim': '42%',
     '--sn-lit-accent': '42%',
 
-    // Alpha
+
     '--sn-alpha-overlay': '0.96',
     '--sn-alpha-subtle': '0.08',
     '--sn-alpha-faint': '0.06',
 
-    // Semantic state colors
+
     '--sn-danger-color': 'hsl(var(--sn-hue-danger), var(--sn-sat-vivid), 48%)',
     '--sn-success-color': 'hsl(var(--sn-hue-success), var(--sn-sat-vivid), 38%)',
     '--sn-warning-color': 'hsl(var(--sn-hue-warning), var(--sn-sat-vivid), 42%)',
 
-    // === Composed tokens ===
 
-    // Canvas — warm cream paper
     '--sn-bg': 'hsl(37, 30%, 91%)',
     '--sn-grid-dot': 'hsla(35, 15%, 50%, 0.12)',
     '--sn-grid-size': '20px',
 
-    // Node — slightly lighter paper surface
+
     '--sn-node-bg': 'hsl(40, 33%, 96%)',
     '--sn-node-border': 'hsl(35, 18%, 80%)',
     '--sn-node-radius': '8px',
@@ -63,39 +60,39 @@ export let EBOOK = {
     '--sn-node-hover': 'hsl(36, 22%, 88%)',
     '--sn-node-header-bg': 'hsl(37, 25%, 93%)',
 
-    // Typography — serif-influenced, ink-dark
+
     '--sn-font': "'Georgia', 'Palatino', 'Times New Roman', serif",
     '--sn-text': 'hsl(30, 15%, 18%)',
     '--sn-text-dim': 'hsl(30, 10%, 45%)',
 
-    // Sockets
+
     '--sn-socket-size': '12px',
     '--sn-socket-border-width': '2px',
 
-    // Connections — subdued ink blue
+
     '--sn-conn-color': 'hsl(210, 40%, 50%)',
     '--sn-conn-width': '1.5',
     '--sn-conn-selected': 'hsl(4, 55%, 50%)',
 
-    // Categories — muted, book-like accents
+
     '--sn-cat-server': 'hsl(210, 45%, 45%)',
     '--sn-cat-instance': 'hsl(150, 40%, 38%)',
     '--sn-cat-control': 'hsl(35, 50%, 45%)',
     '--sn-cat-data': 'hsl(250, 35%, 50%)',
     '--sn-cat-default': 'hsl(30, 8%, 48%)',
 
-    // Context menu
+
     '--sn-ctx-bg': 'hsl(40, 30%, 96%)',
     '--sn-ctx-border': 'hsl(35, 15%, 82%)',
     '--sn-ctx-color': 'hsl(30, 12%, 20%)',
     '--sn-ctx-hover': 'hsla(210, 40%, 50%, 0.08)',
 
-    // Comments — faded parchment
+
     '--sn-comment-bg': 'hsla(38, 25%, 85%, 0.3)',
     '--sn-comment-border': 'hsla(35, 20%, 70%, 0.2)',
     '--sn-comment-radius': '4px',
 
-    // Toolbar
+
     '--sn-toolbar-bg': 'hsla(40, 30%, 95%, var(--sn-alpha-overlay))',
     '--sn-toolbar-border': 'hsla(35, 15%, 70%, 0.25)',
     '--sn-toolbar-color': 'hsl(30, 10%, 35%)',
@@ -104,7 +101,7 @@ export let EBOOK = {
     '--sn-toolbar-danger': 'hsla(4, 55%, 50%, 0.1)',
     '--sn-toolbar-danger-color': 'hsl(4, 55%, 50%)',
 
-    // Shape
+
     '--sn-shape-fill': 'var(--sn-node-bg)',
     '--sn-shape-stroke': 'var(--sn-node-border)',
     '--sn-shape-stroke-width': '1.0',

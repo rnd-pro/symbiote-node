@@ -31,7 +31,7 @@ export class PortItem extends Symbiote {
       if (socketEl) socketEl.setAttribute('data-socket-shape', shape);
     });
 
-    // Deferred socket registration — _canvas may not be set yet
+
     this.#deferRegisterSocket(0);
   }
 

@@ -39,7 +39,7 @@ const ICON_SHAPES = Object.fromEntries(Object.entries(SHAPE_ICONS).map(([k, v]) 
 export function editorToText(editor, positions = {}) {
   let lines = [];
 
-  // --- NODES ---
+
   lines.push('NODES:');
   for (const node of editor.getNodes()) {
     let icon = SHAPE_ICONS[node.shape] || '□';
@@ -55,14 +55,14 @@ export function editorToText(editor, positions = {}) {
     lines.push('  ' + line);
   }
 
-  // --- CONNECTIONS ---
+
   lines.push('');
   lines.push('CONNECTIONS:');
   for (const conn of editor.getConnections()) {
     lines.push(`  ${conn.from}.${conn.out} --> ${conn.to}.${conn.in}`);
   }
 
-  // --- FRAMES ---
+
   let frames = editor.getFrames();
   if (frames.length) {
     lines.push('');
@@ -109,7 +109,7 @@ export function textToGraph(text) {
     }
 
     if (section === 'nodes') {
-      // [○ trigger] Job Event: RU (queue/job-event) shape=circle cat=server in=[exec] out=[exec,data] @50,200
+
       let m = line.match(/^\[(.)\s+(\S+)\]\s+(.+?)\s+\(([^)]+)\)(.*)$/);
       if (!m) continue;
 
@@ -125,7 +125,7 @@ export function textToGraph(text) {
     }
 
     if (section === 'connections') {
-      // trigger.exec --> switch_status.exec
+
       let m = line.match(/^(\S+)\.(\S+)\s+-->\s+(\S+)\.(\S+)$/);
       if (!m) continue;
       let [, from, out, to, inp] = m;
@@ -133,7 +133,7 @@ export function textToGraph(text) {
     }
 
     if (section === 'frames') {
-      // [Formatters] color=#5cd87a x=490 y=-10 w=260 h=520
+
       let m = line.match(/^\[([^\]]+)\]\s+(.*)$/);
       if (!m) continue;
       let [, label, rest] = m;
@@ -165,7 +165,7 @@ export function textToEditor(text, editor, classes) {
   let dataSocket = new Socket('data', { color: '#5cb8ff' });
   let nodeMap = new Map();
 
-  // Collect ports from connections
+
   let inPorts = {};
   let outPorts = {};
   for (const conn of connections) {

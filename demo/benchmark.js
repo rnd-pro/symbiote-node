@@ -42,7 +42,7 @@ let running = false;
 let editor = null;
 let canvas = null;
 
-// FPS tracker
+
 let frameCount = 0;
 let lastFpsTime = performance.now();
 let currentFps = 0;
@@ -140,7 +140,7 @@ function fitToContent() {
   const tx = container.width / 2 - cx * zoom;
   const ty = container.height / 2 - cy * zoom;
 
-  // Update Symbiote reactive state (binding auto-updates CSS transform)
+
   canvas.$.panX = tx;
   canvas.$.panY = ty;
   canvas.$.zoom = zoom;
@@ -170,12 +170,12 @@ function spawnBatch() {
     const node = createNode(idx);
     editor.addNode(node);
 
-    // Grid position
+
     const col = idx % COLS;
     const row = Math.floor(idx / COLS);
     canvas.setNodePosition(node.id, col * SPACING_X + 40, row * SPACING_Y + 40);
 
-    // Queue connection (deferred to avoid SVG recalc during spawn)
+
     if (allNodes.length > 0) {
       const prevIdx = Math.max(0, allNodes.length - 1 - (idx % 3));
       const prev = allNodes[prevIdx];
@@ -207,7 +207,7 @@ async function runBenchmark() {
   while (allNodes.length < TARGET && running) {
     spawnBatch();
 
-    // Auto-fit every 50 nodes
+
     if (allNodes.length % 50 === 0) {
       fitToContent();
     }
@@ -215,7 +215,7 @@ async function runBenchmark() {
     await new Promise((r) => setTimeout(r, INTERVAL));
   }
 
-  // Add all connections in one batch (hidden — LOD will show at full zoom)
+
   btn.lastChild.textContent = ` Connecting (${pendingConns.length})...`;
   const connSvg = canvas.querySelector('.sn-connections');
   if (connSvg) connSvg.style.visibility = 'hidden';
@@ -227,7 +227,7 @@ async function runBenchmark() {
   pendingConns.length = 0;
   updateHud();
 
-  // Final fit + LOD
+
   fitToContent();
 
   running = false;
@@ -243,7 +243,7 @@ function reset() {
   running = false;
   pendingConns.length = 0;
 
-  // Remove all nodes
+
   for (const node of [...allNodes]) {
     editor.removeNode(node.id);
   }
@@ -267,18 +267,18 @@ function init() {
 
   canvas.setEditor(editor);
 
-  // Apply theme
+
   const root = document.documentElement;
   for (const [k, v] of Object.entries(GREY_NEUTRAL.tokens)) {
     root.style.setProperty(k, v);
   }
   canvas.setTheme(GREY_NEUTRAL);
 
-  // Buttons
+
   document.getElementById('btnStart').addEventListener('click', runBenchmark);
   document.getElementById('btnReset').addEventListener('click', reset);
 
-  // FPS tracker
+
   requestAnimationFrame(trackFps);
 
   updateHud();

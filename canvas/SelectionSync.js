@@ -43,7 +43,7 @@ export class SelectionSync {
     this.#zCounter++;
     let editor = this.#getEditor();
 
-    // 1. Identify neighbors of currently selected nodes for "Focus Mode" label visibility
+
     let neighbors = new Set();
     if (editor && selectedNodes.size > 0) {
       for (const conn of editor.getConnections()) {
@@ -52,7 +52,7 @@ export class SelectionSync {
       }
     }
 
-    // Update node attributes — guard to avoid redundant DOM mutations
+
     for (const [id, el] of this.#nodeViews) {
       let shouldSelect = selectedNodes.has(id);
       let isSelected = el.hasAttribute('data-selected');
@@ -72,7 +72,7 @@ export class SelectionSync {
       }
     }
 
-    // 2. Mark connections touching selected nodes
+
     let activeConnIds = new Set();
     if (editor && selectedNodes.size > 0) {
       for (const conn of editor.getConnections()) {
@@ -82,7 +82,7 @@ export class SelectionSync {
       }
     }
 
-    // Use cached path map instead of querySelector per connection
+
     let connSvg = this.#canvas.ref.connections;
     let connRenderer = this.#getConnRenderer();
     if (!this.#connPathCache) this.#connPathCache = new Map();
@@ -94,7 +94,7 @@ export class SelectionSync {
       }
       if (!path) continue;
 
-      // Selection state
+
       let shouldSelectConn = selectedConnections.has(id);
       if (shouldSelectConn !== path.hasAttribute('data-selected')) {
         shouldSelectConn
@@ -102,7 +102,7 @@ export class SelectionSync {
           : path.removeAttribute('data-selected');
       }
 
-      // Active connection: touches a selected node
+
       let isActive = activeConnIds.has(id);
       if (isActive !== path.hasAttribute('data-active-conn')) {
         isActive
@@ -110,19 +110,19 @@ export class SelectionSync {
           : path.removeAttribute('data-active-conn');
       }
 
-      // Dimming
+
       let shouldDim = !isActive && selectedNodes.size > 0;
       if (shouldDim !== path.hasAttribute('data-dimmed')) {
         shouldDim ? path.setAttribute('data-dimmed', '') : path.removeAttribute('data-dimmed');
       }
     }
 
-    // Pass selection state to Canvas renderer for dimming implementation
+
     if (connRenderer && typeof connRenderer.setSelectionState === 'function') {
       connRenderer.setSelectionState(selectedNodes.size > 0, activeConnIds);
     }
 
-    // Quick Action Toolbar — show for single node selection
+
     let toolbar = this.#canvas.ref.quickToolbar;
     if (toolbar) {
       if (selectedNodes.size === 1) {
@@ -134,7 +134,7 @@ export class SelectionSync {
       }
     }
 
-    // Inspector — show selected node details, auto-hide on deselect
+
     let inspector = this.#canvas.ref.inspector;
     if (inspector) {
       inspector._canvas = this.#canvas;
@@ -151,7 +151,7 @@ export class SelectionSync {
       }
     }
 
-    // Dispatch event so consumers can react to selection changes (including deselect)
+
     this.#canvas.dispatchEvent(
       new CustomEvent('selection-changed', {
         detail: { nodes: [...selectedNodes], connections: [...selectedConnections] },

@@ -60,12 +60,12 @@ export class SubgraphManager {
   drillDown(subgraphNode) {
     if (!subgraphNode?._isSubgraph || !this.#canvas) return;
 
-    // Save current state
+
     let current = this.#stack[this.#stack.length - 1];
     current.positions = this.#capturePositions(current.editor, current.positions);
     current.transform = this.#captureTransform();
 
-    // Push inner editor
+
     this.#stack.push({
       editor: subgraphNode.getInnerEditor(),
       positions: subgraphNode.innerPositions,
@@ -74,7 +74,7 @@ export class SubgraphManager {
       subgraphNodeId: subgraphNode.id,
     });
 
-    // Switch canvas to inner editor
+
     this.#applyLevel(this.#stack.length - 1);
     this.#notifyNavigate();
   }
@@ -87,7 +87,7 @@ export class SubgraphManager {
     if (level === undefined) level = this.#stack.length - 2;
     if (level < 0 || level >= this.#stack.length || !this.#canvas) return;
 
-    // Save state of levels being popped (persist inner positions)
+
     for (let i = this.#stack.length - 1; i > level; i--) {
       let entry = this.#stack[i];
       let parentEntry = this.#stack[i - 1];
@@ -100,15 +100,15 @@ export class SubgraphManager {
       }
     }
 
-    // Save current deep level positions before truncating
+
     let currentEntry = this.#stack[this.#stack.length - 1];
     currentEntry.positions = this.#capturePositions(currentEntry.editor, currentEntry.positions);
     currentEntry.transform = this.#captureTransform();
 
-    // Truncate stack
+
     this.#stack.length = level + 1;
 
-    // Switch canvas
+
     this.#applyLevel(level);
     this.#notifyNavigate();
   }
@@ -148,15 +148,15 @@ export class SubgraphManager {
     let entry = this.#stack[level];
     if (!entry || !this.#canvas) return;
 
-    // Rebind editor
+
     this.#canvas.setEditor(entry.editor);
 
-    // Restore positions
+
     for (const [nodeId, pos] of Object.entries(entry.positions)) {
       this.#canvas.setNodePosition(nodeId, pos.x, pos.y);
     }
 
-    // Restore transform
+
     this.#canvas.$.panX = entry.transform.panX;
     this.#canvas.$.panY = entry.transform.panY;
     this.#canvas.$.zoom = entry.transform.zoom;

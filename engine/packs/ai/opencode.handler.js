@@ -76,7 +76,7 @@ export default {
         modelID: model || process.env.OPENCODE_MODEL || 'deepseek/deepseek-v3.2',
       };
 
-      // Workspace for file-based communication
+
       let workspace =
         outputDir || process.env.OPENCODE_WORKSPACE || path.join(os.tmpdir(), 'agi-graph-opencode');
       await fs.mkdir(workspace, { recursive: true });
@@ -84,7 +84,7 @@ export default {
       let taskPath = path.join(workspace, 'task.json');
       let outputPath = path.join(workspace, 'output.json');
 
-      // Write task file with context
+
       await fs.writeFile(
         taskPath,
         JSON.stringify(
@@ -100,7 +100,7 @@ export default {
         'utf8',
       );
 
-      // Clean previous output
+
       try {
         await fs.unlink(outputPath);
       } catch (err) {
@@ -110,7 +110,7 @@ export default {
       }
 
       try {
-        // 1. Create session
+
         let sessionRes = await fetch(`${baseUrl}/session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -124,7 +124,7 @@ export default {
 
         let session = await sessionRes.json();
 
-        // 2. Build full prompt with workspace instructions
+
         let contextBlock = context
           ? `\n\n## Context\n\`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\``
           : '';
@@ -140,7 +140,7 @@ export default {
 
 Output format: { "result": <your_result> }`;
 
-        // 3. Send message (fire & forget)
+
         let msgRes = await fetch(`${baseUrl}/session/${session.id}/message`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -155,7 +155,7 @@ Output format: { "result": <your_result> }`;
           return { result: null, error: `Message send failed: ${msgRes.status}` };
         }
 
-        // 4. Poll for output file
+
         let startTime = Date.now();
         let pollInterval = 3000;
 
@@ -194,7 +194,7 @@ Output format: { "result": <your_result> }`;
           if (parsed.result !== undefined) {
             return { result: parsed.result, error: null };
           }
-          // If the file exists but has no result key, return entire content
+
           if (Object.keys(parsed).length > 0) {
             return { result: parsed, error: null };
           }

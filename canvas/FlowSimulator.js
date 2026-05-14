@@ -85,16 +85,16 @@ export class FlowSimulator {
       for (const nodeId of order) {
         if (this.#abort.signal.aborted) break;
 
-        // Mark node as processing
+
         this.#setNodeState(nodeId, 'processing');
         this.#editor.emit('nodeprocessing', { nodeId });
 
-        // Smooth pan to active node
+
         if (this.followActive && !this.#followPaused) {
           this.#canvas.panToNode?.(nodeId);
         }
 
-        // Run inner flow for subgraph nodes
+
         let node = this.#editor.getNode(nodeId);
         if (node?._isSubgraph && node.innerEditor) {
           await this.#runInnerFlow(nodeId, node);
@@ -103,11 +103,11 @@ export class FlowSimulator {
         }
         if (this.#abort.signal.aborted) break;
 
-        // Mark node as completed
+
         this.#setNodeState(nodeId, 'completed');
         this.#editor.emit('nodecompleted', { nodeId });
 
-        // Animate outgoing connections
+
         let outgoing = connections.filter((c) => c.from === nodeId);
         for (const conn of outgoing) {
           this.#canvas.setFlowing(conn.id, true);
@@ -116,13 +116,13 @@ export class FlowSimulator {
         await this.#wait(this.speed * 0.5);
         if (this.#abort.signal.aborted) break;
 
-        // Stop flowing
+
         for (const conn of outgoing) {
           this.#canvas.setFlowing(conn.id, false);
         }
       }
 
-      // Emit completion
+
       if (!this.#abort.signal.aborted) {
         this.#editor.emit('flowcomplete', {});
       }
@@ -144,12 +144,12 @@ export class FlowSimulator {
     }
     this.#followPaused = false;
 
-    // Clear all node states
+
     for (const node of this.#editor.getNodes()) {
       this.#clearNodeState(node.id);
     }
 
-    // Clear all flowing
+
     this.#canvas.setAllFlowing(false);
   }
 
@@ -162,7 +162,7 @@ export class FlowSimulator {
     let nodes = this.#editor.getNodes();
     let connections = this.#editor.getConnections();
 
-    // Collect only nodes that participate in connections
+
     /** @type {Set<string>} */
     let connectedIds = new Set();
     for (const conn of connections) {
@@ -170,7 +170,7 @@ export class FlowSimulator {
       connectedIds.add(conn.to);
     }
 
-    // Build adjacency + in-degree for connected nodes only
+
     /** @type {Map<string, string[]>} */
     let adj = new Map();
     /** @type {Map<string, number>} */
@@ -187,7 +187,7 @@ export class FlowSimulator {
       inDeg.set(conn.to, (inDeg.get(conn.to) || 0) + 1);
     }
 
-    // Start from nodes with no incoming connections
+
     /** @type {string[]} */
     let queue = [];
     for (const [id, deg] of inDeg) {
@@ -230,7 +230,7 @@ export class FlowSimulator {
       return;
     }
 
-    // Topological sort of inner nodes
+
     let adj = new Map();
     let inDeg = new Map();
     for (const n of innerNodes) {
@@ -256,7 +256,7 @@ export class FlowSimulator {
       }
     }
 
-    // Distribute speed across inner nodes
+
     let stepTime = this.speed / Math.max(innerOrder.length, 1);
     el._innerFlowStates = {};
 
@@ -298,7 +298,7 @@ export class FlowSimulator {
     if (!el) return;
     el.removeAttribute('data-processing');
     el.removeAttribute('data-completed');
-    // Clear inner flow states for subgraph nodes
+
     if (el._innerFlowStates) {
       el._innerFlowStates = {};
       el._redrawPreview?.();

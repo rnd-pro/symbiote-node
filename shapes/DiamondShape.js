@@ -17,11 +17,11 @@ export class DiamondShape extends NodeShape {
     let cy = height / 2;
 
     if (side === 'input') {
-      // Inputs distributed along top edges
+
       if (total === 1) {
         return { x: cx, y: 0, angle: 270 };
       }
-      // Multiple inputs: spread along top-left and top-right edges
+
       let t = (index + 1) / (total + 1);
       return {
         x: cx * (1 - t),
@@ -30,17 +30,17 @@ export class DiamondShape extends NodeShape {
       };
     }
 
-    // Outputs along bottom edges
+
     if (total === 1) {
       return { x: cx, y: height, angle: 90 };
     }
     if (total === 2) {
-      // True: bottom-left, False: bottom-right
+
       return index === 0
         ? { x: cx * 0.35, y: cy + cy * 0.65, angle: 225 }
         : { x: width - cx * 0.35, y: cy + cy * 0.65, angle: 315 };
     }
-    // 3+ outputs: spread along bottom edges
+
     let t = (index + 1) / (total + 1);
     return {
       x: t < 0.5 ? cx * (1 - 2 * t) : cx + cx * (2 * t - 1),
@@ -65,8 +65,7 @@ export class DiamondShape extends NodeShape {
     const MARGIN = 0.2;
     let effectiveT = MARGIN + t * (1 - 2 * MARGIN);
 
-    // Diamond vertices: top(cx,0), right(w,cy), bottom(cx,h), left(0,cy)
-    // Each "side" spans two edges meeting at the cardinal vertex
+
     let vertices = {
       top: [
         { x: 0, y: cy },
@@ -92,7 +91,7 @@ export class DiamondShape extends NodeShape {
 
     let [p0, p1, p2] = vertices[side];
 
-    // effectiveT spans from p0 → p1 → p2 (two edges)
+
     let x, y;
     if (effectiveT <= 0.5) {
       let segT = effectiveT * 2;

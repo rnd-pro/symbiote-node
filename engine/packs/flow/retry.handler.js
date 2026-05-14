@@ -30,12 +30,12 @@ export default {
 
   lifecycle: {
     execute: async (inputs, params) => {
-      // If no error, pass through the action result
+
       if (inputs.error == null && inputs.action != null) {
         return { result: inputs.action, error: null };
       }
 
-      // If error but no actionFn to retry, propagate error
+
       if (inputs.action?._retryFn) {
         let { maxRetries, delay } = params;
         let lastError = inputs.error;
@@ -55,7 +55,7 @@ export default {
         return { result: null, error: `Failed after ${maxRetries} retries: ${lastError}` };
       }
 
-      // No retry function available, pass through with error
+
       return {
         result: inputs.action,
         error: inputs.error ? String(inputs.error) : null,

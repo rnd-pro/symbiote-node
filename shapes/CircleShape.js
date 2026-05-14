@@ -17,9 +17,8 @@ export class CircleShape extends NodeShape {
     let cx = width / 2;
     let cy = height / 2;
 
-    // Inputs: left semicircle (90° to 270°), top to bottom
-    // Outputs: right semicircle (-90° to 90°), top to bottom
-    let arcSpan = Math.PI * 0.8; // 144 degrees
+
+    let arcSpan = Math.PI * 0.8;
     let centerAngle = side === 'input' ? Math.PI : 0;
     let startAngle = centerAngle - arcSpan / 2;
     let step = total > 1 ? arcSpan / (total - 1) : 0;
@@ -46,9 +45,9 @@ export class CircleShape extends NodeShape {
     let cx = size.width / 2;
     let cy = size.height / 2;
 
-    // Each side spans a 90° arc centered on the cardinal direction
+
     const CENTERS = { right: 0, bottom: Math.PI / 2, left: Math.PI, top: -Math.PI / 2 };
-    const ARC = Math.PI * 0.8; // 144° arc to avoid exact corners
+    const ARC = Math.PI * 0.8;
     const MARGIN = 0.2;
     let effectiveT = MARGIN + t * (1 - 2 * MARGIN);
 

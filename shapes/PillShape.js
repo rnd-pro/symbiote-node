@@ -22,8 +22,8 @@ export class PillShape extends NodeShape {
       };
     }
 
-    // Multiple sockets: distribute along the rounded end
-    let arcAngle = Math.PI * 0.6; // 108 degrees arc
+
+    let arcAngle = Math.PI * 0.6;
     let startAngle = side === 'input' ? Math.PI - arcAngle / 2 : -arcAngle / 2;
     let step = arcAngle / (total - 1);
     let a = startAngle + step * index;
@@ -53,14 +53,14 @@ export class PillShape extends NodeShape {
     let r = size.height / 2;
 
     if (side === 'top' || side === 'bottom') {
-      // Flat edge between the two semicircles
+
       let x = r + effectiveT * (size.width - 2 * r);
       let y = side === 'top' ? 0 : size.height;
       return { x, y, angle: NORMALS[side] };
     }
 
-    // Rounded semicircle ends
-    let arcSpan = Math.PI * 0.8; // 144° arc
+
+    let arcSpan = Math.PI * 0.8;
     let cx = side === 'left' ? r : size.width - r;
     let centerAngle = side === 'left' ? Math.PI : 0;
     let startAngle = centerAngle - arcSpan / 2;

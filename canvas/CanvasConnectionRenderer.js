@@ -27,12 +27,12 @@ export class CanvasConnectionRenderer {
   /** @type {Map<string, Object>} Fast lookup for phantom proxy by nodeId */
   #phantomMap = new Map();
 
-  // Computed styles matching the theme
+
   #colorParams = {
     normal: '#4a9eff',
     selected: '#ff6b6b',
     width: 2,
-    flowingColor: '#4a9eff', // We use --sn-conn-color directly
+    flowingColor: '#4a9eff',
   };
 
   /**
@@ -60,7 +60,7 @@ export class CanvasConnectionRenderer {
     this.#initResizeObserver();
     this.#updateStyles();
 
-    // Start render loop for flow animations (if flowing exists)
+
     this.#animationFrameId = requestAnimationFrame(this.#renderLoop);
   }
 
@@ -161,7 +161,6 @@ export class CanvasConnectionRenderer {
     this.redraw();
   }
 
-  // #phantomMap moved to class field declarations (line 25)
 
   /**
    * Set phantom nodes — nodes without DOM that are rendered as Canvas dots.
@@ -184,7 +183,7 @@ export class CanvasConnectionRenderer {
 
     let basePortX = side === 'output' ? w : 0;
 
-    // Fast path: cached layout coords for the node
+
     if (nodeEl._slotCache && nodeEl._slotCache.has(portKey)) {
       let cached = nodeEl._slotCache.get(portKey);
       return {
@@ -209,7 +208,7 @@ export class CanvasConnectionRenderer {
       }
     }
 
-    // Delegate to UniversalSvgShape if defined and handles geometric coordinates (SVGShape)
+
     let shapeConfig = getShape(nodeModel?.shape);
     if (shapeConfig && shapeConfig.pathData && shapeConfig.getSocketPosition) {
       let pos = shapeConfig.getSocketPosition(
@@ -222,7 +221,7 @@ export class CanvasConnectionRenderer {
       if (pos) return pos;
     }
 
-    // Standard shapes: read from DOM socket elements
+
     let container =
       side === 'output' ? nodeEl.querySelector('.outputs') : nodeEl.querySelector('.inputs');
 
@@ -277,26 +276,26 @@ export class CanvasConnectionRenderer {
     let ctx = this.#ctx;
     if (!ctx) return;
 
-    // Reset and clear with devicePixelRatio
+
     let dpr = window.devicePixelRatio || 1;
     let zoom = this.#getZoom();
-    this._frameZoom = zoom; // cache for #plotPath LOD
+    this._frameZoom = zoom;
     let pan = this.#getPan();
 
-    // Reset transform to identity to clear the raw screen buffer
+
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.#canvasLayer.width, this.#canvasLayer.height);
 
-    // Set view transform: Map World coordinates -> Screen coordinates
+
     ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, dpr * pan.x, dpr * pan.y);
 
-    // Update theme vars
+
     this.#updateStyles();
 
     let time = Date.now();
     let hasFlowing = false;
 
-    // Cache node layout geometry once per frame for the router (Map for O(1) lookup)
+
     this._nodeRectMap = new Map();
     for (const [nid, el] of this.#nodeViews) {
       if (el && el._position) {
@@ -310,7 +309,7 @@ export class CanvasConnectionRenderer {
         });
       }
     }
-    // Include phantom nodes in geometry cache for FAR_ZOOM routing
+
     for (const node of this.#phantomNodes) {
       if (node && !this._nodeRectMap.has(node.id)) {
         this._nodeRectMap.set(node.id, {
@@ -324,7 +323,7 @@ export class CanvasConnectionRenderer {
       }
     }
 
-    // Pre-compute connection index once per frame (avoids O(N²) Array.from+indexOf in routing)
+
     let connIndexMap = new Map();
     let ci = 0;
     for (const key of this.#connectionData.keys()) {
@@ -332,11 +331,11 @@ export class CanvasConnectionRenderer {
     }
     this._connIndexMap = connIndexMap;
 
-    // Collect connected sockets to draw caps over them (fixes DOM/Canvas sub-pixel drift seams)
+
     let socketsToDraw = new Map();
 
     let drawConnection = (id, connection) => {
-      // Draw connection
+
       let isFlowing = connection.flowing;
       let isActive = this.#activeConnIds ? this.#activeConnIds.has(connection.id) : false;
       let isSelected = isActive;
@@ -347,9 +346,7 @@ export class CanvasConnectionRenderer {
       let fromColor = fromNode?.outputs?.[connection.out]?.socket?.color;
       let toColor = toNode?.inputs?.[connection.in]?.socket?.color;
 
-      // Scale lineWidth inversely with zoom to maintain screen visibility
-      // At zoom 0.003, a 2px world line = 0.006 screen px (invisible)
-      // minScreenWidth = 1.5 screen px → in world coords = 1.5 / zoom
+
       let baseWidth = this.#colorParams.width;
       ctx.lineWidth = Math.max(baseWidth, 1.5 / zoom);
       ctx.lineCap = 'round';
@@ -361,11 +358,13 @@ export class CanvasConnectionRenderer {
       try {
         coords = this.#plotPath(ctx, connection);
       } catch (err) {
-        console.log('🟡 Path failed:', err);
+        if (CanvasConnectionRenderer.debug) {
+          console.warn('🟡 Path failed:', err);
+        }
       }
       if (!coords) return;
 
-      // Save caps for later drawing (ensures they are on top of all paths)
+
       socketsToDraw.set(`${connection.from}:${connection.out}`, {
         x: coords.startX,
         y: coords.startY,
@@ -388,7 +387,7 @@ export class CanvasConnectionRenderer {
       }
 
       if (isDimmed) {
-        // Actually, color-mix doesn't work on CanvasGradient. If it's a gradient, fallback to solid fromColor.
+
         let baseColor = fromColor || this.#colorParams.normal;
         finalColor = `color-mix(in srgb, ${baseColor} 15%, ${this.#colorParams.bg})`;
       }
@@ -404,7 +403,7 @@ export class CanvasConnectionRenderer {
         ctx.setLineDash([]);
       }
 
-      // Apply drop shadow for selected lines to make them pop
+
       if (isSelected && !isDimmed) {
         ctx.shadowColor = ctx.strokeStyle;
         ctx.shadowBlur = 8;
@@ -414,18 +413,18 @@ export class CanvasConnectionRenderer {
 
       ctx.stroke(coords.path2D);
 
-      // draw direction arrow
+
       if (coords.arrow) {
         ctx.save();
         ctx.translate(coords.arrow.x, coords.arrow.y);
-        // Transform from typical left-to-right arrow drawn along X axis
+
         ctx.rotate(coords.arrow.angle);
         ctx.beginPath();
         ctx.moveTo(-5, -3.5);
         ctx.lineTo(5, 0);
         ctx.lineTo(-5, 3.5);
         ctx.closePath();
-        ctx.fillStyle = ctx.strokeStyle; // inherited from path
+        ctx.fillStyle = ctx.strokeStyle;
         ctx.fill();
         ctx.restore();
       }
@@ -444,25 +443,25 @@ export class CanvasConnectionRenderer {
       }
     }
 
-    // Draw caps for connected sockets to hide DOM subpixel drift
+
     ctx.setLineDash([]);
 
     for (const [, pos] of socketsToDraw) {
       ctx.beginPath();
-      // HTML ::after is 12x12 (content) + 2px border = 16px total.
-      // Canvas r=7 (dia 14) + lineWidth 2 = 14+-1 = 12px inner fill, 16px total outer bound.
+
+
       ctx.arc(pos.x, pos.y, 7, 0, Math.PI * 2);
       ctx.fillStyle = pos.color;
       ctx.fill();
-      ctx.lineWidth = 2; // Match the 2px solid CSS outline exactly
-      ctx.strokeStyle = this.#colorParams.outline; // Match var(--sn-port-outline) / var(--sn-node-bg)
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = this.#colorParams.outline;
       ctx.stroke();
     }
 
-    // ─── Draw phantom node dots (Obsidian-style) ───
+
     this.#drawPhantomDots(ctx, zoom);
 
-    // Stop flow animation if none flowing to save CPU
+
     if (!hasFlowing && this.#animationFrameId) {
       cancelAnimationFrame(this.#animationFrameId);
       this.#animationFrameId = null;
@@ -482,8 +481,7 @@ export class CanvasConnectionRenderer {
     ctx.shadowBlur = 0;
     ctx.setLineDash([]);
 
-    // At very low zoom, scale dot size to maintain minimum screen visibility
-    // minScreen = 8px → in world coords = 8 / zoom
+
     let minWorldW = Math.max(180, 8 / zoom);
     let minWorldH = Math.max(60, 4 / zoom);
     let showLabels = zoom > 0.15;
@@ -494,7 +492,7 @@ export class CanvasConnectionRenderer {
 
       let w = Math.max(minWorldW, node.w);
       let h = Math.max(minWorldH, node.h);
-      // Center the enlarged dot on the original position
+
       let x = (node.x || 0) - (w - node.w) / 2;
       let y = (node.y || 0) - (h - node.h) / 2;
 
@@ -511,13 +509,13 @@ export class CanvasConnectionRenderer {
       ctx.globalAlpha = 0.85;
       ctx.fill();
 
-      // Stroke — scale lineWidth for visibility
+
       ctx.lineWidth = Math.max(1.5, 1 / zoom);
       ctx.strokeStyle = this.#colorParams.outline;
       ctx.stroke();
       ctx.globalAlpha = 1.0;
 
-      // Label at medium+ zoom
+
       if (showLabels && node.label) {
         ctx.fillStyle = '#fff';
         ctx.globalAlpha = 1;
@@ -565,7 +563,7 @@ export class CanvasConnectionRenderer {
     let fromElNodeView = this.#nodeViews.get(conn.from);
     let toElNodeView = this.#nodeViews.get(conn.to);
 
-    // Fallback to phantom proxy for nodes without DOM
+
     if (!fromElNodeView) fromElNodeView = this.#getPhantomProxy(conn.from);
     if (!toElNodeView) toElNodeView = this.#getPhantomProxy(conn.to);
     if (!fromElNodeView || !toElNodeView) return;
@@ -655,7 +653,7 @@ export class CanvasConnectionRenderer {
         pts.push({ x: p1x, y: bottomY });
         pts.push({ x: p2x, y: bottomY });
       } else if (skipObstacles) {
-        // Large graph: simple mid-X routing without obstacle checks
+
         let midX = (p1x + p2x) / 2 + traceOffset;
         pts.push({ x: midX, y: p1y });
         pts.push({ x: midX, y: p2y });
@@ -749,43 +747,39 @@ export class CanvasConnectionRenderer {
       }
       d = path;
     } else if (effectiveStyle === 'pcb') {
-      // ─── PCB Grid-Based Trace Routing ───
-      // All waypoints snap to a grid. Stubs exit perpendicular to node surface
-      // with a minimum length, then route on grid channels with chamfered corners.
 
-      const TRACE_GRID = 5; // Dense trace grid (5px)
-      const STUB_MIN = 20; // minimum perpendicular stub from node edge
-      const CHAMFER = 8; // 45° chamfer radius (px)
 
-      // Snap a coordinate to the trace grid
+      const TRACE_GRID = 5;
+      const STUB_MIN = 20;
+      const CHAMFER = 8;
+
+
       let snapGrid = (v) => Math.round(v / TRACE_GRID) * TRACE_GRID;
 
-      // Connection channel index for parallel trace separation
+
       let connIndex = this._connIndexMap ? (this._connIndexMap.get(conn.id) ?? 0) : 0;
 
-      // Determine unique channel shift to prevent parallel traces overlapping
-      // Alternates: 0, +5, -5, +10, -10...
+
       let shiftIndex = connIndex > -1 ? connIndex % 12 : 0;
       let channelShift = (shiftIndex % 2 === 0 ? 1 : -1) * Math.ceil(shiftIndex / 2) * TRACE_GRID;
 
-      // Compute perpendicular stub directions from surface normals
+
       let fromAngle = fromOffset.angle !== undefined ? fromOffset.angle : 0;
       let toAngle = toOffset.angle !== undefined ? toOffset.angle : 180;
 
-      // Snap angle to cardinal direction (→ ↓ ← ↑)
+
       let snapDir = (deg) => {
         let r = ((deg % 360) + 360) % 360;
-        if (r < 45 || r >= 315) return { dx: 1, dy: 0 }; // right
-        if (r >= 45 && r < 135) return { dx: 0, dy: 1 }; // down
-        if (r >= 135 && r < 225) return { dx: -1, dy: 0 }; // left
-        return { dx: 0, dy: -1 }; // up
+        if (r < 45 || r >= 315) return { dx: 1, dy: 0 };
+        if (r >= 45 && r < 135) return { dx: 0, dy: 1 };
+        if (r >= 135 && r < 225) return { dx: -1, dy: 0 };
+        return { dx: 0, dy: -1 };
       };
 
       let fDir = snapDir(fromAngle);
       let tDir = snapDir(toAngle);
 
-      // Stub endpoints: extend strictly perpedicular, no grid snapping on the orthogonal axis
-      // to avoid diagonal stubs from pins that are floating (not grid aligned).
+
       let stubFromX = fDir.dx === 0 ? startX : startX + fDir.dx * STUB_MIN;
       let stubFromY = fDir.dy === 0 ? startY : startY + fDir.dy * STUB_MIN;
       let stubToX = tDir.dx === 0 ? endX : endX + tDir.dx * STUB_MIN;
@@ -794,18 +788,18 @@ export class CanvasConnectionRenderer {
       let fromH = fromEl.offsetHeight || 60;
       let toH = toEl.offsetHeight || 60;
 
-      // Build orthogonal waypoints on grid
+
       let pts = [
         { x: startX, y: startY },
         { x: stubFromX, y: stubFromY },
       ];
-      // Skip obstacle avoidance on large graphs — O(N) per connection is too expensive
-      // and produces worse visual results at high density anyway
+
+
       let skipObstacles = this._nodeRectMap && this._nodeRectMap.size > 200;
 
-      // Very simple heuristic orthogonal router
+
       if (endX < startX - 20) {
-        // Backwards routing: U-turn below obstacles in the path
+
         let maxObstacleY = Math.max(fromPos.y + fromH, toPos.y + toH);
 
         if (!skipObstacles) {
@@ -830,15 +824,15 @@ export class CanvasConnectionRenderer {
         pts.push({ x: stubFromX, y: bottomY });
         pts.push({ x: stubToX, y: bottomY });
       } else {
-        // Forward routing: mid-X channel
+
         let midX = snapGrid((stubFromX + stubToX) / 2) + channelShift;
 
-        // Same-height shortcut
+
         if (Math.abs(stubFromY - stubToY) < TRACE_GRID * 2) {
           pts.push({ x: stubToX, y: stubFromY });
         } else {
           if (!skipObstacles) {
-            // Obstacle check for mid-X vertical segment
+
             let minY = Math.min(stubFromY, stubToY);
             let maxY = Math.max(stubFromY, stubToY);
             let pad = TRACE_GRID * 4;
@@ -870,16 +864,14 @@ export class CanvasConnectionRenderer {
       pts.push({ x: stubToX, y: stubToY });
       pts.push({ x: endX, y: endY });
 
-      // Path building and Chamfering
 
-      // Log route stats (debug only)
       if (CanvasConnectionRenderer.debug) {
         let fromLabel = fromEl._nodeData?.label || conn.from;
         let toLabel = toEl._nodeData?.label || conn.to;
         console.log(`🔄 [PCB] ${fromLabel} → ${toLabel} | waypoints=${pts.length}`);
       }
 
-      // Build SVG path with 45° chamfered corners
+
       let path = `M ${pts[0].x} ${pts[0].y}`;
       for (let i = 1; i < pts.length; i++) {
         let prev = pts[i - 1];
@@ -888,7 +880,7 @@ export class CanvasConnectionRenderer {
 
         let next = pts[i + 1];
         if (next) {
-          // Determine if there's a turn at curr → need chamfer
+
           let dx1 = curr.x - prev.x,
             dy1 = curr.y - prev.y;
           let dx2 = next.x - curr.x,
@@ -897,22 +889,22 @@ export class CanvasConnectionRenderer {
           let isH2 = Math.abs(dx2) > Math.abs(dy2);
 
           if (isH1 !== isH2) {
-            // Corner turn — apply 45° chamfer
+
             let len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
             let len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
             if (len1 < 1 || len2 < 1) {
-              // Degenerate segment — skip chamfer, go straight
+
               path += ` L ${curr.x} ${curr.y}`;
               continue;
             }
             let c = Math.min(CHAMFER, len1 / 2, len2 / 2);
 
-            // Pre-corner point
+
             let nx1 = dx1 / len1,
               ny1 = dy1 / len1;
             let preX = curr.x - nx1 * c;
             let preY = curr.y - ny1 * c;
-            // Post-corner point
+
             let nx2 = dx2 / len2,
               ny2 = dy2 / len2;
             let postX = curr.x + nx2 * c;
@@ -923,7 +915,7 @@ export class CanvasConnectionRenderer {
           }
         }
 
-        // Straight segment — use H/V for axis-aligned, L for diagonal stubs
+
         if (Math.abs(curr.y - prev.y) < 0.5) {
           path += ` H ${curr.x}`;
         } else if (Math.abs(curr.x - prev.x) < 0.5) {
@@ -944,7 +936,7 @@ export class CanvasConnectionRenderer {
       }
       d = path;
     } else {
-      // Tangent direction: use dynamic edge angle if available, else fixed socket angle
+
       let fromAngleDeg, toAngleDeg;
 
       if (fromOffset.angle !== undefined) {

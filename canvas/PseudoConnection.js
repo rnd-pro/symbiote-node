@@ -45,7 +45,7 @@ export class PseudoConnection {
     let d = `M ${sx} ${sy} C ${sx + dx} ${sy}, ${ex - dx} ${ey}, ${ex} ${ey}`;
     this.#path.setAttribute('d', d);
 
-    // Plus indicator at endpoint
+
     if (!this.#plusIndicator) {
       let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       g.setAttribute('class', 'plus-indicator');

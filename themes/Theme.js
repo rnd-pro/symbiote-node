@@ -13,7 +13,7 @@
  * @property {Object<string, string>} tokens - CSS custom property key-value pairs
  */
 
-// Re-export all built-in themes
+
 export { DARK_DEFAULT } from './dark.js';
 export { LIGHT_CLEAN } from './light.js';
 export { SYNTHWAVE } from './synthwave.js';
@@ -50,14 +50,14 @@ export function applyTheme(element, theme) {
   for (const [key, value] of Object.entries(theme.tokens)) {
     element.style.setProperty(key, value);
   }
-  // Bridge: derive global layout tokens from --sn-* values
+
   for (const [layoutToken, snToken] of Object.entries(LAYOUT_TOKEN_MAP)) {
     let value = theme.tokens[snToken];
     if (value) {
       element.style.setProperty(layoutToken, value);
     }
   }
-  // Extra CSS: inject theme-specific style overrides
+
   if (theme.extraCSS) {
     let existing = element.querySelector('style[data-theme]');
     if (existing) existing.remove();

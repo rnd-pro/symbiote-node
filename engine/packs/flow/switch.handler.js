@@ -28,7 +28,7 @@ export default {
     validate: (inputs) => inputs.data !== undefined,
     execute: (inputs, params) => {
       let { data } = inputs;
-      // Auto-extract value from data[field] when no explicit value input
+
       let value =
         inputs.value !== undefined
           ? inputs.value
@@ -40,7 +40,7 @@ export default {
       let result = { default: null };
 
       if (hasCases) {
-        // Explicit cases mode: value → mapped output name
+
         for (const outputName of Object.values(cases)) {
           result[outputName] = null;
         }
@@ -53,7 +53,7 @@ export default {
           result.default = data;
         }
       } else {
-        // Direct routing: value IS the output name (e.g. 'created' → output 'created')
+
         let outputName = String(value);
         result[outputName] = data;
         result.dynamicOutputs = [outputName];

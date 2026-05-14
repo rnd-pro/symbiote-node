@@ -70,10 +70,10 @@ export class ConnectionRenderer {
    */
   add(conn) {
     this.#connectionData.set(conn.id, conn);
-    // Remove free dots for now-connected ports
+
     this.removeFreeDot(conn.from, conn.out, 'output');
     this.removeFreeDot(conn.to, conn.in, 'input');
-    // Full re-render for affected nodes (slot pool needs full context)
+
     this.#fullRerenderForNodes(new Set([conn.from, conn.to]));
   }
 
@@ -136,15 +136,15 @@ export class ConnectionRenderer {
     this.#connectionData.delete(conn.id);
     let path = this.#svgLayer.querySelector(`[data-conn-id="${conn.id}"]`);
     if (path) {
-      // Fade out using existing CSS opacity transition
+
       path.style.opacity = '0';
       path.addEventListener('transitionend', () => path.remove(), { once: true });
-      // Fallback removal if transition doesn't fire
+
       setTimeout(() => {
         if (path.parentNode) path.remove();
       }, 200);
     }
-    // Remove endpoint dots and arrow
+
     for (const end of ['start', 'end']) {
       let dot = this.#dotLayer.querySelector(`[data-conn-dot="${conn.id}-${end}"]`);
       if (dot) dot.remove();
@@ -152,7 +152,7 @@ export class ConnectionRenderer {
     let arrow = this.#svgLayer.querySelector(`[data-conn-arrow="${conn.id}"]`);
     if (arrow) arrow.remove();
 
-    // Re-render free dots for freed ports
+
     this.renderFreeDots(fromId);
     this.renderFreeDots(toId);
   }
@@ -162,7 +162,7 @@ export class ConnectionRenderer {
    * @param {Set<string>} compatibleNodeIds - set of node IDs that have compatible ports
    */
   highlightDotsForNodes(compatibleNodeIds) {
-    // Highlight connected dots
+
     let connDots = this.#dotLayer.querySelectorAll('.sn-conn-dot');
     for (const dot of connDots) {
       let dotId = dot.getAttribute('data-conn-dot') || '';
@@ -178,7 +178,7 @@ export class ConnectionRenderer {
       }
     }
 
-    // Highlight free dots
+
     let freeDots = this.#dotLayer.querySelectorAll('.sn-free-dot');
     for (const dot of freeDots) {
       let nodeId = dot.getAttribute('data-node-id');
@@ -205,15 +205,15 @@ export class ConnectionRenderer {
    * @param {string} nodeId
    */
   updateForNode(nodeId) {
-    // Only clear and recalculate the DRAGGED node.
-    // Non-dragged nodes use cached slot assignments (no jitter).
+
+
     let draggedEl = this.#nodeViews.get(nodeId);
     if (draggedEl) {
       draggedEl._usedCoords = [];
       draggedEl._slotCache = new Map();
     }
 
-    // Collect touched connections for re-render
+
     let touchedConns = [];
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId || conn.to === nodeId) {
@@ -239,17 +239,17 @@ export class ConnectionRenderer {
 
     this.#clearAllSlots();
 
-    // Clear stale free dots from previous render
+
     let staleDots = this.#dotLayer.querySelectorAll('.sn-free-dot');
     for (const dot of staleDots) dot.remove();
 
-    // Detach layers from layout tree to prevent O(N²) thrashing during Read/Write mix
+
     let originalSvgDisplay = this.#svgLayer.style.display;
     let originalDotDisplay = this.#dotLayer.style.display;
     this.#svgLayer.style.display = 'none';
     this.#dotLayer.style.display = 'none';
 
-    // Pre-cache node rects for routing (prevents O(N^2) Layout Thrashing)
+
     this._nodeRectCache = new Map();
     for (const [nid, el] of this.#nodeViews) {
       if (el) {
@@ -263,15 +263,10 @@ export class ConnectionRenderer {
       }
     }
 
-    // ─── Three-Pass Pipeline: Side-Based Pin Assignment ───
-    // Pass 1: Assign sides and distribute pins
-    // Pass 2: Render connections (pins from _slotCache)
-    // Pass 3: Render free dots on remaining edges
 
     let conns = Array.from(this.#connectionData.values());
 
-    // ─── Pass 1: Side-Based Pin Assignment ───
-    // Group all connection endpoints by node → then by side
+
     /** @type {Map<string, Array<{portKey: string, portSide: string, targetPos: {x:number, y:number}}>>} */
     let nodeJobs = new Map();
 
@@ -300,7 +295,7 @@ export class ConnectionRenderer {
       nodeJobs.get(conn.to).push({ portKey: conn.in, portSide: 'input', targetPos: fromCenter });
     }
 
-    // For each node: determine side per connection, group by side, distribute pins
+
     for (const [nodeId, jobs] of nodeJobs) {
       let el = this.#nodeViews.get(nodeId);
       if (!el?._position) continue;
@@ -314,7 +309,7 @@ export class ConnectionRenderer {
 
       if (!el._slotCache) el._slotCache = new Map();
 
-      // Step 1: Determine side for each connection
+
       /** @type {Map<string, Array<{portKey: string, portSide: string, angle: number}>>} */
       let sideBuckets = new Map();
       for (const job of jobs) {
@@ -322,7 +317,7 @@ export class ConnectionRenderer {
         let dy = job.targetPos.y - cy;
         let angle = Math.atan2(dy, dx);
 
-        // Determine side from angle quadrant
+
         let nodeSide;
         if (Math.abs(dx) > Math.abs(dy)) {
           nodeSide = dx > 0 ? 'right' : 'left';
@@ -334,18 +329,17 @@ export class ConnectionRenderer {
         sideBuckets.get(nodeSide).push({ portKey: job.portKey, portSide: job.portSide, angle });
       }
 
-      // Step 2: Within each side, sort by perpendicular angle and distribute
+
       for (const [nodeSide, bucket] of sideBuckets) {
-        // Sort by perpendicular component for natural spacing
-        // For left/right sides: sort by Y (angle's vertical component)
-        // For top/bottom sides: sort by X (angle's horizontal component)
+
+
         if (nodeSide === 'left' || nodeSide === 'right') {
           bucket.sort((a, b) => Math.sin(a.angle) - Math.sin(b.angle));
         } else {
           bucket.sort((a, b) => Math.cos(a.angle) - Math.cos(b.angle));
         }
 
-        // Distribute pins evenly along the side edge
+
         let total = bucket.length;
         bucket.forEach((item, index) => {
           let t = total === 1 ? 0.5 : index / (total - 1);
@@ -363,19 +357,19 @@ export class ConnectionRenderer {
       }
     }
 
-    // ─── Pass 2: Render connections (pins pre-assigned from _slotCache) ───
+
     for (const conn of conns) {
       this.#render(conn);
     }
 
-    // ─── Pass 3: Render free dots for SVG nodes ───
+
     for (const [nodeId, el] of this.#nodeViews) {
       if (el.getAttribute('data-svg-shape')) {
         this.renderFreeDots(nodeId);
       }
     }
 
-    // ─── Final Debug Pass: Inter-Trace Overlaps ───
+
     if (ConnectionRenderer.debug && this._allSegments) {
       let overlaps = 0;
       for (let i = 0; i < this._allSegments.length; i++) {
@@ -384,7 +378,7 @@ export class ConnectionRenderer {
           let s2 = this._allSegments[j];
           if (s1.connId === s2.connId) continue;
 
-          // Check if both are horizontal
+
           if (s1.p1.y === s1.p2.y && s2.p1.y === s2.p2.y && s1.p1.y === s2.p1.y) {
             let minX1 = Math.min(s1.p1.x, s1.p2.x),
               maxX1 = Math.max(s1.p1.x, s1.p2.x);
@@ -397,7 +391,7 @@ export class ConnectionRenderer {
               overlaps++;
             }
           }
-          // Check if both are vertical
+
           if (s1.p1.x === s1.p2.x && s2.p1.x === s2.p2.x && s1.p1.x === s2.p1.x) {
             let minY1 = Math.min(s1.p1.y, s1.p2.y),
               maxY1 = Math.max(s1.p1.y, s1.p2.y);
@@ -417,11 +411,11 @@ export class ConnectionRenderer {
     this._allSegments = null;
     this._nodeRectCache = null;
 
-    // Restore layers
+
     this.#svgLayer.style.display = originalSvgDisplay;
     this.#dotLayer.style.display = originalDotDisplay;
 
-    // ─── Performance Monitoring ───
+
     if (ConnectionRenderer.debug) {
       let t1 = performance.now();
       let mem = performance?.memory?.usedJSHeapSize
@@ -495,29 +489,29 @@ export class ConnectionRenderer {
    * @returns {{ x: number, y: number }}
    */
   getSocketOffset(nodeEl, portKey, side, targetPos) {
-    // SVG shapes: compute edge position mathematically
+
     let shape = getShape(nodeEl.getAttribute('node-shape'));
     let nodeData = nodeEl._nodeData;
     if (shape && shape.pathData && nodeData) {
       let size = { width: nodeEl._cachedW || 180, height: nodeEl._cachedH || 100 };
 
-      // Dynamic mode — side-based pin placement
+
       if (targetPos && shape.getSidePosition) {
-        // Check cache first (set by refreshAll two-pass pipeline)
+
         if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
         let cacheKey = `${portKey}:${side}`;
         if (nodeEl._slotCache.has(cacheKey)) {
           return nodeEl._slotCache.get(cacheKey);
         }
 
-        // Fallback: immediate side-based calculation (for single-connection render)
+
         let nodePos = nodeEl._position;
         let cx = nodePos.x + size.width / 2;
         let cy = nodePos.y + size.height / 2;
         let dx = targetPos.x - cx;
         let dy = targetPos.y - cy;
 
-        // Determine side from angle to target
+
         let nodeSide =
           Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'bottom' : 'top';
 
@@ -527,7 +521,7 @@ export class ConnectionRenderer {
         return result;
       }
 
-      // Also support getEdgePoint fallback with smart routing
+
       if (targetPos && shape.getEdgePoint) {
         let ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
         let keys = ports ? Object.keys(ports) : [portKey];
@@ -539,17 +533,17 @@ export class ConnectionRenderer {
         let cy = nodePos.y + size.height / 2;
         let baseAngle = Math.atan2(targetPos.y - cy, targetPos.x - cx);
 
-        // 1. Separate input/output zones: gap between types
-        let sideGap = Math.PI / 6; // 30° gap = one full slot between input/output
+
+        let sideGap = Math.PI / 6;
         let adjustedBase = baseAngle + (side === 'output' ? -sideGap : sideGap);
 
-        // 2. Anti-crossing: reverse port order based on perpendicular direction
+
         let dx = targetPos.x - cx;
         let dy = targetPos.y - cy;
         let shouldReverse = side === 'output' ? dy < 0 : dy > 0;
         let effectiveIndex = shouldReverse ? total - 1 - index : index;
 
-        // 3. Spread ports around adjusted base angle
+
         let angle = adjustedBase;
         if (total > 1) {
           let segment = (2 * Math.PI) / (total * 2);
@@ -557,18 +551,18 @@ export class ConnectionRenderer {
           angle = adjustedBase + offset;
         }
 
-        // 4. Quantize to 15° grid for stable discrete movement
-        let step = Math.PI / 12; // 15° grid
+
+        let step = Math.PI / 12;
         angle = Math.round(angle / step) * step;
 
-        // Check cache first
+
         if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
         let cacheKey = `${portKey}:${side}`;
         if (nodeEl._slotCache.has(cacheKey)) {
           return nodeEl._slotCache.get(cacheKey);
         }
 
-        // 5. Collision avoidance by PIXEL COORDINATES
+
         if (!nodeEl._usedCoords) nodeEl._usedCoords = [];
         const MIN_PIX = 5;
         let nudged = angle;
@@ -589,7 +583,7 @@ export class ConnectionRenderer {
         nodeEl._slotCache.set(cacheKey, result);
         return result;
       }
-      // Fixed mode: distribute ports at preset angles
+
       let ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
       if (ports) {
         let keys = Object.keys(ports);
@@ -602,7 +596,7 @@ export class ConnectionRenderer {
       }
     }
 
-    // Fast path: if node is culled, skip forced layout resolution
+
     if (nodeEl.style.contentVisibility === 'hidden') {
       return {
         x: side === 'output' ? nodeEl._cachedW || 180 : 0,
@@ -610,7 +604,7 @@ export class ConnectionRenderer {
       };
     }
 
-    // Standard shapes: read from DOM socket elements
+
     let container =
       side === 'output' ? nodeEl.querySelector('.outputs') : nodeEl.querySelector('.inputs');
 
@@ -651,7 +645,7 @@ export class ConnectionRenderer {
     let fromPos = fromEl._position;
     let toPos = toEl._position;
 
-    // Compute centers for dynamic edge positioning on SVG shapes
+
     let fromW = fromEl._cachedW || fromEl.offsetWidth || 180;
     let fromH = fromEl._cachedH || fromEl.offsetHeight || 100;
     let toW = toEl._cachedW || toEl.offsetWidth || 180;
@@ -665,7 +659,7 @@ export class ConnectionRenderer {
       y: toPos.y + toH / 2,
     };
 
-    // Always recalculate both sides (slot pool makes this cheap and deterministic)
+
     let fromOffset = this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
     let toOffset = this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
 
@@ -674,7 +668,7 @@ export class ConnectionRenderer {
     let endX = toPos.x + toOffset.x;
     let endY = toPos.y + toOffset.y;
 
-    // Tangent-aware Bézier using shape angles
+
     let fromNode = this.#editor.getNode(conn.from);
     let toNode = this.#editor.getNode(conn.to);
     let fromShape = getShape(fromNode?.shape);
@@ -683,7 +677,7 @@ export class ConnectionRenderer {
     let fromSize = { width: fromW, height: fromH };
     let toSize = { width: toW, height: toH };
 
-    // Generate path based on style
+
     let d;
     if (this.#pathStyle === 'straight') {
       d = `M ${startX} ${startY} L ${endX} ${endY}`;
@@ -801,44 +795,40 @@ export class ConnectionRenderer {
       }
       d = path;
     } else if (this.#pathStyle === 'pcb') {
-      // ─── PCB Grid-Based Trace Routing ───
-      // All waypoints snap to a grid. Stubs exit perpendicular to node surface
-      // with a minimum length, then route on grid channels with chamfered corners.
 
-      const TRACE_GRID = 5; // Dense trace grid (5px)
-      const STUB_MIN = 20; // minimum perpendicular stub from node edge
-      const CHAMFER = 8; // 45° chamfer radius (px)
 
-      // Snap a coordinate to the trace grid
+      const TRACE_GRID = 5;
+      const STUB_MIN = 20;
+      const CHAMFER = 8;
+
+
       let snapGrid = (v) => Math.round(v / TRACE_GRID) * TRACE_GRID;
 
-      // Connection channel index for parallel trace separation
+
       let connKeys = Array.from(this.#connectionData.keys());
       let connIndex = connKeys.indexOf(conn.id);
 
-      // Determine unique channel shift to prevent parallel traces overlapping
-      // Alternates: 0, +5, -5, +10, -10...
+
       let shiftIndex = connIndex > -1 ? connIndex % 12 : 0;
       let channelShift = (shiftIndex % 2 === 0 ? 1 : -1) * Math.ceil(shiftIndex / 2) * TRACE_GRID;
 
-      // Compute perpendicular stub directions from surface normals
+
       let fromAngle = fromOffset.angle !== undefined ? fromOffset.angle : 0;
       let toAngle = toOffset.angle !== undefined ? toOffset.angle : 180;
 
-      // Snap angle to cardinal direction (→ ↓ ← ↑)
+
       let snapDir = (deg) => {
         let r = ((deg % 360) + 360) % 360;
-        if (r < 45 || r >= 315) return { dx: 1, dy: 0 }; // right
-        if (r >= 45 && r < 135) return { dx: 0, dy: 1 }; // down
-        if (r >= 135 && r < 225) return { dx: -1, dy: 0 }; // left
-        return { dx: 0, dy: -1 }; // up
+        if (r < 45 || r >= 315) return { dx: 1, dy: 0 };
+        if (r >= 45 && r < 135) return { dx: 0, dy: 1 };
+        if (r >= 135 && r < 225) return { dx: -1, dy: 0 };
+        return { dx: 0, dy: -1 };
       };
 
       let fDir = snapDir(fromAngle);
       let tDir = snapDir(toAngle);
 
-      // Stub endpoints: extend strictly perpedicular, no grid snapping on the orthogonal axis
-      // to avoid diagonal stubs from pins that are floating (not grid aligned).
+
       let stubFromX = fDir.dx === 0 ? startX : startX + fDir.dx * STUB_MIN;
       let stubFromY = fDir.dy === 0 ? startY : startY + fDir.dy * STUB_MIN;
       let stubToX = tDir.dx === 0 ? endX : endX + tDir.dx * STUB_MIN;
@@ -847,15 +837,15 @@ export class ConnectionRenderer {
       let fromH = fromEl.offsetHeight || 60;
       let toH = toEl.offsetHeight || 60;
 
-      // Build orthogonal waypoints on grid
+
       let pts = [
         { x: startX, y: startY },
         { x: stubFromX, y: stubFromY },
       ];
 
-      // Very simple heuristic orthogonal router
+
       if (endX < startX - 20) {
-        // Backwards routing: U-turn below obstacles in the path
+
         let minXForObstacle = Math.min(stubFromX, stubToX);
         let maxXForObstacle = Math.max(stubFromX, stubToX);
         let maxObstacleY = Math.max(fromPos.y + fromH, toPos.y + toH);
@@ -866,7 +856,7 @@ export class ConnectionRenderer {
           let ny = rect.y;
           let nw = rect.w;
           let nh = rect.h;
-          // Check if node is in the horizontal path of the detour
+
           let pad = TRACE_GRID * 2;
           if (nx + nw + pad >= minXForObstacle && nx - pad <= maxXForObstacle) {
             if (ny + nh > maxObstacleY) {
@@ -875,21 +865,20 @@ export class ConnectionRenderer {
           }
         }
 
-        // Detour deeply below all nodes in the path to avoid overlaps
-        // We use absolute channelShift so tracks stack neatly downward
+
         let bottomY = snapGrid(maxObstacleY + 30) + Math.abs(channelShift);
         pts.push({ x: stubFromX, y: bottomY });
         pts.push({ x: stubToX, y: bottomY });
       } else {
-        // Forward routing: mid-X channel
+
         let midX = snapGrid((stubFromX + stubToX) / 2) + channelShift;
 
-        // Same-height shortcut: if stubs are roughly aligned (in same track cell), connect via single horizontal
+
         if (Math.abs(stubFromY - stubToY) < TRACE_GRID * 2) {
-          // Keep strictly horizontal
+
           pts.push({ x: stubToX, y: stubFromY });
         } else {
-          // Obstacle check for mid-X vertical segment
+
           let minY = Math.min(stubFromY, stubToY);
           let maxY = Math.max(stubFromY, stubToY);
           let pad = TRACE_GRID * 4;
@@ -904,7 +893,7 @@ export class ConnectionRenderer {
 
             if (midX >= nx - pad && midX <= nx + nw + pad) {
               if (ny - pad <= maxY && ny + nh + pad >= minY) {
-                // Detour around obstacle
+
                 let leftX = snapGrid(nx - pad) + channelShift;
                 let rightX = snapGrid(nx + nw + pad) + channelShift;
                 midX = Math.abs(midX - leftX) < Math.abs(midX - rightX) ? leftX : rightX;
@@ -921,10 +910,10 @@ export class ConnectionRenderer {
       pts.push({ x: stubToX, y: stubToY });
       pts.push({ x: endX, y: endY });
 
-      // Path building and Chamfering
+
       let debugCollisions = [];
 
-      // 1. Check if line segments intersect any nodes
+
       for (let i = 0; i < pts.length - 1; i++) {
         let segX1 = Math.min(pts[i].x, pts[i + 1].x);
         let segY1 = Math.min(pts[i].y, pts[i + 1].y);
@@ -948,7 +937,7 @@ export class ConnectionRenderer {
         }
       }
 
-      // 2. Self-overlap (180 degree turn)
+
       for (let i = 0; i < pts.length - 2; i++) {
         let p1 = pts[i],
           p2 = pts[i + 1],
@@ -964,7 +953,7 @@ export class ConnectionRenderer {
         }
       }
 
-      // Store generated segments for global overlap checks
+
       if (!this._allSegments) this._allSegments = [];
       let segments = [];
       for (let i = 0; i < pts.length - 1; i++) {
@@ -977,7 +966,7 @@ export class ConnectionRenderer {
       }
       this._allSegments.push(...segments);
 
-      // Log route stats
+
       if (ConnectionRenderer.debug) {
         let fromLabel = fromEl._nodeData?.label || conn.from;
         let toLabel = toEl._nodeData?.label || conn.to;
@@ -988,7 +977,7 @@ export class ConnectionRenderer {
         console.log(msg);
       }
 
-      // Build SVG path with 45° chamfered corners
+
       let path = `M ${pts[0].x} ${pts[0].y}`;
       for (let i = 1; i < pts.length; i++) {
         let prev = pts[i - 1];
@@ -997,7 +986,7 @@ export class ConnectionRenderer {
 
         let next = pts[i + 1];
         if (next) {
-          // Determine if there's a turn at curr → need chamfer
+
           let dx1 = curr.x - prev.x,
             dy1 = curr.y - prev.y;
           let dx2 = next.x - curr.x,
@@ -1006,22 +995,22 @@ export class ConnectionRenderer {
           let isH2 = Math.abs(dx2) > Math.abs(dy2);
 
           if (isH1 !== isH2) {
-            // Corner turn — apply 45° chamfer
+
             let len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
             let len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
             if (len1 < 1 || len2 < 1) {
-              // Degenerate segment — skip chamfer, go straight
+
               path += ` L ${curr.x} ${curr.y}`;
               continue;
             }
             let c = Math.min(CHAMFER, len1 / 2, len2 / 2);
 
-            // Pre-corner point
+
             let nx1 = dx1 / len1,
               ny1 = dy1 / len1;
             let preX = curr.x - nx1 * c;
             let preY = curr.y - ny1 * c;
-            // Post-corner point
+
             let nx2 = dx2 / len2,
               ny2 = dy2 / len2;
             let postX = curr.x + nx2 * c;
@@ -1032,7 +1021,7 @@ export class ConnectionRenderer {
           }
         }
 
-        // Straight segment — use H/V for axis-aligned, L for diagonal stubs
+
         if (Math.abs(curr.y - prev.y) < 0.5) {
           path += ` H ${curr.x}`;
         } else if (Math.abs(curr.x - prev.x) < 0.5) {
@@ -1043,7 +1032,7 @@ export class ConnectionRenderer {
       }
       d = path;
     } else {
-      // Tangent direction: use dynamic edge angle if available, else fixed socket angle
+
       let fromAngleDeg, toAngleDeg;
 
       if (fromOffset.angle !== undefined) {
@@ -1090,7 +1079,7 @@ export class ConnectionRenderer {
     }
     path.setAttribute('d', d);
 
-    // Wire type styling — thicker for exec, normal for data
+
     let fromSocketName = fromNode?.outputs[conn.out]?.socket?.name || 'data';
     if (
       fromSocketName === 'exec' ||
@@ -1114,18 +1103,18 @@ export class ConnectionRenderer {
       path.style.strokeDasharray = '';
     }
 
-    // Gradient connection coloring
+
     this.#applyGradient(path, conn, fromNode, toNode, startX, startY, endX, endY);
 
-    // Determine socket type for visual dot styling
+
     let outSocketName = fromNode?.outputs?.[conn.out]?.socket?.name || 'data';
     let inSocketName = toNode?.inputs?.[conn.in]?.socket?.name || outSocketName;
 
-    // Endpoint dots with side and type coloring
+
     this.#updateDot(conn.id, 'start', startX, startY, 'output', outSocketName);
     this.#updateDot(conn.id, 'end', endX, endY, 'input', inSocketName);
 
-    // Direction arrow at wire midpoint
+
     this.#updateArrow(conn.id, d);
   }
 
@@ -1150,9 +1139,7 @@ export class ConnectionRenderer {
     dot.setAttribute('cx', x);
     dot.setAttribute('cy', y);
 
-    // Dots are hidden by default (CSS). Only show for SVG nodes.
-    // Runs on every update to handle timing — NodeViewManager may set
-    // data-svg-shape after initial connection render
+
     if (!dot.hasAttribute('data-svg-wired')) {
       let conn = this.#connectionData.get(connId);
       if (conn) {
@@ -1180,7 +1167,7 @@ export class ConnectionRenderer {
       }
     }
 
-    // Classify socket type
+
     let typeClass = 'sn-dot-data';
     if (socketType === 'exec' || socketType === 'execution' || socketType === 'trigger') {
       typeClass = 'sn-dot-exec';
@@ -1197,11 +1184,11 @@ export class ConnectionRenderer {
    * @param {string} pathD - SVG path d attribute
    */
   #updateArrow(connId, pathD) {
-    // Universal midpoint calculation using SVG path API (works for all path styles)
+
     let tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     tempPath.setAttribute('d', pathD);
 
-    // Need to briefly attach to DOM for getPointAtLength to work
+
     this.#svgLayer.appendChild(tempPath);
     let totalLen = tempPath.getTotalLength();
     if (totalLen < 1) {
@@ -1209,10 +1196,10 @@ export class ConnectionRenderer {
       return;
     }
 
-    // Midpoint at 50% of path length
+
     let mid = tempPath.getPointAtLength(totalLen * 0.5);
 
-    // Tangent: sample two close points (0.5% before/after midpoint)
+
     let delta = Math.max(0.5, totalLen * 0.005);
     let p1 = tempPath.getPointAtLength(Math.max(0, totalLen * 0.5 - delta));
     let p2 = tempPath.getPointAtLength(Math.min(totalLen, totalLen * 0.5 + delta));
@@ -1295,21 +1282,21 @@ export class ConnectionRenderer {
     let pos = nodeEl._position;
     if (!pos) return;
 
-    // Collect already-connected port keys
+
     let connectedPorts = new Set();
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId) connectedPorts.add(`output:${conn.out}`);
       if (conn.to === nodeId) connectedPorts.add(`input:${conn.in}`);
     }
 
-    // Ensure collision tracking exists
+
     if (!nodeEl._usedCoords) nodeEl._usedCoords = [];
     const MIN_PIX = 12;
-    let step = Math.PI / 12; // 15° grid
+    let step = Math.PI / 12;
 
-    // Place free dots using edge-point system (same as connections)
+
     let placeDot = (key, side, baseAngle, portData) => {
-      // Find a free position using collision avoidance
+
       let angle = Math.round(baseAngle / step) * step;
       let nudged = angle;
       let attempts = 0;
@@ -1332,7 +1319,7 @@ export class ConnectionRenderer {
       this.#createFreeDot(nodeId, key, side, pos.x + ep.x, pos.y + ep.y, portData);
     };
 
-    // Render dots for unconnected inputs (left side baseline angle = π)
+
     let inputKeys = Object.keys(node.inputs);
     inputKeys.forEach((key, i) => {
       if (connectedPorts.has(`input:${key}`)) return;
@@ -1342,7 +1329,7 @@ export class ConnectionRenderer {
       placeDot(key, 'input', baseAngle, node.inputs[key]);
     });
 
-    // Render dots for unconnected outputs (right side baseline angle = 0)
+
     let outputKeys = Object.keys(node.outputs);
     outputKeys.forEach((key, i) => {
       if (connectedPorts.has(`output:${key}`)) return;
@@ -1364,7 +1351,7 @@ export class ConnectionRenderer {
    */
   #createFreeDot(nodeId, key, side, wx, wy, portData) {
     let dotId = `free-${nodeId}-${side}-${key}`;
-    // Skip if already exists
+
     if (this.#dotLayer.querySelector(`[data-free-dot="${dotId}"]`)) return;
 
     let dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -1424,7 +1411,7 @@ export class ConnectionRenderer {
   refreshFreeDots(nodeId) {
     let dots = this.#dotLayer.querySelectorAll(`[data-node-id="${nodeId}"][data-free-dot]`);
     if (!dots.length) {
-      // No dots yet — initial render (position was likely missing at shape setup time)
+
       this.renderFreeDots(nodeId);
       return;
     }
@@ -1466,7 +1453,7 @@ export class ConnectionRenderer {
     let bestDist = radius;
     let best = null;
 
-    // Search free dots
+
     let freeDots = this.#dotLayer.querySelectorAll('[data-free-dot]');
     for (const dot of freeDots) {
       let cx = parseFloat(dot.getAttribute('cx')) || 0;
@@ -1482,7 +1469,7 @@ export class ConnectionRenderer {
       }
     }
 
-    // Search connected SVG dots
+
     let wiredDots = this.#dotLayer.querySelectorAll('[data-svg-wired=""]');
     for (const dot of wiredDots) {
       let cx = parseFloat(dot.getAttribute('cx')) || 0;
@@ -1491,7 +1478,7 @@ export class ConnectionRenderer {
       if (dist < bestDist) {
         bestDist = dist;
         let connDotId = dot.getAttribute('data-conn-dot');
-        // Parse connDotId: "connId-start" or "connId-end"
+
         let isStart = connDotId.endsWith('-start');
         let connId = connDotId.replace(/-(?:start|end)$/, '');
         let conn = this.#connectionData.get(connId);

@@ -141,7 +141,7 @@ async function cleanupRemote(remotePath, host) {
       timeoutMs: 10000,
     });
   } catch {
-    /* ignore */
+
   }
 }
 
@@ -164,7 +164,7 @@ async function analyze(mediaPath, params) {
       return { result, detected: result.suitable || false, error: null };
     }
 
-    // Upload via curl for remote analysis
+
     let { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
     try {
       let response = await fetch(`${endpoint}/analyze?min_coverage=${params.minCoverage || 5}`, {
@@ -274,7 +274,7 @@ async function framesGpu(mediaPath, params) {
     let remotePath = path.resolve(mediaPath);
     let cleanup = false;
 
-    // If not on server, rsync frames directory to remote
+
     if (!params.useRemotePath && !isOnServer()) {
       let dirName = `face_frames_${Date.now()}`;
       remotePath = `/tmp/${dirName}`;
@@ -308,7 +308,7 @@ async function framesGpu(mediaPath, params) {
             timeoutMs: 10000,
           });
         } catch {
-          /* ignore */
+
         }
       }
     }

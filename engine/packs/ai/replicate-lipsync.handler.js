@@ -59,7 +59,7 @@ export default {
       startTime: { type: 'number', default: 0, description: 'Audio start time (seconds)' },
       endTime: { type: 'number', default: 0, description: 'Audio end time (seconds)' },
       maxWaitMs: { type: 'int', default: 300000, description: 'Max poll wait time (ms)' },
-      // Batch params
+
       segments: { type: 'any', default: null, description: 'Segments array' },
       videoMap: { type: 'any', default: null, description: 'Map of promptId → videoUrl' },
       concurrency: { type: 'int', default: 3, description: 'Max concurrent tasks' },
@@ -109,7 +109,6 @@ export default {
   },
 };
 
-// --- Replicate API ---
 
 /**
  * Create prediction on Replicate
@@ -201,7 +200,6 @@ async function downloadResult(videoUrl, outputPath, signal) {
   return outputPath;
 }
 
-// --- Utilities ---
 
 /**
  * Convert file to data URI
@@ -272,7 +270,6 @@ async function validateTunnel(publicBaseUrl) {
   }
 }
 
-// --- Processing pipeline ---
 
 /**
  * Process single segment
@@ -293,11 +290,11 @@ async function processSegment(inputs, params) {
     return { videoPath: outputPath, cached: true };
   }
 
-  // Extract audio clip
+
   let clipPath = path.join(clipsDir, `${segmentId}.mp3`);
   await extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
 
-  // Get audio data URI or public URL
+
   let audioUrl;
   if (publicBaseUrl) {
     audioUrl = getPublicUrl(clipPath, publicBaseUrl);
@@ -305,16 +302,16 @@ async function processSegment(inputs, params) {
     audioUrl = await fileToDataUri(clipPath);
   }
 
-  // Create prediction
+
   let prediction = await createPrediction(inputs.videoUrl, audioUrl, replicateToken, params.signal);
 
-  // Poll if not already complete
+
   let result = prediction;
   if (prediction.status !== 'succeeded') {
     result = await pollPrediction(prediction.id, replicateToken, params.maxWaitMs, params.signal);
   }
 
-  // Download result
+
   let resultUrl = result.output;
   if (!resultUrl) {
     throw new Error('No output URL in prediction result');

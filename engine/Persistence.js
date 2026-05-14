@@ -21,7 +21,7 @@ export function serialize(graph, options = {}) {
   let { pretty = true, includeOutput = false } = options;
   let data = graph.toJSON();
 
-  // Strip _output unless explicitly requested
+
   if (!includeOutput) {
     data.nodes = data.nodes.map((n) => {
       let { _output, ...rest } = n;

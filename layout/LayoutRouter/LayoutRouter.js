@@ -88,7 +88,7 @@ export function buildHash(panel, subpath, params) {
  */
 export function navigate(panel, subpath = '', params = {}) {
   if (typeof location === 'undefined') return;
-  // Carry global params from current URL into new route
+
   const currentQuery = parseQuery(routerCtx.read('query'));
   const merged = {};
   for (const key of _globalKeys) {
@@ -96,7 +96,7 @@ export function navigate(panel, subpath = '', params = {}) {
       merged[key] = currentQuery[key];
     }
   }
-  // Apply explicit params (can override or null-out globals)
+
   for (const [k, v] of Object.entries(params)) {
     if (v != null && v !== '') {
       merged[k] = v;
@@ -105,7 +105,7 @@ export function navigate(panel, subpath = '', params = {}) {
     }
   }
   const hash = buildHash(panel, subpath, merged);
-  // Use pushState instead of location.hash to ensure clean URL
+
   history.pushState(null, '', location.pathname + '#' + hash);
   syncFromHash();
   if (typeof window !== 'undefined') {
@@ -156,7 +156,7 @@ function syncFromHash() {
   routerCtx.pub('subpath', subpath);
   routerCtx.pub('query', queryPart);
 
-  // Extract and publish global params
+
   if (_globalKeys.size > 0) {
     const allParams = parseQuery(queryPart);
     const globals = {};
@@ -198,7 +198,7 @@ export function setDefaultPanel(panel) {
  */
 export function registerGlobalParam(...keys) {
   keys.forEach((k) => _globalKeys.add(k));
-  // Re-sync to publish initial global params from current URL
+
   if (typeof location !== 'undefined') {
     const allParams = parseQuery(routerCtx.read('query'));
     const globals = {};
@@ -220,7 +220,7 @@ export function setGlobalParam(key, value) {
   updateParams({ [key]: value });
 }
 
-// Initial sync + listen to hashchange (browser-only)
+
 if (typeof location !== 'undefined' && typeof window !== 'undefined') {
   syncFromHash();
   window.addEventListener('hashchange', syncFromHash);

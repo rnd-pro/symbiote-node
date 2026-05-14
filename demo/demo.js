@@ -46,18 +46,14 @@ import '../layout/LayoutSidebar/LayoutSidebar.js';
 async function initDemo() {
   const editor = new NodeEditor();
 
-  // Socket types
+
   const dataSocket = new Socket('data', { color: '#5cb8ff' });
   const textSocket = new Socket('text', { color: '#5cd87a' });
   const anySocket = new Socket('any', { color: '#f0b840' });
   const execSocket = new Socket('exec', { color: '#ffffff' });
   const arraySocket = new Socket('array', { color: '#a78bfa' });
 
-  // ══════════════════════════════════════════════════
-  // Row 1: Data Acquisition & Auth
-  // ══════════════════════════════════════════════════
 
-  // ⬡ API Gateway — hexagon SVG node (entry point)
   const gateway = new Node('API Gateway', {
     type: 'gateway',
     category: 'server',
@@ -67,12 +63,12 @@ async function initDemo() {
   gateway.addOutput('data', new Output(dataSocket, 'Data'));
   gateway.addOutput('meta', new Output(textSocket, 'Meta'));
 
-  // ⛨ Auth Guard — shield SVG node (security layer)
+
   const auth = new Node('Auth Guard', { type: 'auth', category: 'server', shape: 'shield' });
   auth.addInput('token', new Input(textSocket, 'Token'));
   auth.addOutput('ok', new Output(execSocket, 'Verified'));
 
-  // ☁ Cloud Storage — cloud SVG node (data source)
+
   const cloudSrc = new Node('Cloud Fetch', {
     type: 'storage',
     category: 'instance',
@@ -81,23 +77,19 @@ async function initDemo() {
   cloudSrc.addInput('query', new Input(dataSocket, 'Query'));
   cloudSrc.addOutput('docs', new Output(arraySocket, 'Documents'));
 
-  // ⚡ Event Trigger — bolt SVG node (startup signal)
+
   const trigger = new Node('Trigger', { type: 'trigger', category: 'control', shape: 'pentagon' });
   trigger.addOutput('exec', new Output(execSocket, 'Exec'));
   trigger.addOutput('config', new Output(textSocket, 'Config'));
 
-  // ══════════════════════════════════════════════════
-  // Row 2: Processing Pipeline (standard nodes)
-  // ══════════════════════════════════════════════════
 
-  // HTTP Request (standard rect)
   const httpReq = new Node('HTTP Request', { type: 'action', category: 'control' });
   httpReq.addInput('exec', new Input(execSocket, 'Exec'));
   httpReq.addInput('data', new Input(dataSocket, 'Request'));
   httpReq.addOutput('response', new Output(dataSocket, 'Response'));
   httpReq.addControl('url', new InputControl('text', { initial: 'api.openai.com/v1/chat' }));
 
-  // AI Agent (standard rect)
+
   const aiAgent = new Node('AI Agent', { type: 'ai', category: 'data' });
   aiAgent.addInput('prompt', new Input(dataSocket, 'Prompt'));
   aiAgent.addInput('context', new Input(arraySocket, 'Context'));
@@ -105,38 +97,34 @@ async function initDemo() {
   aiAgent.addOutput('tokens', new Output(textSocket, 'Tokens'));
   aiAgent.addControl('model', new InputControl('text', { initial: 'gpt-4o' }));
 
-  // Filter (pill shape)
+
   const filter = new Node('Filter', { type: 'filter', category: 'default', shape: 'pill' });
   filter.addInput('in', new Input(dataSocket, 'In'));
   filter.addOutput('pass', new Output(dataSocket, 'Pass'));
   filter.addOutput('reject', new Output(dataSocket, 'Reject'));
 
-  // Merge (circle shape)
+
   const merge = new Node('Merge', { type: 'merge', category: 'control', shape: 'circle' });
   merge.addInput('a', new Input(anySocket, 'A'));
   merge.addInput('b', new Input(anySocket, 'B'));
   merge.addOutput('out', new Output(anySocket, 'Out'));
 
-  // ══════════════════════════════════════════════════
-  // Row 3: Delivery & Monitoring
-  // ══════════════════════════════════════════════════
 
-  // ⬡ CDN Publish — octagon SVG (distribution)
   const cdn = new Node('CDN Publish', { type: 'publish', category: 'server', shape: 'octagon' });
   cdn.addInput('content', new Input(anySocket, 'Content'));
   cdn.addOutput('url', new Output(textSocket, 'URL'));
 
-  // 🗄 Database — database SVG (persistence)
+
   const db = new Node('Database', { type: 'database', category: 'data', shape: 'database' });
   db.addInput('data', new Input(anySocket, 'Data'));
   db.addOutput('id', new Output(textSocket, 'Record ID'));
 
-  // ♥ Health Monitor — heart SVG (system health)
+
   const health = new Node('Health', { type: 'health', category: 'instance', shape: 'heart' });
   health.addInput('ping', new Input(execSocket, 'Ping'));
   health.addOutput('status', new Output(textSocket, 'Status'));
 
-  // Debug (standard rect — inspector)
+
   const debug = new Node('Debug Log', { type: 'debug', category: 'default' });
   debug.addInput('inspect', new Input(anySocket, 'Inspect'));
   debug.addInput('health', new Input(textSocket, 'Health'));
@@ -145,13 +133,10 @@ async function initDemo() {
     new InputControl('text', { initial: '{ status: "ok", latency: "42ms" }', readonly: true })
   );
 
-  // ★ Notification — star SVG (alerts)
+
   const notify = new Node('Notify', { type: 'event', category: 'control', shape: 'star' });
   notify.addInput('event', new Input(textSocket, 'Event'));
 
-  // ══════════════════════════════════════════════════
-  // Subgraph: Data Enrichment Pipeline
-  // ══════════════════════════════════════════════════
 
   const subgraph = new SubgraphNode('Data Enrichment', { category: 'data' });
   const innerSocket = new Socket('data', { color: '#4a9eff' });
@@ -179,13 +164,10 @@ async function initDemo() {
     [innerEnrich.id]: { x: 700, y: 100 },
   };
 
-  // Manual ports (stable names — don't use syncPorts which generates dynamic IDs)
+
   subgraph.addInput('raw', new Input(anySocket, 'Raw Data'));
   subgraph.addOutput('output', new Output(anySocket, 'Enriched'));
 
-  // ══════════════════════════════════════════════════
-  // Add all nodes
-  // ══════════════════════════════════════════════════
 
   const allNodes = [
     trigger,
@@ -205,17 +187,13 @@ async function initDemo() {
   ];
   allNodes.forEach((n) => editor.addNode(n));
 
-  // ══════════════════════════════════════════════════
-  // Connections — unified data flow
-  // ══════════════════════════════════════════════════
 
-  // Row 1: Trigger → Auth → Gateway, Gateway → HTTP & Cloud
   editor.addConnection(new Connection(trigger, 'exec', auth, 'token'));
   editor.addConnection(new Connection(auth, 'ok', gateway, 'auth'));
   editor.addConnection(new Connection(gateway, 'data', httpReq, 'data'));
   editor.addConnection(new Connection(gateway, 'meta', cloudSrc, 'query'));
 
-  // Row 2: HTTP → AI, Cloud → AI context, AI → Filter → Merge → Subgraph
+
   editor.addConnection(new Connection(httpReq, 'response', aiAgent, 'prompt'));
   editor.addConnection(new Connection(cloudSrc, 'docs', aiAgent, 'context'));
   editor.addConnection(new Connection(aiAgent, 'result', filter, 'in'));
@@ -223,7 +201,7 @@ async function initDemo() {
   editor.addConnection(new Connection(aiAgent, 'tokens', merge, 'b'));
   editor.addConnection(new Connection(merge, 'out', subgraph, 'raw'));
 
-  // Row 3: Subgraph → CDN & DB, DB → Debug, CDN → Notify, Health loop
+
   editor.addConnection(new Connection(subgraph, 'output', cdn, 'content'));
   editor.addConnection(new Connection(subgraph, 'output', db, 'data'));
   editor.addConnection(new Connection(db, 'id', debug, 'inspect'));
@@ -231,9 +209,6 @@ async function initDemo() {
   editor.addConnection(new Connection(trigger, 'config', health, 'ping'));
   editor.addConnection(new Connection(health, 'status', debug, 'health'));
 
-  // ══════════════════════════════════════════════════
-  // Node type catalog for context menu
-  // ══════════════════════════════════════════════════
 
   const NODE_TYPES = [
     { label: 'Standard Node', type: 'default', category: 'default' },
@@ -269,7 +244,7 @@ async function initDemo() {
     if (c) c.setNodePosition(newNode.id, x, y);
   };
 
-  // Context menu: add node
+
   editor.on('contextadd', ({ x, y }) => {
     const c = document.querySelector('node-canvas');
     if (!c) return;
@@ -284,13 +259,13 @@ async function initDemo() {
     c.ref?.contextMenu?.show(menuX, menuY, items);
   });
 
-  // Context menu: add frame
+
   editor.on('contextaddframe', ({ x, y }) => {
     const frame = new Frame('Group', { x, y, width: 400, height: 300, color: '#4a9eff' });
     editor.addFrame(frame);
   });
 
-  // Context menu: add comment
+
   editor.on('contextaddcomment', ({ x, y }) => {
     const comment = new Node('Add your notes here...', { type: 'comment', shape: 'comment' });
     editor.addNode(comment);
@@ -298,17 +273,17 @@ async function initDemo() {
     if (c) c.setNodePosition(comment.id, x, y);
   });
 
-  // Auto layout
+
   editor.on('autolayout', () => {
     const c = document.querySelector('node-canvas');
     if (c) c.autoLayout();
   });
 
-  // Apply theme to :root so both layout and canvas inherit tokens
+
   const applyToRoot = (theme) => applyTheme(document.documentElement, theme);
   applyToRoot(GREY_NEUTRAL);
 
-  // ═══ Panel type registry ═══
+
   const PANEL_TYPES = {
     canvas: { title: 'Canvas', icon: 'account_tree', component: 'node-canvas' },
     eventlog: { title: 'Event Log', icon: 'terminal', component: 'event-log' },
@@ -316,7 +291,7 @@ async function initDemo() {
     aichat: { title: 'AI Assistant', icon: 'smart_toy', component: 'ai-chat' },
   };
 
-  // ═══ Sidebar sections ═══
+
   const SIDEBAR_SECTIONS = [
     { id: 'canvas', icon: 'account_tree', label: 'Canvas' },
     { id: 'eventlog', icon: 'terminal', label: 'Event Log' },
@@ -324,7 +299,7 @@ async function initDemo() {
     { id: 'aichat', icon: 'smart_toy', label: 'AI Chat' },
   ];
 
-  // ═══ Section-based workspace (admin-panel pattern) ═══
+
   const contentArea = document.getElementById('contentArea');
   const sidebar = document.querySelector('layout-sidebar');
   /** @type {Map<string, HTMLElement>} */
@@ -334,7 +309,7 @@ async function initDemo() {
     sidebar.setSections(SIDEBAR_SECTIONS);
   }
 
-  // Import LayoutRouter
+
   const { navigate, setDefaultPanel } = await import('../layout/LayoutRouter/LayoutRouter.js');
   setDefaultPanel('canvas');
 
@@ -345,12 +320,12 @@ async function initDemo() {
   function showSection(sectionId) {
     if (!contentArea) return;
 
-    // Hide all existing section panels
+
     for (const [id, el] of sectionPanels) {
       el.hidden = id !== sectionId;
     }
 
-    // Create section panel if doesn't exist yet
+
     if (!sectionPanels.has(sectionId)) {
       const panelConfig = PANEL_TYPES[sectionId];
       if (!panelConfig) return;
@@ -364,17 +339,17 @@ async function initDemo() {
       sectionPanels.set(sectionId, layout);
 
       requestAnimationFrame(() => {
-        // Register all panel types (so user can split and add any panel)
+
         for (const [name, config] of Object.entries(PANEL_TYPES)) {
           layout.registerPanelType(name, config);
         }
 
-        // Default layout per section
+
         const storageKey = `sn-demo-layout-${sectionId}`;
         const saved = localStorage.getItem(storageKey);
         if (!saved) {
           if (sectionId === 'canvas') {
-            // Canvas gets the original 3-panel split layout
+
             layout.setLayout(
               LayoutTree.createSplit(
                 'horizontal',
@@ -389,7 +364,7 @@ async function initDemo() {
               )
             );
           } else {
-            // Other sections get a single panel
+
             layout.setLayout({
               type: 'panel',
               id: `p_${sectionId}`,
@@ -398,7 +373,7 @@ async function initDemo() {
           }
         }
 
-        // Wire sub-panels to sidebar
+
         watchLayoutTree(layout, sectionId);
       });
     }
@@ -448,14 +423,14 @@ async function initDemo() {
     });
   }
 
-  // Listen to route changes — show/hide section panels
+
   if (sidebar) {
     sidebar.sub('ROUTER/panel', (panel) => {
       showSection(panel);
     });
   }
 
-  // Wait for layout to render, then find the canvas
+
   setTimeout(() => {
     const canvas = document.querySelector('node-canvas');
     if (!canvas) {
@@ -467,13 +442,13 @@ async function initDemo() {
     canvas.setTheme(GREY_NEUTRAL);
     canvas.setSnapGrid(true, 20);
 
-    // Connect event log to editor
+
     const eventLog = document.querySelector('event-log');
     if (eventLog) {
       eventLog.listen(editor);
     }
 
-    // History (Undo/Redo)
+
     const history = new History();
     history.listen(editor, {
       getCanvas: () => canvas,
@@ -482,34 +457,31 @@ async function initDemo() {
     history.bindKeyboard(canvas);
     history.clear();
 
-    // ══════════════════════════════════════════════════
-    // Node Positions — 20px grid, 280px column spacing
-    // ══════════════════════════════════════════════════
 
     setTimeout(() => {
-      // Row 1: Data Acquisition
+
       canvas.setNodePosition(trigger.id, 13, 118);
       canvas.setNodePosition(auth.id, 180, 100);
       canvas.setNodePosition(gateway.id, 380, 100);
       canvas.setNodePosition(cloudSrc.id, 580, 100);
 
-      // Row 2: Processing
+
       canvas.setNodePosition(httpReq.id, -180, 370);
       canvas.setNodePosition(aiAgent.id, 100, 370);
       canvas.setNodePosition(filter.id, 358, 492);
       canvas.setNodePosition(merge.id, 553, 475);
       canvas.setNodePosition(subgraph.id, 713, 415);
 
-      // Row 3: Delivery
+
       canvas.setNodePosition(cdn.id, 146, 801);
       canvas.setNodePosition(db.id, 346, 801);
       canvas.setNodePosition(debug.id, 546, 781);
       canvas.setNodePosition(notify.id, 340, 1020);
 
-      // Side: Health monitor
+
       canvas.setNodePosition(health.id, -34, 801);
 
-      // Demo features: error state, preview
+
       canvas.setNodeError(filter.id, 'Missing required condition');
       canvas.setPreview(
         aiAgent.id,
@@ -517,11 +489,11 @@ async function initDemo() {
         'text'
       );
 
-      // Settle SVG connectors after all nodes are positioned
+
       requestAnimationFrame(() => canvas.refreshConnections());
     }, 200);
 
-    // Frames
+
     const sourceFrame = new Frame('Data Sources', {
       x: -30,
       y: 40,
@@ -547,7 +519,7 @@ async function initDemo() {
     editor.addFrame(processFrame);
     editor.addFrame(deliveryFrame);
 
-    // --- Flow Simulator (cyclic) ---
+
     const sim = new FlowSimulator(editor, canvas);
     sim.speed = 700;
 
@@ -575,7 +547,7 @@ async function initDemo() {
       } else {
         flowLoop = true;
         setPlayBtn('stop', 'Stop', true);
-        // Auto-enable follow on play start
+
         sim.followActive = true;
         btnFollow?.classList.add('active');
         runLoop();
@@ -584,7 +556,7 @@ async function initDemo() {
     if (btnPlay) btnPlay.addEventListener('click', toggleFlow);
     window.toggleFlow = toggleFlow;
 
-    // --- Follow toggle ---
+
     const btnFollow = document.getElementById('btnFollow');
     if (btnFollow) {
       btnFollow.addEventListener('click', () => {
@@ -593,7 +565,7 @@ async function initDemo() {
       });
     }
 
-    // --- Theme button ---
+
     const themes = [GREY_NEUTRAL, DARK_DEFAULT, SYNTHWAVE, NEON_GLOW];
     let themeIdx = 0;
     const btnTheme = document.getElementById('btnTheme');
@@ -605,7 +577,7 @@ async function initDemo() {
     if (btnTheme) btnTheme.addEventListener('click', switchTheme);
     window.switchTheme = switchTheme;
 
-    // --- Wire Style button ---
+
     const wireStyles = ['bezier', 'orthogonal', 'straight'];
     const wireLabels = { bezier: 'Bezier', orthogonal: 'Step', straight: 'Straight' };
     let wireIdx = 0;
@@ -618,7 +590,7 @@ async function initDemo() {
       });
     }
 
-    // --- Copy Layout button ---
+
     const btnCopy = document.getElementById('btnCopyLayout');
     if (btnCopy) {
       btnCopy.addEventListener('click', async () => {
@@ -657,7 +629,7 @@ async function initDemo() {
       });
     }
 
-    // Console palette/skin switching
+
     const palettes = [GREY_PALETTE, DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE];
     let paletteIdx = 0;
     window.switchPalette = () => {
@@ -676,7 +648,7 @@ async function initDemo() {
   }, 300);
 }
 
-// Auto-init
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initDemo);
 } else {

@@ -93,7 +93,7 @@ export default {
           };
         }
 
-        // Default: hybrid align (fuzzy + optional AI correction)
+
         let phrases = await alignHybrid(inputs.lyrics, inputs.whisperWords, segments, params);
         return {
           phrases,
@@ -113,7 +113,6 @@ export default {
   },
 };
 
-// --- Core alignment functions (ported from anchor-matcher.js) ---
 
 /**
  * Parse lyrics into structured segments
@@ -209,7 +208,6 @@ function editDistance(s1, s2) {
 }
 
 
-
 /**
  * Infer section from timestamp
  * @param {number} timestamp
@@ -281,7 +279,7 @@ function calculateSectionTiming(segments, correctedWords) {
  * @returns {Promise<Array>}
  */
 async function alignHybrid(referenceLyrics, whisperWords, segments, params) {
-  // Build lyrics vocabulary
+
   let lyricsVocabulary = new Map();
   for (const seg of segments) {
     for (const line of seg.lines) {
@@ -302,11 +300,11 @@ async function alignHybrid(referenceLyrics, whisperWords, segments, params) {
     }
   }
 
-  // Correct Whisper words using vocabulary
+
   let correctedWords = whisperWords.map((w) => {
     let whisperNorm = normalizeWord(w.word);
 
-    // Exact match
+
     if (lyricsVocabulary.has(whisperNorm)) {
       let match = lyricsVocabulary.get(whisperNorm);
       return {
@@ -319,7 +317,7 @@ async function alignHybrid(referenceLyrics, whisperWords, segments, params) {
       };
     }
 
-    // Fuzzy search vocabulary
+
     let bestMatch = null;
     let bestDistance = Infinity;
 
@@ -346,10 +344,10 @@ async function alignHybrid(referenceLyrics, whisperWords, segments, params) {
     };
   });
 
-  // Calculate section timing
+
   let segmentsWithTiming = calculateSectionTiming(segments, correctedWords);
 
-  // Build phrases with word-level timing
+
   return buildPhrasesFromCorrectedWords(correctedWords, segmentsWithTiming, params.maxPhraseWords);
 }
 
@@ -395,7 +393,7 @@ function buildPhrasesFromCorrectedWords(correctedWords, segments, maxWords = 8) 
     }
   }
 
-  // Last phrase
+
   if (currentPhrase.length > 0 && phraseStart !== null) {
     let startIdx = correctedWords.length - currentPhrase.length;
     alignments.push({

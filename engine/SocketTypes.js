@@ -67,7 +67,7 @@ export function areSocketsCompatible(from, to) {
   return fromDef.compatible.includes(to);
 }
 
-// Core socket types (always available)
+
 registerSocketTypes({
   any: { color: '#FFFFFF', label: 'Any', compatible: [] },
   float: { color: '#A1A1A1', label: 'Float', compatible: ['float', 'int'] },

@@ -31,7 +31,7 @@ export default {
       let results = [];
 
       if (!bodyType) {
-        // No body type: return items as-is
+
         return { results: items };
       }
 

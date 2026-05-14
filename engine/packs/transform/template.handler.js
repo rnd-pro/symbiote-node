@@ -33,8 +33,7 @@ export default {
   },
 
   lifecycle: {
-    // No validate: template comes from params.template or inputs.template
-    // Execute handles both cases
+
 
     cacheKey: (inputs) => `tpl:${inputs.template}:${JSON.stringify(inputs.data)}`,
 
@@ -44,7 +43,7 @@ export default {
 
       let result = template.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
         let trimmed = key.trim();
-        // Support dot notation: {{user.name}}
+
         let value = trimmed.split('.').reduce((obj, k) => {
           if (obj === null || obj === undefined) return undefined;
           return obj[k];
@@ -60,13 +59,11 @@ export default {
         return String(value);
       });
 
-      // Output rendered text in both formats:
-      // - result: raw string (for chaining)
-      // - data: full context with text field (for telegram/chat)
+
       let outputField = params?.outputField || 'text';
       let outputData = { ...(typeof data === 'object' ? data : {}), [outputField]: result };
 
-      // Attach inline keyboard if configured
+
       if (params?.replyMarkup) {
         try {
           outputData.reply_markup = JSON.parse(params.replyMarkup);

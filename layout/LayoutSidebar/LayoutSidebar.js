@@ -41,10 +41,10 @@ export class LayoutSidebar extends Symbiote {
     },
 
     onResetAllLayouts: () => {
-      // Reset sidebar order and visibility
+
       this.resetConfig();
 
-      // Clear all saved panel layouts from localStorage
+
       if (typeof localStorage !== 'undefined') {
         for (let i = localStorage.length - 1; i >= 0; i--) {
           let key = localStorage.key(i);
@@ -55,11 +55,11 @@ export class LayoutSidebar extends Symbiote {
         localStorage.removeItem(STORAGE_KEY_WIDTH);
       }
 
-      // Reset inline sizing styles
+
       this.style.width = '';
       this.style.minWidth = '';
 
-      // Reload to apply default layouts and sidebar config
+
       if (typeof window !== 'undefined') {
         window.location.reload();
       }
@@ -70,7 +70,7 @@ export class LayoutSidebar extends Symbiote {
   #allSections = [];
 
   renderCallback() {
-    // Reflect attributes
+
     this.sub('collapsed', (val) => {
       this.toggleAttribute('collapsed', val);
     });
@@ -78,28 +78,28 @@ export class LayoutSidebar extends Symbiote {
       this.toggleAttribute('edit-mode', val);
     });
 
-    // Restore collapsed state (default: collapsed)
+
     if (typeof localStorage !== 'undefined') {
       let stored = localStorage.getItem(STORAGE_KEY_COLLAPSED);
       if (stored === null || stored === 'true') {
         this.$.collapsed = true;
       }
 
-      // Restore saved width
+
       let savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
       if (savedWidth) this.style.width = savedWidth + 'px';
     }
 
-    // Persist collapsed state
+
     this.sub('collapsed', (val) => {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(STORAGE_KEY_COLLAPSED, String(val));
-        // Reset inline width when collapsing (CSS handles 48px)
+
         if (val) {
           this.style.width = '';
           this.style.minWidth = '';
         } else {
-          // Restore saved width when expanding
+
           let w = localStorage.getItem(STORAGE_KEY_WIDTH);
           if (w) {
             this.style.width = w + 'px';
@@ -109,7 +109,7 @@ export class LayoutSidebar extends Symbiote {
       }
     });
 
-    // Resize drag handle
+
     let handle = this.querySelector('.sb-resize-handle');
     if (handle) {
       let startX = 0;
@@ -156,12 +156,12 @@ export class LayoutSidebar extends Symbiote {
   setSections(items) {
     this.#allSections = items;
 
-    // Load saved config (order + visibility)
+
     let savedConfig = this.#loadConfig();
     let ordered = items;
 
     if (savedConfig) {
-      // Reorder based on saved order
+
       let orderMap = new Map(savedConfig.map((c, i) => [c.id, i]));
       ordered = [...items].sort((a, b) => {
         let ai = orderMap.get(a.id) ?? 999;
@@ -172,7 +172,7 @@ export class LayoutSidebar extends Symbiote {
 
     this.#buildSections(ordered, savedConfig);
 
-    // Subscribe to route changes to update active section (unless disabled)
+
     if (this.routerSync) {
       this.sub('ROUTER/panel', (panel) => {
         this.$.sections = this.$.sections.map((s) => ({

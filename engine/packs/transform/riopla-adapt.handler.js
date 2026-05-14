@@ -11,7 +11,6 @@
  * @module agi-graph/packs/transform/riopla-adapt
  */
 
-// ─── Transliteration Engine ────────────────────────────────────────────
 
 /**
  * Lightweight word segmenter; uses Intl.Segmenter when available
@@ -28,7 +27,7 @@ function segmentWords(text) {
       }));
     }
   } catch {
-    /* fallback */
+
   }
   let parts = text.split(/(\p{L}+(?:[\p{Mn}\p{Pd}]?\p{L}+)*)/u);
   return parts.filter(Boolean).map((p) => ({ type: /\p{L}/u.test(p) ? 'word' : 'sep', value: p }));
@@ -306,7 +305,6 @@ function adaptSpanishToRioplatense(text) {
     .replace(/([^cs]|^)h/gi, '$1');
 }
 
-// ─── Voice Instruct Templates ──────────────────────────────────────────
 
 const INSTRUCT_TEMPLATES = {
   ru: {
@@ -447,7 +445,6 @@ function generateBatchInstructs(segments) {
   return results;
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'transform/riopla-adapt',
@@ -469,7 +466,7 @@ export default {
         description:
           'Operation: transliterate | adapt-rioplatense | numbers-to-spanish | voice-instruct | batch-instructs',
       },
-      // transliterate options
+
       keepAccents: {
         type: 'boolean',
         default: true,
@@ -480,7 +477,7 @@ export default {
         default: true,
         description: 'Auto-add stress marks based on Spanish rules',
       },
-      // voice-instruct options
+
       lang: {
         type: 'string',
         default: 'es',
@@ -492,7 +489,7 @@ export default {
         description:
           'Voice instruct context hint (neutral/friendly/enthusiastic/teaching/encouraging)',
       },
-      // batch-instructs
+
       segments: {
         type: 'any',
         default: null,
@@ -511,8 +508,8 @@ export default {
     },
 
     cacheKey: (inputs, params) => {
-      if (params.operation === 'batch-instructs') return null; // random, no cache
-      if (params.operation === 'voice-instruct') return null; // random, no cache
+      if (params.operation === 'batch-instructs') return null;
+      if (params.operation === 'voice-instruct') return null;
       return `riopla:${params.operation}:${inputs.text?.slice(0, 100)}`;
     },
 

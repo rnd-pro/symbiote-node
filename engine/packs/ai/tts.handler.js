@@ -69,7 +69,7 @@ export default {
       outputFormat: { type: 'string', default: 'wav', description: 'wav | mp3' },
       exaggeration: { type: 'number', default: 0, description: 'Voice exaggeration (0-1)' },
       cfg: { type: 'number', default: 0.1, description: 'Classifier-free guidance (0-1)' },
-      // SSH params
+
       remoteHost: {
         type: 'string',
         default: 'mr-agent@mr-agent.rnd-pro.com',
@@ -86,7 +86,7 @@ export default {
         description: 'Remote Python venv path',
       },
       device: { type: 'string', default: 'cuda', description: 'cuda | cpu' },
-      // HTTP params
+
       endpoint: {
         type: 'string',
         default: 'http://localhost:5008',
@@ -158,7 +158,7 @@ async function executeSSH(text, params) {
   try {
     await fs.mkdir(outDir, { recursive: true });
 
-    // Build batch task
+
     let batchTask = [
       {
         id: taskId,
@@ -171,16 +171,16 @@ async function executeSSH(text, params) {
       },
     ];
 
-    // If using built-in speaker (no refAudio), add speaker param
+
     if (!params.refAudio && SPEAKERS.has(params.speaker)) {
       batchTask[0].speaker = params.speaker;
     }
 
-    // Write local batch file
+
     let batchFile = path.join(outDir, `${taskId}_batch.json`);
     await fs.writeFile(batchFile, JSON.stringify(batchTask, null, 2));
 
-    // Ensure remote dir + upload batch
+
     await runCommandWithWatchdog(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
       inactivityMs: 10000,
       timeoutMs: 10000,
@@ -193,7 +193,7 @@ async function executeSSH(text, params) {
     });
 
     try {
-      // Run batch script
+
       let pythonCmd = `${venv}/bin/python`;
       let scriptPath = `${remotePath}/utils/generate_qwen3tts_batch.py`;
       let cmd = `source "${venv}/bin/activate" && "${pythonCmd}" "${scriptPath}" --batch "${remoteBatch}" --device "${device}"`;
@@ -204,14 +204,14 @@ async function executeSSH(text, params) {
         timeoutMs: params.timeout || 120000,
       });
 
-      // Download result
+
       let remoteOut = `${remoteTmpDir}/${taskId}.wav`;
       await runCommandWithWatchdog(`scp "${host}:${remoteOut}" "${localWav}"`, {
         inactivityMs: 30000,
         timeoutMs: 30000,
       });
 
-      // Cleanup batch + remote output
+
       await cleanupLocalFile(batchFile);
       await runCommandWithWatchdog(`ssh ${host} "rm -f ${remoteBatch} ${remoteOut}"`, {
         inactivityMs: 5000,
@@ -251,7 +251,7 @@ async function executeHTTP(text, params) {
       cfg: params.cfg ?? 0.1,
     };
 
-    // Add ref_audio for voice cloning
+
     if (params.refAudio) {
       let refBuffer = await fs.readFile(params.refAudio);
       body.ref_audio = refBuffer.toString('base64');
@@ -268,7 +268,7 @@ async function executeHTTP(text, params) {
       return { audioPath: null, error: `TTS API error: ${response.status}` };
     }
 
-    // Response is audio binary
+
     let contentType = response.headers.get('content-type') || '';
 
     if (contentType.includes('audio') || contentType.includes('octet-stream')) {
@@ -277,7 +277,7 @@ async function executeHTTP(text, params) {
       return { audioPath: outputPath, error: null };
     }
 
-    // JSON response with file path
+
     let result = await response.json();
     if (result.audio_path) {
       return { audioPath: result.audio_path, error: null };

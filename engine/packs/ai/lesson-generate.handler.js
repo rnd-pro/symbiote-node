@@ -35,7 +35,7 @@ async function loadMaterials(materialsDir) {
       materials[entry.replace('.md', '')] = content;
     }
   } catch {
-    /* no materials dir */
+
   }
   return materials;
 }
@@ -53,18 +53,18 @@ function buildLessonPrompt(newsItems, materials, focus, maxExamples) {
 
   prompt += `TASK: Generate a structured lesson based on the following news items.\n\n`;
 
-  // Add news items
+
   prompt += `NEWS CONTEXT:\n`;
   for (const item of newsItems.slice(0, 5)) {
     prompt += `- ${item.title || 'Untitled'}: ${(item.description || item.content || '').slice(0, 200)}\n`;
   }
 
-  // Add focus if provided
+
   if (focus) {
     prompt += `\nLESSON FOCUS: ${focus}\n`;
   }
 
-  // Add educational materials for style reference
+
   let materialKeys = Object.keys(materials);
   if (materialKeys.length > 0) {
     prompt += `\nSTYLE REFERENCE (learn from these examples):\n`;
@@ -76,7 +76,7 @@ function buildLessonPrompt(newsItems, materials, focus, maxExamples) {
   prompt += `\nOUTPUT FORMAT: JSON object with these fields:
 {
   "title_es": "Lesson title in Spanish",
-  "title_ru": "Lesson title in Russian", 
+  "title_ru": "Lesson title in Russian",
   "focus": "Grammar/vocabulary focus",
   "explanation_ru": "2-3 line explanation in Russian about the Spanish construction",
   "examples": [{"es": "Spanish example", "ru": "Russian translation"}],
@@ -146,7 +146,7 @@ function parseResponse(response) {
     try {
       return JSON.parse(jsonMatch[0]);
     } catch {
-      /* fallback */
+
     }
   }
   return { error: 'Failed to parse AI response', raw: response };
@@ -176,7 +176,6 @@ function validateLesson(lesson, newsItems) {
   return violations;
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'ai/lesson-generate',
@@ -214,9 +213,9 @@ export default {
         default: null,
         description: 'Path to educational materials for style reference',
       },
-      // daily-digest
+
       categories: { type: 'any', default: null, description: 'News items grouped by category' },
-      // validate
+
       content: { type: 'string', default: null, description: 'Content to validate' },
       contentType: { type: 'string', default: 'news', description: 'Content type for validation' },
     },
@@ -233,7 +232,7 @@ export default {
       return true;
     },
 
-    cacheKey: () => null, // AI output varies
+    cacheKey: () => null,
 
     execute: async (inputs, params) => {
       let { newsItems } = inputs;

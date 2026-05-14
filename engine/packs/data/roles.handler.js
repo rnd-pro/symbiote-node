@@ -33,7 +33,7 @@ function parseFrontmatter(content) {
     let key = line.slice(0, colonIdx).trim();
     let value = line.slice(colonIdx + 1).trim();
 
-    // Parse arrays (simple YAML inline [a, b, c])
+
     if (value.startsWith('[') && value.endsWith(']')) {
       value = value
         .slice(1, -1)
@@ -97,13 +97,12 @@ async function scanRolesDirectory(dirPath, prefix = '') {
       role.tags.forEach((t) => tags.add(t));
     }
   } catch {
-    // Directory not found or unreadable
+
   }
 
   return roles;
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'data/roles',
@@ -152,7 +151,7 @@ export default {
       let { operation } = params;
 
       try {
-        // Scan directory for all roles
+
         let roles = await scanRolesDirectory(rolesDir);
 
         let opMap = {

@@ -157,7 +157,7 @@ export class SVGShape extends NodeShape {
     let totalLen = pathEl.getTotalLength();
     let center = this.#getCenter();
 
-    // Phase 1: coarse scan (128 samples)
+
     let bestDist = Infinity;
     let bestLen = 0;
     const COARSE = 128;
@@ -174,7 +174,7 @@ export class SVGShape extends NodeShape {
       }
     }
 
-    // Phase 2: refine with binary-like search around bestLen
+
     let searchRadius = totalLen / COARSE;
     const FINE = 32;
     let startLen = Math.max(0, bestLen - searchRadius);
@@ -206,7 +206,7 @@ export class SVGShape extends NodeShape {
    * @returns {{ x: number, y: number, angle: number }}
    */
   getSocketPosition(side, index, total, size) {
-    // Cache key: position depends on side, index, total, and element size
+
     let key = `${side}|${index}|${total}|${size.width}|${size.height}`;
     if (this.#posCache.has(key)) return this.#posCache.get(key);
 
@@ -219,9 +219,9 @@ export class SVGShape extends NodeShape {
       return result;
     }
 
-    // Distribute ports along the relevant side of the path perimeter
+
     let centerAngle = side === 'input' ? Math.PI : 0;
-    let arcSpan = Math.PI * 0.6; // 108° spread
+    let arcSpan = Math.PI * 0.6;
     let targetAngle;
 
     if (total === 1) {
@@ -235,7 +235,7 @@ export class SVGShape extends NodeShape {
     let pt = this.#findPointAtAngle(targetAngle, pathEl);
     let scaled = this.#scalePoint(pt.x, pt.y, size);
 
-    // Compute outward surface normal (same as getEdgePoint)
+
     let totalLen = pathEl.getTotalLength();
     let center = this.#getCenter();
     let bestLen = 0,
@@ -279,7 +279,7 @@ export class SVGShape extends NodeShape {
    * @returns {{ x: number, y: number, angle: number }}
    */
   getEdgePoint(angle, size) {
-    // Round to 3 decimal places (~0.06° precision, invisible jitter)
+
     let rounded = Math.round(angle * 1000) / 1000;
     let key = `edge|${rounded}|${size.width}|${size.height}`;
     if (this.#posCache.has(key)) return this.#posCache.get(key);
@@ -298,13 +298,11 @@ export class SVGShape extends NodeShape {
     let pt = this.#findPointAtAngle(angle, pathEl);
     let scaled = this.#scalePoint(pt.x, pt.y, size);
 
-    // Compute outward surface normal (perpendicular to edge), NOT radial angle.
-    // For polygons, the radial angle varies across a flat edge,
-    // but the surface normal is constant — this gives correct perpendicular stubs.
+
     let totalLen = pathEl.getTotalLength();
     let center = this.#getCenter();
 
-    // Find the path length for this point (re-use findPointAtAngle's logic)
+
     let bestLen = 0,
       bestDist = Infinity;
     const SCAN = 128;
@@ -318,34 +316,33 @@ export class SVGShape extends NodeShape {
       }
     }
 
-    // Sample neighbors to get tangent vector
-    let delta = 0.5; // small step along path
+
+    let delta = 0.5;
     let prevLen = Math.max(0, bestLen - delta);
     let nextLen = Math.min(totalLen, bestLen + delta);
     let prevPt = pathEl.getPointAtLength(prevLen);
     let nextPt = pathEl.getPointAtLength(nextLen);
 
-    // Tangent = direction along edge
+
     let tx = nextPt.x - prevPt.x;
     let ty = nextPt.y - prevPt.y;
 
-    // Normal = tangent rotated 90° (two candidates: +90° and -90°)
-    // Pick the one pointing outward (away from center)
+
     let nx = -ty,
-      ny = tx; // candidate 1: rotate -90°
+      ny = tx;
     let radX = pt.x - center.x;
     let radY = pt.y - center.y;
-    // Dot product with radial vector — if negative, flip
+
     if (nx * radX + ny * radY < 0) {
       nx = ty;
-      ny = -tx; // candidate 2: rotate +90°
+      ny = -tx;
     }
 
     let angleDeg = (Math.atan2(ny, nx) * 180) / Math.PI;
 
     let result = { x: scaled.x, y: scaled.y, angle: angleDeg };
 
-    // Bounded cache: evict oldest when exceeding 360 entries
+
     if (this.#posCache.size > 360) {
       let first = this.#posCache.keys().next().value;
       this.#posCache.delete(first);
@@ -369,16 +366,15 @@ export class SVGShape extends NodeShape {
     let key = `side|${side}|${(t * 100) | 0}|${size.width}|${size.height}`;
     if (this.#posCache.has(key)) return this.#posCache.get(key);
 
-    // Outward normal angles for each side (screen coords: Y down)
+
     const NORMALS = { top: -90, right: 0, bottom: 90, left: 180 };
     let angleDeg = NORMALS[side];
 
-    // For shapes with pathData: sample points on the side's angular range
-    // and interpolate along the edge
+
     let pathEl = this.#getPathElement();
     if (pathEl) {
-      // Angular ranges for each side (radians, screen coords)
-      // Generous ranges that cover the flat + diagonal edges
+
+
       const RANGES = {
         right: { from: -Math.PI / 4, to: Math.PI / 4 },
         bottom: { from: Math.PI / 4, to: (3 * Math.PI) / 4 },
@@ -387,7 +383,7 @@ export class SVGShape extends NodeShape {
       };
 
       let range = RANGES[side];
-      // Use side-level caching for points to prevent SVG DOM explosion
+
       let sideKey = `sidepts|${side}|${size.width}|${size.height}`;
       let sidePoints;
 
@@ -405,7 +401,7 @@ export class SVGShape extends NodeShape {
         this.#posCache.set(sideKey, sidePoints);
       }
 
-      // Use inset range (20%-80%) to avoid placing on corners
+
       const MARGIN = 0.2;
       let effectiveT = MARGIN + t * (1 - 2 * MARGIN);
       let idx = effectiveT * (sidePoints.length - 1);
@@ -421,7 +417,7 @@ export class SVGShape extends NodeShape {
       return result;
     }
 
-    // Fallback for shapes without path: rectangle approximation
+
     let x, y;
     switch (side) {
       case 'top':
@@ -448,7 +444,7 @@ export class SVGShape extends NodeShape {
   }
 
   getClipPath(size) {
-    return null; // We use SVG background layer instead of clip-path
+    return null;
   }
 
   getOutlinePath(size) {
@@ -472,7 +468,6 @@ export class SVGShape extends NodeShape {
   }
 }
 
-// --- Preset SVG shapes (Material Symbols paths) ---
 
 /**
  * Register an SVG shape from a path string
@@ -484,44 +479,44 @@ export function createSVGShape(name, pathData, options = {}) {
   return new SVGShape(name, { pathData, ...options });
 }
 
-// Common icon paths from Material Symbols (24x24 viewBox)
+
 export let SVG_PRESETS = {
-  // Hexagon
+
   hexagon: 'M12 2L22 8.5V15.5L12 22L2 15.5V8.5Z',
 
-  // Pentagon
+
   pentagon: 'M12 2L22 9.27L18.18 21H5.82L2 9.27Z',
 
-  // Star (5-pointed)
+
   star: 'M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26Z',
 
-  // Cloud
+
   cloud:
     'M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z',
 
-  // Shield
+
   shield: 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z',
 
-  // Octagon
+
   octagon: 'M7.86 2H16.14L22 7.86V16.14L16.14 22H7.86L2 16.14V7.86Z',
 
-  // Parallelogram
+
   parallelogram: 'M6 2H22L18 22H2Z',
 
-  // Trapezoid
+
   trapezoid: 'M4 22H20L23 2H1Z',
 
-  // Cylinder (approximation)
+
   cylinder: 'M4 6C4 4 8 2 12 2S20 4 20 6V18C20 20 16 22 12 22S4 20 4 18Z',
 
-  // Database
+
   database:
     'M12 3C7.58 3 4 4.79 4 7V17C4 19.21 7.59 21 12 21S20 19.21 20 17V7C20 4.79 16.42 3 12 3Z',
 
-  // Lightning bolt
+
   bolt: 'M7 2V13H10V22L17 10H13L17 2Z',
 
-  // Heart
+
   heart:
     'M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z',
 };

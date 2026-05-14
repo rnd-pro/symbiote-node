@@ -14,7 +14,7 @@
  * @property {Object<string, string>} colors
  */
 
-// Re-export all built-in palettes
+
 export { DARK_PALETTE } from './dark.js';
 export { LIGHT_PALETTE } from './light.js';
 export { SYNTHWAVE_PALETTE } from './synthwave.js';

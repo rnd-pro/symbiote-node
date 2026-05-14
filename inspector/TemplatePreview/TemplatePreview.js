@@ -34,7 +34,7 @@ export class TemplatePreview extends Symbiote {
   };
 
   renderCallback() {
-    // Bind textarea to testData
+
     /** @type {HTMLTextAreaElement|null} */
     let textarea = this.querySelector('.tpl-test-data');
     if (textarea) {
@@ -44,7 +44,7 @@ export class TemplatePreview extends Symbiote {
       });
     }
 
-    // React to template changes
+
     this.sub('template', () => this._updatePreview());
     this.sub('testData', () => this._updatePreview());
   }
@@ -58,7 +58,7 @@ export class TemplatePreview extends Symbiote {
 
     this.$.noPlaceholders = placeholders.length === 0;
 
-    // Parse test data
+
     let data = {};
     try {
       data = JSON.parse(this.$.testData);
@@ -69,7 +69,7 @@ export class TemplatePreview extends Symbiote {
       return;
     }
 
-    // Build chips with resolved status
+
     let resolved = [];
     let chips = placeholders.map((name) => {
       let val = this._resolvePath(data, name);
@@ -80,10 +80,10 @@ export class TemplatePreview extends Symbiote {
 
     this.$.placeholderChips = chips;
 
-    // Apply chip colors after itemize renders
+
     requestAnimationFrame(() => this._applyChipColors(resolved));
 
-    // Interpolate
+
     if (!tpl) {
       this.$.previewText = '';
       return;

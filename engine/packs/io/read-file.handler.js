@@ -32,7 +32,7 @@ export default {
       return true;
     },
 
-    // No caching — file content may change
+
     cacheKey: null,
 
     execute: async (inputs, params) => {
@@ -44,7 +44,7 @@ export default {
           try {
             parsed = JSON.parse(content);
           } catch {
-            // Not valid JSON
+
           }
         }
 

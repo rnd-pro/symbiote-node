@@ -81,7 +81,7 @@ export class AiChat extends Symbiote {
   };
 
   renderCallback() {
-    // Welcome message
+
     setTimeout(() => {
       this._addBubble(
         'ai',
@@ -99,10 +99,10 @@ export class AiChat extends Symbiote {
     input.value = '';
     this._addBubble('user', text);
 
-    // Show typing indicator
+
     const typing = this._addTyping();
 
-    // Simulate thinking delay
+
     const delay = 600 + Math.random() * 800;
     setTimeout(() => {
       typing.remove();

@@ -24,7 +24,7 @@ let socketTypes = {
  * Video node type definitions
  */
 let nodes = [
-  // ─── Source ─────────────────────────────────────────────────────────
+
   {
     type: 'source/audio',
     category: 'source',
@@ -107,7 +107,7 @@ let nodes = [
     }),
   },
 
-  // ─── Analysis ──────────────────────────────────────────────────────
+
   {
     type: 'analysis/beat-analyzer',
     category: 'analysis',
@@ -158,7 +158,7 @@ let nodes = [
     },
   },
 
-  // ─── Processing ────────────────────────────────────────────────────
+
   {
     type: 'processing/physics-vfx',
     category: 'processing',
@@ -223,7 +223,7 @@ let nodes = [
     },
   },
 
-  // ─── Composition ───────────────────────────────────────────────────
+
   {
     type: 'composition/layout',
     category: 'composition',
@@ -284,7 +284,7 @@ let nodes = [
     },
   },
 
-  // ─── Output ────────────────────────────────────────────────────────
+
   {
     type: 'output/viewport',
     category: 'output',
@@ -331,5 +331,5 @@ export function registerVideoPack() {
   });
 }
 
-// Auto-register when imported
+
 registerVideoPack();

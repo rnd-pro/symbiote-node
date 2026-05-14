@@ -38,7 +38,7 @@ export default {
         description: 'Intensity change threshold',
       },
       dropThreshold: { type: 'number', default: 0.7, description: 'Drop peak threshold (0-1)' },
-      // annotate mode
+
       segments: {
         type: 'any',
         default: null,
@@ -62,7 +62,7 @@ export default {
       try {
         let skeleton = generateEffectsSkeleton(inputs.beatData, params);
 
-        // If segments provided, annotate them with effects
+
         if (params.segments) {
           skeleton.annotatedSegments = annotateSegmentsWithEffects(params.segments, skeleton);
         }
@@ -75,7 +75,6 @@ export default {
   },
 };
 
-// --- Pure analysis functions (ported from effects-skeleton.js) ---
 
 /**
  * Detect intensity zones from energy data
@@ -121,7 +120,7 @@ function detectIntensityZones(energy, eps) {
     zones.push(current);
   }
 
-  // Merge short zones (< 1s)
+
   let merged = [];
   for (const zone of zones) {
     if (zone.end - zone.start < 1.0 && merged.length > 0) {
@@ -189,7 +188,7 @@ function detectTransitionAnchors(energy, eps, threshold) {
     }
   }
 
-  // Deduplicate within 1s
+
   let deduped = [];
   for (const a of anchors) {
     let last = deduped[deduped.length - 1];
@@ -356,7 +355,7 @@ function generateEffectsSkeleton(beatData, params) {
     strongOnsets = [],
   } = beatData;
 
-  // Support both snake_case (librosa output) and camelCase
+
   let rawQuietZones = beatData.quiet_zones || quietZones;
   let rawStrongOnsets = beatData.strong_onsets || strongOnsets;
   let rawEps = beatData.energy_per_second || params.energyPerSecond || 10;

@@ -89,7 +89,7 @@ export class InspectorPanel extends Symbiote {
 
     this._currentNodeId = node.id;
 
-    // Check if node is fireable (inject or trigger with testData)
+
     let driver = node.driver || node._driver;
     let isFireable =
       !!driver?.fireable ||
@@ -114,7 +114,7 @@ export class InspectorPanel extends Symbiote {
       innerNodeCount,
     });
 
-    // Populate template-preview with current template value
+
     if (node.type === 'transform/template-builder' || node.type === 'transform/template') {
       requestAnimationFrame(() => {
         /** @type {*} */
@@ -150,7 +150,7 @@ export class InspectorPanel extends Symbiote {
       this.toggleAttribute('hidden', !val);
     });
 
-    // Listen for control value changes from InspCtrlItem
+
     this.addEventListener('ctrl-change', (/** @type {CustomEvent} */ e) => {
       let { key, value } = e.detail;
       if (this._currentNodeId && this._canvas) {
@@ -160,11 +160,11 @@ export class InspectorPanel extends Symbiote {
           if (node && node.controls[key]) {
             node.controls[key].setValue(value);
           }
-          // Also update params for serialization
+
           if (node && node.params) {
             node.params[key] = value;
           }
-          // Update template-preview when template field changes
+
           if (key === 'template') {
             let preview = this.querySelector('template-preview');
             if (preview) preview.$.template = value;
@@ -188,11 +188,11 @@ export class InspectorPanel extends Symbiote {
       if (sgSection) sgSection.hidden = !val;
     });
 
-    // Resize drag handle
+
     const STORAGE_KEY = 'sn-inspector-width';
     let handle = this.querySelector('.insp-resize-handle');
 
-    // Restore saved width
+
     let saved = localStorage.getItem(STORAGE_KEY);
     if (saved) this.style.width = saved + 'px';
 
@@ -227,7 +227,7 @@ export class InspectorPanel extends Symbiote {
   }
 }
 
-// Port item for itemize
+
 class InspPortItem extends Symbiote {
   init$ = {
     key: '',
@@ -239,7 +239,7 @@ class InspPortItem extends Symbiote {
 InspPortItem.template = inspPortItemTemplate;
 InspPortItem.reg('insp-port-item');
 
-// Control item for itemize — renders editable form controls
+
 class InspCtrlItem extends Symbiote {
   init$ = {
     key: '',
@@ -307,7 +307,7 @@ class InspCtrlItem extends Symbiote {
       el.addEventListener('change', () => this._emitChange(el.value));
       container.appendChild(el);
     } else {
-      // text / number
+
       let el = document.createElement('input');
       el.className = 'insp-ctrl-input-el';
       el.type = type === 'number' ? 'number' : 'text';

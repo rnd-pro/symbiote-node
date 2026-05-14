@@ -65,14 +65,14 @@ export default {
         default: '/tmp/kling-lipsync',
         description: 'Output directory for results',
       },
-      // For poll operation
+
       taskId: { type: 'string', default: '', description: 'Task ID to poll' },
       maxWaitMs: { type: 'int', default: 300000, description: 'Max poll wait time (ms)' },
-      // For lipsync operation
+
       startTime: { type: 'number', default: 0, description: 'Audio start time (seconds)' },
       endTime: { type: 'number', default: 0, description: 'Audio end time (seconds)' },
       segmentId: { type: 'string', default: '', description: 'Segment identifier' },
-      // For batch operation
+
       segments: {
         type: 'any',
         default: null,
@@ -136,7 +136,6 @@ export default {
   },
 };
 
-// --- JWT Authentication ---
 
 /**
  * Generate JWT token for Kling API authentication
@@ -163,7 +162,6 @@ function generateJWT(accessKey, secretKey) {
   return `${base64Header}.${base64Payload}.${signature}`;
 }
 
-// --- API Operations ---
 
 /**
  * Step 1: Identify face in video
@@ -266,7 +264,7 @@ async function pollTaskCompletion(taskId, token, params) {
   let pollInterval = 5000;
 
   while (Date.now() - startTime < maxWaitMs) {
-    // Refresh token for each poll
+
     let freshToken = generateJWT(params.accessKey, params.secretKey);
 
     let response = await fetch(`${params.baseUrl}/v1/videos/advanced-lip-sync/${taskId}`, {
@@ -319,7 +317,6 @@ async function downloadResult(videoUrl, outputPath, signal) {
   return outputPath;
 }
 
-// --- Audio Utilities ---
 
 /**
  * Extract audio clip using FFmpeg
@@ -354,7 +351,6 @@ async function audioToBase64(audioPath) {
   return `data:audio/mpeg;base64,${buffer.toString('base64')}`;
 }
 
-// --- High-level pipeline ---
 
 /**
  * Process single segment: extract audio → identify face → create task → poll → download
@@ -375,15 +371,15 @@ async function processSegment(inputs, params) {
     return { videoPath: outputPath, cached: true };
   }
 
-  // 1. Extract audio clip
+
   let clipPath = path.join(clipsDir, `${segmentId}.mp3`);
   await extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
   let audioDurationMs = Math.round((endTime - startTime) * 1000);
 
-  // 2. Convert to base64
+
   let audioBase64 = await audioToBase64(clipPath);
 
-  // 3. Identify face
+
   let token = generateJWT(accessKey, secretKey);
   let faceData = await identifyFace(inputs.videoUrl, token, baseUrl, params.signal);
 
@@ -393,7 +389,7 @@ async function processSegment(inputs, params) {
 
   let face = faceData.face_data[0];
 
-  // 4. Create task
+
   token = generateJWT(accessKey, secretKey);
   let task = await createLipsyncTask(
     faceData.session_id,
@@ -406,10 +402,10 @@ async function processSegment(inputs, params) {
     params.signal,
   );
 
-  // 5. Poll
+
   let result = await pollTaskCompletion(task.task_id, token, params);
 
-  // 6. Download
+
   let resultVideoUrl = result.task_result?.videos?.[0]?.url;
   if (!resultVideoUrl) {
     throw new Error('No video URL in task result');

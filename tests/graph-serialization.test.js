@@ -93,7 +93,6 @@ function buildTestEditor() {
   return { editor, positions };
 }
 
-// --- GraphText tests ---
 
 describe('GraphText', () => {
   it('editorToText produces correct output', () => {
@@ -123,7 +122,7 @@ describe('GraphText', () => {
     assert.equal(parsed.connections.length, 5, 'connection count');
     assert.equal(parsed.frames.length, 2, 'frame count');
 
-    // Check shapes
+
     const trigger = parsed.nodes.find((n) => n.id === 'trigger');
     assert.equal(trigger.shape, 'circle');
     assert.equal(trigger.name, 'Job Event: RU');
@@ -131,10 +130,10 @@ describe('GraphText', () => {
     const send = parsed.nodes.find((n) => n.id === 'send');
     assert.equal(send.shape, 'pill');
 
-    // Check positions
+
     assert.deepEqual(parsed.positions.trigger, [80, 200]);
 
-    // Check frames
+
     const formatters = parsed.frames.find((f) => f.label === 'Formatters');
     assert.equal(formatters.color, '#5cd87a');
 
@@ -142,7 +141,6 @@ describe('GraphText', () => {
   });
 });
 
-// --- GraphMermaid tests ---
 
 describe('GraphMermaid', () => {
   it('editorToMermaid produces valid Mermaid syntax', () => {
@@ -181,7 +179,7 @@ describe('GraphMermaid', () => {
     assert.equal(graph.connections.length, 5, 'connection count');
     assert.equal(graph.frames.length, 1, 'frame count');
 
-    // Check shapes
+
     const trigger = graph.nodes.find((n) => n.id === 'trigger');
     assert.equal(trigger.shape, 'circle', 'trigger is circle');
     assert.equal(trigger.name, 'Job Event: RU', 'trigger label');
@@ -192,13 +190,13 @@ describe('GraphMermaid', () => {
     const send = graph.nodes.find((n) => n.id === 'send');
     assert.equal(send.shape, 'pill', 'send is pill');
 
-    // Check connections
+
     const createdConn = graph.connections.find((c) => c.out === 'created');
     assert.ok(createdConn, 'has created connection');
     assert.equal(createdConn.from, 'switch_status');
     assert.equal(createdConn.to, 'fmt_created');
 
-    // Check frame
+
     assert.equal(graph.frames[0].label, 'Formatters');
 
     console.log('mermaidToGraph: OK');
@@ -208,13 +206,13 @@ describe('GraphMermaid', () => {
   it('Mermaid round-trip: editor → mermaid → parse → compare', () => {
     const { editor } = buildTestEditor();
 
-    // Editor → Mermaid
+
     const mermaidText = editorToMermaid(editor);
 
-    // Mermaid → Graph
+
     const parsed = mermaidToGraph(mermaidText);
 
-    // Compare node count and shapes
+
     const origNodes = editor.getNodes();
     assert.equal(parsed.nodes.length, origNodes.length, 'node count matches');
 
@@ -225,7 +223,7 @@ describe('GraphMermaid', () => {
       assert.equal(found.name, orig.label, `label for ${orig.id}`);
     }
 
-    // Compare connection count
+
     const origConns = editor.getConnections();
     assert.equal(parsed.connections.length, origConns.length, 'connection count matches');
 

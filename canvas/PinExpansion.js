@@ -76,7 +76,7 @@ export class PinExpansion {
   #renderPinsForNode(el, pins) {
     if (!pins || pins.length === 0) return;
 
-    // Create or reuse pin overlay
+
     let overlay = el.querySelector('.pcb-pin-overlay');
     if (!overlay) {
       overlay = document.createElement('div');
@@ -84,7 +84,7 @@ export class PinExpansion {
       el.appendChild(overlay);
     }
 
-    // Prepare pins if they are empty
+
     if (overlay.children.length === 0) {
       let maxPins = Math.min(pins.length, 12);
       let half = Math.ceil(maxPins / 2);
@@ -114,20 +114,20 @@ export class PinExpansion {
         return pinEl;
       };
 
-      // Right side: first half
+
       for (let i = 0; i < half; i++) {
         let yPct = ((i + 1) / (half + 1)) * 100;
         overlay.appendChild(createPinEl(pins[i], 'right', yPct));
       }
 
-      // Left side: remaining
+
       for (let i = half; i < maxPins; i++) {
         let yPct = ((i - half + 1) / (maxPins - half + 1)) * 100;
         overlay.appendChild(createPinEl(pins[i], 'left', yPct));
       }
     }
 
-    // Animate in
+
     requestAnimationFrame(() => overlay.setAttribute('data-visible', ''));
   }
 }

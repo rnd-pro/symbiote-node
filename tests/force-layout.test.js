@@ -23,7 +23,6 @@ const WORKER_PATH = path.join(__dirname, '..', 'canvas', 'ForceWorker.js');
 const NODE_W = 260;
 const NODE_H = 40;
 
-// ---- Helpers ----
 
 /**
  * Run ForceWorker on a graph and return final positions.
@@ -32,7 +31,7 @@ const NODE_H = 40;
  * @returns {Promise<{positions: object, iterations: number}>}
  */
 function runLayout(data, timeout = 30000) {
-  // Ensure worker uses the same dimensions as the test validation
+
   data.options = {
     nodeWidth: NODE_W,
     nodeHeight: NODE_H,
@@ -40,8 +39,8 @@ function runLayout(data, timeout = 30000) {
   };
 
   return new Promise((resolve, reject) => {
-    // ForceWorker uses importScripts/self.onmessage — it's a browser Worker.
-    // For Node.js testing, we wrap it: eval the source with a shim.
+
+
     const workerCode = `
       import { parentPort } from 'node:worker_threads';
       import { readFileSync } from 'node:fs';
@@ -182,7 +181,6 @@ function boundingBox(positions) {
   return { width, height, area: width * height };
 }
 
-// ---- Graph generators ----
 
 function makeChainGraph(n) {
   const nodes = Array.from({ length: n }, (_, i) => ({ id: `n${i}`, x: i * 100, y: 0 }));
@@ -228,7 +226,7 @@ function makeClusterGraph(clusterCount, nodesPerCluster) {
       groups[groupId].push(id);
       if (i > 0) edges.push({ from: `c${c}_n${i - 1}`, to: id });
     }
-    // Inter-cluster edges
+
     if (c > 0) edges.push({ from: `c${c - 1}_n0`, to: `c${c}_n0` });
   }
   return { nodes, edges, groups };
@@ -251,7 +249,6 @@ function makeRandomGraph(n, edgeDensity = 0.02) {
   return { nodes, edges };
 }
 
-// ---- Tests ----
 
 describe('Force layout — chain graph (20 nodes)', () => {
   let result;
@@ -286,7 +283,7 @@ describe('Force layout — chain graph (20 nodes)', () => {
     console.log(
       `  Edge dist: min=${stats.min.toFixed(0)} max=${stats.max.toFixed(0)} median=${stats.median.toFixed(0)} mean=${stats.mean.toFixed(0)}`
     );
-    // Max edge distance should not be more than 10× min
+
     assert.ok(
       stats.max / Math.max(stats.min, 1) < 10,
       `Max/min ratio too high: ${(stats.max / stats.min).toFixed(1)}`
@@ -312,7 +309,7 @@ describe('Force layout — grid graph (5×5)', () => {
 
   it('bounding box is compact', () => {
     const bbox = boundingBox(result.positions);
-    const maxArea = 25 * NODE_W * NODE_H * 20; // 20× theoretical minimum
+    const maxArea = 25 * NODE_W * NODE_H * 20;
     assert.ok(bbox.area < maxArea, `BBox area ${bbox.area} exceeds ${maxArea}`);
   });
 });
@@ -369,7 +366,7 @@ describe('Force layout — clustered graph (5 clusters × 10 nodes)', () => {
   });
 
   it('intra-cluster distances < inter-cluster distances', () => {
-    // Compute avg distance within first cluster vs avg distance between cluster 0 and cluster 4
+
     const c0 = graph.groups['group0'];
     const c4 = graph.groups['group4'];
     let intra = 0,
@@ -462,13 +459,10 @@ describe('Layout quality metrics (diagnostics)', () => {
     );
     console.log('  ╚══════════════════════════════════════════╝\n');
 
-    assert.ok(true); // Diagnostic — always passes
+    assert.ok(true);
   });
 });
 
-// =====================================================================
-// EDGE CASES
-// =====================================================================
 
 describe('Edge case — single node', () => {
   it('converges without error', async () => {
@@ -517,7 +511,7 @@ describe('Edge case — disconnected components (3 isolated cliques)', () => {
   let result;
   const graph = { nodes: [], edges: [] };
 
-  // 3 triangles with no inter-connections
+
   for (let c = 0; c < 3; c++) {
     const ids = [`t${c}_0`, `t${c}_1`, `t${c}_2`];
     ids.forEach((id, i) => graph.nodes.push({ id, x: c * 500 + i * 100, y: 0 }));
@@ -536,7 +530,7 @@ describe('Edge case — disconnected components (3 isolated cliques)', () => {
   });
 
   it('components are visually separate', () => {
-    // Centroid of each triangle should be distinct
+
     const centroids = [];
     for (let c = 0; c < 3; c++) {
       const ids = [`t${c}_0`, `t${c}_1`, `t${c}_2`];
@@ -548,7 +542,7 @@ describe('Edge case — disconnected components (3 isolated cliques)', () => {
       });
       centroids.push({ x: cx / 3, y: cy / 3 });
     }
-    // Pairwise distance between component centroids
+
     for (let i = 0; i < centroids.length; i++) {
       for (let j = i + 1; j < centroids.length; j++) {
         const dist = Math.sqrt(
@@ -569,7 +563,7 @@ describe('Edge case — all nodes at origin (coincident)', () => {
     const edges = Array.from({ length: 14 }, (_, i) => ({ from: `n${i}`, to: `n${i + 1}` }));
     result = await runLayout({ nodes, edges, groups: {}, options: {} });
 
-    // No NaN positions
+
     for (const [id, pos] of Object.entries(result.positions)) {
       assert.ok(!isNaN(pos.x) && !isNaN(pos.y), `NaN position for ${id}: (${pos.x}, ${pos.y})`);
     }
@@ -593,7 +587,7 @@ describe('Edge case — binary tree (depth 6, 63 nodes)', () => {
   let result;
   const graph = { nodes: [], edges: [] };
 
-  // Build complete binary tree
+
   for (let i = 0; i < 63; i++) {
     graph.nodes.push({ id: `n${i}`, x: (i % 8) * 300, y: Math.floor(i / 8) * 100 });
     if (i > 0) {
@@ -631,14 +625,14 @@ describe('Edge case — self-loops and duplicate edges (malformed data)', () => 
       ],
       edges: [
         { from: 'a', to: 'b' },
-        { from: 'a', to: 'a' }, // self-loop
+        { from: 'a', to: 'a' },
         { from: 'b', to: 'c' },
-        { from: 'b', to: 'c' }, // duplicate
+        { from: 'b', to: 'c' },
       ],
       groups: {},
       options: {},
     });
-    // Should not crash, all positions valid
+
     for (const [id, pos] of Object.entries(result.positions)) {
       assert.ok(!isNaN(pos.x) && !isNaN(pos.y), `NaN for ${id}`);
     }
@@ -653,8 +647,8 @@ describe('Edge case — self-loops and duplicate edges (malformed data)', () => 
       ],
       edges: [
         { from: 'a', to: 'b' },
-        { from: 'a', to: 'ghost' }, // ghost node
-        { from: 'phantom', to: 'b' }, // phantom node
+        { from: 'a', to: 'ghost' },
+        { from: 'phantom', to: 'b' },
       ],
       groups: {},
       options: {},
@@ -711,7 +705,7 @@ describe('Stress test — 500 nodes (simulated dep-graph scale)', () => {
   let result, graph;
 
   it('converges within 30s', async () => {
-    // Simulate dependency graph: sparse, with directory groups
+
     graph = { nodes: [], edges: [], groups: {} };
     const dirs = ['src', 'lib', 'utils', 'core', 'api', 'db', 'views', 'tests'];
     for (let i = 0; i < 500; i++) {
@@ -726,7 +720,7 @@ describe('Stress test — 500 nodes (simulated dep-graph scale)', () => {
       if (!graph.groups[dir]) graph.groups[dir] = [];
       graph.groups[dir].push(id);
     }
-    // Sparse edges (~3 per node on average)
+
     for (let i = 0; i < 500; i++) {
       for (let k = 0; k < 3; k++) {
         const j = Math.floor(Math.random() * 500);

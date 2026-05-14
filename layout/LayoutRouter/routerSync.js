@@ -64,7 +64,7 @@ function castValue(value, type) {
 export function syncWithRouter(component, panelName, mapping) {
   let syncing = false;
 
-  // Pre-normalize all mapping entries
+
   let normalizedMap = {};
   for (const [prop, entry] of Object.entries(mapping)) {
     normalizedMap[prop] = normalizeMapping(entry);
@@ -85,7 +85,7 @@ export function syncWithRouter(component, panelName, mapping) {
           component.$[prop] = val;
         }
       } else if (defaultVal !== undefined) {
-        // Apply default when param missing from URL
+
         if (component.$[prop] !== defaultVal) {
           component.$[prop] = defaultVal;
         }
@@ -104,7 +104,7 @@ export function syncWithRouter(component, panelName, mapping) {
     syncing = true;
     let { param, defaultVal } = normalizedMap[prop];
     let value = component.$[prop];
-    // Skip writing default values to keep URL clean
+
     if (value === defaultVal) {
       updateParams({ [param]: '' });
     } else {
@@ -113,20 +113,20 @@ export function syncWithRouter(component, panelName, mapping) {
     syncing = false;
   }
 
-  // Subscribe to route changes — read URL when this panel becomes active
+
   component.sub('ROUTER/panel', (panel) => {
     if (panel === panelName) {
       readFromURL();
     }
   });
 
-  // Subscribe to query changes — update component when URL params change
+
   component.sub('ROUTER/query', () => {
     if (component.$['ROUTER/panel'] !== panelName) return;
     readFromURL();
   });
 
-  // Subscribe to component property changes — write to URL
+
   for (const prop of Object.keys(normalizedMap)) {
     component.sub(prop, () => {
       if (component.$['ROUTER/panel'] === panelName) {
@@ -135,7 +135,7 @@ export function syncWithRouter(component, panelName, mapping) {
     });
   }
 
-  // Initial read if already on this panel
+
   if (component.$['ROUTER/panel'] === panelName) {
     readFromURL();
   }
@@ -179,7 +179,7 @@ export function syncWithRouter(component, panelName, mapping) {
 export function setupPanelRouting(component, panelName, config = {}) {
   let { tabs, detail, onActivate, syncParams } = config;
 
-  // --- Tab sync via ?tab= ---
+
   if (tabs && tabs.length > 0) {
     let defaultTab = tabs[0];
     syncWithRouter(component, panelName, {
@@ -200,11 +200,11 @@ export function setupPanelRouting(component, panelName, config = {}) {
     let listWrap = component.ref?.listWrap;
     let isDetail = !!(detail && subpath);
 
-    // Global signal — CSS can hide tabs/actions via [data-detail]
+
     component.toggleAttribute('data-detail', isDetail);
 
     if (isDetail) {
-      // --- Detail mode ---
+
       if (listWrap) listWrap.hidden = true;
 
       let detailEl = component.querySelector(detail.component);
@@ -215,7 +215,7 @@ export function setupPanelRouting(component, panelName, config = {}) {
         }
       }
     } else {
-      // --- List mode ---
+
       if (listWrap) listWrap.hidden = false;
 
       if (detail) {
@@ -227,14 +227,14 @@ export function setupPanelRouting(component, panelName, config = {}) {
     }
   }
 
-  // Subscribe to panel activation
+
   component.sub('ROUTER/panel', (panel) => {
     if (panel === panelName) {
       checkDetailMode();
     }
   });
 
-  // Subscribe to subpath changes (list ↔ detail)
+
   if (detail) {
     component.sub('ROUTER/subpath', () => {
       if (component.$['ROUTER/panel'] === panelName) {
@@ -243,7 +243,7 @@ export function setupPanelRouting(component, panelName, config = {}) {
     });
   }
 
-  // Initial check if already on this panel
+
   if (component.$['ROUTER/panel'] === panelName) {
     checkDetailMode();
   }

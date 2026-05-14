@@ -37,7 +37,7 @@ export class Minimap extends Symbiote {
     this.#canvas2d = this.querySelector('canvas');
     this.#ctx = this.#canvas2d?.getContext('2d');
 
-    // Pointer events for viewport drag
+
     this.#canvas2d?.addEventListener('pointerdown', (e) => this.#onPointerDown(e));
     window.addEventListener('pointermove', (e) => this.#onPointerMove(e));
     window.addEventListener('pointerup', () => this.#onPointerUp());
@@ -72,7 +72,7 @@ export class Minimap extends Symbiote {
     let w = canvas.width;
     let h = canvas.height;
 
-    // Read theme colors from CSS variables
+
     let cs = getComputedStyle(this);
     let bgColor =
       cs.getPropertyValue('--sn-minimap-bg').trim() ||
@@ -88,16 +88,16 @@ export class Minimap extends Symbiote {
     let vpFill =
       cs.getPropertyValue('--sn-minimap-viewport-fill').trim() || 'rgba(255, 255, 255, 0.04)';
 
-    // Clear
+
     ctx.clearRect(0, 0, w, h);
 
-    // Background
+
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, w, h);
 
     if (nodes.length === 0) return;
 
-    // Calculate bounds of all nodes
+
     let minX = Infinity,
       minY = Infinity,
       maxX = -Infinity,
@@ -109,7 +109,7 @@ export class Minimap extends Symbiote {
       maxY = Math.max(maxY, n.y + (n.height || 100));
     }
 
-    // Add padding
+
     let pad = 100;
     minX -= pad;
     minY -= pad;
@@ -119,7 +119,7 @@ export class Minimap extends Symbiote {
     let graphW = maxX - minX;
     let graphH = maxY - minY;
 
-    // Scale to fit
+
     let scaleX = w / graphW;
     let scaleY = h / graphH;
     let scale = Math.min(scaleX, scaleY);
@@ -127,14 +127,14 @@ export class Minimap extends Symbiote {
     let offsetX = (w - graphW * scale) / 2;
     let offsetY = (h - graphH * scale) / 2;
 
-    // Store for viewport drag
+
     this._mapMinX = minX;
     this._mapMinY = minY;
     this._mapScale = scale;
     this._mapOffsetX = offsetX;
     this._mapOffsetY = offsetY;
 
-    // Draw nodes as rectangles
+
     for (const n of nodes) {
       let x = (n.x - minX) * scale + offsetX;
       let y = (n.y - minY) * scale + offsetY;
@@ -148,7 +148,7 @@ export class Minimap extends Symbiote {
       ctx.strokeRect(x, y, nw, nh);
     }
 
-    // Draw viewport rectangle
+
     if (containerSize && transform) {
       let vx = (-transform.x / transform.zoom - minX) * scale + offsetX;
       let vy = (-transform.y / transform.zoom - minY) * scale + offsetY;
@@ -187,16 +187,16 @@ export class Minimap extends Symbiote {
     let state = this.#getState();
     if (!state?.containerSize || !state?.transform) return;
 
-    // Convert minimap coords to graph coords
+
     let graphX = (mx - this._mapOffsetX) / this._mapScale + this._mapMinX;
     let graphY = (my - this._mapOffsetY) / this._mapScale + this._mapMinY;
 
-    // Center the viewport on that point
+
     let zoom = state.transform.zoom;
     let newX = -(graphX * zoom - state.containerSize.width / 2);
     let newY = -(graphY * zoom - state.containerSize.height / 2);
 
-    // Dispatch event so NodeCanvas can update its transform
+
     this.dispatchEvent(
       new CustomEvent('minimap-navigate', {
         detail: { x: newX, y: newY },

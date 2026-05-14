@@ -24,7 +24,7 @@ export default {
   lifecycle: {
     validate: () => true,
 
-    // Never cache delays
+
     cacheKey: null,
 
     execute: async (inputs, params) => {

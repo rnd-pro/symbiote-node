@@ -19,7 +19,7 @@
 function extractPlaceholders(template) {
   if (!template) return [];
   let matches = new Set();
-  // Match both {var} and {{var}} — normalize to single-brace names
+
   let regex = /\{\{?([^{}]+)\}?\}/g;
   let m;
   while ((m = regex.exec(template)) !== null) {
@@ -101,7 +101,7 @@ export default {
       let data = inputs.data ?? {};
       let placeholders = extractPlaceholders(template);
 
-      // Interpolate — replace both {var} and {{var}} with resolved values
+
       let text = template.replace(/\{\{?([^{}]+)\}?\}/g, (match, key) => {
         let trimmed = key.trim();
         let value = resolvePath(data, trimmed);
@@ -116,7 +116,7 @@ export default {
         return String(value);
       });
 
-      // Log discovered vs resolved
+
       let resolved = placeholders.filter((p) => resolvePath(data, p) !== undefined);
       let missing = placeholders.filter((p) => resolvePath(data, p) === undefined);
       if (missing.length) {
@@ -134,5 +134,5 @@ export default {
   },
 };
 
-// Re-export utility for Inspector use
+
 export { extractPlaceholders };

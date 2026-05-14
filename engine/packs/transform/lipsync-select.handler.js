@@ -106,7 +106,6 @@ export default {
   },
 };
 
-// --- Core selection logic (ported from lipsync-selector.js) ---
 
 /**
  * Select lipsync segments based on face detection metadata
@@ -138,7 +137,7 @@ function selectLipsyncSegments(segments, params) {
     let hasFace = false;
     let faceCoverage = 0;
 
-    // Check faceTracking data in segment or source metadata
+
     let faceTracking = seg.faceTracking || seg.sourceMetadata?.faceTracking;
 
     if (faceTracking) {
@@ -161,7 +160,7 @@ function selectLipsyncSegments(segments, params) {
         hasFace = faceCoverage >= minFaceCoverage;
       }
     } else {
-      // No face tracking data — include anyway
+
       hasFace = true;
     }
 

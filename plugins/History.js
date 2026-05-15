@@ -151,10 +151,6 @@ export class History {
     );
   }
 
-  /**
-   * Bind Ctrl+Z / Ctrl+Shift+Z keyboard shortcuts
-   * @param {HTMLElement} target - element to listen for keydown
-   */
   bindKeyboard(target) {
     let handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {

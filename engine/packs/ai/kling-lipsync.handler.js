@@ -168,6 +168,7 @@ function generateJWT(accessKey, secretKey) {
  * @param {string} videoUrl
  * @param {string} token
  * @param {string} baseUrl
+ * @param {AbortSignal} [signal]
  * @returns {Promise<Object>}
  */
 async function identifyFace(videoUrl, token, baseUrl, signal) {
@@ -203,6 +204,7 @@ async function identifyFace(videoUrl, token, baseUrl, signal) {
  * @param {number} faceStartMs
  * @param {string} token
  * @param {string} baseUrl
+ * @param {AbortSignal} [signal]
  * @returns {Promise<Object>}
  */
 async function createLipsyncTask(
@@ -302,6 +304,7 @@ async function pollTaskCompletion(taskId, token, params) {
  * Download result video
  * @param {string} videoUrl
  * @param {string} outputPath
+ * @param {AbortSignal} [signal]
  * @returns {Promise<string>}
  */
 async function downloadResult(videoUrl, outputPath, signal) {

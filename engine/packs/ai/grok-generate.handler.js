@@ -127,11 +127,6 @@ export default {
 };
 
 
-/**
- * Create bridge client for communication with grok-bridge Chrome extension
- * @param {string} baseUrl
- * @returns {Object}
- */
 function createBridgeClient(baseUrl) {
   let sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

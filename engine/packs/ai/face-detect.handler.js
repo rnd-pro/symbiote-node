@@ -111,6 +111,7 @@ function isOnServer() {
  * Upload file to remote server via SCP if needed
  * @param {string} localPath - Local file path
  * @param {string} host - SSH host
+ * @param {{useRemotePath?: boolean}} params
  * @returns {{remotePath: string, cleanup: boolean}}
  */
 async function prepareRemotePath(localPath, host, params) {

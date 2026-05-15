@@ -115,6 +115,7 @@ export default {
  * @param {string} videoUrl
  * @param {string} audioUrl - Public URL or data URI
  * @param {string} token
+ * @param {AbortSignal} [signal]
  * @returns {Promise<Object>}
  */
 async function createPrediction(videoUrl, audioUrl, token, signal) {
@@ -148,6 +149,7 @@ async function createPrediction(videoUrl, audioUrl, token, signal) {
  * @param {string} predictionId
  * @param {string} token
  * @param {number} maxWaitMs
+ * @param {AbortSignal} [signal]
  * @returns {Promise<Object>}
  */
 async function pollPrediction(predictionId, token, maxWaitMs = 300000, signal) {
@@ -185,6 +187,7 @@ async function pollPrediction(predictionId, token, maxWaitMs = 300000, signal) {
  * Download result video
  * @param {string} videoUrl
  * @param {string} outputPath
+ * @param {AbortSignal} [signal]
  * @returns {Promise<string>}
  */
 async function downloadResult(videoUrl, outputPath, signal) {

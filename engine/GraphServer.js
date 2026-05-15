@@ -9,12 +9,12 @@
 
 import { createServer as createHttpServer } from 'node:http';
 import { readFile, writeFile, watch as fsWatch } from 'node:fs/promises';
-import { resolve, extname } from 'node:path';
+import { resolve } from 'node:path';
 import { WebSocketServer } from 'ws';
 
 import { Graph } from './Graph.js';
 import { Executor } from './Executor.js';
-import { getNodeType, listDrivers } from './Registry.js';
+import { listDrivers } from './Registry.js';
 import { loadHandlers, watchHandlers } from './HandlerLoader.js';
 
 /**
@@ -322,6 +322,7 @@ export async function createServer(options = {}) {
       try {
         let watcher = fsWatch(wfPath, { signal: ac.signal });
         for await (const event of watcher) {
+          void event;
           if (debounce) clearTimeout(debounce);
           debounce = setTimeout(async () => {
             try {

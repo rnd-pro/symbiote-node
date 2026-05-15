@@ -126,7 +126,7 @@ let nodes = [
         strongThreshold: { type: 'float', default: 1.3, min: 0.5, max: 3 },
       },
     },
-    process: (inputs, params) => ({
+    process: () => ({
       skeleton: {
         intensityZones: [],
         fadeZones: [],

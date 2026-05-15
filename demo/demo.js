@@ -28,7 +28,6 @@ import {
   MODERN_SKIN,
   COMPACT_SKIN,
   ROUNDED_SKIN,
-  Layout,
   LayoutTree,
   applyTheme,
 } from '../index.js';
@@ -253,7 +252,6 @@ async function initDemo() {
       icon: def.shape ? 'hexagon' : 'add_box',
       action: () => addTypedNode(def, x, y),
     }));
-    const container = c.ref?.canvasContainer || c;
     const menuX = x * (c.$.zoom || 1) + (c.$.panX || 0);
     const menuY = y * (c.$.zoom || 1) + (c.$.panY || 0);
     c.ref?.contextMenu?.show(menuX, menuY, items);
@@ -310,7 +308,7 @@ async function initDemo() {
   }
 
 
-  const { navigate, setDefaultPanel } = await import('../layout/LayoutRouter/LayoutRouter.js');
+  const { setDefaultPanel } = await import('../layout/LayoutRouter/LayoutRouter.js');
   setDefaultPanel('canvas');
 
   /**

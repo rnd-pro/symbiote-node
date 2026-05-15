@@ -10,7 +10,7 @@
  * @module agi-graph/packs/data/roles
  */
 
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 /**
@@ -158,7 +158,7 @@ export default {
           list: () => {
             let allTags = new Set();
             let rolesList = [];
-            for (const [id, role] of roles) {
+            for (const [, role] of roles) {
               rolesList.push({
                 id: role.id,
                 name: role.name,

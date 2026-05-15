@@ -347,7 +347,6 @@ function detectHiResTransitions(beats, energy, eps) {
 function generateEffectsSkeleton(beatData, params) {
   let {
     energy = [],
-    peaks = [],
     beats = [],
     tempo = 120,
     duration = 0,

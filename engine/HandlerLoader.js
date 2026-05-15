@@ -16,7 +16,7 @@
  * @module symbiote-node/HandlerLoader */
 
 import { readdir, stat } from 'node:fs/promises';
-import { join, relative, extname } from 'node:path';
+import { join, relative } from 'node:path';
 import { watch } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { registerNodeType } from './Registry.js';

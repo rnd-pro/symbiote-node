@@ -9,7 +9,6 @@
 import Symbiote from '@symbiotejs/symbiote';
 import { sidebarTemplate } from './LayoutSidebar.tpl.js';
 import { sidebarStyles } from './LayoutSidebar.css.js';
-import { navigate } from '../LayoutRouter/LayoutRouter.js';
 import './SidebarSection.js';
 
 const STORAGE_KEY_COLLAPSED = 'sn-sidebar-collapsed';

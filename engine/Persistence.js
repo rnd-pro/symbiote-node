@@ -24,7 +24,8 @@ export function serialize(graph, options = {}) {
 
   if (!includeOutput) {
     data.nodes = data.nodes.map((n) => {
-      let { _output, ...rest } = n;
+      let rest = { ...n };
+      delete rest._output;
       return rest;
     });
   }

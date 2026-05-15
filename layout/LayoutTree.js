@@ -236,7 +236,7 @@ export function updateNode(root, nodeId, updates) {
  * @param {string} panelId - Panel ID
  * @returns {{ left?: string, right?: string, top?: string, bottom?: string }}
  */
-export function getNeighbors(root, panelId) {
+export function getNeighbors() {
 
   return {};
 }

@@ -125,7 +125,7 @@ export class CanvasConnectionRenderer {
     this.redraw();
   }
 
-  updateForNode(nodeId) {
+  updateForNode(_nodeId) {
     this.redraw();
   }
 
@@ -145,12 +145,12 @@ export class CanvasConnectionRenderer {
     this.redraw();
   }
 
-  highlightDotsForNodes(compatibleNodeIds) {}
+  highlightDotsForNodes(_compatibleNodeIds) {}
   clearDotHighlights() {}
-  renderFreeDots(nodeId) {}
-  removeFreeDot(nodeId, key, side) {}
-  refreshFreeDots(nodeId) {}
-  findNearestDot(wx, wy, radius = 20) {
+  renderFreeDots(_nodeId) {}
+  removeFreeDot(_nodeId, _key, _side) {}
+  refreshFreeDots(_nodeId) {}
+  findNearestDot(_wx, _wy, _radius = 20) {
     return null;
   }
 
@@ -181,9 +181,6 @@ export class CanvasConnectionRenderer {
     let w = nodeEl._cachedW || nodeEl.offsetWidth || 180;
     let h = nodeEl._cachedH || nodeEl.offsetHeight || 100;
 
-    let basePortX = side === 'output' ? w : 0;
-
-
     if (nodeEl._slotCache && nodeEl._slotCache.has(portKey)) {
       let cached = nodeEl._slotCache.get(portKey);
       return {
@@ -194,7 +191,6 @@ export class CanvasConnectionRenderer {
     }
 
     let nodeModel = this.#editor?.getNode(nodeEl.id);
-    let isParamNode = nodeModel?.type === 'param';
     let portIndex = 0;
     let totalPorts = 1;
 
@@ -501,7 +497,7 @@ export class CanvasConnectionRenderer {
         let r = Math.min(6, w * 0.1, h * 0.1);
         if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
         else ctx.rect(x, y, w, h);
-      } catch (e) {
+      } catch {
         ctx.rect(x, y, w, h);
       }
 

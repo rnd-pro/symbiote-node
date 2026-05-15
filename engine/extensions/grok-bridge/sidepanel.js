@@ -23,7 +23,7 @@ async function checkStatus() {
     let data = await res.json();
     statusDot.className = 'status-dot connected';
     statusText.textContent = `Bridge connected (${data.pendingCommands || 0} pending)`;
-  } catch (e) {
+  } catch {
     statusDot.className = 'status-dot disconnected';
     statusText.textContent = 'Bridge disconnected';
   }
@@ -62,7 +62,7 @@ function renderEvents() {
 }
 
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request) => {
   if (request.action === 'logEvent') {
     addEvent(request.event);
   }
@@ -81,7 +81,7 @@ async function fetchExistingEvents() {
         }
       });
     }
-  } catch (e) {
+  } catch {
 
   }
 }

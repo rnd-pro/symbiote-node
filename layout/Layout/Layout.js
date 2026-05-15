@@ -234,7 +234,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e
    */
   _onActionZoneExecute(e) {
-    let { panelId, corner, gesture } = e.detail;
+    let { panelId, corner: _corner, gesture } = e.detail;
 
     if (gesture === 'split-h') {
       this.splitPanel(panelId, 'horizontal', 0.5);
@@ -250,7 +250,7 @@ export class Layout extends Symbiote {
    * Called when action zone drag ends
    * @param {CustomEvent} e
    */
-  _onActionZoneEnd(e) {
+  _onActionZoneEnd(_e) {
     this.$.activeGesture = null;
 
 
@@ -484,7 +484,7 @@ export class Layout extends Symbiote {
    * @param {number} dy
    * @returns {{id: string, direction: string}|null}
    */
-  _findJoinTarget(panelId, dx, dy) {
+  _findJoinTarget(panelId, _dx, _dy) {
 
     let parentInfo = LayoutTree.findParent(this.$.layoutTree, panelId);
     if (!parentInfo) return null;

@@ -1,6 +1,6 @@
 {
   "name": "symbiote-node",
-  "version": "0.3.0-alpha.1",
+  "version": "0.3.0-alpha.2",
   "type": "module",
   "description": "Visual Node Graph Editor + Execution Engine — extensible, themeable graph editor and runtime built on Symbiote.js",
   "main": "index.js",
@@ -49,7 +49,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/RND-PRO/symbiote-node"
+    "url": "git+https://github.com/RND-PRO/symbiote-node.git"
   },
   "author": "RND-PRO <nicothin@gmail.com>",
   "license": "MIT",

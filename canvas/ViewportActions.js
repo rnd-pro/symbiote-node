@@ -233,7 +233,7 @@ export class ViewportActions {
    * @param {object} socketData
    * @param {HTMLElement} nodesLayer
    */
-  highlightCompatibleSockets(socketData, nodesLayer) {
+  highlightCompatibleSockets(socketData) {
     let node = this.#editor.getNode(socketData.nodeId);
     if (!node) return;
 

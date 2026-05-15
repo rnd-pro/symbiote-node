@@ -18,8 +18,7 @@
  * @module agi-graph/packs/ai/grok-generate
  */
 
-import { readFile, writeFile, mkdir, rename } from 'fs/promises';
-import { existsSync } from 'fs';
+import { readFile, writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
 function requestSignal(timeoutMs, parentSignal) {
@@ -578,7 +577,7 @@ async function waitForHD(bridge, timeout = 120000, workerId = null, sdUrl = null
  * @returns {Promise<Object>}
  */
 async function batchImages(bridge, params) {
-  let { segments, outputDir, globalStyle } = params;
+  let { segments, outputDir } = params;
   let results = {};
   await mkdir(outputDir, { recursive: true });
 

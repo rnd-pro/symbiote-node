@@ -158,7 +158,7 @@ function parseResponse(response) {
  * @param {Array} newsItems
  * @returns {Array<string>}
  */
-function validateLesson(lesson, newsItems) {
+function validateLesson(lesson) {
   let violations = [];
 
   if (!lesson.title_es) violations.push('Missing title_es');

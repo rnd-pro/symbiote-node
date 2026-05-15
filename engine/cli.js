@@ -14,25 +14,19 @@
  * @module symbiote-node/cli */
 
 import { readFile } from 'node:fs/promises';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 
 import {
-  Graph,
   Executor,
   listDrivers,
   getNodeType,
-  findCompatible,
   getNodeMenu,
   validateParams,
   deserialize,
-  clearRegistry,
   loadHandlers,
   createServer,
 } from './index.js';
-
-let __dirname = dirname(fileURLToPath(import.meta.url));
 
 
 /**

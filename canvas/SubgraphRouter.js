@@ -80,7 +80,7 @@ export class SubgraphRouter {
 
       if (path) {
         let hash = window.location.hash;
-        let [base, queryStr] = hash.split('?');
+        let [, queryStr] = hash.split('?');
         let params = new URLSearchParams(queryStr || '');
 
         params.set('in', '1');
@@ -128,7 +128,7 @@ export class SubgraphRouter {
 
       let updateUrl = (newPath, setIn = false, setFocus = null) => {
         let hash = window.location.hash;
-        let [base, queryStr] = hash.split('?');
+        let [, queryStr] = hash.split('?');
         let params = new URLSearchParams(queryStr || '');
 
         let newBase = `#${this.#config.hashPrefix}`;

@@ -7,7 +7,7 @@
  * @module symbiote-node/core/Node
  */
 
-import { uid, Input, Output } from './Socket.js';
+import { uid } from './Socket.js';
 
 export class Node {
   /**

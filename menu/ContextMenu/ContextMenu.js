@@ -7,7 +7,7 @@
  * @module symbiote-node/components/ContextMenu
  */
 
-import Symbiote, { html } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
 import { template, ctxItemTemplate } from './ContextMenu.tpl.js';
 import { styles } from './ContextMenu.css.js';
 

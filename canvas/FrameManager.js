@@ -184,7 +184,6 @@ export class FrameManager {
       let handle = el.ref?.resizeHandle;
       if (handle) {
         let resizeDrag = new Drag();
-        let startSize = null;
         resizeDrag.initialize(
           handle,
           {
@@ -192,16 +191,10 @@ export class FrameManager {
             getZoom: () => this.#canvas.$.zoom,
           },
           {
-            onStart: () => {
-              startSize = { w: frame.width, h: frame.height };
-            },
             onTranslate: (x, y) => {
               let w = Math.max(120, x);
               let h = Math.max(80, y);
               this.setSize(frame.id, w, h);
-            },
-            onDrop: () => {
-              startSize = null;
             },
           }
         );

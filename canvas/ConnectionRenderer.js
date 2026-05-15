@@ -538,7 +538,6 @@ export class ConnectionRenderer {
         let adjustedBase = baseAngle + (side === 'output' ? -sideGap : sideGap);
 
 
-        let dx = targetPos.x - cx;
         let dy = targetPos.y - cy;
         let shouldReverse = side === 'output' ? dy < 0 : dy > 0;
         let effectiveIndex = shouldReverse ? total - 1 - index : index;
@@ -637,7 +636,7 @@ export class ConnectionRenderer {
    * @param {import('../core/Connection.js').Connection} conn
    * @param {string|null} [draggedNodeId=null]
    */
-  #render(conn, draggedNodeId = null) {
+  #render(conn) {
     let fromEl = this.#nodeViews.get(conn.from);
     let toEl = this.#nodeViews.get(conn.to);
     if (!fromEl || !toEl) return;

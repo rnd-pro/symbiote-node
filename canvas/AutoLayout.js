@@ -16,8 +16,6 @@
  */
 
 export function computeAutoLayout(editor, options = {}) {
-  let cycleCount = 0;
-
   let {
     nodeWidth = 180,
     nodeHeight = 140,
@@ -512,7 +510,6 @@ export function computeAutoLayout(editor, options = {}) {
       let ids = Object.keys(finalPositions);
       for (let pass = 0; pass < 3; pass++) {
         let overlaps = false;
-        cycleCount++;
         for (let i = 0; i < ids.length; i++) {
           for (let j = i + 1; j < ids.length; j++) {
             let p1 = finalPositions[ids[i]];

@@ -22,7 +22,7 @@ export class NodeShape {
    *   x, y are relative to node top-left corner
    *   angle is in degrees: 0 = right, 90 = down, 180 = left, 270 = up
    */
-  getSocketPosition(side, index, total, size) {
+  getSocketPosition(_side, _index, _total, _size) {
     throw new Error('getSocketPosition must be implemented');
   }
 
@@ -31,7 +31,7 @@ export class NodeShape {
    * @param {{ width: number, height: number }} size
    * @returns {string} SVG path d attribute
    */
-  getOutlinePath(size) {
+  getOutlinePath(_size) {
     return '';
   }
 
@@ -40,7 +40,7 @@ export class NodeShape {
    * @param {{ width: number, height: number }} size
    * @returns {string}
    */
-  getBorderRadius(size) {
+  getBorderRadius(_size) {
     return 'var(--sn-node-radius, 10px)';
   }
 
@@ -65,7 +65,7 @@ export class NodeShape {
    * @param {{ width: number, height: number }} size
    * @returns {string|null} null = no clip
    */
-  getClipPath(size) {
+  getClipPath(_size) {
     return null;
   }
 

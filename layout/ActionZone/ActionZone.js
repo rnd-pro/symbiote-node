@@ -152,7 +152,7 @@ export class ActionZone extends Symbiote {
       if (e?.pointerId !== undefined) {
         this.releasePointerCapture(e.pointerId);
       }
-    } catch (err) {
+    } catch {
 
     }
 

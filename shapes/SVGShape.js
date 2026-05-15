@@ -443,11 +443,11 @@ export class SVGShape extends NodeShape {
     return result;
   }
 
-  getClipPath(size) {
+  getClipPath(_size) {
     return null;
   }
 
-  getOutlinePath(size) {
+  getOutlinePath(_size) {
     return this.pathData;
   }
 

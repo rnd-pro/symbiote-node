@@ -111,7 +111,7 @@ export class LayoutNode extends Symbiote {
 
 
     if (this.$.nodeData) {
-      this.sub('nodeData', (d) => {});
+      this.sub('nodeData', () => {});
     }
   }
 
@@ -323,9 +323,6 @@ export class LayoutNode extends Symbiote {
 
   _startResize(e) {
     e.preventDefault();
-    let startPos = this.$.direction === 'horizontal' ? e.clientX : e.clientY;
-    let startRatio = this.$.ratio;
-
     this.setAttribute('resizing', '');
 
 

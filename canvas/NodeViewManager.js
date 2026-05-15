@@ -237,9 +237,6 @@ export class NodeViewManager {
 
     requestAnimationFrame(() => {
       if (shape && shape.pathData) {
-        let size = { width: el.offsetWidth, height: el.offsetHeight };
-
-
         let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('viewBox', shape.viewBox);
         svg.setAttribute('preserveAspectRatio', 'none');

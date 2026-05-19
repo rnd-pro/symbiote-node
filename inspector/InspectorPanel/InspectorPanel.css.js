@@ -235,8 +235,8 @@ export let styles = css`
     padding-right: 24px;
 
     & option {
-      background: #2a2a3e;
-      color: #d4d4d4;
+      background: var(--sn-node-bg, #2a2a3e);
+      color: var(--sn-text, #d4d4d4);
     }
   }
 
@@ -267,7 +267,7 @@ export let styles = css`
         height: 14px;
         left: 3px;
         bottom: 3px;
-        background: #aaa;
+        background: var(--sn-text-dim, #aaa);
         border-radius: 50%;
         transition:
           transform 0.2s,
@@ -342,7 +342,7 @@ export let styles = css`
     border: 1px solid rgba(76, 175, 80, 0.4);
     border-radius: 8px;
     background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(46, 125, 50, 0.1) 100%);
-    color: #66bb6a;
+    color: var(--sn-success-color, #66bb6a);
     font-family: var(--sn-font, 'Inter', sans-serif);
     font-size: 13px;
     font-weight: 600;

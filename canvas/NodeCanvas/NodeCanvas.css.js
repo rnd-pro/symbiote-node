@@ -270,7 +270,7 @@ export let styles = css`
   }
 
   graph-node[data-fire-state='active'] {
-    border-color: #4caf50 !important;
+    border-color: var(--sn-success-color, #4caf50) !important;
     animation: sn-fire-pulse 0.6s ease-out;
     z-index: 50;
   }

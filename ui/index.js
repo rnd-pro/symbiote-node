@@ -113,6 +113,7 @@ export { NEON_PALETTE } from '../themes/neon.js';
 
 export let NodeCanvas;
 export let CanvasGraph;
+export let GraphExplorerShell;
 export let GraphNode;
 export let NodeSocket;
 export let QuickToolbar;
@@ -184,6 +185,7 @@ if (hasDOMGlobals) {
   const [
     nodeCanvas,
     canvasGraph,
+    graphExplorerShell,
     graphNode,
     nodeSocket,
     quickToolbar,
@@ -219,6 +221,7 @@ if (hasDOMGlobals) {
   ] = await Promise.all([
     import('../canvas/NodeCanvas/NodeCanvas.js'),
     import('../canvas/CanvasGraph/CanvasGraph.js'),
+    import('../canvas/GraphExplorerShell/GraphExplorerShell.js'),
     import('../node/GraphNode/GraphNode.js'),
     import('../node/NodeSocket/NodeSocket.js'),
     import('../toolbar/QuickToolbar/QuickToolbar.js'),
@@ -255,6 +258,7 @@ if (hasDOMGlobals) {
 
   ({ NodeCanvas } = nodeCanvas);
   ({ CanvasGraph } = canvasGraph);
+  ({ GraphExplorerShell } = graphExplorerShell);
   ({ GraphNode } = graphNode);
   ({ NodeSocket } = nodeSocket);
   ({ QuickToolbar } = quickToolbar);

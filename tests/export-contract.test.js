@@ -102,6 +102,7 @@ const ROOT_EXPORTS = [
 const UI_EXPORTS = [
   ['NodeCanvas', 'function'],
   ['CanvasGraph', 'function'],
+  ['GraphExplorerShell', 'function'],
   ['GraphNode', 'function'],
   ['NodeSocket', 'function'],
   ['Drag', 'function'],

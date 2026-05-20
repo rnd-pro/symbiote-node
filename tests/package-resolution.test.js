@@ -22,6 +22,7 @@ describe('package exports resolution', () => {
     assert.equal(typeof root.NodeEditor, 'function');
     assert.equal(typeof root.createForceLayoutPayload, 'function');
     assert.equal(typeof ui.ForceLayout, 'function');
+    assert.ok('GraphExplorerShell' in ui, 'UI entrypoint must expose GraphExplorerShell binding');
     assert.equal(typeof ui.computeInitialGraphPositions, 'function');
     assert.ok('Layout' in ui, 'UI entrypoint must expose Layout binding');
     assert.ok('CellBg' in ui, 'UI entrypoint must expose CellBg binding');
@@ -73,6 +74,7 @@ describe('package exports resolution', () => {
       'symbiote-node/navigation/QuickOpen/QuickOpen.js',
       'symbiote-node/effects/CellBg/CellBg.js',
       'symbiote-node/canvas/CanvasGraph/CanvasGraph.js',
+      'symbiote-node/canvas/GraphExplorerShell/GraphExplorerShell.js',
       'symbiote-node/chat/message-model.js',
       'symbiote-node/chat/ChatMessageItem/ChatMessageItem.js',
       'symbiote-node/chat/ChatTranscript/ChatTranscript.js',

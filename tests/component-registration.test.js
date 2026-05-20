@@ -164,6 +164,14 @@ describe('With DOM shim', () => {
     assert.equal(graph._isSemanticPath('cluster:cluster-a'), false);
   });
 
+  it('GraphExplorerShell can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../canvas/GraphExplorerShell/GraphExplorerShell.js'),
+      'GraphExplorerShell must import without throwing'
+    );
+    assert.ok(customElements.get('graph-explorer-shell'));
+  });
+
   it('CellBg can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../effects/CellBg/CellBg.js'),

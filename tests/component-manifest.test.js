@@ -21,6 +21,7 @@ let requiredTags = [
   'node-socket',
   'node-canvas',
   'canvas-graph',
+  'graph-explorer-shell',
   'panel-layout',
   'layout-sidebar',
   'layout-node',
@@ -87,6 +88,7 @@ describe('component registry', () => {
     assert.equal(getComponentModule('node-canvas'), 'canvas/NodeCanvas/NodeCanvas.js');
     assert.equal(getComponent('canvas-graph').className, 'CanvasGraph');
     assert.equal(getComponentModule('canvas-graph'), 'canvas/CanvasGraph/CanvasGraph.js');
+    assert.equal(getComponentModule('graph-explorer-shell'), 'canvas/GraphExplorerShell/GraphExplorerShell.js');
     assert.equal(getComponent('cell-bg').category, 'effects');
     assert.equal(getComponentModule('sn-list-item'), 'list/ListItem/ListItem.js');
     assert.equal(getComponent('sn-tree-view').category, 'tree');

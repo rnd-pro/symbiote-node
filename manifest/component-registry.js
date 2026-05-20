@@ -28,6 +28,13 @@ export let COMPONENTS = [
     description: 'Generic hierarchical canvas graph renderer with force layout and selection events.',
   },
   {
+    tagName: 'graph-explorer-shell',
+    className: 'GraphExplorerShell',
+    module: 'canvas/GraphExplorerShell/GraphExplorerShell.js',
+    category: 'canvas',
+    description: 'Generic graph explorer shell with toolbar, canvas, overlay, legend, and stats slots.',
+  },
+  {
     tagName: 'panel-layout',
     className: 'Layout',
     module: 'layout/Layout/Layout.js',

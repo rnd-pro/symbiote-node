@@ -55,6 +55,19 @@
       "exports": [{ "kind": "custom-element-definition", "name": "canvas-graph", "declaration": { "name": "CanvasGraph" } }]
     },
     {
+      "path": "canvas/GraphExplorerShell/GraphExplorerShell.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "GraphExplorerShell",
+          "tagName": "graph-explorer-shell",
+          "description": "Generic graph explorer shell with toolbar, canvas, overlay, legend, and stats slots."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "graph-explorer-shell", "declaration": { "name": "GraphExplorerShell" } }]
+    },
+    {
       "path": "layout/Layout/Layout.js",
       "declarations": [
         {

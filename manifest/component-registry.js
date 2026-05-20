@@ -21,6 +21,13 @@ export let COMPONENTS = [
     description: 'Primary graph canvas custom element.',
   },
   {
+    tagName: 'canvas-graph',
+    className: 'CanvasGraph',
+    module: 'canvas/CanvasGraph/CanvasGraph.js',
+    category: 'canvas',
+    description: 'Generic hierarchical canvas graph renderer with force layout and selection events.',
+  },
+  {
     tagName: 'panel-layout',
     className: 'Layout',
     module: 'layout/Layout/Layout.js',

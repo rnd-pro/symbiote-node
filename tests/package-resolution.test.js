@@ -71,6 +71,7 @@ describe('package exports resolution', () => {
       'symbiote-node/menu/ContextMenu/ContextMenu.js',
       'symbiote-node/navigation/QuickOpen/QuickOpen.js',
       'symbiote-node/effects/CellBg/CellBg.js',
+      'symbiote-node/canvas/CanvasGraph/CanvasGraph.js',
       'symbiote-node/chat/message-model.js',
       'symbiote-node/chat/ChatMessageItem/ChatMessageItem.js',
       'symbiote-node/chat/ChatTranscript/ChatTranscript.js',

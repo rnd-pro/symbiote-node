@@ -127,6 +127,14 @@ describe('With DOM shim', () => {
     );
   });
 
+  it('CanvasGraph can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../canvas/CanvasGraph/CanvasGraph.js'),
+      'CanvasGraph must import without throwing'
+    );
+    assert.ok(customElements.get('canvas-graph'));
+  });
+
   it('CellBg can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../effects/CellBg/CellBg.js'),

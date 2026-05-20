@@ -100,6 +100,7 @@ export { EBOOK, EBOOK_PALETTE } from '../themes/ebook.js';
 export { NEON_PALETTE } from '../themes/neon.js';
 
 export let NodeCanvas;
+export let CanvasGraph;
 export let GraphNode;
 export let NodeSocket;
 export let QuickToolbar;
@@ -170,6 +171,7 @@ const hasDOMGlobals =
 if (hasDOMGlobals) {
   const [
     nodeCanvas,
+    canvasGraph,
     graphNode,
     nodeSocket,
     quickToolbar,
@@ -204,6 +206,7 @@ if (hasDOMGlobals) {
     outputGraphPreview,
   ] = await Promise.all([
     import('../canvas/NodeCanvas/NodeCanvas.js'),
+    import('../canvas/CanvasGraph/CanvasGraph.js'),
     import('../node/GraphNode/GraphNode.js'),
     import('../node/NodeSocket/NodeSocket.js'),
     import('../toolbar/QuickToolbar/QuickToolbar.js'),
@@ -239,6 +242,7 @@ if (hasDOMGlobals) {
   ]);
 
   ({ NodeCanvas } = nodeCanvas);
+  ({ CanvasGraph } = canvasGraph);
   ({ GraphNode } = graphNode);
   ({ NodeSocket } = nodeSocket);
   ({ QuickToolbar } = quickToolbar);

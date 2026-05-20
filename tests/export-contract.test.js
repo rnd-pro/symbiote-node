@@ -91,6 +91,7 @@ const ROOT_EXPORTS = [
 
 const UI_EXPORTS = [
   ['NodeCanvas', 'function'],
+  ['CanvasGraph', 'function'],
   ['GraphNode', 'function'],
   ['NodeSocket', 'function'],
   ['Drag', 'function'],
@@ -273,7 +274,7 @@ describe('symbiote-node root exports', () => {
     });
   }
 
-  for (const name of ['NodeCanvas', 'Layout', 'GraphNode', 'NodeSocket']) {
+  for (const name of ['NodeCanvas', 'CanvasGraph', 'Layout', 'GraphNode', 'NodeSocket']) {
     it(`${name} is not exported from Node-safe root`, () => {
       assert.equal(lib[name], undefined);
     });

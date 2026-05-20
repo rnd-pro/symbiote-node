@@ -34,8 +34,11 @@ describe('SSR-safe import boundary', () => {
       assert.equal(globalThis[name], undefined, `${name} should not exist before UI import`);
     }
 
+    let ui = await import(`../ui/index.js?ssr=${Date.now()}`);
+    assert.equal(ui.CanvasGraph, undefined, 'CanvasGraph must stay browser-only without DOM globals');
+
     await assert.doesNotReject(
-      import(`../ui/index.js?ssr=${Date.now()}`),
+      Promise.resolve(ui),
       'UI entry must import without throwing in Node/SSR'
     );
 

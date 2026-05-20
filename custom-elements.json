@@ -42,6 +42,19 @@
       "exports": [{ "kind": "custom-element-definition", "name": "node-canvas", "declaration": { "name": "NodeCanvas" } }]
     },
     {
+      "path": "canvas/CanvasGraph/CanvasGraph.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "CanvasGraph",
+          "tagName": "canvas-graph",
+          "description": "Generic hierarchical canvas graph renderer with force layout and selection events."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "canvas-graph", "declaration": { "name": "CanvasGraph" } }]
+    },
+    {
       "path": "layout/Layout/Layout.js",
       "declarations": [
         {

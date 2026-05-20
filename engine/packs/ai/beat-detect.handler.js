@@ -8,12 +8,7 @@
  * - Quiet zones (silence detection)
  * - Strong onsets (transient detection)
  *
- * Uses Python librosa library on remote server via SSH.
- * Based on Mr-Computer/modules/ai-music-video beat-detector-ssh.js
- *
- * Remote: mr-agent@mr-agent.rnd-pro.com
- * Script: beat-detection.py (uploaded automatically)
- * Venv:   /home/mr-agent/automations/argentine-spanish-bot/venv
+ * Uses Python librosa library on a configured remote server via SSH.
  *
  * @module agi-graph/packs/ai/beat-detect
  */
@@ -55,17 +50,17 @@ export default {
 
       remoteHost: {
         type: 'string',
-        default: 'mr-agent@mr-agent.rnd-pro.com',
+        default: '',
         description: 'SSH host',
       },
       remotePath: {
         type: 'string',
-        default: '/home/mr-agent/automations/argentine-spanish-bot',
+        default: '',
         description: 'Remote project path',
       },
       remoteVenv: {
         type: 'string',
-        default: '/home/mr-agent/automations/argentine-spanish-bot/venv',
+        default: '',
         description: 'Remote Python venv',
       },
       scriptPath: {
@@ -123,19 +118,18 @@ const EMPTY = {
  * @returns {Promise<Object>}
  */
 async function executeSSH(audioPath, params) {
-  let host =
-    params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  let remotePath =
-    params.remotePath ||
-    process.env.WHISPER_REMOTE_PATH ||
-    '/home/mr-agent/automations/argentine-spanish-bot';
-  let venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
+  let host = params.remoteHost || process.env.BEAT_REMOTE_HOST || '';
+  let remotePath = params.remotePath || process.env.BEAT_REMOTE_PATH || '';
+  let venv = params.remoteVenv || process.env.BEAT_REMOTE_VENV || `${remotePath}/venv`;
   let sr = params.sampleRate || parseInt(process.env.BEAT_SAMPLE_RATE, 10) || 22050;
   let hop = params.hopLength || parseInt(process.env.BEAT_HOP_LENGTH, 10) || 512;
   let pps = params.peaksPerSecond || 10;
   let remoteTmpDir = '/tmp/agi-graph-beat';
 
   try {
+    if (!host || !remotePath || !venv) {
+      throw new Error('Beat detection SSH mode requires remoteHost, remotePath, and remoteVenv configuration');
+    }
 
     await fs.access(audioPath);
 

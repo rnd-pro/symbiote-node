@@ -1,7 +1,7 @@
 /**
  * ai/face-detect — Face detection via HTTP API (InsightFace SCRFD GPU)
  *
- * Client for remote face detection service on mr-agent.rnd-pro.com:5050.
+ * Client for a configured remote face detection service.
  * Supports SSH tunnel for local access.
  *
  * Operations:
@@ -10,8 +10,6 @@
  * - track-gpu:  GPU InsightFace tracking with landmarks, age, gender
  * - mouth:      Mouth position detection (for speech bubble placement)
  * - frames-gpu: Face tracking on WebP frame sequences
- *
- * Based on Mr-Computer/modules/ai-music-video/src/utils/face-detector.js
  *
  * @module agi-graph/packs/ai/face-detect
  */
@@ -60,7 +58,7 @@ export default {
       fps: { type: 'int', default: 30, description: 'FPS for frames-gpu mode' },
       remoteHost: {
         type: 'string',
-        default: 'mr-agent@mr-agent.rnd-pro.com',
+        default: '',
         description: 'SSH host for SCP uploads',
       },
       useRemotePath: {
@@ -96,14 +94,25 @@ export default {
 };
 
 /**
- * Check if running on the mr-agent server
+ * Check if the current host should use local media paths.
  * @returns {boolean}
  */
 function isOnServer() {
   try {
-    return os.hostname().includes('mr-agent') || os.hostname().includes('rnd-pro');
+    let marker = process.env.FACE_LOCAL_HOST_MARKER;
+    return Boolean(marker && os.hostname().includes(marker));
   } catch {
     return false;
+  }
+}
+
+function resolveRemoteHost(params) {
+  return params.remoteHost || process.env.FACE_REMOTE_HOST || '';
+}
+
+function requireRemoteHost(host) {
+  if (!host) {
+    throw new Error('Face detection remote upload requires remoteHost or FACE_REMOTE_HOST');
   }
 }
 
@@ -119,6 +128,7 @@ async function prepareRemotePath(localPath, host, params) {
     return { remotePath: path.resolve(localPath), cleanup: false };
   }
 
+  requireRemoteHost(host);
   let filename = `face_${Date.now()}_${path.basename(localPath)}`;
   let remotePath = `/tmp/${filename}`;
 
@@ -151,7 +161,7 @@ async function cleanupRemote(remotePath, host) {
  */
 async function analyze(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';
-  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let host = resolveRemoteHost(params);
 
   try {
     if (params.useRemotePath || isOnServer()) {
@@ -189,7 +199,7 @@ async function analyze(mediaPath, params) {
  */
 async function track(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';
-  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let host = resolveRemoteHost(params);
 
   try {
     let { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
@@ -216,7 +226,7 @@ async function track(mediaPath, params) {
  */
 async function trackGpu(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';
-  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let host = resolveRemoteHost(params);
 
   try {
     let { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
@@ -243,7 +253,7 @@ async function trackGpu(mediaPath, params) {
  */
 async function mouth(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';
-  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let host = resolveRemoteHost(params);
 
   try {
     let { remotePath, cleanup } = await prepareRemotePath(mediaPath, host, params);
@@ -269,7 +279,7 @@ async function mouth(mediaPath, params) {
  */
 async function framesGpu(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';
-  let host = params.remoteHost || 'mr-agent@mr-agent.rnd-pro.com';
+  let host = resolveRemoteHost(params);
 
   try {
     let remotePath = path.resolve(mediaPath);
@@ -277,6 +287,7 @@ async function framesGpu(mediaPath, params) {
 
 
     if (!params.useRemotePath && !isOnServer()) {
+      requireRemoteHost(host);
       let dirName = `face_frames_${Date.now()}`;
       remotePath = `/tmp/${dirName}`;
 

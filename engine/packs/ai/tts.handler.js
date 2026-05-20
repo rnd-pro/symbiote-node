@@ -2,7 +2,7 @@
  * ai/tts — Text-to-Speech via Qwen3-TTS
  *
  * Two modes:
- * - SSH: batch script on remote server (mr-agent.rnd-pro.com)
+ * - SSH: batch script on a configured remote server
  * - HTTP: POST to Qwen3 TTS HTTP endpoint
  *
  * Supports:
@@ -10,10 +10,7 @@
  * - Voice cloning via ref_audio (reference audio sample)
  * - Language: es (Spanish/Rioplatense), ru (Russian), en (English)
  *
- * Config from Mr-Computer/automations/argentine-spanish-bot:
- *   TTS_SERVER_URL: http://localhost:5008
- *   TTS_VENV_PATH: /home/mr-agent/automations/argentine-spanish-bot/venv
- *   Batch script: utils/generate_qwen3tts_batch.py
+ * SSH mode expects TTS_REMOTE_HOST and TTS_REMOTE_PATH, or matching params.
  *
  * @module agi-graph/packs/ai/tts
  */
@@ -72,17 +69,17 @@ export default {
 
       remoteHost: {
         type: 'string',
-        default: 'mr-agent@mr-agent.rnd-pro.com',
+        default: '',
         description: 'SSH host',
       },
       remotePath: {
         type: 'string',
-        default: '/home/mr-agent/automations/argentine-spanish-bot',
+        default: '',
         description: 'Remote project path',
       },
       remoteVenv: {
         type: 'string',
-        default: '/home/mr-agent/automations/argentine-spanish-bot/venv',
+        default: '',
         description: 'Remote Python venv path',
       },
       device: { type: 'string', default: 'cuda', description: 'cuda | cpu' },
@@ -141,13 +138,9 @@ const SPEAKERS = new Set([
  * @returns {Promise<Object>}
  */
 async function executeSSH(text, params) {
-  let host =
-    params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  let remotePath =
-    params.remotePath ||
-    process.env.WHISPER_REMOTE_PATH ||
-    '/home/mr-agent/automations/argentine-spanish-bot';
-  let venv = params.remoteVenv || process.env.TTS_VENV_PATH || `${remotePath}/venv`;
+  let host = params.remoteHost || process.env.TTS_REMOTE_HOST || '';
+  let remotePath = params.remotePath || process.env.TTS_REMOTE_PATH || '';
+  let venv = params.remoteVenv || process.env.TTS_REMOTE_VENV || `${remotePath}/venv`;
   let device = params.device || process.env.PODCAST_TTS_DEVICE || 'cuda';
 
   let outDir = params.outputDir || path.join(os.tmpdir(), 'agi-graph-tts');
@@ -156,6 +149,9 @@ async function executeSSH(text, params) {
   let remoteTmpDir = '/tmp/agi-graph-tts';
 
   try {
+    if (!host || !remotePath || !venv) {
+      throw new Error('TTS SSH mode requires remoteHost, remotePath, and remoteVenv configuration');
+    }
     await fs.mkdir(outDir, { recursive: true });
 
 

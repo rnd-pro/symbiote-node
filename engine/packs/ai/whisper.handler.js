@@ -5,10 +5,7 @@
  * - SSH: uploads audio to remote server via scp, runs Whisper via SSH
  * - HTTP: sends audio to a Whisper HTTP endpoint (e.g., faster-whisper-server)
  *
- * SSH remote config from Mr-Computer/modules/ai-music-video/whisper-ssh.js:
- *   Host: mr-agent@mr-agent.rnd-pro.com
- *   Venv: /home/mr-agent/automations/argentine-spanish-bot/venv
- *   Script: utils/whisper-word-timing.py
+ * SSH mode expects WHISPER_REMOTE_HOST and WHISPER_REMOTE_PATH, or matching params.
  *
  * @module agi-graph/packs/ai/whisper
  */
@@ -50,17 +47,17 @@ export default {
 
       remoteHost: {
         type: 'string',
-        default: 'mr-agent@mr-agent.rnd-pro.com',
+        default: '',
         description: 'SSH host',
       },
       remotePath: {
         type: 'string',
-        default: '/home/mr-agent/automations/argentine-spanish-bot',
+        default: '',
         description: 'Remote project path',
       },
       remoteVenv: {
         type: 'string',
-        default: '/home/mr-agent/automations/argentine-spanish-bot/venv',
+        default: '',
         description: 'Remote Python venv',
       },
 
@@ -100,12 +97,8 @@ export default {
  * @returns {Promise<Object>} Result with text, words, duration
  */
 async function executeSSH(audioPath, params) {
-  let host =
-    params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  let remotePath =
-    params.remotePath ||
-    process.env.WHISPER_REMOTE_PATH ||
-    '/home/mr-agent/automations/argentine-spanish-bot';
+  let host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || '';
+  let remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '';
   let venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
   let model = params.model || process.env.WHISPER_MODEL || 'medium';
   let device = params.device || process.env.WHISPER_DEVICE || 'cuda';
@@ -113,6 +106,9 @@ async function executeSSH(audioPath, params) {
   let remoteTmpDir = '/tmp/agi-graph-whisper';
 
   try {
+    if (!host || !remotePath || !venv) {
+      throw new Error('Whisper SSH mode requires remoteHost, remotePath, and remoteVenv configuration');
+    }
 
     await fs.access(audioPath);
 

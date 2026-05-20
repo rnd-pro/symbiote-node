@@ -48,4 +48,20 @@ describe('canvas graph model', () => {
     assert.deepEqual(store.edges, [{ from: 'a', to: 'b' }]);
     assert.deepEqual(store.rootNodes, ['a', 'b']);
   });
+
+  it('accepts generic graph connections', () => {
+    const model = normalizeCanvasGraphModel({
+      nodes: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+      connections: [
+        { source: 'a', target: 'b', label: 'string endpoints' },
+        { source: { node: 'b' }, target: { id: 'c' }, label: 'object endpoints' },
+        { source: 'a', target: 'missing' },
+      ],
+    });
+
+    assert.deepEqual(model.edges, [
+      { source: 'a', target: 'b', label: 'string endpoints', from: 'a', to: 'b' },
+      { source: { node: 'b' }, target: { id: 'c' }, label: 'object endpoints', from: 'b', to: 'c' },
+    ]);
+  });
 });

@@ -16,8 +16,10 @@ function normalizeNode(rawNode) {
 
 function normalizeEdge(rawEdge) {
   if (!rawEdge || typeof rawEdge !== 'object') return null;
-  const from = String(rawEdge.from || '').trim();
-  const to = String(rawEdge.to || '').trim();
+  const rawFrom = rawEdge.from ?? rawEdge.source?.node ?? rawEdge.source?.id ?? rawEdge.source;
+  const rawTo = rawEdge.to ?? rawEdge.target?.node ?? rawEdge.target?.id ?? rawEdge.target;
+  const from = String(rawFrom || '').trim();
+  const to = String(rawTo || '').trim();
   if (!from || !to) return null;
   return { ...rawEdge, from, to };
 }
@@ -35,7 +37,8 @@ export function normalizeCanvasGraphModel(model = {}) {
     nodesById.set(node.id, node);
   }
 
-  for (const rawEdge of model.edges || []) {
+  const rawEdges = Array.isArray(model.connections) ? model.connections : model.edges || [];
+  for (const rawEdge of rawEdges) {
     const edge = normalizeEdge(rawEdge);
     if (!edge || !nodesById.has(edge.from) || !nodesById.has(edge.to)) continue;
     edges.push(edge);

@@ -135,6 +135,35 @@ describe('With DOM shim', () => {
     assert.ok(customElements.get('canvas-graph'));
   });
 
+  it('CanvasGraph exposes configurable host event and action contracts', async () => {
+    let { CanvasGraph } = await import('../canvas/CanvasGraph/CanvasGraph.js');
+    let graph = new CanvasGraph();
+    let events = [];
+    graph.dispatchEvent = (event) => {
+      events.push(event);
+      return true;
+    };
+
+    graph.setEventNames({ toolbarAction: 'graph-action', nodeDeselected: 'graph-clear' });
+    graph.setActionItems([{ action: 'inspect', label: 'Inspect', path: 'M0 0h1v1H0z' }]);
+    graph.setSemanticPathPrefix('semantic:');
+
+    graph._emitGraphEvent('toolbarAction', { action: 'inspect', nodeId: 'node-a' }, {
+      bubbles: true,
+      composed: true,
+    });
+    graph._emitGraphEvent('nodeDeselected');
+
+    assert.equal(events[0].type, 'graph-action');
+    assert.equal(events[0].detail.action, 'inspect');
+    assert.equal(events[0].bubbles, true);
+    assert.equal(events[0].composed, true);
+    assert.equal(events[1].type, 'graph-clear');
+    assert.deepEqual(graph.getActionItems().map((item) => item.action), ['inspect']);
+    assert.equal(graph._isSemanticPath('semantic:cluster-a'), true);
+    assert.equal(graph._isSemanticPath('cluster:cluster-a'), false);
+  });
+
   it('CellBg can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../effects/CellBg/CellBg.js'),

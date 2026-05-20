@@ -60,11 +60,22 @@ function parseHexColor(value) {
   return parts.map((part) => parseInt(part, 16));
 }
 
-const MENU_ITEMS = [
+const DEFAULT_EVENT_NAMES = Object.freeze({
+  fileSelected: 'file-selected',
+  groupSelected: 'group-selected',
+  layoutDone: 'layout-done',
+  layoutSnapshot: 'layout-snapshot',
+  layoutTick: 'layout-tick',
+  nodeDeselected: 'node-deselected',
+  pathChanged: 'path-changed',
+  toolbarAction: 'toolbar-action',
+});
+
+const DEFAULT_MENU_ITEMS = Object.freeze([
   { action: 'drill', label: 'Enter Group', path: 'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z' },
   { action: 'explore', label: 'Explore', path: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z' },
   { action: 'view-code', label: 'View Code', path: 'M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z' },
-];
+]);
 
 export class CanvasGraph extends Symbiote {
   init$ = {
@@ -95,6 +106,10 @@ export class CanvasGraph extends Symbiote {
   _ghostColor = 'rgb(22,30,50)';
 
   initCallback() {
+    this.eventNames = { ...DEFAULT_EVENT_NAMES, ...this.eventNames };
+    this.actionItems = Array.isArray(this.actionItems) ? this.actionItems : [...DEFAULT_MENU_ITEMS];
+    this.semanticPathPrefix = typeof this.semanticPathPrefix === 'string' ? this.semanticPathPrefix : 'cluster:';
+
     this.nodes = [];
     this.edges = [];
     this.nodeMap = new Map();
@@ -392,7 +407,32 @@ export class CanvasGraph extends Symbiote {
   }
 
   _emitLayoutSnapshot() {
-    this.dispatchEvent(new CustomEvent('layout-snapshot', { detail: this.getLayoutSnapshot() }));
+    this._emitGraphEvent('layoutSnapshot', this.getLayoutSnapshot());
+  }
+
+  setEventNames(eventNames = {}) {
+    this.eventNames = { ...DEFAULT_EVENT_NAMES, ...eventNames };
+  }
+
+  setActionItems(items) {
+    this.actionItems = Array.isArray(items) ? [...items] : [...DEFAULT_MENU_ITEMS];
+  }
+
+  getActionItems() {
+    return this.actionItems || [...DEFAULT_MENU_ITEMS];
+  }
+
+  setSemanticPathPrefix(prefix) {
+    this.semanticPathPrefix = typeof prefix === 'string' ? prefix : 'cluster:';
+  }
+
+  _isSemanticPath(path) {
+    return Boolean(this.semanticPathPrefix && typeof path === 'string' && path.startsWith(this.semanticPathPrefix));
+  }
+
+  _emitGraphEvent(name, detail = {}, options = {}) {
+    const type = this.eventNames?.[name] || DEFAULT_EVENT_NAMES[name] || name;
+    return this.dispatchEvent(new CustomEvent(type, { detail, ...options }));
   }
 
   setPath(pathStr) {
@@ -401,7 +441,7 @@ export class CanvasGraph extends Symbiote {
       return;
     }
 
-    if (pathStr.startsWith('cluster:')) {
+    if (this._isSemanticPath(pathStr)) {
       this.focusSemanticCluster(pathStr);
       return;
     }
@@ -586,7 +626,7 @@ export class CanvasGraph extends Symbiote {
 
     this.startWorker(options);
 
-    this.dispatchEvent(new CustomEvent('path-changed', { detail: { path: this.currentGroupId || '' } }));
+    this._emitGraphEvent('pathChanged', { path: this.currentGroupId || '' });
   }
 
   startWorker(customOptions = null) {
@@ -609,14 +649,14 @@ export class CanvasGraph extends Symbiote {
       this.tickCount++;
       this.frameCount++;
       this._wakeLoop();
-      this.dispatchEvent(new CustomEvent('layout-tick', { detail: { alpha: this.lastAlpha } }));
+      this._emitGraphEvent('layoutTick', { alpha: this.lastAlpha });
     };
 
     this.worker.onDone = (positions) => {
       if (positions) {
         for (const [id, pos] of Object.entries(positions)) this.nodePositions.set(id, pos);
       }
-      this.dispatchEvent(new CustomEvent('layout-done'));
+      this._emitGraphEvent('layoutDone');
       this._emitLayoutSnapshot();
     };
 
@@ -756,7 +796,7 @@ export class CanvasGraph extends Symbiote {
           this.nextActiveNode = null;
         } else {
           this.activeNode = null;
-          this.dispatchEvent(new CustomEvent('node-deselected'));
+          this._emitGraphEvent('nodeDeselected');
         }
         this.deactivating = false;
         this.updateInteractionDepths();
@@ -1146,9 +1186,10 @@ export class CanvasGraph extends Symbiote {
         }
 
         const tc = getNodeColor(this.activeNode);
-        for (let i = 0; i < MENU_ITEMS.length; i++) {
-          const item = MENU_ITEMS[i];
-          const angle = (i / MENU_ITEMS.length) * Math.PI * 2 - Math.PI / 2;
+        const menuItems = this.getActionItems();
+        for (let i = 0; i < menuItems.length; i++) {
+          const item = menuItems[i];
+          const angle = (i / menuItems.length) * Math.PI * 2 - Math.PI / 2;
           const ix = apos.x + Math.cos(angle) * mr;
           const iy = apos.y + Math.sin(angle) * mr;
 
@@ -1443,22 +1484,21 @@ export class CanvasGraph extends Symbiote {
           const menuDist = nodeR + 14;
           const itemR = 6;
 
-          for (let i = 0; i < MENU_ITEMS.length; i++) {
-            const angle = (i / MENU_ITEMS.length) * Math.PI * 2 - Math.PI / 2;
+          const menuItems = this.getActionItems();
+          for (let i = 0; i < menuItems.length; i++) {
+            const angle = (i / menuItems.length) * Math.PI * 2 - Math.PI / 2;
             const ix = apos.x + Math.cos(angle) * menuDist;
             const iy = apos.y + Math.sin(angle) * menuDist;
             const dx = world.x - ix, dy = world.y - iy;
             if (dx * dx + dy * dy < itemR * itemR * 2) {
-              const action = MENU_ITEMS[i].action;
+              const action = menuItems[i].action;
               if (action === 'drill') {
                 if (this.activeNode.isGroup && !this.activeNode.isSemanticCluster) this.loadLevel(this.activeNode.id);
               } else {
-                // Dispatch prod action
-                this.dispatchEvent(new CustomEvent('toolbar-action', {
-                  detail: { action, nodeId: this.activeNode.id },
+                this._emitGraphEvent('toolbarAction', { action, nodeId: this.activeNode.id }, {
                   bubbles: true,
-                  composed: true
-                }));
+                  composed: true,
+                });
               }
               e.preventDefault();
               return;
@@ -1566,29 +1606,29 @@ export class CanvasGraph extends Symbiote {
               }
             } else {
               // Single click on group
-              this.dispatchEvent(new CustomEvent('group-selected', { detail: { path: node.id } }));
+              this._emitGraphEvent('groupSelected', { path: node.id });
             }
             this.lastClickTime = now;
             this.lastClickNode = node.id;
           } else {
             // File node click
-            this.dispatchEvent(new CustomEvent('file-selected', { detail: { path: node.id } }));
+            this._emitGraphEvent('fileSelected', { path: node.id });
           }
         } else {
           // Click on empty space → deselect active node
           if (this.activeNode && !this.deactivating) {
             this.deactivating = true;
             this.dragNode = null;
-            this.dispatchEvent(new CustomEvent('node-deselected'));
+            this._emitGraphEvent('nodeDeselected');
           }
         }
       } else if (draggedNode && this._nodeActivatedOnDown) {
         // We dragged a node that was just activated on pointerdown.
         // Emit selection event so URL and UI synchronize.
         if (draggedNode.isGroup) {
-          this.dispatchEvent(new CustomEvent('group-selected', { detail: { path: draggedNode.id } }));
+          this._emitGraphEvent('groupSelected', { path: draggedNode.id });
         } else {
-          this.dispatchEvent(new CustomEvent('file-selected', { detail: { path: draggedNode.id } }));
+          this._emitGraphEvent('fileSelected', { path: draggedNode.id });
         }
       }
       if (draggedNode) this._emitLayoutSnapshot();

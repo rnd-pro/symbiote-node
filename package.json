@@ -4,17 +4,100 @@
   "type": "module",
   "description": "Visual Node Graph Editor + Execution Engine — extensible, themeable graph editor and runtime built on Symbiote.js",
   "main": "index.js",
+  "customElements": "custom-elements.json",
   "exports": {
-    ".": "./index.js",
-    "./engine": "./engine/index.js",
-    "./engine/*": "./engine/*",
+    ".": {
+      "import": "./index.js",
+      "default": "./index.js"
+    },
+    "./core": {
+      "import": "./core/index.js",
+      "default": "./core/index.js"
+    },
+    "./core/*": "./core/*",
+    "./engine": {
+      "import": "./engine/index.js",
+      "default": "./engine/index.js"
+    },
+    "./engine/cli": "./engine/cli.js",
+    "./engine/packs/*": "./engine/packs/*",
+    "./manifest": {
+      "import": "./manifest/index.js",
+      "default": "./manifest/index.js"
+    },
+    "./manifest/*": "./manifest/*",
+    "./layout": {
+      "import": "./layout/index.js",
+      "default": "./layout/index.js"
+    },
+    "./tokens/*": "./tokens/*",
+    "./rules/*": "./rules/*",
+    "./schemas/*": "./schemas/*",
+    "./custom-elements.json": "./custom-elements.json",
+    "./display/output-preview": "./display/output-preview.js",
+    "./display/highlight": "./display/highlight.js",
+    "./display/markdown-formatter": "./display/markdown-formatter.js",
     "./themes/*": "./themes/*",
-    "./canvas/*": "./canvas/*",
-    "./layout/*": "./layout/*",
-    "./interactions/*": "./interactions/*",
-    "./node/*": "./node/*",
     "./shapes/*": "./shapes/*",
-    "./plugins/*": "./plugins/*"
+    "./plugins/*": "./plugins/*",
+    "./package.json": "./package.json",
+    "./ui": {
+      "import": "./ui/index.js",
+      "default": "./ui/index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "custom-elements.json",
+    "core/",
+    "engine/*.js",
+    "engine/packs/",
+    "manifest/",
+    "tokens/",
+    "rules/",
+    "schemas/",
+    "shapes/",
+    "themes/",
+    "plugins/",
+    "canvas/",
+    "node/",
+    "interactions/",
+    "layout/",
+    "navigation/",
+    "display/",
+    "effects/",
+    "chat/",
+    "list/",
+    "tree/",
+    "toolbar/",
+    "inspector/",
+    "palette/",
+    "menu/",
+    "ui/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": [
+    "**/*.css.js",
+    "**/*.tpl.js",
+    "ui/index.js",
+    "canvas/**/*.js",
+    "node/**/*.js",
+    "layout/**/*.js",
+    "display/**/*.js",
+    "effects/**/*.js",
+    "chat/**/*.js",
+    "list/**/*.js",
+    "tree/**/*.js",
+    "navigation/**/*.js",
+    "toolbar/**/*.js",
+    "inspector/**/*.js",
+    "palette/**/*.js",
+    "menu/**/*.js"
+  ],
+  "bin": {
+    "symbiote-node": "./engine/cli.js"
   },
   "publishConfig": {
     "access": "public"

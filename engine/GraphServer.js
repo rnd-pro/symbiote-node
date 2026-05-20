@@ -16,6 +16,7 @@ import { Graph } from './Graph.js';
 import { Executor } from './Executor.js';
 import { listDrivers } from './Registry.js';
 import { loadHandlers, watchHandlers } from './HandlerLoader.js';
+import { deserialize } from './Persistence.js';
 
 /**
  * @typedef {object} ServerOptions
@@ -42,8 +43,7 @@ export async function createServer(options = {}) {
   if (workflowFile) {
     try {
       let json = await readFile(resolve(workflowFile), 'utf-8');
-      let data = JSON.parse(json);
-      graph = deserialize(data);
+      graph = deserialize(json);
       log(`📄 Loaded workflow: ${workflowFile} (${graph.nodes.size} nodes)`);
     } catch (err) {
       log(`⚠️  Could not load workflow: ${err.message}`);

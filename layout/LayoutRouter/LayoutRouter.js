@@ -16,7 +16,7 @@
  *
  * @module symbiote-node/layout/LayoutRouter
  */
-import { PubSub } from '@symbiotejs/symbiote';
+import { PubSub } from '@symbiotejs/symbiote/core/PubSub.js';
 
 const CTX = 'ROUTER';
 

@@ -1,20 +1,23 @@
-
-
+#!/usr/bin/env node
 /**
  * cli.js - AGI-Graph command-line runner
  *
  * Execute, validate, and inspect workflow JSON files.
+ * Agent-facing --json mode available for commands that produce structured output.
  *
  * Usage:
- *   node symbiote-node/cli.js run <workflow.json> [--pack custom] [--secrets secrets.json] [--verbose]
- *   node symbiote-node/cli.js validate <workflow.json> [--pack custom]
- *   node symbiote-node/cli.js list [--pack custom]
- *   node symbiote-node/cli.js inspect <workflow.json>
+ *   node symbiote-node/cli.js run <workflow.json> [--pack custom] [--secrets secrets.json] [--verbose] [--json]
+ *   node symbiote-node/cli.js validate <workflow.json> [--pack custom] [--json]
+ *   node symbiote-node/cli.js list [--pack custom] [--json]
+ *   node symbiote-node/cli.js inspect <workflow.json> [--json]
+ *   node symbiote-node/cli.js discover
  *
  * @module symbiote-node/cli */
 
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 
 import {
@@ -25,8 +28,100 @@ import {
   validateParams,
   deserialize,
   loadHandlers,
-  createServer,
+  listPacks,
+  getAllSocketTypes,
 } from './index.js';
+
+import {
+  COMPONENTS,
+  THEME_NAMES,
+  getTheme,
+  getThemeTokens,
+  listTokenFiles,
+  RULESETS,
+  listRules,
+  GRAPH_SCHEMA_VERSIONS,
+  getGraphSchema,
+} from '../manifest/index.js';
+
+let __dirname = dirname(fileURLToPath(import.meta.url));
+let PKG_PATH = resolve(__dirname, '../package.json');
+let PKG = JSON.parse(readFileSync(PKG_PATH, 'utf-8'));
+
+const EXPORT_ENTRYPOINTS = [
+  {
+    specifier: 'symbiote-node',
+    kind: 'node-safe',
+    description: 'Node-safe graph/core API, themes, shapes, plugins, and pure utilities.',
+  },
+  {
+    specifier: 'symbiote-node/core',
+    kind: 'node-safe',
+    description: 'Core graph editor data model primitives.',
+  },
+  {
+    specifier: 'symbiote-node/engine',
+    kind: 'node-safe',
+    description: 'Server-side graph runtime, registry, executor, and serialization helpers.',
+  },
+  {
+    specifier: 'symbiote-node/manifest',
+    kind: 'node-safe',
+    description: 'Agent-readable component, theme, token, rule, and schema catalogs.',
+  },
+  {
+    specifier: 'symbiote-node/layout',
+    kind: 'ssr-safe',
+    description: 'Layout tree, section registry, and router helpers without browser components.',
+  },
+  {
+    specifier: 'symbiote-node/ui',
+    kind: 'browser',
+    description: 'Browser Web Components, layout modules, themes, router helpers, chat, navigation, and display modules.',
+  },
+  {
+    specifier: 'symbiote-node/display/highlight',
+    kind: 'node-safe',
+    description: 'Syntax highlighting and markdown rendering helpers.',
+  },
+  {
+    specifier: 'symbiote-node/display/markdown-formatter',
+    kind: 'node-safe',
+    description: 'Markdown formatting helpers shared by chat and host applications.',
+  },
+  {
+    specifier: 'symbiote-node/custom-elements.json',
+    kind: 'metadata',
+    description: 'Custom Elements manifest for editor/docs/design-system tooling.',
+  },
+  {
+    specifier: 'symbiote-node/tokens/*',
+    kind: 'metadata',
+    description: 'Design token JSON files.',
+  },
+  {
+    specifier: 'symbiote-node/rules/*',
+    kind: 'metadata',
+    description: 'Machine-readable library and Symbiote rules.',
+  },
+  {
+    specifier: 'symbiote-node/schemas/*',
+    kind: 'metadata',
+    description: 'Graph schema JSON files.',
+  },
+];
+
+function listPackageExportSubpaths() {
+  return Object.keys(PKG.exports || {}).sort().map((subpath) => {
+    let target = PKG.exports[subpath];
+    let importTarget = typeof target === 'string' ? target : target?.import || target?.default || null;
+    return {
+      subpath,
+      specifier: subpath === '.' ? PKG.name : `${PKG.name}/${subpath.replace(/^\.\//, '')}`,
+      target: importTarget,
+    };
+  });
+}
 
 
 /**
@@ -90,21 +185,21 @@ async function loadSecrets(secretsPath) {
 /**
  * Load domain packs by name
  * @param {string|string[]} packs
+ * @param {{quiet?: boolean}} [options]
  */
-async function loadPacks(packs) {
+async function loadPacks(packs, options = {}) {
   let packList = Array.isArray(packs) ? packs : packs.split(',');
   for (const pack of packList) {
     let packName = pack.trim();
     try {
       await import(`./packs/${packName}-pack.js`);
-      console.log(`  ✔ Pack loaded: ${packName}`);
+      if (!options.quiet) console.log(`  ✔ Pack loaded: ${packName}`);
     } catch (err) {
       console.error(`  ✖ Failed to load pack "${packName}": ${err.message}`);
       process.exit(1);
     }
   }
 }
-
 
 /**
  * Run a workflow JSON file
@@ -113,22 +208,22 @@ async function loadPacks(packs) {
  */
 async function cmdRun(filePath, options) {
   let verbose = !!options.verbose;
-  console.log(`\n🚀 symbiote-node run: ${filePath}\n`);
+  let json = !!options.json;
 
   if (options.pack) {
-    await loadPacks(/** @type {string} */ (options.pack));
+    await loadPacks(/** @type {string} */ (options.pack), { quiet: json });
   }
 
 
   if (options.handlers) {
     let dir = resolve(/** @type {string} */ (options.handlers));
     let types = await loadHandlers(dir);
-    if (verbose) console.log(`  🔧 Loaded ${types.length} handler(s) from ${options.handlers}`);
+    if (verbose && !json) console.log(`  🔧 Loaded ${types.length} handler(s) from ${options.handlers}`);
   }
 
 
   let secrets = await loadSecrets(/** @type {string|undefined} */ (options.secrets));
-  if (Object.keys(secrets).length > 0 && verbose) {
+  if (Object.keys(secrets).length > 0 && verbose && !json) {
     console.log(`  🔑 Secrets loaded: ${Object.keys(secrets).join(', ')}`);
   }
 
@@ -136,10 +231,13 @@ async function cmdRun(filePath, options) {
   let raw = await readFile(resolve(filePath), 'utf-8');
   let workflowData = JSON.parse(raw);
 
-  console.log(`  📄 Workflow: ${workflowData.name || workflowData.id}`);
-  console.log(`  📊 Nodes: ${workflowData.nodes?.length || 0}`);
-  console.log(`  🔗 Connections: ${workflowData.connections?.length || 0}`);
-  console.log();
+  if (!json) {
+    console.log(`\n🚀 symbiote-node run: ${filePath}\n`);
+    console.log(`  📄 Workflow: ${workflowData.name || workflowData.id}`);
+    console.log(`  📊 Nodes: ${workflowData.nodes?.length || 0}`);
+    console.log(`  🔗 Connections: ${workflowData.connections?.length || 0}`);
+    console.log();
+  }
 
 
   let graph = deserialize(raw);
@@ -155,6 +253,26 @@ async function cmdRun(filePath, options) {
     });
 
     let elapsed = (performance.now() - t0).toFixed(1);
+
+    let jsonResult = {
+      command: 'run',
+      file: filePath,
+      success: true,
+      durationMs: parseFloat(elapsed),
+      workflowName: workflowData.name || workflowData.id || null,
+      nodeCount: result.executionOrder.length,
+      executionOrder: result.executionOrder,
+      outputs: result.outputs,
+      log: result.log.map((entry) => ({
+        nodeId: entry.nodeId,
+        nodeName: graph.getNode(entry.nodeId)?.name || entry.nodeId,
+        timeMs: entry.time,
+        skipped: entry.skipped || false,
+      })),
+    };
+
+    if (json) return jsonResult;
+
     console.log(`  ✔ Execution complete in ${elapsed}ms`);
     console.log(`  📋 Execution order: ${result.executionOrder.length} nodes`);
 
@@ -191,8 +309,21 @@ async function cmdRun(filePath, options) {
     }
 
     console.log(`\n✅ Done\n`);
+
+    return jsonResult;
   } catch (err) {
     let elapsed = (performance.now() - t0).toFixed(1);
+
+    let jsonError = {
+      command: 'run',
+      file: filePath,
+      success: false,
+      durationMs: parseFloat(elapsed),
+      error: err.message,
+    };
+
+    if (json) return jsonError;
+
     console.error(`\n  ✖ Execution failed after ${elapsed}ms: ${err.message}\n`);
     process.exit(1);
   }
@@ -204,9 +335,10 @@ async function cmdRun(filePath, options) {
  * @param {Record<string, string|boolean>} options
  */
 async function cmdValidate(filePath, options) {
-  console.log(`\n🔍 symbiote-node validate: ${filePath}\n`);
+  let json = !!options.json;
+  if (!json) console.log(`\n🔍 symbiote-node validate: ${filePath}\n`);
   if (options.pack) {
-    await loadPacks(/** @type {string} */ (options.pack));
+    await loadPacks(/** @type {string} */ (options.pack), { quiet: json });
   }
 
   if (options.handlers) {
@@ -217,15 +349,14 @@ async function cmdValidate(filePath, options) {
   let raw = await readFile(resolve(filePath), 'utf-8');
   let data = JSON.parse(raw);
 
-  let errors = 0;
-  let warnings = 0;
+  let errors = [];
+  let warnings = [];
 
 
   for (const node of data.nodes || []) {
     let typeDef = getNodeType(node.type);
     if (!typeDef) {
-      console.error(`  ✖ Unknown node type: ${node.type} (node: ${node.id})`);
-      errors++;
+      errors.push({ nodeId: node.id, type: node.type, message: `Unknown node type` });
       continue;
     }
 
@@ -233,8 +364,7 @@ async function cmdValidate(filePath, options) {
     let validation = validateParams(node.type, node.params || {});
     if (!validation.valid) {
       for (const err of validation.errors) {
-        console.error(`  ✖ ${node.id} (${node.type}): ${err}`);
-        errors++;
+        errors.push({ nodeId: node.id, type: node.type, message: err });
       }
     }
   }
@@ -243,12 +373,10 @@ async function cmdValidate(filePath, options) {
   let nodeIds = new Set((data.nodes || []).map((n) => n.id));
   for (const conn of data.connections || []) {
     if (!nodeIds.has(conn.from)) {
-      console.error(`  ✖ Connection references unknown source node: ${conn.from}`);
-      errors++;
+      errors.push({ kind: 'connection', from: conn.from, message: 'Unknown source node' });
     }
     if (!nodeIds.has(conn.to)) {
-      console.error(`  ✖ Connection references unknown target node: ${conn.to}`);
-      errors++;
+      errors.push({ kind: 'connection', to: conn.to, message: 'Unknown target node' });
     }
   }
 
@@ -260,20 +388,43 @@ async function cmdValidate(filePath, options) {
   }
   for (const node of data.nodes || []) {
     if (!connectedNodes.has(node.id)) {
-      console.warn(`  ⚠ Orphan node: ${node.id} (${node.type})`);
-      warnings++;
+      warnings.push({ nodeId: node.id, type: node.type, message: 'Orphan node' });
     }
   }
 
+  let errorCount = errors.length;
+  let warningCount = warnings.length;
+
+  let jsonResult = {
+    command: 'validate',
+    file: filePath,
+    valid: errorCount === 0,
+    errors,
+    warnings,
+    errorCount,
+    warningCount,
+  };
+
+  if (json) return jsonResult;
+
+  for (const err of errors) {
+    console.error(`  ✖ ${err.nodeId || err.from || ''} (${err.type || ''}): ${err.message}`);
+  }
+  for (const warn of warnings) {
+    console.warn(`  ⚠ ${warn.nodeId} (${warn.type}): ${warn.message}`);
+  }
+
   console.log();
-  if (errors === 0) {
-    console.log(`  ✅ Valid (${warnings} warning${warnings !== 1 ? 's' : ''})\n`);
+  if (errorCount === 0) {
+    console.log(`  ✅ Valid (${warningCount} warning${warningCount !== 1 ? 's' : ''})\n`);
   } else {
     console.error(
-      `  ❌ ${errors} error${errors !== 1 ? 's' : ''}, ${warnings} warning${warnings !== 1 ? 's' : ''}\n`
+      `  ❌ ${errorCount} error${errorCount !== 1 ? 's' : ''}, ${warningCount} warning${warningCount !== 1 ? 's' : ''}\n`
     );
     process.exit(1);
   }
+
+  return jsonResult;
 }
 
 /**
@@ -281,9 +432,10 @@ async function cmdValidate(filePath, options) {
  * @param {Record<string, string|boolean>} options
  */
 async function cmdList(options) {
-  console.log(`\n📋 symbiote-node node types\n`);
+  let json = !!options.json;
+  if (!json) console.log(`\n📋 symbiote-node node types\n`);
   if (options.pack) {
-    await loadPacks(/** @type {string} */ (options.pack));
+    await loadPacks(/** @type {string} */ (options.pack), { quiet: json });
   }
 
   if (options.handlers) {
@@ -292,6 +444,38 @@ async function cmdList(options) {
   }
 
   let menu = getNodeMenu();
+  let drivers = listDrivers();
+  let total = drivers.length;
+
+  let jsonResult = {
+    command: 'list',
+    total,
+    categories: menu.map((group) => ({
+      category: group.category,
+      nodes: group.nodes.map((node) => {
+        let typeDef = getNodeType(node.type);
+        return {
+          type: node.type,
+          icon: node.icon,
+          description: node.description,
+          inputCount: typeDef?.driver.inputs?.length || 0,
+          outputCount: typeDef?.driver.outputs?.length || 0,
+        };
+      }),
+    })),
+    drivers: drivers.map((d) => ({
+      type: d.type,
+      category: d.category,
+      icon: d.icon,
+      inputs: (d.driver.inputs || []).map((inp) => ({ name: inp.name, type: inp.type, label: inp.label })),
+      outputs: (d.driver.outputs || []).map((out) => ({ name: out.name, type: out.type, label: out.label })),
+      description: d.driver.description,
+      params: Object.entries(d.driver.params || {}).map(([name, p]) => ({ name, type: p.type, required: p.required, default: p.default })),
+    })),
+  };
+
+  if (json) return jsonResult;
+
   for (const group of menu) {
     console.log(`  ═══ ${group.category.toUpperCase()} ═══`);
     for (const node of group.nodes) {
@@ -303,18 +487,51 @@ async function cmdList(options) {
     console.log();
   }
 
-  let total = listDrivers().length;
   console.log(`  Total: ${total} node types\n`);
+
+  return jsonResult;
 }
 
 /**
  * Inspect a workflow — show structure without executing
  * @param {string} filePath
+ * @param {Record<string, string|boolean>} [options]
  */
-async function cmdInspect(filePath) {
-  console.log(`\n🔎 symbiote-node inspect: ${filePath}\n`);
+async function cmdInspect(filePath, options = {}) {
+  let json = !!options.json;
+  if (!json) console.log(`\n🔎 symbiote-node inspect: ${filePath}\n`);
   let raw = await readFile(resolve(filePath), 'utf-8');
   let data = JSON.parse(raw);
+
+  let nodes = (data.nodes || []).map((node) => ({
+    id: node.id,
+    type: node.type,
+    name: node.name || null,
+    params: node.params || {},
+    paramKeys: Object.keys(node.params || {}),
+  }));
+
+  let connections = (data.connections || []).map((conn) => ({
+    from: conn.from,
+    out: conn.out,
+    to: conn.to,
+    in: conn.in,
+  }));
+
+  let jsonResult = {
+    command: 'inspect',
+    file: filePath,
+    name: data.name || null,
+    id: data.id || null,
+    version: data.version || null,
+    nodeCount: nodes.length,
+    connectionCount: connections.length,
+    nodes,
+    connections,
+    execution: data.execution || null,
+  };
+
+  if (json) return jsonResult;
 
   console.log(`  Name: ${data.name || '(unnamed)'}`);
   console.log(`  ID: ${data.id || '(none)'}`);
@@ -341,6 +558,96 @@ async function cmdInspect(filePath) {
   }
 
   console.log();
+
+  return jsonResult;
+}
+
+/**
+ * Discover — expose manifests, rules, themes, schemas, and registry for agents.
+ * Always outputs machine-readable JSON.
+ * @param {Record<string, string|boolean>} [options]
+ */
+async function cmdDiscover(options = {}) {
+  if (options.pack) {
+    await loadPacks(/** @type {string} */ (options.pack), { quiet: true });
+  }
+
+  if (options.handlers) {
+    let dir = resolve(/** @type {string} */ (options.handlers));
+    await loadHandlers(dir);
+  }
+
+  let drivers = listDrivers();
+  let menu = getNodeMenu();
+  let socketTypes = getAllSocketTypes();
+  let packs = listPacks();
+
+  let data = {
+    command: 'discover',
+    package: {
+      name: PKG.name,
+      version: PKG.version,
+      description: PKG.description,
+    },
+    exports: {
+      subpaths: listPackageExportSubpaths(),
+      entrypoints: EXPORT_ENTRYPOINTS,
+    },
+    registry: {
+      totalDrivers: drivers.length,
+      drivers: drivers.map((d) => ({
+        type: d.type,
+        category: d.category,
+        icon: d.icon,
+        inputs: (d.driver.inputs || []).map((inp) => ({ name: inp.name, type: inp.type, label: inp.label })),
+        outputs: (d.driver.outputs || []).map((out) => ({ name: out.name, type: out.type, label: out.label })),
+        description: d.driver.description,
+        params: Object.entries(d.driver.params || {}).map(([name, p]) => ({ name, type: p.type, required: p.required, default: p.default })),
+      })),
+      menu: menu.map((group) => ({
+        category: group.category,
+        nodes: group.nodes,
+      })),
+      packs,
+    },
+    socketTypes: [...socketTypes.entries()].map(([name, s]) => ({
+      name,
+      label: s.label || name,
+      color: s.color || null,
+      description: s.description || null,
+    })),
+    manifest: {
+      components: COMPONENTS.map((c) => ({
+        tagName: c.tagName,
+        className: c.className,
+        module: c.module,
+        category: c.category,
+        description: c.description,
+      })),
+      themes: THEME_NAMES.map((name) => ({
+        name,
+        ...getTheme(name),
+        tokens: getThemeTokens(name),
+      })),
+      tokenFiles: listTokenFiles(),
+      rulesets: RULESETS.map((rs) => ({
+        name: rs.name,
+        version: rs.version,
+        path: rs.path,
+        description: rs.description,
+        rules: listRules().filter((r) => true),
+      })),
+      rules: listRules(),
+      schemas: GRAPH_SCHEMA_VERSIONS.map((sv) => ({
+        version: sv.version,
+        path: sv.path,
+        description: sv.description,
+        ...getGraphSchema(sv.version),
+      })),
+    },
+  };
+
+  return data;
 }
 
 
@@ -351,16 +658,17 @@ Commands:
   validate <file.workflow.json>  Validate without executing
   list                           List all registered node types
   inspect <file.workflow.json>   Show workflow structure
+  discover                       Output machine-readable registry + manifests (for agents)
   serve <file.workflow.json>     Start WebSocket + HTTP server
 
 Options:
-  --pack <name>      Load domain pack (e.g. "custom")  --handlers <dir>   Load handler files from directory
+  --json             Output machine-readable JSON (run, validate, list, inspect)
+  --pack <name>      Load domain pack (e.g. "custom")
+  --handlers <dir>   Load handler files from directory
   --secrets <path>   Path to secrets.json
   --port <number>    Server port (default: 3100)
   --verbose          Show detailed execution log
 `;
-
-let { command, target, options } = parseArgs(process.argv);
 
 let cliMap = {
   run: async () => {
@@ -368,27 +676,51 @@ let cliMap = {
       console.error('Usage: symbiote-node run <file.workflow.json>');
       process.exit(1);
     }
-    await cmdRun(target, options);
+    let result = await cmdRun(target, options);
+    if (options.json && result) {
+      process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+      if (!result.success) process.exit(1);
+    }
+    return result;
   },
   validate: async () => {
     if (!target) {
       console.error('Usage: symbiote-node validate <file.workflow.json>');
       process.exit(1);
     }
-    await cmdValidate(target, options);
+    let result = await cmdValidate(target, options);
+    if (options.json && result) {
+      process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+      if (!result.valid) process.exit(1);
+    }
+    return result;
   },
   list: async () => {
-    await cmdList(options);
+    let result = await cmdList(options);
+    if (options.json && result) {
+      process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    }
+    return result;
   },
   inspect: async () => {
     if (!target) {
       console.error('Usage: symbiote-node inspect <file.workflow.json>');
       process.exit(1);
     }
-    await cmdInspect(target);
+    let result = await cmdInspect(target, options);
+    if (options.json && result) {
+      process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    }
+    return result;
+  },
+  discover: async () => {
+    let result = await cmdDiscover(options);
+    process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    return result;
   },
   serve: async () => {
     let port = parseInt(options.port) || 3100;
+    let { createServer } = await import('./GraphServer.js');
     await createServer({
       port,
       workflowFile: target,
@@ -399,9 +731,18 @@ let cliMap = {
   },
 };
 
+let { command, target, options } = parseArgs(process.argv);
+
 let handler = cliMap[command];
-if (handler) {
+
+
+export { cmdRun, cmdValidate, cmdList, cmdInspect, cmdDiscover, parseArgs };
+
+let isMain = fileURLToPath(import.meta.url) === process.argv[1];
+
+if (isMain && handler) {
   await handler();
-} else {
+} else if (isMain) {
   console.log(HELP);
+  if (command && command !== '--help' && command !== '-h') process.exit(1);
 }

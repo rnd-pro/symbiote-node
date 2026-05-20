@@ -355,7 +355,7 @@ export class CanvasConnectionRenderer {
         coords = this.#plotPath(ctx, connection);
       } catch (err) {
         if (CanvasConnectionRenderer.debug) {
-          console.warn('🟡 Path failed:', err);
+          console.warn('[CanvasConnectionRenderer] Path failed:', err);
         }
       }
       if (!coords) return;
@@ -859,14 +859,6 @@ export class CanvasConnectionRenderer {
 
       pts.push({ x: stubToX, y: stubToY });
       pts.push({ x: endX, y: endY });
-
-
-      if (CanvasConnectionRenderer.debug) {
-        let fromLabel = fromEl._nodeData?.label || conn.from;
-        let toLabel = toEl._nodeData?.label || conn.to;
-        console.log(`🔄 [PCB] ${fromLabel} → ${toLabel} | waypoints=${pts.length}`);
-      }
-
 
       let path = `M ${pts[0].x} ${pts[0].y}`;
       for (let i = 1; i < pts.length; i++) {

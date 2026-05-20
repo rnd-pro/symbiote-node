@@ -79,6 +79,7 @@ export let CARBON = {
     '--sn-cat-control': '#ff9800',
     '--sn-cat-data': '#9c27b0',
     '--sn-cat-default': '#666666',
+    '--sn-subgraph-accent': 'var(--sn-cat-data)',
 
 
     '--sn-ctx-bg': '#2a2a2a',

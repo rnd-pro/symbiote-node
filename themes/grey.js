@@ -79,6 +79,7 @@ export let GREY_NEUTRAL = {
     '--sn-cat-control': 'hsl(var(--sn-hue-warning), var(--sn-sat-vivid), 60%)',
     '--sn-cat-data': 'hsl(var(--sn-hue-data), var(--sn-sat-vivid), 68%)',
     '--sn-cat-default': 'hsl(0, 0%, 60%)',
+    '--sn-subgraph-accent': 'var(--sn-cat-data)',
 
 
     '--sn-ctx-bg': 'hsl(0, 0%, 22%)',

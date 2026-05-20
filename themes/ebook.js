@@ -80,6 +80,7 @@ export let EBOOK = {
     '--sn-cat-control': 'hsl(35, 50%, 45%)',
     '--sn-cat-data': 'hsl(250, 35%, 50%)',
     '--sn-cat-default': 'hsl(30, 8%, 48%)',
+    '--sn-subgraph-accent': 'var(--sn-cat-data)',
 
 
     '--sn-ctx-bg': 'hsl(40, 30%, 96%)',

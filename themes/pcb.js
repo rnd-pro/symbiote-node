@@ -32,6 +32,7 @@ export let PCB_DARK = {
     '--sn-node-hover': '#2d2d2d',
 
 
+    '--sn-font': "'Inter', sans-serif",
     '--sn-text': '#e0e0e0',
     '--sn-text-dim': '#888888',
 
@@ -63,6 +64,7 @@ export let PCB_DARK = {
     '--sn-cat-control': '#d4a04a',
     '--sn-cat-data': '#5c8dbf',
     '--sn-cat-default': '#555555',
+    '--sn-subgraph-accent': 'var(--sn-cat-data)',
 
     '--sn-cat-directory': '#f0b840',
     '--sn-cat-file': '#5cb8ff',

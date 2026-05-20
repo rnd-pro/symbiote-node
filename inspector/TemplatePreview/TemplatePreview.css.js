@@ -91,12 +91,12 @@ export let styles = css`
     font-size: 11px;
     font-family: 'SF Mono', 'Fira Code', monospace;
     border-radius: 10px;
-    background: color-mix(in srgb, #4caf50 20%, transparent);
+    background: color-mix(in srgb, var(--sn-success-color, #4caf50) 20%, transparent);
     color: var(--sn-success-color, #81c784);
     border: 1px solid rgba(76, 175, 80, 0.3);
 
     &[data-missing] {
-      background: color-mix(in srgb, #f44336 20%, transparent);
+      background: color-mix(in srgb, var(--sn-danger-color, #f44336) 20%, transparent);
       color: var(--sn-danger-color, #ef9a9a);
       border-color: rgba(244, 67, 54, 0.3);
     }

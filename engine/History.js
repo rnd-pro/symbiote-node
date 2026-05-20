@@ -9,7 +9,7 @@
 
 const MAX_HISTORY = 50;
 
-export class History {
+export class GraphHistory {
   /** @type {Array<{nodes: object[], connections: object[]}>} */
   _states = [];
 
@@ -88,3 +88,5 @@ export class History {
     return JSON.parse(JSON.stringify(state));
   }
 }
+
+export { GraphHistory as History };

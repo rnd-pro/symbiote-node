@@ -19,6 +19,8 @@ export { DARK_PALETTE } from './dark.js';
 export { LIGHT_PALETTE } from './light.js';
 export { SYNTHWAVE_PALETTE } from './synthwave.js';
 export { GREY_PALETTE } from './grey.js';
+export { AGENT_PORTAL_PALETTE } from './agent-portal.js';
+export { AGENT_PORTAL_PALETTE as DEFAULT_PALETTE } from './agent-portal.js';
 
 /**
  * Apply palette to element

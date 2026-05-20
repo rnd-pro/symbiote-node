@@ -226,17 +226,11 @@ export class ConnectionRenderer {
     }
   }
 
-  static _refreshCycleCount = 0;
-  static _lastRefreshTime = 0;
-
   /**
    * Clear all caches and re-render every connection + free dots.
    * Call after initial node positioning to let SVG connectors settle.
    */
   refreshAll() {
-    let t0 = performance.now();
-    ConnectionRenderer._refreshCycleCount = (ConnectionRenderer._refreshCycleCount || 0) + 1;
-
     this.#clearAllSlots();
 
 
@@ -346,13 +340,6 @@ export class ConnectionRenderer {
           let pos = shape.getSidePosition(nodeSide, t, size);
           let cacheKey = `${item.portKey}:${item.portSide}`;
           el._slotCache.set(cacheKey, { x: pos.x, y: pos.y, angle: pos.angle });
-
-          if (ConnectionRenderer.debug) {
-            let label = el._nodeData?.label || nodeId;
-            console.log(
-              `🔄 [PIN] ${label} | ${item.portSide}:${item.portKey} → side=${nodeSide} t=${t.toFixed(2)} pos=(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}) angle=${pos.angle}°`
-            );
-          }
         });
       }
     }
@@ -369,45 +356,6 @@ export class ConnectionRenderer {
       }
     }
 
-
-    if (ConnectionRenderer.debug && this._allSegments) {
-      let overlaps = 0;
-      for (let i = 0; i < this._allSegments.length; i++) {
-        for (let j = i + 1; j < this._allSegments.length; j++) {
-          let s1 = this._allSegments[i];
-          let s2 = this._allSegments[j];
-          if (s1.connId === s2.connId) continue;
-
-
-          if (s1.p1.y === s1.p2.y && s2.p1.y === s2.p2.y && s1.p1.y === s2.p1.y) {
-            let minX1 = Math.min(s1.p1.x, s1.p2.x),
-              maxX1 = Math.max(s1.p1.x, s1.p2.x);
-            let minX2 = Math.min(s2.p1.x, s2.p2.x),
-              maxX2 = Math.max(s2.p1.x, s2.p2.x);
-            if (Math.max(minX1, minX2) + 5 < Math.min(maxX1, maxX2)) {
-              console.log(
-                `🟡 [PCB DEBUG] Trace Overlap (Horizontal) Y=${s1.p1.y}: conn[${s1.connId}] overlaps conn[${s2.connId}]`
-              );
-              overlaps++;
-            }
-          }
-
-          if (s1.p1.x === s1.p2.x && s2.p1.x === s2.p2.x && s1.p1.x === s2.p1.x) {
-            let minY1 = Math.min(s1.p1.y, s1.p2.y),
-              maxY1 = Math.max(s1.p1.y, s1.p2.y);
-            let minY2 = Math.min(s2.p1.y, s2.p2.y),
-              maxY2 = Math.max(s2.p1.y, s2.p2.y);
-            if (Math.max(minY1, minY2) + 5 < Math.min(maxY1, maxY2)) {
-              console.log(
-                `🟡 [PCB DEBUG] Trace Overlap (Vertical) X=${s1.p1.x}: conn[${s1.connId}] overlaps conn[${s2.connId}]`
-              );
-              overlaps++;
-            }
-          }
-        }
-      }
-      if (overlaps > 0) console.log(`🟡 [PCB DEBUG] Found ${overlaps} inter-trace overlaps.`);
-    }
     this._allSegments = null;
     this._nodeRectCache = null;
 
@@ -415,24 +363,6 @@ export class ConnectionRenderer {
     this.#svgLayer.style.display = originalSvgDisplay;
     this.#dotLayer.style.display = originalDotDisplay;
 
-
-    if (ConnectionRenderer.debug) {
-      let t1 = performance.now();
-      let mem = performance?.memory?.usedJSHeapSize
-        ? (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2) + 'MB'
-        : 'N/A';
-      console.log(
-        `🔄 [PCB PERF] refreshAll cycle #${ConnectionRenderer._refreshCycleCount} took ${(t1 - t0).toFixed(2)}ms | Mem: ${mem}`
-      );
-
-      let dt = t0 - (ConnectionRenderer._lastRefreshTime || 0);
-      if (ConnectionRenderer._lastRefreshTime > 0 && dt < 16) {
-        console.log(
-          `🟡 [PCB PERF] High refresh rate detected! dt=${dt.toFixed(2)}ms (possible rendering loop or layout oscillation)`
-        );
-      }
-      ConnectionRenderer._lastRefreshTime = t0;
-    }
   }
 
   /**
@@ -910,49 +840,6 @@ export class ConnectionRenderer {
       pts.push({ x: endX, y: endY });
 
 
-      let debugCollisions = [];
-
-
-      for (let i = 0; i < pts.length - 1; i++) {
-        let segX1 = Math.min(pts[i].x, pts[i + 1].x);
-        let segY1 = Math.min(pts[i].y, pts[i + 1].y);
-        let segX2 = Math.max(pts[i].x, pts[i + 1].x);
-        let segY2 = Math.max(pts[i].y, pts[i + 1].y);
-
-        let iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
-        for (const rect of iter) {
-          if (rect.id === conn.from || rect.id === conn.to) continue;
-
-          let nx = rect.x,
-            ny = rect.y;
-          let nw = rect.w,
-            nh = rect.h;
-
-          if (segX1 < nx + nw && segX2 > nx && segY1 < ny + nh && segY2 > ny) {
-            debugCollisions.push(
-              `Node Collision: (${pts[i].x},${pts[i].y})->(${pts[i + 1].x},${pts[i + 1].y}) intersects Node[${rect.id}]`
-            );
-          }
-        }
-      }
-
-
-      for (let i = 0; i < pts.length - 2; i++) {
-        let p1 = pts[i],
-          p2 = pts[i + 1],
-          p3 = pts[i + 2];
-        let v1x = p2.x - p1.x,
-          v1y = p2.y - p1.y;
-        let v2x = p3.x - p2.x,
-          v2y = p3.y - p2.y;
-        if (v1x * v2x < 0 || v1y * v2y < 0) {
-          debugCollisions.push(
-            `180° Fold: at (${p2.x},${p2.y}) turning back toward (${p3.x},${p3.y})`
-          );
-        }
-      }
-
-
       if (!this._allSegments) this._allSegments = [];
       let segments = [];
       for (let i = 0; i < pts.length - 1; i++) {
@@ -964,17 +851,6 @@ export class ConnectionRenderer {
         });
       }
       this._allSegments.push(...segments);
-
-
-      if (ConnectionRenderer.debug) {
-        let fromLabel = fromEl._nodeData?.label || conn.from;
-        let toLabel = toEl._nodeData?.label || conn.to;
-        let msg = `[PCB] ${fromLabel} → ${toLabel} | waypoints=${pts.length}`;
-        if (debugCollisions.length > 0) {
-          msg += ` | ERRS: ` + debugCollisions.join(' | ');
-        }
-        console.log(msg);
-      }
 
 
       let path = `M ${pts[0].x} ${pts[0].y}`;

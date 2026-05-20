@@ -1,11 +1,10 @@
 {
-  "name": "symbiote-node",
-  "version": "0.2.0",
+  "name": "@symbiote-node/engine-internal",
+  "version": "0.3.0-alpha.2",
   "description": "Universal node-based execution engine. Domain-agnostic graph runtime.",
+  "private": true,
   "type": "module",
   "main": "index.js",
-  "bin": {
-    "symbiote-node": "./cli.js"  },
   "exports": {
     ".": "./index.js",
     "./cli": "./cli.js",

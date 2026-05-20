@@ -1,0 +1,87 @@
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+
+let hadCustomElements;
+let hadHTMLElement;
+let hadWindow;
+let hadDocument;
+let hadCSSStyleSheet;
+let getSourceLanguage;
+let isDirectoryLikePath;
+let buildDirectoryInfo;
+
+before(async () => {
+  hadCustomElements = 'customElements' in globalThis;
+  hadHTMLElement = 'HTMLElement' in globalThis;
+  hadWindow = 'window' in globalThis;
+  hadDocument = 'document' in globalThis;
+  hadCSSStyleSheet = 'CSSStyleSheet' in globalThis;
+
+  globalThis.HTMLElement = class {};
+  globalThis.window = globalThis;
+  globalThis.CSSStyleSheet = class {
+    replaceSync(cssText) {
+      this.cssText = cssText;
+    }
+  };
+  globalThis.customElements = {
+    define() {},
+    get() {
+      return null;
+    },
+  };
+  globalThis.document = { createElement() { return { content: { cloneNode() {} } }; } };
+
+  ({
+    buildDirectoryInfo,
+    getSourceLanguage,
+    isDirectoryLikePath,
+  } = await import('../display/SourceViewer/SourceViewer.js'));
+});
+
+after(() => {
+  if (!hadCustomElements) delete globalThis.customElements;
+  if (!hadHTMLElement) delete globalThis.HTMLElement;
+  if (!hadWindow) delete globalThis.window;
+  if (!hadDocument) delete globalThis.document;
+  if (!hadCSSStyleSheet) delete globalThis.CSSStyleSheet;
+});
+
+describe('SourceViewer display helpers', () => {
+  it('detects language from common source and asset paths', () => {
+    assert.equal(getSourceLanguage('src/app.js'), 'js');
+    assert.equal(getSourceLanguage('README.md'), 'md');
+    assert.equal(getSourceLanguage('assets/logo.png'), 'image');
+    assert.equal(getSourceLanguage('Dockerfile'), 'dockerfile');
+  });
+
+  it('detects directories from generic directory indexes', () => {
+    let directoryIndex = {
+      directories: ['src', 'src/components', 'docs/reference'],
+    };
+
+    assert.equal(isDirectoryLikePath('src', directoryIndex), true);
+    assert.equal(isDirectoryLikePath('docs', directoryIndex), true);
+    assert.equal(isDirectoryLikePath('README', directoryIndex), false);
+    assert.equal(isDirectoryLikePath('src/app.js', directoryIndex), false);
+  });
+
+  it('formats normalized directory metadata without project-specific skeleton fields', () => {
+    let info = buildDirectoryInfo('src', {
+      subdirectories: ['components'],
+      files: ['app.js', 'style.css'],
+      fileTypes: { '.js': 3, '.css': 1 },
+      totalFiles: 4,
+      totalSubdirectories: 1,
+      symbolCount: 2,
+    });
+
+    assert.match(info, /Directory: src/);
+    assert.match(info, /Subdirectories \(1\):/);
+    assert.match(info, /Files \(2\):/);
+    assert.match(info, /\.js\s+3/);
+    assert.match(info, /Total: 4 files across 1 subdirectories/);
+    assert.match(info, /Symbols: 2 exported nodes in this directory/);
+    assert.doesNotMatch(info, /skeleton/i);
+  });
+});

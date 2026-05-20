@@ -19,6 +19,8 @@ export { LIGHT_CLEAN } from './light.js';
 export { SYNTHWAVE } from './synthwave.js';
 export { GREY_NEUTRAL } from './grey.js';
 export { NEON_GLOW } from './neon.js';
+export { AGENT_PORTAL } from './agent-portal.js';
+export { AGENT_PORTAL as DEFAULT_THEME } from './agent-portal.js';
 
 /**
  * Mapping from layout global tokens to symbiote-node tokens.

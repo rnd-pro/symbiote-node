@@ -79,6 +79,7 @@ export let SYNTHWAVE = {
     '--sn-cat-control': 'hsl(var(--sn-hue-warning), var(--sn-sat-vivid), 50%)',
     '--sn-cat-data': 'hsl(var(--sn-hue-data), var(--sn-sat-vivid), 50%)',
     '--sn-cat-default': 'hsl(var(--sn-hue-base), 20%, var(--sn-lit-text-dim))',
+    '--sn-subgraph-accent': 'var(--sn-cat-data)',
 
 
     '--sn-ctx-bg': 'hsl(var(--sn-hue-base), var(--sn-sat), var(--sn-lit-surface))',

@@ -1,0 +1,97 @@
+/**
+ * Package resolution contract tests for symbiote-node.
+ *
+ * These tests exercise package self-resolution through package.json#exports,
+ * not local relative file imports.
+ *
+ * Run: node --test tests/package-resolution.test.js
+ */
+
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+
+describe('package exports resolution', () => {
+  it('exposes stable public entrypoints', async () => {
+    let root = await import('symbiote-node');
+    let ui = await import('symbiote-node/ui');
+    let engine = await import('symbiote-node/engine');
+    let manifest = await import('symbiote-node/manifest');
+    let layout = await import('symbiote-node/layout');
+    let markdownFormatter = await import('symbiote-node/display/markdown-formatter');
+
+    assert.equal(typeof root.NodeEditor, 'function');
+    assert.equal(typeof root.createForceLayoutPayload, 'function');
+    assert.equal(typeof ui.ForceLayout, 'function');
+    assert.equal(typeof ui.computeInitialGraphPositions, 'function');
+    assert.ok('Layout' in ui, 'UI entrypoint must expose Layout binding');
+    assert.ok('CellBg' in ui, 'UI entrypoint must expose CellBg binding');
+    assert.ok('ChatTranscript' in ui, 'UI entrypoint must expose ChatTranscript binding');
+    assert.ok('ChatComposer' in ui, 'UI entrypoint must expose ChatComposer binding');
+    assert.ok('ChatList' in ui, 'UI entrypoint must expose ChatList binding');
+    assert.ok('ChatListItem' in ui, 'UI entrypoint must expose ChatListItem binding');
+    assert.ok('TreeView' in ui, 'UI entrypoint must expose TreeView binding');
+    assert.equal(typeof ui.sharedUiStyles, 'string');
+    assert.match(ui.sharedUiStyles, /\.ui-container/);
+    assert.equal(typeof ui.escapeHtml, 'function');
+    assert.equal(typeof ui.uiAlert, 'function');
+    assert.equal(typeof ui.uiConfirm, 'function');
+    assert.equal(typeof ui.uiPrompt, 'function');
+    assert.ok('SourceEditor' in ui, 'UI entrypoint must expose SourceEditor binding');
+    assert.ok('navigate' in ui, 'UI entrypoint must expose router binding');
+    assert.equal(typeof engine.Graph, 'function');
+    assert.equal(typeof manifest.listComponents, 'function');
+    assert.equal(typeof layout.createSectionRegistry, 'function');
+    assert.equal(typeof layout.LayoutTree.collectPanels, 'function');
+    assert.equal(typeof layout.setupPanelRouting, 'function');
+    assert.equal(typeof layout.navigate, 'function');
+    assert.ok(!('Layout' in layout), 'Layout entrypoint must stay SSR-safe; use symbiote-node/ui for components');
+    assert.equal(typeof markdownFormatter.formatMarkdown, 'function');
+    assert.equal(typeof markdownFormatter.escapeHtml, 'function');
+  });
+
+  it('exposes markdown formatting as a reusable display utility', async () => {
+    let { formatMarkdown } = await import('symbiote-node/display/markdown-formatter');
+
+    let html = formatMarkdown('**Ready** `@[src/app.js]`');
+
+    assert.match(html, /<strong>Ready<\/strong>/);
+    assert.match(html, /<span class="markdown-mention">@\[src\/app\.js\]<\/span>/);
+  });
+
+  it('keeps browser implementation deep imports private', async () => {
+    let privateSubpaths = [
+      'symbiote-node/ui/index.js',
+      'symbiote-node/canvas/ForceLayout.js',
+      'symbiote-node/layout/Layout/Layout.js',
+      'symbiote-node/interactions/Drag.js',
+      'symbiote-node/node/GraphNode/GraphNode.js',
+      'symbiote-node/toolbar/QuickToolbar/QuickToolbar.js',
+      'symbiote-node/inspector/InspectorPanel/InspectorPanel.js',
+      'symbiote-node/palette/PaletteBrowser/PaletteBrowser.js',
+      'symbiote-node/menu/ContextMenu/ContextMenu.js',
+      'symbiote-node/navigation/QuickOpen/QuickOpen.js',
+      'symbiote-node/effects/CellBg/CellBg.js',
+      'symbiote-node/chat/message-model.js',
+      'symbiote-node/chat/ChatMessageItem/ChatMessageItem.js',
+      'symbiote-node/chat/ChatTranscript/ChatTranscript.js',
+      'symbiote-node/chat/ChatComposer/ChatComposer.js',
+      'symbiote-node/chat/ChatList/ChatList.js',
+      'symbiote-node/chat/ChatListItem/ChatListItem.js',
+      'symbiote-node/chat/ChatSidebar/ChatSidebar.js',
+      'symbiote-node/chat/ChatSidebarItem/ChatSidebarItem.js',
+      'symbiote-node/tree/TreeView/TreeView.js',
+      'symbiote-node/layout/ProjectTabs/ProjectTabs.js',
+      'symbiote-node/display/CodeBlock/CodeBlock.js',
+      'symbiote-node/display/SourceViewer/SourceViewer.js',
+      'symbiote-node/display/SourceEditor/SourceEditor.js',
+    ];
+
+    for (let specifier of privateSubpaths) {
+      await assert.rejects(
+        import(specifier),
+        (error) => error?.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED',
+        `${specifier} must be private; use symbiote-node/ui`
+      );
+    }
+  });
+});

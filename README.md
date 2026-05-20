@@ -15,7 +15,8 @@ A **visual node graph editor** and **execution engine** built on [Symbiote.js](h
 The editor constructs visual node graphs from a data model. Nodes have typed input/output ports with compatibility validation, color-coded category headers, inline controls, and drag & drop with snap-to-grid. Connections render as SVG Bézier curves with gradient coloring.
 
 ```javascript
-import { NodeEditor, Node, Socket, Input, Output, NodeCanvas } from 'symbiote-node';
+import { NodeEditor, Node, Socket, Input, Output } from 'symbiote-node';
+import { NodeCanvas } from 'symbiote-node/ui';
 
 const editor = new NodeEditor();
 const socket = new Socket('data', { color: '#4a9eff' });
@@ -33,19 +34,151 @@ const canvas = document.querySelector('node-canvas');
 canvas.setEditor(editor);
 ```
 
+The root `symbiote-node` entrypoint is Node-safe and does not register browser custom elements. Browser UI modules live in `symbiote-node/ui`; in SSR or pure Node imports, browser-only exports are present but resolve to `undefined` until DOM globals are available.
+
+### Source Display And Editing
+
+`CodeBlock`, `SourceViewer`, and `SourceEditor` are reusable browser-only modules from `symbiote-node/ui`. Host applications provide file loading and persistence; the library owns rendering, markdown/code display, editable source text state, dirty state, readonly/disabled behavior, focus helpers, and tab insertion.
+
+```javascript
+import { SourceEditor, SourceViewer } from 'symbiote-node/ui';
+
+const editor = document.querySelector('source-editor');
+editor.setContent('# Notes');
+editor.addEventListener('source-editor-input', (event) => {
+  saveDraft(event.detail.value);
+});
+
+const viewer = document.querySelector('source-viewer');
+viewer.showFile({ path: 'README.md', raw: editor.getContent(), lang: 'md' });
+```
+
+### List UI
+
+`ListItem` is a generic browser-only list primitive from `symbiote-node/ui`. It owns neutral item presentation, active/disabled state, keyboard selection, and the `sn-list-item-select` event; host applications decide routing, persistence, and item-specific actions.
+
+```javascript
+import { ListItem } from 'symbiote-node/ui';
+
+const item = document.querySelector('sn-list-item');
+item.setItem({
+  label: 'Build',
+  description: 'Run the default build task',
+  icon: 'play_arrow',
+  meta: 'local',
+  active: false,
+});
+
+item.addEventListener('sn-list-item-select', (event) => {
+  runItem(event.detail.item);
+});
+```
+
+### Tree UI
+
+`TreeView` is a generic browser-only tree primitive from `symbiote-node/ui`. It owns neutral tree rendering, selection, expansion state, branch-aware filtering, optional expanded-state persistence, and drag payload events. Host applications provide data, routing, file loading, and persistence policy.
+
+```javascript
+import { TreeView } from 'symbiote-node/ui';
+
+const tree = document.querySelector('sn-tree-view');
+
+tree.setItems([
+  {
+    id: 'src',
+    label: 'src',
+    kind: 'folder',
+    icon: 'folder',
+    path: '/src',
+    children: [
+      {
+        id: 'src-app',
+        label: 'app.js',
+        kind: 'file',
+        icon: 'code',
+        path: '/src/app.js',
+        badges: ['js'],
+        draggable: true,
+        payload: { path: '/src/app.js' },
+      },
+    ],
+  },
+]);
+
+tree.expandedIds = ['src'];
+tree.filterText = 'app';
+tree.addEventListener('sn-tree-select', (event) => {
+  openItem(event.detail.item);
+});
+```
+
+### Chat UI
+
+Reusable chat primitives are browser-only exports from `symbiote-node/ui`. `ChatTranscript` owns transcript rendering, scroll controls, live status, copy feedback, and delegation-card events. `ChatComposer` owns the textarea, context chips, footer controls, send/stop affordance, drag/drop host, and autocomplete container. `ChatList` and `ChatListItem` own reusable chat-list display, filters, nesting, selection, creation, and delete events. Host applications keep transport, routing, persistence, autocomplete data, and model/provider policy.
+
+```javascript
+import { ChatComposer, ChatList, ChatTranscript, buildChatMessageItems } from 'symbiote-node/ui';
+
+const transcript = document.querySelector('chat-transcript');
+const { items } = buildChatMessageItems(messages, { hasActiveStream: true });
+
+transcript.setMessageItems(items);
+transcript.addEventListener('delegation-card-open', (event) => {
+  openChat(event.detail.chatId);
+});
+
+const composer = document.querySelector('chat-composer');
+composer.setFooterHtml(providerControlsHtml);
+composer.addEventListener('chat-composer-submit', () => sendMessage(composer.getInputElement().value));
+
+const list = document.querySelector('chat-list');
+list.setItems(chatItems);
+list.addEventListener('chat-list-select', (event) => openChat(event.detail.id));
+```
+
+### Shared UI Styles
+
+`sharedUiStyles` is the reusable class recipe layer for browser components that need standard panel shells, buttons, cards, forms, lists, badges, banners, and empty states. The module is a plain string export from `symbiote-node/ui`, backed by `--sn-*` design tokens, and is safe to import without DOM globals.
+
+```javascript
+import { sharedUiStyles } from 'symbiote-node/ui';
+import panelStyles from './my-panel.css.js';
+
+MyPanel.rootStyles = sharedUiStyles + panelStyles;
+```
+
+`uiAlert`, `uiConfirm`, and `uiPrompt` provide light DOM dialog helpers with scoped `sn-dialog-*` styles and escaped message/default text.
+
+```javascript
+import { uiConfirm } from 'symbiote-node/ui';
+
+if (await uiConfirm('Delete this item?')) {
+  deleteItem();
+}
+```
+
 ### Execution Engine
 
 Server-side graph runtime with handler packs for data flow, control flow, I/O, and transforms. Graphs serialize to JSON and execute with topological ordering, retry logic, and parallel barriers.
 
 ```javascript
-import { Graph, Executor, Registry } from 'symbiote-node/engine';
+import { Graph, Executor, loadHandlers } from 'symbiote-node/engine';
 
-const registry = new Registry();
-await registry.loadDir('./engine/packs');
+await loadHandlers('./engine/packs');
 
-const graph = Graph.fromFile('workflow.json');
-const executor = new Executor(graph, registry);
-const results = await executor.run();
+const graph = new Graph({
+  version: 'v1',
+  nodes: [
+    { id: 'source', type: 'compound/input', params: { value: 'hello' } },
+    { id: 'result', type: 'compound/output', params: {} }
+  ],
+  connections: [
+    { from: 'source', out: 'data', to: 'result', in: 'data' }
+  ]
+});
+
+const executor = new Executor();
+const results = await executor.run(graph);
 ```
 
 ### Node Shapes
@@ -67,7 +200,8 @@ Separate **Palette** (colors), **Skin** (geometry), and **Theme** (combined) lay
 
 | Theme | Description |
 |-------|-------------|
-| `GREY_NEUTRAL` | Balanced grey UI (default) |
+| `AGENT_PORTAL` | Agent Portal design system (default) |
+| `GREY_NEUTRAL` | Balanced grey UI |
 | `DARK_DEFAULT` | Professional dark interface |
 | `LIGHT_CLEAN` | Light mode |
 | `SYNTHWAVE` | Neon retro aesthetic |
@@ -87,7 +221,59 @@ applyPalette(canvasElement, SYNTHWAVE_PALETTE); // Colors only
 Binary Space Partitioning layout engine for IDE-style panel workspaces. Panels resize by dragging dividers, sections split horizontally or vertically. Sidebar navigation with section switching and panel routing.
 
 ```javascript
-import { Layout, LayoutTree, LayoutSidebar } from 'symbiote-node';
+import { Layout, LayoutTree, LayoutSidebar } from 'symbiote-node/ui';
+```
+
+For library consumers that only need layout tree and section registry primitives, use the lighter `symbiote-node/layout` entrypoint. It exposes pure layout helpers without requiring DOM globals or graph editor modules:
+
+```javascript
+import {
+  LayoutTree,
+  createSectionRegistry,
+  withGlobalPanel,
+} from 'symbiote-node/layout';
+
+const registry = createSectionRegistry();
+
+registry.registerSection('explorer', {
+  icon: 'folder',
+  label: 'Explorer',
+  scope: 'project',
+  layout: withGlobalPanel(
+    () => LayoutTree.createSplit(
+      'horizontal',
+      LayoutTree.createPanel('file-tree'),
+      LayoutTree.createPanel('code-viewer'),
+      0.35
+    ),
+    'agent-chat',
+    { collapsed: true }
+  ),
+});
+
+const tree = registry.getLayout('explorer');
+const primaryPanel = LayoutTree.getPrimaryPanelType(tree);
+const sidebarItems = LayoutTree.createSidebarSubPanels(tree, {
+  'file-tree': { title: 'Files', icon: 'folder' },
+  'code-viewer': { title: 'Code', icon: 'code' },
+});
+```
+
+`LayoutTree` helpers accept both canonical BSP nodes (`type`, `first`, `second`) and legacy serialized shapes (`nodeType`, `children`), which makes them suitable for host applications that migrate saved layouts over time.
+
+The same `symbiote-node/layout` entrypoint also exposes URL-backed routing helpers for host shells and panels. In Node/SSR imports these helpers are safe to import; URL mutating functions are no-ops until browser globals exist.
+
+```javascript
+import { navigate, parseQuery, setupPanelRouting } from 'symbiote-node/layout';
+
+navigate('skills', 'agents/orchestrator.md', { project: 'workspace-1' });
+
+setupPanelRouting(panelElement, 'skills', {
+  tabs: ['team', 'open-library'],
+  syncParams: { filter: { param: 'q', default: '' } },
+});
+
+const params = parseQuery('project=workspace-1&tab=team');
 ```
 
 ### Plugins & Interactions
@@ -123,14 +309,15 @@ npx -y serve -l 3000 .
 {
   "imports": {
     "@symbiotejs/symbiote": "https://esm.sh/@symbiotejs/symbiote@3.2.1",
-    "symbiote-node": "./index.js"
+    "symbiote-node": "./index.js",
+    "symbiote-node/ui": "./ui/index.js",
+    "symbiote-node/layout": "./layout/index.js"
   }
 }
 </script>
 <script type="module">
-  import { NodeEditor, Node, Socket, Input, Output, NodeCanvas } from 'symbiote-node';
-  import 'symbiote-node/canvas/NodeCanvas/NodeCanvas.js';
-  import 'symbiote-node/node/GraphNode/GraphNode.js';
+  import { NodeEditor, Node, Socket, Input, Output } from 'symbiote-node';
+  import { NodeCanvas } from 'symbiote-node/ui';
   // ...
 </script>
 ```
@@ -138,11 +325,26 @@ npx -y serve -l 3000 .
 ## CLI (Engine)
 
 ```bash
-node engine/cli.js run <workflow.json>       # Execute graph
-node engine/cli.js validate <workflow.json>  # Validate graph
-node engine/cli.js list                      # List available node types
-node engine/cli.js inspect <workflow.json>   # Inspect graph structure
+symbiote-node run <workflow.json>       # Execute graph
+symbiote-node validate <workflow.json>  # Validate graph
+symbiote-node list                      # List available node types
+symbiote-node inspect <workflow.json>   # Inspect graph structure
+symbiote-node discover                  # Output agent-readable package metadata
 ```
+
+Use `--json` with `run`, `validate`, `list`, and `inspect` when integrating with agents or CI.
+
+## Agent Provider Contract
+
+`symbiote-node` publishes machine-readable provider metadata for agents:
+
+- `custom-elements.json` — Web Component catalog
+- `manifest/` — components, themes, rules, and graph schema accessors
+- `symbiote-node/ui` — browser Web Components, router helpers, chat primitives, and shared UI styles
+- `tokens/` — design token and theme JSON files
+- `rules/` — Symbiote.js and library boundary rules
+- `schemas/` — graph JSON schemas
+- `node engine/cli.js discover` — one JSON payload for component, theme, rule, token, schema, and export discovery
 
 ## Engine Handler Packs
 
@@ -163,12 +365,18 @@ Custom handler packs can be loaded from any directory via `registry.loadDir()`.
 
 ```
 symbiote-node/
-├── index.js          — public API (70+ exports)
+├── index.js          — Node-safe public API
+├── ui/               — browser/UI entrypoint for custom elements
+├── manifest/         — agent-readable catalogs
+├── tokens/           — design token JSON
+├── rules/            — machine-readable rules
+├── schemas/          — graph schemas
 ├── core/             — Editor, Node, Connection, Socket, Portal
 ├── canvas/           — NodeCanvas, ConnectionRenderer, FlowSimulator, AutoLayout
 ├── node/             — GraphNode, PortItem, CtrlItem, NodeSocket
 ├── menu/             — ContextMenu
 ├── interactions/     — Drag, Zoom, Selector, SnapGrid, ConnectFlow
+├── display/          — CodeBlock, SourceViewer, SourceEditor, markdown formatting
 ├── shapes/           — SVG shape system with 10 presets
 ├── themes/           — Theme, Palette, Skin (7 themes)
 ├── layout/           — BSP layout engine + LayoutSidebar + LayoutRouter
@@ -180,15 +388,13 @@ symbiote-node/
 │   ├── packs/        — Built-in handler packs (flow, data, transform, io, util)
 │   └── cli.js        — CLI runner
 ├── demo/             — Interactive demo
-└── tests/            — 45 tests (geometry, serialization, topology)
+└── tests/            — Node test suites for package contracts and behavior
 ```
 
 ## Tests
 
 ```bash
 node --test tests/*.test.js
-# 45 tests: geometry, Bézier paths, serialization, socket compatibility,
-# collapse/mute, subgraphs, execution, duck-typing
 ```
 
 ## Related Projects

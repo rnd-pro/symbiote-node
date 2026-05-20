@@ -81,6 +81,7 @@ export let NEON_GLOW = {
     '--sn-cat-control': 'hsl(var(--sn-hue-warning), var(--sn-sat-vivid), 55%)',
     '--sn-cat-data': 'hsl(var(--sn-hue-data), var(--sn-sat-vivid), 65%)',
     '--sn-cat-default': 'hsl(var(--sn-hue-accent), 30%, 45%)',
+    '--sn-subgraph-accent': 'var(--sn-cat-data)',
 
 
     '--sn-ctx-bg': 'hsla(var(--sn-hue-base), var(--sn-sat), 6%, 0.96)',

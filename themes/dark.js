@@ -79,6 +79,7 @@ export let DARK_DEFAULT = {
     '--sn-cat-control': 'hsl(var(--sn-hue-warning), var(--sn-sat-vivid), var(--sn-lit-accent))',
     '--sn-cat-data': 'hsl(var(--sn-hue-data), var(--sn-sat-vivid), var(--sn-lit-accent))',
     '--sn-cat-default': 'hsl(0, 0%, var(--sn-lit-text-dim))',
+    '--sn-subgraph-accent': 'var(--sn-cat-data)',
 
 
     '--sn-ctx-bg': 'hsl(var(--sn-hue-base), var(--sn-sat), 15%)',

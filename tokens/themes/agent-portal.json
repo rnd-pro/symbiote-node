@@ -1,0 +1,12 @@
+{
+  "name": "agent-portal",
+  "extends": "../base.json",
+  "color": {
+    "background": { "$type": "color", "$value": "#1a1a1a" },
+    "surface": { "$type": "color", "$value": "#222222" },
+    "border": { "$type": "color", "$value": "rgba(255, 255, 255, 0.1)" },
+    "text": { "$type": "color", "$value": "#f0f0f0" },
+    "textDim": { "$type": "color", "$value": "#999999" },
+    "accent": { "$type": "color", "$value": "#4c8bf5" }
+  }
+}

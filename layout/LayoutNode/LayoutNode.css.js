@@ -12,8 +12,8 @@ export let styles = css`
     /* Panel mode */
     &[node-type='panel'] {
       flex-direction: column;
-      background: var(--bg-panel, #252525);
-      border: 1px solid var(--layout-border, #333);
+      background: var(--bg-panel, var(--sn-node-bg, #252525));
+      border: 1px solid var(--layout-border, var(--sn-node-border, #333));
     }
 
     .panel-view {
@@ -29,8 +29,8 @@ export let styles = css`
       align-items: center;
       gap: 2px;
       padding: 2px 4px;
-      background: var(--bg-header, #1e1e1e);
-      border-bottom: 1px solid var(--layout-border, #333);
+      background: var(--bg-header, var(--sn-node-header-bg, #1e1e1e));
+      border-bottom: 1px solid var(--layout-border, var(--sn-node-border, #333));
       flex-shrink: 0;
       min-height: 28px;
     }
@@ -44,7 +44,7 @@ export let styles = css`
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      color: var(--text-dim, #888);
+      color: var(--text-dim, var(--sn-text-dim, #888));
       font-size: 0.75rem;
       transition:
         background 0.1s,
@@ -55,8 +55,8 @@ export let styles = css`
       }
 
       &:hover {
-        background: var(--bg-hover, #333);
-        color: var(--text-main, #e0e0e0);
+        background: var(--bg-hover, var(--sn-node-hover, #333));
+        color: var(--text-main, var(--sn-text, #e0e0e0));
       }
 
       .material-symbols-outlined {
@@ -259,7 +259,7 @@ export let styles = css`
 
     .split-resizer {
       flex-shrink: 0;
-      background: var(--layout-border, #333);
+      background: var(--layout-border, var(--sn-node-border, #333));
       transition: background 0.15s ease;
       z-index: 10;
     }
@@ -275,11 +275,11 @@ export let styles = css`
     }
 
     .split-resizer:hover {
-      background: var(--layout-highlight, #888);
+      background: var(--layout-highlight, var(--sn-node-selected, #888));
     }
 
     &[resizing] .split-resizer {
-      background: var(--layout-highlight, #888);
+      background: var(--layout-highlight, var(--sn-node-selected, #888));
     }
 
     &[resizing] {

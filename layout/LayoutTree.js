@@ -212,8 +212,130 @@ export function clone(root) {
  * @returns {PanelNode[]}
  */
 export function getAllPanels(root) {
-  if (root.type === 'panel') return [root];
-  return [...getAllPanels(root.first), ...getAllPanels(root.second)];
+  return collectPanels(root);
+}
+
+/**
+ * Check whether a node is a panel in either the current BSP format or
+ * legacy/serialized layout formats used by host applications.
+ * @param {Object} node
+ * @returns {boolean}
+ */
+export function isPanelNode(node) {
+  return !!node && (node.type || node.nodeType) === 'panel';
+}
+
+/**
+ * Check whether a node is a split/container in either supported format.
+ * @param {Object} node
+ * @returns {boolean}
+ */
+export function isSplitNode(node) {
+  return !!node && (node.type || node.nodeType) === 'split';
+}
+
+/**
+ * Collect panel nodes from a layout tree.
+ * @param {LayoutNode | Object | null} root
+ * @param {Object} [options]
+ * @param {boolean} [options.includeGlobal=true] Include panels marked as global.
+ * @returns {PanelNode[]}
+ */
+export function collectPanels(root, options = {}) {
+  let { includeGlobal = true } = options;
+  let panels = [];
+
+  function walk(node) {
+    if (!node) return;
+    if (isPanelNode(node)) {
+      if (includeGlobal || !node.global) panels.push(node);
+      return;
+    }
+    if (node.first) walk(node.first);
+    if (node.second) walk(node.second);
+    if (Array.isArray(node.children)) node.children.forEach(walk);
+  }
+
+  walk(root);
+  return panels;
+}
+
+/**
+ * Collect panel type ids from a layout tree.
+ * @param {LayoutNode | Object | null} root
+ * @param {Object} [options]
+ * @param {boolean} [options.includeGlobal=true] Include panels marked as global.
+ * @returns {string[]}
+ */
+export function collectPanelTypes(root, options = {}) {
+  return collectPanels(root, options)
+    .map((panel) => panel.panelType)
+    .filter(Boolean);
+}
+
+/**
+ * Return the first non-global panel type from a layout tree.
+ * @param {LayoutNode | Object | null} root
+ * @returns {string | null}
+ */
+export function getPrimaryPanelType(root) {
+  return collectPanels(root, { includeGlobal: false })[0]?.panelType || null;
+}
+
+/**
+ * Check that every requested panel type exists in a layout tree.
+ * @param {LayoutNode | Object | null} root
+ * @param {Iterable<string>} requiredPanelTypes
+ * @param {Object} [options]
+ * @returns {boolean}
+ */
+export function hasEveryPanelType(root, requiredPanelTypes, options = {}) {
+  let available = new Set(collectPanelTypes(root, options));
+  for (let panelType of requiredPanelTypes || []) {
+    if (!available.has(panelType)) return false;
+  }
+  return true;
+}
+
+/**
+ * Check whether any of the requested panel types exists in a layout tree.
+ * @param {LayoutNode | Object | null} root
+ * @param {Iterable<string>} panelTypes
+ * @param {Object} [options]
+ * @returns {boolean}
+ */
+export function hasAnyPanelType(root, panelTypes, options = {}) {
+  let available = new Set(collectPanelTypes(root, options));
+  for (let panelType of panelTypes || []) {
+    if (available.has(panelType)) return true;
+  }
+  return false;
+}
+
+/**
+ * Build sidebar submenu descriptors from panels in a layout tree.
+ * @param {LayoutNode | Object | null} root
+ * @param {Record<string, {title?: string, icon?: string}>} panelDefinitions
+ * @param {Object} [options]
+ * @param {boolean} [options.includeGlobal=false] Include panels marked as global.
+ * @param {number} [options.minPanels=2] Minimum count required before returning items.
+ * @returns {{title: string, icon: string, panelId: string, isMaster: boolean, panelType: string}[]}
+ */
+export function createSidebarSubPanels(root, panelDefinitions = {}, options = {}) {
+  let { includeGlobal = false, minPanels = 2 } = options;
+  let panels = collectPanels(root, { includeGlobal });
+  if (panels.length < minPanels) return [];
+  return panels.map((panel, index) => {
+    let panelType = panel.panelType || 'panel';
+    let config = panelDefinitions[panelType] || {};
+    return {
+      title: config.title || panelType,
+      icon: config.icon || 'dashboard',
+      panelId: panel.id || `${panelType}-${index}`,
+      isMaster: index === 0,
+      panelType,
+    };
+  });
 }
 
 /**
@@ -228,15 +350,4 @@ export function updateNode(root, nodeId, updates) {
   if (!node) return false;
   Object.assign(node, updates);
   return true;
-}
-
-/**
- * Get neighbor panel IDs for a panel
- * @param {LayoutNode} root - Root node
- * @param {string} panelId - Panel ID
- * @returns {{ left?: string, right?: string, top?: string, bottom?: string }}
- */
-export function getNeighbors() {
-
-  return {};
 }

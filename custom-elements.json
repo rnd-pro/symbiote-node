@@ -1,0 +1,484 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "README.md",
+  "modules": [
+    {
+      "path": "node/GraphNode/GraphNode.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "GraphNode",
+          "tagName": "graph-node",
+          "description": "Interactive graph node component for the node canvas."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "graph-node", "declaration": { "name": "GraphNode" } }]
+    },
+    {
+      "path": "node/NodeSocket/NodeSocket.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "NodeSocket",
+          "tagName": "node-socket",
+          "description": "Socket endpoint component for graph node inputs and outputs."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "node-socket", "declaration": { "name": "NodeSocket" } }]
+    },
+    {
+      "path": "canvas/NodeCanvas/NodeCanvas.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "NodeCanvas",
+          "tagName": "node-canvas",
+          "description": "Primary graph canvas custom element."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "node-canvas", "declaration": { "name": "NodeCanvas" } }]
+    },
+    {
+      "path": "layout/Layout/Layout.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "Layout",
+          "tagName": "panel-layout",
+          "description": "Panel-based application layout shell."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "panel-layout", "declaration": { "name": "Layout" } }]
+    },
+    {
+      "path": "layout/LayoutSidebar/LayoutSidebar.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "LayoutSidebar",
+          "tagName": "layout-sidebar",
+          "description": "Sidebar navigation component for the panel layout."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "layout-sidebar", "declaration": { "name": "LayoutSidebar" } }]
+    },
+    {
+      "path": "layout/LayoutNode/LayoutNode.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "LayoutNode",
+          "tagName": "layout-node",
+          "description": "Resizable and dockable layout node component."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "layout-node", "declaration": { "name": "LayoutNode" } }]
+    },
+    {
+      "path": "layout/ProjectTabs/ProjectTabs.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ProjectTabs",
+          "tagName": "project-tabs",
+          "description": "Generic project/workspace tab strip with add, select, and close events."
+        },
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ProjectTabItem",
+          "tagName": "project-tab-item",
+          "description": "Internal tab item used by project-tabs."
+        }
+      ],
+      "exports": [
+        { "kind": "custom-element-definition", "name": "project-tabs", "declaration": { "name": "ProjectTabs" } },
+        { "kind": "custom-element-definition", "name": "project-tab-item", "declaration": { "name": "ProjectTabItem" } }
+      ]
+    },
+    {
+      "path": "display/CodeBlock/CodeBlock.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "CodeBlock",
+          "tagName": "code-block",
+          "description": "Code, markdown, image, and diagnostics display component."
+        },
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "CbSquiggle",
+          "tagName": "cb-squiggle",
+          "description": "Internal diagnostic squiggle marker used by code-block."
+        }
+      ],
+      "exports": [
+        { "kind": "custom-element-definition", "name": "code-block", "declaration": { "name": "CodeBlock" } },
+        { "kind": "custom-element-definition", "name": "cb-squiggle", "declaration": { "name": "CbSquiggle" } }
+      ]
+    },
+    {
+      "path": "display/SourceViewer/SourceViewer.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "SourceViewer",
+          "tagName": "source-viewer",
+          "description": "Source file viewer with code, markdown, image, metadata, actions, and transform modes."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "source-viewer", "declaration": { "name": "SourceViewer" } }]
+    },
+    {
+      "path": "display/SourceEditor/SourceEditor.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "SourceEditor",
+          "tagName": "source-editor",
+          "description": "Generic source text editor with content, dirty state, readonly, disabled, focus, and tab handling."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "source-editor", "declaration": { "name": "SourceEditor" } }]
+    },
+    {
+      "path": "display/LoadingOverlay/LoadingOverlay.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "LoadingOverlay",
+          "tagName": "sn-loading-overlay",
+          "description": "Generic loading overlay with label, phase, progress, and secondary status text."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "sn-loading-overlay", "declaration": { "name": "LoadingOverlay" } }]
+    },
+    {
+      "path": "display/OutputListPreview/OutputListPreview.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "OutputListPreview",
+          "tagName": "output-list-preview",
+          "description": "Generic normalized list preview for arbitrary output values."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "output-list-preview", "declaration": { "name": "OutputListPreview" } }]
+    },
+    {
+      "path": "display/OutputGraphPreview/OutputGraphPreview.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "OutputGraphPreview",
+          "tagName": "output-graph-preview",
+          "description": "Generic normalized graph preview for node and edge output values."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "output-graph-preview", "declaration": { "name": "OutputGraphPreview" } }]
+    },
+    {
+      "path": "effects/CellBg/CellBg.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "CellBg",
+          "tagName": "cell-bg",
+          "description": "Animated cellular automaton background effect."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "cell-bg", "declaration": { "name": "CellBg" } }]
+    },
+    {
+      "path": "toolbar/QuickToolbar/QuickToolbar.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "QuickToolbar",
+          "tagName": "quick-toolbar",
+          "description": "Floating quick action toolbar for graph editing."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "quick-toolbar", "declaration": { "name": "QuickToolbar" } }]
+    },
+    {
+      "path": "inspector/InspectorPanel/InspectorPanel.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "InspectorPanel",
+          "tagName": "inspector-panel",
+          "description": "Inspector panel for selected graph node properties."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "inspector-panel", "declaration": { "name": "InspectorPanel" } }]
+    },
+    {
+      "path": "palette/PaletteBrowser/PaletteBrowser.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "PaletteBrowser",
+          "tagName": "palette-browser",
+          "description": "Node palette browser for adding graph nodes."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "palette-browser", "declaration": { "name": "PaletteBrowser" } }]
+    },
+    {
+      "path": "canvas/Minimap/Minimap.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "Minimap",
+          "tagName": "node-minimap",
+          "description": "Canvas minimap for graph navigation."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "node-minimap", "declaration": { "name": "Minimap" } }]
+    },
+    {
+      "path": "canvas/NodeSearch/NodeSearch.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "NodeSearch",
+          "tagName": "node-search",
+          "description": "Search component for graph nodes and actions."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "node-search", "declaration": { "name": "NodeSearch" } }]
+    },
+    {
+      "path": "canvas/GraphTabs/GraphTabs.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "GraphTabs",
+          "tagName": "graph-tabs",
+          "description": "Tab strip component for multiple graph views."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "graph-tabs", "declaration": { "name": "GraphTabs" } }]
+    },
+    {
+      "path": "canvas/Breadcrumb/Breadcrumb.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "Breadcrumb",
+          "tagName": "graph-breadcrumb",
+          "description": "Breadcrumb component for graph and subgraph navigation."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "graph-breadcrumb", "declaration": { "name": "Breadcrumb" } }]
+    },
+    {
+      "path": "navigation/QuickOpen/QuickOpen.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "QuickOpen",
+          "tagName": "quick-open",
+          "description": "Generic fuzzy quick-open dialog for selecting files or application items."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "quick-open", "declaration": { "name": "QuickOpen" } }]
+    },
+    {
+      "path": "chat/ChatMessageItem/ChatMessageItem.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ChatMessageItem",
+          "tagName": "chat-message-item",
+          "description": "Generic chat message renderer for text, tool, board, and thinking messages."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "chat-message-item", "declaration": { "name": "ChatMessageItem" } }]
+    },
+    {
+      "path": "chat/ChatTranscript/ChatTranscript.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ChatTranscript",
+          "tagName": "chat-transcript",
+          "description": "Generic chat transcript shell with message rendering, scroll controls, live status, and delegation card events."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "chat-transcript", "declaration": { "name": "ChatTranscript" } }]
+    },
+    {
+      "path": "chat/ChatComposer/ChatComposer.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ChatComposer",
+          "tagName": "chat-composer",
+          "description": "Generic chat composer with input, context chips, footer controls, and autocomplete host."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "chat-composer", "declaration": { "name": "ChatComposer" } }]
+    },
+    {
+      "path": "chat/ChatList/ChatList.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ChatList",
+          "tagName": "chat-list",
+          "description": "Generic chat list shell with filters, creation action, item list, and selection/delete events."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "chat-list", "declaration": { "name": "ChatList" } }]
+    },
+    {
+      "path": "chat/ChatListItem/ChatListItem.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ChatListItem",
+          "tagName": "chat-list-item",
+          "description": "Generic chat list item with project badge, adapter, preview, metadata, nesting, and delete action."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "chat-list-item", "declaration": { "name": "ChatListItem" } }]
+    },
+    {
+      "path": "chat/ChatSidebar/ChatSidebar.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ChatSidebarShell",
+          "tagName": "chat-sidebar-shell",
+          "description": "Generic collapsible and resizable chat navigation shell."
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "chat-sidebar-shell", "declaration": { "name": "ChatSidebarShell" } }]
+    },
+    {
+      "path": "chat/ChatSidebarItem/ChatSidebarItem.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ChatSidebarItem",
+          "tagName": "chat-sidebar-item",
+          "description": "Generic chat sidebar root item with nested child chat rendering."
+        },
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ChatSidebarSubItem",
+          "tagName": "chat-sidebar-sub-item",
+          "description": "Generic chat sidebar child item."
+        }
+      ],
+      "exports": [
+        { "kind": "custom-element-definition", "name": "chat-sidebar-item", "declaration": { "name": "ChatSidebarItem" } },
+        { "kind": "custom-element-definition", "name": "chat-sidebar-sub-item", "declaration": { "name": "ChatSidebarSubItem" } }
+      ]
+    },
+    {
+      "path": "list/ListItem/ListItem.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ListItem",
+          "tagName": "sn-list-item",
+          "description": "Generic selectable list item with label, description, icon, meta text, and item payload event.",
+          "members": [
+            { "kind": "field", "name": "label", "type": { "text": "string" } },
+            { "kind": "field", "name": "description", "type": { "text": "string" } },
+            { "kind": "field", "name": "icon", "type": { "text": "string" } },
+            { "kind": "field", "name": "meta", "type": { "text": "string" } },
+            { "kind": "field", "name": "active", "type": { "text": "boolean" } },
+            { "kind": "field", "name": "disabled", "type": { "text": "boolean" } },
+            { "kind": "field", "name": "item", "type": { "text": "unknown" } },
+            { "kind": "method", "name": "setItem", "parameters": [{ "name": "item", "type": { "text": "unknown" } }] }
+          ],
+          "events": [
+            {
+              "name": "sn-list-item-select",
+              "type": { "text": "CustomEvent<{ item: unknown }>" },
+              "description": "Fired when the item is selected by pointer, Enter, or Space."
+            }
+          ]
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "sn-list-item", "declaration": { "name": "ListItem" } }]
+    },
+    {
+      "path": "tree/TreeView/TreeView.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "TreeView",
+          "tagName": "sn-tree-view",
+          "description": "Generic tree view with selection, expansion, filtering, drag payloads, and host-owned item data.",
+          "members": [
+            { "kind": "field", "name": "items", "type": { "text": "Array<{ id: string, label: string, kind?: string, icon?: string, path?: string, children?: unknown[], badges?: unknown[], muted?: boolean, draggable?: boolean, payload?: unknown }>" } },
+            { "kind": "field", "name": "selectedId", "type": { "text": "string" } },
+            { "kind": "field", "name": "expandedIds", "type": { "text": "string[]" } },
+            { "kind": "field", "name": "filterText", "type": { "text": "string" } },
+            { "kind": "field", "name": "storageKey", "type": { "text": "string" } },
+            { "kind": "method", "name": "setItems", "parameters": [{ "name": "items", "type": { "text": "unknown[]" } }] },
+            { "kind": "method", "name": "collapseAll" },
+            { "kind": "method", "name": "expandAncestors", "parameters": [{ "name": "idOrPath", "type": { "text": "string" } }] },
+            { "kind": "method", "name": "scrollSelectedIntoView" }
+          ],
+          "events": [
+            {
+              "name": "sn-tree-select",
+              "type": { "text": "CustomEvent<{ item: unknown }>" },
+              "description": "Fired when a tree item is selected by pointer, Enter, or Space."
+            },
+            {
+              "name": "sn-tree-toggle",
+              "type": { "text": "CustomEvent<{ item: unknown, expanded: boolean }>" },
+              "description": "Fired when a branch item is expanded or collapsed."
+            },
+            {
+              "name": "sn-tree-dragstart",
+              "type": { "text": "CustomEvent<{ item: unknown, payload: unknown }>" },
+              "description": "Fired when a draggable tree item starts dragging."
+            }
+          ]
+        }
+      ],
+      "exports": [{ "kind": "custom-element-definition", "name": "sn-tree-view", "declaration": { "name": "TreeView" } }]
+    }
+  ]
+}

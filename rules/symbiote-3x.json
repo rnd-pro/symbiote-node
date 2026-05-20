@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "symbiote-3x",
+  "version": "1.0.0",
+  "description": "Machine-readable Symbiote.js 3.x rules for reusable package, UI, and provider contracts.",
+  "rules": [
+    {
+      "id": "SYM-001",
+      "name": "triple-file-standard",
+      "description": "Production components are split into .js, .tpl.js, and .css.js files.",
+      "severity": "error",
+      "filePattern": "**/*.js",
+      "check": "component_has_triple_files",
+      "tags": ["symbiote", "components", "architecture"]
+    },
+    {
+      "id": "SYM-002",
+      "name": "no-inline-templates",
+      "description": "Templates are defined in .tpl.js files instead of inline component bodies.",
+      "severity": "error",
+      "filePattern": "**/*.js",
+      "check": "no_inline_html_template",
+      "tags": ["symbiote", "templates"]
+    },
+    {
+      "id": "SYM-003",
+      "name": "reg-call-required",
+      "description": "Every custom element component calls .reg('kebab-case-tag').",
+      "severity": "error",
+      "filePattern": "**/*.js",
+      "check": "has_reg_call",
+      "tags": ["symbiote", "web-components"]
+    },
+    {
+      "id": "SYM-004",
+      "name": "css-token-usage",
+      "description": "Component CSS uses --sn-* custom properties for themeable values.",
+      "severity": "warning",
+      "filePattern": "**/*.css.js",
+      "check": "uses_sn_css_tokens",
+      "tags": ["symbiote", "theming", "tokens"]
+    },
+    {
+      "id": "SYM-005",
+      "name": "node-safe-core",
+      "description": "Root, core, manifest, rules, schemas, and tokens remain importable without DOM globals.",
+      "severity": "error",
+      "filePattern": ["index.js", "core/**/*.js", "manifest/**/*.js"],
+      "check": "no_dom_side_effects",
+      "tags": ["symbiote", "node-safe", "library"]
+    },
+    {
+      "id": "SYM-006",
+      "name": "single-binding-block",
+      "description": "Each template element has at most one Symbiote binding block.",
+      "severity": "error",
+      "filePattern": "**/*.tpl.js",
+      "check": "no_multiple_binding_blocks",
+      "tags": ["symbiote", "templates", "bindings"]
+    },
+    {
+      "id": "SYM-007",
+      "name": "published-library-contract",
+      "description": "Public metadata, rules, schemas, and token files are reachable from package exports and files[].",
+      "severity": "error",
+      "filePattern": "package.json",
+      "check": "published_contract_in_exports_and_files",
+      "tags": ["package", "exports", "library"]
+    },
+    {
+      "id": "SYM-008",
+      "name": "agent-boundary",
+      "description": "Agent-facing manifests describe modules and rules without importing browser components.",
+      "severity": "error",
+      "filePattern": "manifest/**/*.js",
+      "check": "manifest_is_side_effect_free",
+      "tags": ["agents", "mcp", "architecture"]
+    },
+    {
+      "id": "SYM-009",
+      "name": "public-subpath-imports",
+      "description": "Consumers import symbiote-node through package exports instead of relative package internals or deep implementation paths.",
+      "severity": "error",
+      "filePattern": "**/*.js",
+      "check": "uses_public_package_exports",
+      "tags": ["package", "exports", "library", "agents"]
+    }
+  ]
+}

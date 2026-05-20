@@ -23,6 +23,17 @@ const WORKER_PATH = path.join(__dirname, '..', 'canvas', 'ForceWorker.js');
 const NODE_W = 260;
 const NODE_H = 40;
 
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+let rand = mulberry32(42);
+
 
 /**
  * Run ForceWorker on a graph and return final positions.
@@ -222,7 +233,7 @@ function makeClusterGraph(clusterCount, nodesPerCluster) {
     groups[groupId] = [];
     for (let i = 0; i < nodesPerCluster; i++) {
       const id = `c${c}_n${i}`;
-      nodes.push({ id, x: c * 800 + i * 100, y: Math.random() * 200, group: groupId });
+      nodes.push({ id, x: c * 800 + i * 100, y: rand() * 200, group: groupId });
       groups[groupId].push(id);
       if (i > 0) edges.push({ from: `c${c}_n${i - 1}`, to: id });
     }
@@ -235,13 +246,13 @@ function makeClusterGraph(clusterCount, nodesPerCluster) {
 function makeRandomGraph(n, edgeDensity = 0.02) {
   const nodes = Array.from({ length: n }, (_, i) => ({
     id: `n${i}`,
-    x: (Math.random() - 0.5) * n * 50,
-    y: (Math.random() - 0.5) * n * 50,
+    x: (rand() - 0.5) * n * 50,
+    y: (rand() - 0.5) * n * 50,
   }));
   const edges = [];
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
-      if (Math.random() < edgeDensity) {
+      if (rand() < edgeDensity) {
         edges.push({ from: `n${i}`, to: `n${j}` });
       }
     }
@@ -713,8 +724,8 @@ describe('Stress test — 500 nodes (simulated dep-graph scale)', () => {
       const id = `${dir}/file${Math.floor(i / dirs.length)}.js`;
       graph.nodes.push({
         id,
-        x: (Math.random() - 0.5) * 5000,
-        y: (Math.random() - 0.5) * 5000,
+        x: (rand() - 0.5) * 5000,
+        y: (rand() - 0.5) * 5000,
         group: dir,
       });
       if (!graph.groups[dir]) graph.groups[dir] = [];
@@ -723,7 +734,7 @@ describe('Stress test — 500 nodes (simulated dep-graph scale)', () => {
 
     for (let i = 0; i < 500; i++) {
       for (let k = 0; k < 3; k++) {
-        const j = Math.floor(Math.random() * 500);
+        const j = Math.floor(rand() * 500);
         if (i !== j) graph.edges.push({ from: graph.nodes[i].id, to: graph.nodes[j].id });
       }
     }

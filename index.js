@@ -61,6 +61,18 @@ export {
   getGraphCacheKey,
   getOrBuildGraph,
 } from './canvas/graph-layout.js';
+export {
+  GRAPH_DIRECTORY_FRAME_COLORS,
+  GRAPH_PATH_STYLES,
+  addGraphDirectoryFrames,
+  getGraphPathStyleDisplay,
+  getNextGraphPathStyle,
+  renderGraphPathStyleButton,
+  renderGraphViewModeButton,
+  resolveInitialGraphViewMode,
+  setGraphLayerVisible,
+  toggleGraphLayerButtonState,
+} from './canvas/graph-explorer.js';
 export { collectQuickOpenFilesFromSkeleton, fuzzyScore, searchQuickOpenItems } from './navigation/quick-open-utils.js';
 export { normalizeOutputList, normalizePreviewGraph } from './display/output-preview.js';
 

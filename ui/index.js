@@ -93,6 +93,18 @@ export {
   getGraphCacheKey,
   getOrBuildGraph,
 } from '../canvas/graph-layout.js';
+export {
+  GRAPH_DIRECTORY_FRAME_COLORS,
+  GRAPH_PATH_STYLES,
+  addGraphDirectoryFrames,
+  getGraphPathStyleDisplay,
+  getNextGraphPathStyle,
+  renderGraphPathStyleButton,
+  renderGraphViewModeButton,
+  resolveInitialGraphViewMode,
+  setGraphLayerVisible,
+  toggleGraphLayerButtonState,
+} from '../canvas/graph-explorer.js';
 
 export { CARBON, CARBON_PALETTE } from '../themes/carbon.js';
 export { PCB_DARK } from '../themes/pcb.js';

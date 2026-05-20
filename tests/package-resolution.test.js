@@ -63,6 +63,7 @@ describe('package exports resolution', () => {
       'symbiote-node/ui/index.js',
       'symbiote-node/canvas/ForceLayout.js',
       'symbiote-node/layout/Layout/Layout.js',
+      'symbiote-node/canvas/graph-explorer.js',
       'symbiote-node/interactions/Drag.js',
       'symbiote-node/node/GraphNode/GraphNode.js',
       'symbiote-node/toolbar/QuickToolbar/QuickToolbar.js',

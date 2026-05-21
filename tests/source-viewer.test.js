@@ -1,5 +1,10 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+let ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 
 let hadCustomElements;
 let hadHTMLElement;
@@ -83,5 +88,25 @@ describe('SourceViewer display helpers', () => {
     assert.match(info, /Total: 4 files across 1 subdirectories/);
     assert.match(info, /Symbols: 2 exported nodes in this directory/);
     assert.doesNotMatch(info, /skeleton/i);
+  });
+
+  it('keeps source display styles on provider theme tokens', () => {
+    for (let relative of [
+      'display/CodeBlock/CodeBlock.css.js',
+      'display/SourceViewer/SourceViewer.css.js',
+      'display/SourceEditor/SourceEditor.css.js',
+    ]) {
+      let source = fs.readFileSync(path.join(ROOT, relative), 'utf8');
+      for (let literal of [
+        'hsl(30, 10%',
+        'hsl(30, 15%',
+        'hsl(35, 18%',
+        'hsl(37, 30%',
+        'hsl(210, 45%',
+        'hsla(210',
+      ]) {
+        assert.equal(source.includes(literal), false, `${relative} must not copy provider fallback ${literal}`);
+      }
+    }
   });
 });

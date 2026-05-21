@@ -89,6 +89,12 @@ function declarationTags() {
   });
 }
 
+function declarationByTag(tagName) {
+  return manifest.modules
+    .flatMap((mod) => mod.declarations || [])
+    .find((declaration) => declaration.tagName === tagName);
+}
+
 describe('custom-elements manifest', () => {
   it('declares every public custom element', () => {
     let tags = declarationTags();
@@ -107,6 +113,42 @@ describe('custom-elements manifest', () => {
   it('maps every manifest module to an existing source file', () => {
     for (let mod of manifest.modules) {
       assert.ok(fs.existsSync(path.join(PKG_ROOT, mod.path)), `${mod.path} must exist`);
+    }
+  });
+
+  it('mirrors public component contracts into custom-elements metadata', () => {
+    for (let component of listComponents()) {
+      let declaration = declarationByTag(component.tagName);
+      assert.ok(declaration, `${component.tagName} must have a custom-elements declaration`);
+      assert.equal(declaration.description, component.description);
+
+      let attributes = new Set((declaration.attributes || []).map((item) => item.name));
+      for (let attribute of component.contract?.attributes || []) {
+        assert.ok(attributes.has(attribute.name), `${component.tagName} must expose attribute ${attribute.name}`);
+      }
+
+      let cssProperties = new Set((declaration.cssProperties || []).map((item) => item.name));
+      for (let alias of component.contract?.themeAliases || []) {
+        assert.ok(cssProperties.has(alias), `${component.tagName} must expose css property ${alias}`);
+      }
+
+      let events = new Set((declaration.events || []).map((item) => item.name));
+      for (let event of component.contract?.events || []) {
+        assert.ok(events.has(event.name), `${component.tagName} must expose event ${event.name}`);
+      }
+
+      let members = new Set((declaration.members || []).map((item) => `${item.kind}:${item.name}`));
+      for (let property of component.contract?.properties || []) {
+        assert.ok(members.has(`field:${property.name}`), `${component.tagName} must expose property ${property.name}`);
+      }
+      for (let method of component.contract?.methods || []) {
+        assert.ok(members.has(`method:${method.name}`), `${component.tagName} must expose method ${method.name}`);
+      }
+
+      let slots = new Set((declaration.slots || []).map((item) => item.name));
+      for (let slot of component.contract?.slots || []) {
+        assert.ok(slots.has(slot.name), `${component.tagName} must expose slot ${slot.name}`);
+      }
     }
   });
 });

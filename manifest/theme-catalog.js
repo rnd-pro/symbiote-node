@@ -26,8 +26,40 @@ const RUNTIME_THEMES = {
   'default-dark': DEFAULT_DARK,
 };
 
+const CSS_TOKEN_CLASSIFIERS = [
+  { kind: 'source-control', group: 'control', pattern: /^--sn-theme-/ },
+  { kind: 'source-accent', group: 'color', pattern: /^--sn-hue-/ },
+  { kind: 'color-cascade', group: 'color', pattern: /^--sn-(sat($|-)|lit-|alpha-)/ },
+  { kind: 'color-cascade', group: 'accent', pattern: /^--sn-accent-/ },
+  { kind: 'semantic-alias', group: 'surface', pattern: /^--sn-(bg|panel-bg|node-bg|node-border|node-selected|node-accent|node-hover|node-header-bg|node-radius|node-shadow|text|text-dim|bg-overlay|shadow-color)$/ },
+  { kind: 'semantic-alias', group: 'status', pattern: /^--sn-(success|warning|danger|cat|subgraph)-/ },
+  { kind: 'component-alias', group: 'layout', pattern: /^--sn-layout-/ },
+  { kind: 'component-alias', group: 'navigation-row', pattern: /^--sn-(tree|list-item)-/ },
+  { kind: 'component-alias', group: 'chat', pattern: /^--sn-(composer|chat)-/ },
+  { kind: 'component-alias', group: 'tabs', pattern: /^--sn-tabs-/ },
+  { kind: 'component-alias', group: 'source', pattern: /^--sn-(source|editor)-/ },
+  { kind: 'component-alias', group: 'loading', pattern: /^--sn-loading-/ },
+  { kind: 'component-alias', group: 'graph', pattern: /^--sn-(socket|conn|grid|shape)-/ },
+  { kind: 'component-alias', group: 'context-menu', pattern: /^--sn-ctx-/ },
+  { kind: 'component-alias', group: 'toolbar', pattern: /^--sn-toolbar-/ },
+  { kind: 'component-alias', group: 'comment', pattern: /^--sn-comment-/ },
+  { kind: 'component-alias', group: 'frame', pattern: /^--sn-frame-/ },
+  { kind: 'typography-cascade', group: 'typography', pattern: /^--sn-(font|icon-font)/ },
+  { kind: 'motion-effects', group: 'effect', pattern: /^--sn-effect-/ },
+  { kind: 'motion-effects', group: 'scrollbar', pattern: /^--sn-scrollbar-/ },
+  { kind: 'host-bridge-alias', group: 'host-bridge', pattern: /^--(bg-level-2|border-color|text-color|text-color-muted)$/ },
+];
+
 function copyData(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function classifyCssToken(cssVar) {
+  let classifier = CSS_TOKEN_CLASSIFIERS.find((item) => item.pattern.test(cssVar));
+  if (!classifier) {
+    return { kind: 'unclassified', group: 'unknown' };
+  }
+  return { kind: classifier.kind, group: classifier.group };
 }
 
 export let THEME_CONTROLS = {
@@ -501,6 +533,17 @@ export function getThemeCssTokens(themeName) {
   return { ...(RUNTIME_THEMES[themeName]?.tokens || {}) };
 }
 
+export function listThemeCssTokenClassifications(themeName) {
+  return Object.entries(getThemeCssTokens(themeName)).map(([cssVar, value]) => {
+    let classification = classifyCssToken(cssVar);
+    return {
+      cssVar,
+      value,
+      ...classification,
+    };
+  });
+}
+
 export function getThemeRecipe(themeName) {
   let theme = getTheme(themeName);
   let tokens = getThemeTokens(themeName);
@@ -513,6 +556,7 @@ export function getThemeRecipe(themeName) {
     tokens: copyData(tokens),
     flatTokens: copyData(flattenTokens(tokens)),
     cssTokens,
+    cssTokenClassifications: listThemeCssTokenClassifications(themeName),
     cssTokenSource: RUNTIME_THEMES[themeName] ? 'runtime-theme' : 'not-runtime-complete',
     controls: getThemeControls(themeName),
     elementGroups: listThemeElementGroups(),

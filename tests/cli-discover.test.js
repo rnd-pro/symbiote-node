@@ -309,6 +309,9 @@ describe('discover command', () => {
       assert.equal(recipe.flatTokens['color.accent'].$value, '#4c8bf5');
       assert.equal(recipe.cssTokens['--sn-layout-border'], 'transparent');
       assert.equal(recipe.cssTokens['--sn-theme-hue'], '218');
+      assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-theme-hue' && item.kind === 'source-control'));
+      assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-layout-gap-bg' && item.group === 'layout'));
+      assert.ok(recipe.cssTokenClassifications.every((item) => item.kind !== 'unclassified'));
       assert.equal(recipe.cssTokenSource, 'runtime-theme');
       assert.ok(recipe.controls.some((control) => control.name === 'chroma'));
       assert.ok(recipe.elementGroups.some((group) => group.name === 'control'));

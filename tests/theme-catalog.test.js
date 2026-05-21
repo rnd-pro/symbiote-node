@@ -10,6 +10,7 @@ import {
   getTheme,
   getThemeControls,
   getThemeCssTokens,
+  listThemeCssTokenClassifications,
   getThemeRecipe,
   getThemeRuleBlocks,
   getThemeTokens,
@@ -205,6 +206,19 @@ describe('theme token files', () => {
     assert.equal(recipe.flatTokens['geometry.treeRowHeight'].$value, '22px');
     assert.equal(recipe.cssTokens['--sn-layout-border'], 'transparent');
     assert.equal(recipe.cssTokens['--sn-theme-hue'], '218');
+    assert.equal(
+      recipe.cssTokenClassifications.length,
+      Object.keys(DEFAULT_DARK.tokens).length,
+      'recipe must classify every runtime CSS token'
+    );
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-theme-hue' && item.kind === 'source-control'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-layout-gap-bg' && item.group === 'layout'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-tree-row-height' && item.group === 'navigation-row'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-effect-focus-ring' && item.kind === 'motion-effects'));
+    assert.ok(
+      recipe.cssTokenClassifications.every((item) => item.kind !== 'unclassified'),
+      'default runtime CSS tokens must stay agent-classified'
+    );
     assert.equal(recipe.cssTokenSource, 'runtime-theme');
     assert.equal(
       recipe.cssTokens['--sn-effect-hover-transition'],
@@ -223,6 +237,7 @@ describe('theme token files', () => {
     assert.ok(getThemeRecipe('default-dark').ruleBlocks.length > 0);
     assert.equal(getThemeRecipe('dark').cssTokenSource, 'not-runtime-complete');
     assert.deepEqual(getThemeRecipe('dark').cssTokens, {});
+    assert.deepEqual(listThemeCssTokenClassifications('dark'), []);
     assert.deepEqual(getThemeCssTokens('missing'), {});
     assert.equal(getThemeRecipe('missing'), undefined);
   });

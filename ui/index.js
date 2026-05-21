@@ -6,6 +6,7 @@
  */
 
 export * from '../core/index.js';
+export * from '../graph/index.js';
 
 export { Drag } from '../interactions/Drag.js';
 export { Zoom } from '../interactions/Zoom.js';

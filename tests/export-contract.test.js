@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import * as lib from '../index.js';
 import * as core from '../core/index.js';
 import * as engine from '../engine/index.js';
+import * as graph from '../graph/index.js';
 import * as layout from '../layout/index.js';
 import * as manifest from '../manifest/index.js';
 
@@ -82,6 +83,16 @@ const ROOT_EXPORTS = [
   ['searchQuickOpenItems', 'function'],
   ['normalizeOutputList', 'function'],
   ['normalizePreviewGraph', 'function'],
+  ['normalizeGraphEndpoint', 'function'],
+  ['normalizeGraphNode', 'function'],
+  ['normalizeGraphEdge', 'function'],
+  ['normalizeGraphModel', 'function'],
+  ['graphModelToCanvasGraphModel', 'function'],
+  ['canvasGraphModelToGraphModel', 'function'],
+  ['normalizeProjectPackage', 'function'],
+  ['normalizeProjectTransaction', 'function'],
+  ['applyProjectTransaction', 'function'],
+  ['createProjectRuntime', 'function'],
   ['CARBON', 'object'],
   ['CARBON_PALETTE', 'object'],
   ['PCB_DARK', 'object'],
@@ -262,6 +273,22 @@ const MANIFEST_EXPORTS = [
   ['GRAPH_SCHEMA_VERSIONS', 'object'],
   ['getGraphSchema', 'function'],
   ['listGraphVersions', 'function'],
+  ['PROJECT_SCHEMA_VERSIONS', 'object'],
+  ['getProjectSchema', 'function'],
+  ['listProjectSchemaVersions', 'function'],
+];
+
+const GRAPH_EXPORTS = [
+  ['normalizeGraphEndpoint', 'function'],
+  ['normalizeGraphNode', 'function'],
+  ['normalizeGraphEdge', 'function'],
+  ['normalizeGraphModel', 'function'],
+  ['graphModelToCanvasGraphModel', 'function'],
+  ['canvasGraphModelToGraphModel', 'function'],
+  ['normalizeProjectPackage', 'function'],
+  ['normalizeProjectTransaction', 'function'],
+  ['applyProjectTransaction', 'function'],
+  ['createProjectRuntime', 'function'],
 ];
 
 const LAYOUT_EXPORTS = [
@@ -391,6 +418,14 @@ describe('symbiote-node engine exports', () => {
     assert.equal(engine.GraphHistory.name, 'GraphHistory');
     assert.equal(Object.hasOwn(engine, 'History'), false);
   });
+});
+
+describe('symbiote-node graph exports', () => {
+  for (const [name, kind] of GRAPH_EXPORTS) {
+    it(`${name} is exported`, () => {
+      assert.equal(typeof graph[name], kind, `${name} must be ${kind}`);
+    });
+  }
 });
 
 describe('symbiote-node manifest exports', () => {

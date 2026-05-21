@@ -19,6 +19,10 @@
       "import": "./engine/index.js",
       "default": "./engine/index.js"
     },
+    "./graph": {
+      "import": "./graph/index.js",
+      "default": "./graph/index.js"
+    },
     "./engine/cli": "./engine/cli.js",
     "./manifest": {
       "import": "./manifest/index.js",
@@ -49,6 +53,7 @@
     "index.js",
     "custom-elements.json",
     "core/",
+    "graph/",
     "engine/*.js",
     "manifest/",
     "tokens/",

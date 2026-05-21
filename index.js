@@ -5,6 +5,7 @@
  */
 
 export * from './core/index.js';
+export * from './graph/index.js';
 
 export {
   NodeShape,

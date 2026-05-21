@@ -45,6 +45,7 @@ import {
   RULESETS,
   listRules,
   listGraphSchemas,
+  listProjectSchemas,
   UI_SCHEMA_VERSIONS,
   getUiSchema,
 } from '../manifest/index.js';
@@ -68,6 +69,11 @@ const EXPORT_ENTRYPOINTS = [
     specifier: 'symbiote-node/engine',
     kind: 'node-safe',
     description: 'Server-side graph runtime, registry, executor, and serialization helpers.',
+  },
+  {
+    specifier: 'symbiote-node/graph',
+    kind: 'node-safe',
+    description: 'Universal graph model normalization for UI, workflow, automation, and media projects.',
   },
   {
     specifier: 'symbiote-node/manifest',
@@ -660,6 +666,7 @@ async function cmdDiscover(options = {}) {
       rules: listRules(),
       schemas: [
         ...listGraphSchemas(),
+        ...listProjectSchemas(),
         ...UI_SCHEMA_VERSIONS.map((sv) => ({
           version: sv.version,
           path: sv.path,

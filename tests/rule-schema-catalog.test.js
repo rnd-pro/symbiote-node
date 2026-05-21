@@ -5,12 +5,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getGraphSchema, listGraphVersions } from '../manifest/graph-schema.js';
+import { getProjectSchema, listProjectSchemaVersions } from '../manifest/project-schema-catalog.js';
 import { getRule, getRuleSet, listRuleSets, listRules } from '../manifest/rule-catalog.js';
 import { getUiSchema, listUiSchemaVersions } from '../manifest/ui-schema-catalog.js';
 
 let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
 let ruleset = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'rules/symbiote-3x.json'), 'utf-8'));
 let graphSchema = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/graph-v1.json'), 'utf-8'));
+let graphModelSchema = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/graph-model-v1.json'), 'utf-8'));
+let projectPackageSchema = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/project-package-v1.json'), 'utf-8'));
+let projectTransactionSchema = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/project-transaction-v1.json'), 'utf-8'));
 let uiSchemas = {
   'component-descriptor-v1': JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/component-descriptor-v1.json'), 'utf-8')),
   'runtime-ui-v1': JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/runtime-ui-v1.json'), 'utf-8')),
@@ -58,12 +62,27 @@ describe('graph schema catalog', () => {
   });
 
   it('exposes graph schema versions without importing JSON at runtime', () => {
-    assert.deepEqual(listGraphVersions(), ['v1']);
+    assert.deepEqual(listGraphVersions(), ['v1', 'graph-model-v1']);
     assert.deepEqual(getGraphSchema('v1').required, ['version', 'nodes', 'connections']);
+    assert.deepEqual(getGraphSchema('graph-model-v1').required, ['version', 'nodes']);
   });
 
   it('catalog graph schema matches the published schema JSON', () => {
     assert.deepEqual(getGraphSchema('v1'), graphSchema);
+    assert.deepEqual(getGraphSchema('graph-model-v1'), graphModelSchema);
+  });
+});
+
+describe('project schema catalog', () => {
+  it('exposes project package schema versions without importing JSON at runtime', () => {
+    assert.deepEqual(listProjectSchemaVersions(), ['project-package-v1', 'project-transaction-v1']);
+    assert.deepEqual(getProjectSchema('project-package-v1').required, ['version', 'id', 'entry', 'graphs', 'layouts', 'themes']);
+    assert.deepEqual(getProjectSchema('project-transaction-v1').required, ['version', 'id', 'operations']);
+  });
+
+  it('catalog project schema matches the published schema JSON', () => {
+    assert.deepEqual(getProjectSchema('project-package-v1'), projectPackageSchema);
+    assert.deepEqual(getProjectSchema('project-transaction-v1'), projectTransactionSchema);
   });
 });
 

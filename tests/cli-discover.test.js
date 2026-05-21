@@ -293,10 +293,10 @@ describe('discover command', () => {
 
     it('exposes graph and runtime UI schemas', () => {
       let schemas = new Map(data.manifest.schemas.map((schema) => [schema.version, schema]));
-      for (let version of ['v1', 'component-descriptor-v1', 'runtime-ui-v1', 'theme-rule-block-v1']) {
-        assert.ok(schemas.has(version), `${version} schema must be discoverable`);
-        assert.equal(typeof schemas.get(version).path, 'string');
-        assert.equal(typeof schemas.get(version).$id, 'string');
+    for (let version of ['v1', 'graph-model-v1', 'project-package-v1', 'project-transaction-v1', 'component-descriptor-v1', 'runtime-ui-v1', 'theme-rule-block-v1']) {
+      assert.ok(schemas.has(version), `${version} schema must be discoverable`);
+      assert.equal(typeof schemas.get(version).path, 'string');
+      assert.equal(typeof schemas.get(version).$id, 'string');
       }
     });
 

@@ -36,6 +36,36 @@ canvas.setEditor(editor);
 
 The root `symbiote-node` entrypoint is Node-safe and does not register browser custom elements. Browser UI modules live in `symbiote-node/ui`; in SSR or pure Node imports, browser-only exports are present but resolve to `undefined` until DOM globals are available.
 
+### Universal Graph Model
+
+`symbiote-node/graph` exposes Node-safe graph normalization for project data, UI layouts, automation workflows, media pipelines, and external node-workflow formats. `graph-model-v1` keeps node flow, params, design, hierarchy, state, views, and theme references as separate data domains so host apps and agents can project the same model into editors, dashboards, runtime execution, or custom layouts without product-specific fields.
+
+```javascript
+import { graphModelToCanvasGraphModel, normalizeGraphModel } from 'symbiote-node/graph';
+
+const model = normalizeGraphModel({
+  version: 'graph-model-v1',
+  nodes: [
+    {
+      id: 'panel:queue',
+      kind: 'ui.panel',
+      params: { source: 'automation.queue' },
+      design: { component: 'sn-list-item', themeScope: 'panel.queue' },
+    },
+  ],
+});
+
+const canvasModel = graphModelToCanvasGraphModel(model, { view: 'main' });
+```
+
+`project-package-v1` wraps those graphs with layouts, themes, packs, data sources, and agent rules. A host application can load a package config and choose the entry graph, layout, and theme without hardcoding a product shell. Built-in provider themes validate modifier names against the published theme controls so agent-authored packages cannot silently invent unsupported theme knobs.
+
+`project-transaction-v1` describes safe agent-authored mutations such as adding graph nodes, connecting edges, adding runtime panels, replacing a layout root, or setting a theme modifier. Hosts can apply those transactions to project packages and re-render without restarting the application.
+
+`createProjectRuntime(project)` wraps a normalized project package with a small subscription-based host state. It applies `project-transaction-v1` updates, exposes the active graph/layout/theme records, and rejects transactions targeting a different project. Product apps remain responsible for persistence, permissions, and route policy.
+
+Canvas adapters bridge the universal graph contract to the existing `CanvasGraph` model shape. They are generic: product skeletons, route state, code-analysis metadata, and server policy stay in the host or provider layer.
+
 ### Source Display And Editing
 
 `CodeBlock`, `SourceViewer`, and `SourceEditor` are reusable browser-only modules from `symbiote-node/ui`. Host applications provide file loading and persistence; the library owns rendering, markdown/code display, editable source text state, dirty state, readonly/disabled behavior, focus helpers, and tab insertion.
@@ -218,6 +248,8 @@ applyPalette(canvasElement, SYNTHWAVE_PALETTE); // Colors only
 
 Agent-readable theme construction data is published through `symbiote-node/manifest` and `node engine/cli.js discover`. The default provider theme is described as composable rule blocks: source accents, color cascade, geometry cascade, typography cascade, motion/effects, semantic aliases, and component aliases. Each block exposes inputs, outputs, parameters, and derivations so agents can compose new themes from root accents and density rules instead of writing one-off component overrides.
 
+Theme modifiers are project data, not product code. For the default provider theme, supported controls are `hue`, `chroma`, `backgroundLightness`, `surfaceLightness`, `textLightness`, `density`, `radius`, `motion`, and `elevation`; custom theme packs can define their own modifier vocabulary.
+
 ### Layout System (BSP)
 
 Binary Space Partitioning layout engine for IDE-style panel workspaces. Panels resize by dragging dividers, sections split horizontally or vertically. Sidebar navigation with section switching and panel routing.
@@ -342,6 +374,9 @@ Use `--json` with `run`, `validate`, `list`, and `inspect` when integrating with
 
 - `custom-elements.json` — Web Component catalog
 - `manifest/` — components, themes, rules, and graph schema accessors
+- `symbiote-node/graph` — Node-safe `graph-model-v1` normalizers for shared project/workflow/UI graph data
+- `schemas/project-package-v1.json` — portable project config contract for graph/layout/theme/packs assembly
+- `schemas/project-transaction-v1.json` — safe mutation contract for agent-built UI and workflow changes
 - `symbiote-node/ui` — browser Web Components, router helpers, chat primitives, and shared UI styles
 - `tokens/` — design token and theme JSON files
 - `rules/` — Symbiote.js and library boundary rules
@@ -360,6 +395,7 @@ Custom handlers can be loaded from any directory with `loadHandlers()`. Handler 
 symbiote-node/
 ├── index.js          — Node-safe public API
 ├── ui/               — browser/UI entrypoint for custom elements
+├── graph/            — universal graph model normalization
 ├── manifest/         — agent-readable catalogs
 ├── tokens/           — design token JSON
 ├── rules/            — machine-readable rules

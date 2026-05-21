@@ -15,6 +15,7 @@ describe('package exports resolution', () => {
     let root = await import('symbiote-node');
     let ui = await import('symbiote-node/ui');
     let engine = await import('symbiote-node/engine');
+    let graph = await import('symbiote-node/graph');
     let manifest = await import('symbiote-node/manifest');
     let layout = await import('symbiote-node/layout');
     let markdownFormatter = await import('symbiote-node/display/markdown-formatter');
@@ -44,6 +45,12 @@ describe('package exports resolution', () => {
     assert.ok('SourceEditor' in ui, 'UI entrypoint must expose SourceEditor binding');
     assert.ok('navigate' in ui, 'UI entrypoint must expose router binding');
     assert.equal(typeof engine.Graph, 'function');
+    assert.equal(typeof graph.normalizeGraphModel, 'function');
+    assert.equal(typeof graph.normalizeProjectPackage, 'function');
+    assert.equal(typeof graph.normalizeProjectTransaction, 'function');
+    assert.equal(typeof graph.applyProjectTransaction, 'function');
+    assert.equal(typeof graph.createProjectRuntime, 'function');
+    assert.equal(typeof root.normalizeGraphModel, 'function');
     assert.equal(typeof manifest.listComponents, 'function');
     assert.equal(typeof layout.createSectionRegistry, 'function');
     assert.equal(typeof layout.LayoutTree.collectPanels, 'function');

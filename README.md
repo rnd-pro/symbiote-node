@@ -348,7 +348,7 @@ Use `--json` with `run`, `validate`, `list`, and `inspect` when integrating with
 - `schemas/` — graph JSON schemas
 - `node engine/cli.js discover` — one JSON payload for component, theme, rule, token, schema, and export discovery
 
-Theme recipes are available through `getThemeRecipe(name)` from `symbiote-node/manifest` and through `discover.manifest.themeRecipes`. A recipe combines the theme file, DTCG token tree, flattened token paths, runtime CSS custom properties, and rule blocks so agents can build or modify themes from explicit source accents, cascade formulas, semantic aliases, and component aliases.
+Theme recipes are available through `getThemeRecipe(name)` from `symbiote-node/manifest` and through `discover.manifest.themeRecipes`. A recipe combines the theme file, DTCG token tree, flattened token paths, runtime CSS custom properties, parametric controls, element groups, and rule blocks so agents can build or modify themes from explicit source accents, cascade formulas, semantic aliases, and component aliases. The default provider theme exposes native CSS controls such as `--sn-theme-hue`, `--sn-theme-chroma`, `--sn-theme-density`, and `--sn-theme-radius-scale`; host apps can override those at `:root` or any subtree boundary without per-component style patches.
 
 ## Engine Handlers
 

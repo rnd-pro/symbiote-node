@@ -242,12 +242,16 @@ const MANIFEST_EXPORTS = [
   ['getComponentTags', 'function'],
   ['THEME_NAMES', 'object'],
   ['TOKEN_FILES', 'object'],
+  ['THEME_CONTROLS', 'object'],
+  ['THEME_ELEMENT_GROUPS', 'object'],
   ['listThemes', 'function'],
   ['getTheme', 'function'],
   ['getThemeTokens', 'function'],
   ['getThemeCssTokens', 'function'],
   ['getThemeRecipe', 'function'],
+  ['getThemeControls', 'function'],
   ['getThemeRuleBlocks', 'function'],
+  ['listThemeElementGroups', 'function'],
   ['listTokenFiles', 'function'],
   ['flattenTokens', 'function'],
   ['RULESETS', 'object'],
@@ -363,10 +367,12 @@ describe('symbiote-node UI exports', () => {
   it('uses default dark as the default theme and palette', () => {
     assert.equal(ui.DEFAULT_THEME, ui.DEFAULT_DARK);
     assert.equal(ui.DEFAULT_PALETTE, ui.DEFAULT_DARK_PALETTE);
-    assert.equal(ui.DEFAULT_THEME.tokens['--sn-panel-bg'], '#222222');
+    assert.equal(ui.DEFAULT_THEME.tokens['--sn-theme-hue'], '218');
+    assert.equal(ui.DEFAULT_THEME.tokens['--sn-hue-accent'], 'var(--sn-theme-hue)');
+    assert.equal(ui.DEFAULT_THEME.tokens['--sn-panel-bg'], 'hsl(0 0% var(--sn-lit-surface))');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-layout-gap-bg'], 'transparent');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-layout-border'], 'transparent');
-    assert.equal(ui.DEFAULT_THEME.tokens['--sn-tree-row-min-height'], '22px');
+    assert.equal(ui.DEFAULT_THEME.tokens['--sn-tree-row-min-height'], 'calc(22px * var(--sn-theme-density))');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-composer-bg'], 'var(--sn-node-bg)');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-tabs-active-bg'], 'var(--sn-node-bg)');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-bg-overlay'], 'rgba(0, 0, 0, 0.45)');

@@ -1,6 +1,17 @@
 {
   "name": "default-dark",
   "extends": "../base.json",
+  "control": {
+    "hue": { "$type": "number", "$value": "218" },
+    "chroma": { "$type": "percentage", "$value": "89%" },
+    "backgroundLightness": { "$type": "percentage", "$value": "10%" },
+    "surfaceLightness": { "$type": "percentage", "$value": "13%" },
+    "textLightness": { "$type": "percentage", "$value": "94%" },
+    "density": { "$type": "number", "$value": "1" },
+    "radius": { "$type": "number", "$value": "1" },
+    "motion": { "$type": "number", "$value": "1" },
+    "elevation": { "$type": "number", "$value": "1" }
+  },
   "color": {
     "background": { "$type": "color", "$value": "#1a1a1a" },
     "surface": { "$type": "color", "$value": "#222222" },
@@ -20,9 +31,9 @@
     "layoutResizerBackground": { "$type": "color", "$value": "transparent" },
     "layoutResizerHoverBackground": { "$type": "color", "$value": "rgba(255, 255, 255, 0.08)" },
     "nodeHover": { "$type": "color", "$value": "#444444" },
-    "accentBackground": { "$type": "color", "$value": "rgba(76, 139, 245, 0.12)" },
-    "accentBackgroundSubtle": { "$type": "color", "$value": "rgba(76, 139, 245, 0.06)" },
-    "accentBorder": { "$type": "color", "$value": "rgba(76, 139, 245, 0.2)" },
+    "accentBackground": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.12)" },
+    "accentBackgroundSubtle": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.06)" },
+    "accentBorder": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.2)" },
     "successBorder": { "$type": "color", "$value": "rgba(76, 175, 80, 0.2)" },
     "dangerBorder": { "$type": "color", "$value": "rgba(244, 67, 54, 0.2)" },
     "dangerBackground": { "$type": "color", "$value": "rgba(244, 67, 54, 0.12)" },
@@ -82,9 +93,9 @@
     "control": { "$type": "dimension", "$value": "4px" }
   },
   "effect": {
-    "hoverTransition": { "$type": "transition", "$value": "background-color 120ms ease, border-color 120ms ease" },
-    "focusRing": { "$type": "shadow", "$value": "0 0 0 2px rgba(76, 139, 245, 0.35)" },
-    "dragShadow": { "$type": "shadow", "$value": "0 14px 32px rgba(0, 0, 0, 0.35)" },
-    "loadingPulse": { "$type": "gradient", "$value": "linear-gradient(90deg, transparent, rgba(76, 139, 245, 0.6), transparent)" }
+    "hoverTransition": { "$type": "transition", "$value": "background-color calc(120ms * var(--sn-theme-motion-scale)) ease, border-color calc(120ms * var(--sn-theme-motion-scale)) ease" },
+    "focusRing": { "$type": "shadow", "$value": "0 0 0 2px hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.35)" },
+    "dragShadow": { "$type": "shadow", "$value": "0 14px calc(32px * var(--sn-theme-elevation-scale)) rgba(0, 0, 0, 0.35)" },
+    "loadingPulse": { "$type": "gradient", "$value": "linear-gradient(90deg, transparent, hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.6), transparent)" }
   }
 }

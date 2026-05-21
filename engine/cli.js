@@ -38,6 +38,8 @@ import {
   getTheme,
   getThemeTokens,
   getThemeRecipe,
+  getThemeControls,
+  listThemeElementGroups,
   listTokenFiles,
   listThemeRuleBlocks,
   RULESETS,
@@ -644,6 +646,8 @@ async function cmdDiscover(options = {}) {
         tokens: getThemeTokens(name),
       })),
       themeRuleBlocks: listThemeRuleBlocks(),
+      themeControls: Object.fromEntries(THEME_NAMES.map((name) => [name, getThemeControls(name)])),
+      themeElementGroups: listThemeElementGroups(),
       themeRecipes: THEME_NAMES.map((name) => getThemeRecipe(name)).filter(Boolean),
       tokenFiles: listTokenFiles(),
       rulesets: RULESETS.map((rs) => ({

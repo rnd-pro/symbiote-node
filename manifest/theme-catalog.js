@@ -30,25 +30,92 @@ function copyData(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+export let THEME_CONTROLS = {
+  'default-dark': [
+    { name: 'hue', type: 'number', default: '218', cssVar: '--sn-theme-hue', description: 'Primary accent hue in native CSS HSL space.' },
+    { name: 'chroma', type: 'percentage', default: '89%', cssVar: '--sn-theme-chroma', description: 'Primary accent saturation/chroma used by selected, focus, and loading states.' },
+    { name: 'backgroundLightness', type: 'percentage', default: '10%', cssVar: '--sn-theme-bg-lightness', description: 'Root surface lightness; can move the preset between darker and lighter modes.' },
+    { name: 'surfaceLightness', type: 'percentage', default: '13%', cssVar: '--sn-theme-surface-lightness', description: 'Panel and control surface lightness derived near the background.' },
+    { name: 'textLightness', type: 'percentage', default: '94%', cssVar: '--sn-theme-text-lightness', description: 'Foreground text lightness inherited by text aliases.' },
+    { name: 'density', type: 'number', default: '1', cssVar: '--sn-theme-density', description: 'Density multiplier for repeated navigation row height.' },
+    { name: 'radius', type: 'number', default: '1', cssVar: '--sn-theme-radius-scale', description: 'Radius multiplier for node, row, list, composer, and source action corners.' },
+    { name: 'motion', type: 'number', default: '1', cssVar: '--sn-theme-motion-scale', description: 'Global motion multiplier for transitions and feedback effects.' },
+    { name: 'elevation', type: 'number', default: '1', cssVar: '--sn-theme-elevation-scale', description: 'Global shadow and overlay intensity multiplier.' },
+  ],
+};
+
+export let THEME_ELEMENT_GROUPS = [
+  {
+    name: 'panel',
+    description: 'Framed layout surfaces such as sidebars, graph panels, source panes, and dialogs.',
+    tokens: ['--sn-panel-bg', '--sn-node-border', '--sn-node-shadow', '--sn-node-radius'],
+    usedBy: ['panel-layout', 'source-viewer', 'source-editor', 'chat-transcript', 'sn-loading-overlay'],
+  },
+  {
+    name: 'control',
+    description: 'Clickable controls including toolbar buttons, icon buttons, tab close actions, and dialog actions.',
+    tokens: ['--sn-toolbar-bg', '--sn-toolbar-border', '--sn-toolbar-color', '--sn-toolbar-hover', '--sn-effect-hover-transition', '--sn-effect-focus-ring'],
+    usedBy: ['project-tabs', 'source-viewer', 'chat-composer'],
+  },
+  {
+    name: 'row',
+    description: 'Reusable list/tree/navigation rows with hover, active, selected, and focus states.',
+    tokens: ['--sn-tree-row-height', '--sn-tree-row-hover-bg', '--sn-tree-row-selected-bg', '--sn-list-item-hover-bg', '--sn-list-item-active-bg'],
+    usedBy: ['sn-tree-view', 'sn-list-item', 'chat-list-item', 'chat-sidebar-item'],
+  },
+  {
+    name: 'input',
+    description: 'Text entry, code entry, composer, and textarea surfaces.',
+    tokens: ['--sn-composer-bg', '--sn-source-editor-bg', '--sn-editor-border', '--sn-editor-font', '--sn-effect-focus-ring'],
+    usedBy: ['chat-composer', 'source-editor'],
+  },
+  {
+    name: 'code-surface',
+    description: 'Read-only and editable source/code surfaces.',
+    tokens: ['--sn-source-bg', '--sn-source-header-bg', '--sn-source-border', '--sn-source-editor-bg', '--sn-source-editor-color'],
+    usedBy: ['source-viewer', 'source-editor'],
+  },
+  {
+    name: 'status',
+    description: 'Badges, loading, success, warning, danger, and transient status feedback.',
+    tokens: ['--sn-success-color', '--sn-warning-color', '--sn-danger-color', '--sn-loading-bar-bg', '--sn-effect-loading-pulse'],
+    usedBy: ['sn-loading-overlay', 'chat-transcript', 'chat-composer'],
+  },
+  {
+    name: 'graph',
+    description: 'Graph nodes, edges, clusters, pins, sockets, and graph canvas feedback.',
+    tokens: ['--sn-node-bg', '--sn-node-border', '--sn-node-selected', '--sn-conn-color', '--sn-cat-server', '--sn-cat-control', '--sn-cat-data'],
+    usedBy: ['node-canvas', 'canvas-graph', 'graph-explorer-shell'],
+  },
+  {
+    name: 'tab',
+    description: 'Project and document tabs with active, hover, divider, and close affordances.',
+    tokens: ['--sn-tabs-bg', '--sn-tabs-border', '--sn-tabs-active-bg', '--sn-tabs-hover-bg', '--sn-tabs-radius'],
+    usedBy: ['project-tabs'],
+  },
+];
+
 export let THEME_RULE_BLOCKS = [
   {
     name: 'default-dark-source-accents',
     theme: 'default-dark',
     kind: 'source-accent',
-    description: 'Minimal human or agent-selected inputs for the default dark provider theme.',
+    description: 'Minimal human or agent-selected inputs for the default provider theme.',
     parameters: [
-      { name: 'neutral.background', type: 'color', default: '#1a1a1a', description: 'Root app background for the dark operational surface.' },
-      { name: 'neutral.surface', type: 'color', default: '#222222', description: 'Primary panel and composed control surface.' },
-      { name: 'accent.primary', type: 'color', default: '#4c8bf5', description: 'Primary action, focus, and selection accent.' },
-      { name: 'density.scale', type: 'number', default: 'compact', description: 'Compact density target for repeated work surfaces.' },
+      { name: 'hue', type: 'number', default: '218', description: 'Native CSS HSL hue for primary accent and derived state colors.' },
+      { name: 'chroma', type: 'percentage', default: '89%', description: 'Native CSS HSL saturation/chroma for accent-derived colors.' },
+      { name: 'backgroundLightness', type: 'percentage', default: '10%', description: 'Root surface lightness, adjustable from darker to lighter modes.' },
+      { name: 'surfaceLightness', type: 'percentage', default: '13%', description: 'Panel and control surface lightness near the root background.' },
+      { name: 'textLightness', type: 'percentage', default: '94%', description: 'Primary foreground lightness for contrast tuning.' },
+      { name: 'density', type: 'number', default: '1', description: 'User density modifier for repeated operational surfaces.' },
     ],
-    inputs: ['accent.primary', 'accent.success', 'accent.warning', 'accent.danger', 'neutral.background'],
+    inputs: ['hue', 'chroma', 'backgroundLightness', 'surfaceLightness', 'textLightness', 'density'],
     outputs: ['color.accent', 'color.success', 'color.warning', 'color.danger', 'color.background'],
     formula: 'Source accents define the stable roots used by color, semantic, and component aliases.',
     derivations: [
-      { output: 'color.background', inputs: ['neutral.background'], expression: 'neutral.background', description: 'The page and root app background stays the first user-selected neutral.' },
-      { output: 'color.surface', inputs: ['neutral.surface'], expression: 'neutral.surface', description: 'Panel surfaces derive from the second neutral root.' },
-      { output: 'color.accent', inputs: ['accent.primary'], expression: 'accent.primary', description: 'The primary accent is the stable root for selected, focus, and action states.' },
+      { output: 'color.background', inputs: ['backgroundLightness'], expression: 'hsl(0 0% backgroundLightness)', description: 'The page and root app background derive from the neutral lightness control.' },
+      { output: 'color.surface', inputs: ['surfaceLightness'], expression: 'hsl(0 0% surfaceLightness)', description: 'Panel surfaces derive from the surface lightness control.' },
+      { output: 'color.accent', inputs: ['hue', 'chroma'], expression: 'hsl(hue chroma 63%)', description: 'The primary accent is native CSS HSL so agents can shift hue and chroma at runtime.' },
     ],
   },
   {
@@ -202,6 +269,17 @@ export let THEME_TOKENS = {
   'default-dark': {
     name: 'default-dark',
     extends: '../base.json',
+    control: {
+      hue: { $type: 'number', $value: '218' },
+      chroma: { $type: 'percentage', $value: '89%' },
+      backgroundLightness: { $type: 'percentage', $value: '10%' },
+      surfaceLightness: { $type: 'percentage', $value: '13%' },
+      textLightness: { $type: 'percentage', $value: '94%' },
+      density: { $type: 'number', $value: '1' },
+      radius: { $type: 'number', $value: '1' },
+      motion: { $type: 'number', $value: '1' },
+      elevation: { $type: 'number', $value: '1' },
+    },
     color: {
       background: { $type: 'color', $value: '#1a1a1a' },
       surface: { $type: 'color', $value: '#222222' },
@@ -221,9 +299,9 @@ export let THEME_TOKENS = {
       layoutResizerBackground: { $type: 'color', $value: 'transparent' },
       layoutResizerHoverBackground: { $type: 'color', $value: 'rgba(255, 255, 255, 0.08)' },
       nodeHover: { $type: 'color', $value: '#444444' },
-      accentBackground: { $type: 'color', $value: 'rgba(76, 139, 245, 0.12)' },
-      accentBackgroundSubtle: { $type: 'color', $value: 'rgba(76, 139, 245, 0.06)' },
-      accentBorder: { $type: 'color', $value: 'rgba(76, 139, 245, 0.2)' },
+      accentBackground: { $type: 'color', $value: 'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.12)' },
+      accentBackgroundSubtle: { $type: 'color', $value: 'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.06)' },
+      accentBorder: { $type: 'color', $value: 'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.2)' },
       successBorder: { $type: 'color', $value: 'rgba(76, 175, 80, 0.2)' },
       dangerBorder: { $type: 'color', $value: 'rgba(244, 67, 54, 0.2)' },
       dangerBackground: { $type: 'color', $value: 'rgba(244, 67, 54, 0.12)' },
@@ -283,10 +361,10 @@ export let THEME_TOKENS = {
       control: { $type: 'dimension', $value: '4px' },
     },
     effect: {
-      hoverTransition: { $type: 'transition', $value: 'background-color 120ms ease, border-color 120ms ease' },
-      focusRing: { $type: 'shadow', $value: '0 0 0 2px rgba(76, 139, 245, 0.35)' },
-      dragShadow: { $type: 'shadow', $value: '0 14px 32px rgba(0, 0, 0, 0.35)' },
-      loadingPulse: { $type: 'gradient', $value: 'linear-gradient(90deg, transparent, rgba(76, 139, 245, 0.6), transparent)' },
+      hoverTransition: { $type: 'transition', $value: 'background-color calc(120ms * var(--sn-theme-motion-scale)) ease, border-color calc(120ms * var(--sn-theme-motion-scale)) ease' },
+      focusRing: { $type: 'shadow', $value: '0 0 0 2px hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.35)' },
+      dragShadow: { $type: 'shadow', $value: '0 14px calc(32px * var(--sn-theme-elevation-scale)) rgba(0, 0, 0, 0.35)' },
+      loadingPulse: { $type: 'gradient', $value: 'linear-gradient(90deg, transparent, hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.6), transparent)' },
     },
   },
   dark: {
@@ -411,6 +489,14 @@ export function getThemeRuleBlocks(themeName) {
   return listThemeRuleBlocks({ theme: themeName });
 }
 
+export function getThemeControls(themeName) {
+  return copyData(THEME_CONTROLS[themeName] || []);
+}
+
+export function listThemeElementGroups() {
+  return copyData(THEME_ELEMENT_GROUPS);
+}
+
 export function getThemeCssTokens(themeName) {
   return { ...(RUNTIME_THEMES[themeName]?.tokens || {}) };
 }
@@ -428,6 +514,8 @@ export function getThemeRecipe(themeName) {
     flatTokens: copyData(flattenTokens(tokens)),
     cssTokens,
     cssTokenSource: RUNTIME_THEMES[themeName] ? 'runtime-theme' : 'not-runtime-complete',
+    controls: getThemeControls(themeName),
+    elementGroups: listThemeElementGroups(),
     ruleBlocks: copyData(getThemeRuleBlocks(themeName)),
   };
 }

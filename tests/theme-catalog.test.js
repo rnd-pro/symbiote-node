@@ -8,10 +8,12 @@ import {
   THEME_NAMES,
   flattenTokens,
   getTheme,
+  getThemeControls,
   getThemeCssTokens,
   getThemeRecipe,
   getThemeRuleBlocks,
   getThemeTokens,
+  listThemeElementGroups,
   listThemeRuleBlocks,
   listThemes,
   listTokenFiles,
@@ -67,7 +69,12 @@ describe('theme token files', () => {
     assert.equal(getThemeTokens('default-dark').component.panelBackground.$value, '#222222');
     assert.equal(getThemeTokens('default-dark').component.layoutGapBackground.$value, 'transparent');
     assert.equal(getThemeTokens('default-dark').component.layoutBorder.$value, 'transparent');
-    assert.equal(getThemeTokens('default-dark').component.accentBackground.$value, 'rgba(76, 139, 245, 0.12)');
+    assert.equal(getThemeTokens('default-dark').control.hue.$value, '218');
+    assert.equal(getThemeTokens('default-dark').control.density.$value, '1');
+    assert.equal(
+      getThemeTokens('default-dark').component.accentBackground.$value,
+      'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.12)'
+    );
     assert.equal(getThemeTokens('default-dark').geometry.treeRowHeight.$value, '22px');
     assert.equal(getThemeTokens('default-dark').typography.iconFont.$value, "'Material Symbols Outlined'");
     assert.equal(getThemeTokens('default-dark').alias.composerBackground.$value, 'var(--sn-node-bg)');
@@ -118,6 +125,44 @@ describe('theme token files', () => {
     );
   });
 
+  it('publishes controls and element groups for parametric theme editing', () => {
+    let controls = getThemeControls('default-dark');
+    assert.deepEqual(
+      controls.map((control) => control.name),
+      ['hue', 'chroma', 'backgroundLightness', 'surfaceLightness', 'textLightness', 'density', 'radius', 'motion', 'elevation']
+    );
+    assert.equal(controls.find((control) => control.name === 'hue').cssVar, '--sn-theme-hue');
+    assert.equal(controls.find((control) => control.name === 'chroma').cssVar, '--sn-theme-chroma');
+    assert.equal(controls.find((control) => control.name === 'density').default, '1');
+
+    controls.length = 0;
+    assert.equal(getThemeControls('default-dark').length, 9);
+    assert.deepEqual(getThemeControls('missing'), []);
+
+    let groups = listThemeElementGroups();
+    let groupNames = groups.map((group) => group.name);
+    for (let name of ['panel', 'control', 'row', 'input', 'code-surface', 'status', 'graph', 'tab']) {
+      assert.ok(groupNames.includes(name), `${name} group must be published`);
+    }
+
+    let runtimeTokens = new Set(Object.keys(DEFAULT_DARK.tokens));
+    let componentTags = new Set(listComponents().map((component) => component.tagName));
+    for (let group of groups) {
+      assert.equal(typeof group.description, 'string');
+      assert.ok(Array.isArray(group.tokens));
+      assert.ok(Array.isArray(group.usedBy));
+      for (let token of group.tokens) {
+        assert.ok(runtimeTokens.has(token), `${group.name} token ${token} must exist in the runtime theme`);
+      }
+      for (let tagName of group.usedBy) {
+        assert.ok(componentTags.has(tagName), `${group.name} usedBy ${tagName} must be a registered component`);
+      }
+    }
+
+    groups[0].tokens.length = 0;
+    assert.ok(listThemeElementGroups()[0].tokens.length > 0);
+  });
+
   it('keeps rule block outputs linked to real theme and component contracts', () => {
     let knownThemes = new Set(THEME_NAMES);
     let componentTags = new Set(listComponents().map((component) => component.tagName));
@@ -147,14 +192,25 @@ describe('theme token files', () => {
     assert.equal(recipe.tokenFile, 'tokens/themes/default-dark.json');
     assert.equal(recipe.theme.path, 'tokens/themes/default-dark.json');
     assert.equal(recipe.tokens.color.accent.$value, '#4c8bf5');
+    assert.equal(recipe.tokens.control.hue.$value, '218');
     assert.equal(recipe.flatTokens['geometry.treeRowHeight'].$value, '22px');
     assert.equal(recipe.cssTokens['--sn-layout-border'], 'transparent');
+    assert.equal(recipe.cssTokens['--sn-theme-hue'], '218');
     assert.equal(recipe.cssTokenSource, 'runtime-theme');
-    assert.equal(recipe.cssTokens['--sn-effect-hover-transition'], 'background-color 120ms ease, border-color 120ms ease');
+    assert.equal(
+      recipe.cssTokens['--sn-effect-hover-transition'],
+      'background-color calc(120ms * var(--sn-theme-motion-scale)) ease, border-color calc(120ms * var(--sn-theme-motion-scale)) ease'
+    );
+    assert.equal(recipe.controls.length, getThemeControls('default-dark').length);
+    assert.ok(recipe.elementGroups.some((group) => group.name === 'graph'));
     assert.equal(recipe.ruleBlocks.length, listThemeRuleBlocks({ theme: 'default-dark' }).length);
     recipe.tokens.color.accent.$value = '#000000';
+    recipe.controls.length = 0;
+    recipe.elementGroups.length = 0;
     recipe.ruleBlocks.length = 0;
     assert.equal(getThemeTokens('default-dark').color.accent.$value, '#4c8bf5');
+    assert.ok(getThemeRecipe('default-dark').controls.length > 0);
+    assert.ok(getThemeRecipe('default-dark').elementGroups.length > 0);
     assert.ok(getThemeRecipe('default-dark').ruleBlocks.length > 0);
     assert.equal(getThemeRecipe('dark').cssTokenSource, 'not-runtime-complete');
     assert.deepEqual(getThemeRecipe('dark').cssTokens, {});

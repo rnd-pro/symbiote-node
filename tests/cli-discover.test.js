@@ -190,6 +190,7 @@ describe('discover command', () => {
         'node-canvas',
         'canvas-graph',
         'graph-explorer-shell',
+        'context-menu',
         'panel-layout',
         'layout-sidebar',
         'layout-node',
@@ -208,8 +209,12 @@ describe('discover command', () => {
         'chat-list-item',
         'chat-sidebar-shell',
         'chat-sidebar-item',
+        'chat-sidebar-sub-item',
         'sn-list-item',
         'sn-tree-view',
+        'node-search',
+        'graph-tabs',
+        'graph-breadcrumb',
         'graph-frame',
       ]) {
         let component = components.get(tag);
@@ -227,6 +232,7 @@ describe('discover command', () => {
       assert.ok(components.get('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));
       assert.ok(components.get('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
       assert.ok(components.get('graph-explorer-shell').contract.slots.some((slot) => slot.name === 'canvas'));
+      assert.ok(components.get('context-menu').contract.methods.some((method) => method.name === 'show'));
       assert.ok(components.get('node-canvas').contract.events.some((event) => event.name === 'manualviewport'));
       assert.ok(components.get('layout-node').contract.events.some((event) => event.name === 'layout-change'));
       assert.ok(components.get('code-block').contract.methods.some((method) => method.name === 'setDiagnostics'));
@@ -237,6 +243,9 @@ describe('discover command', () => {
       assert.ok(components.get('chat-list').contract.events.some((event) => event.name === 'chat-list-select'));
       assert.ok(components.get('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
       assert.ok(components.get('graph-frame').contract.properties.some((property) => property.name === 'color'));
+      assert.ok(components.get('node-search').contract.methods.some((method) => method.name === 'configure'));
+      assert.ok(components.get('graph-tabs').contract.methods.some((method) => method.name === 'addTab'));
+      assert.ok(components.get('graph-breadcrumb').contract.methods.some((method) => method.name === 'setPath'));
     });
 
     it('exposes themes with token data', () => {

@@ -170,6 +170,7 @@ describe('component registry', () => {
       'node-canvas',
       'canvas-graph',
       'graph-explorer-shell',
+      'context-menu',
       'panel-layout',
       'layout-sidebar',
       'layout-node',
@@ -188,8 +189,12 @@ describe('component registry', () => {
       'chat-list-item',
       'chat-sidebar-shell',
       'chat-sidebar-item',
+      'chat-sidebar-sub-item',
       'sn-list-item',
       'sn-tree-view',
+      'node-search',
+      'graph-tabs',
+      'graph-breadcrumb',
       'graph-frame',
     ]) {
       let component = getComponent(tag);
@@ -210,6 +215,7 @@ describe('component registry', () => {
     assert.ok(getComponent('canvas-graph').contract.events.some((event) => event.name === 'file-selected'));
     assert.ok(getComponent('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
     assert.ok(getComponent('graph-explorer-shell').contract.slots.some((slot) => slot.name === 'canvas'));
+    assert.ok(getComponent('context-menu').contract.methods.some((method) => method.name === 'show'));
     assert.ok(getComponent('node-canvas').contract.events.some((event) => event.name === 'manualviewport'));
     assert.ok(getComponent('layout-node').contract.events.some((event) => event.name === 'layout-change'));
     assert.ok(getComponent('code-block').contract.methods.some((method) => method.name === 'setDiagnostics'));
@@ -220,6 +226,10 @@ describe('component registry', () => {
     assert.ok(getComponent('chat-list').contract.events.some((event) => event.name === 'chat-list-select'));
     assert.ok(getComponent('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
     assert.ok(getComponent('chat-sidebar-item').contract.properties.some((property) => property.name === 'subChats'));
+    assert.ok(getComponent('chat-sidebar-sub-item').contract.events.some((event) => event.name === 'chat-sidebar-delete'));
+    assert.ok(getComponent('node-search').contract.methods.some((method) => method.name === 'configure'));
+    assert.ok(getComponent('graph-tabs').contract.methods.some((method) => method.name === 'addTab'));
+    assert.ok(getComponent('graph-breadcrumb').contract.methods.some((method) => method.name === 'setPath'));
     assert.ok(getComponent('graph-frame').contract.properties.some((property) => property.name === 'color'));
   });
 });

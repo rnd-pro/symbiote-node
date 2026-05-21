@@ -166,6 +166,8 @@ describe('component registry', () => {
 
   it('publishes data-only contracts for first runtime UI surfaces', () => {
     for (let tag of [
+      'canvas-graph',
+      'graph-explorer-shell',
       'panel-layout',
       'project-tabs',
       'source-viewer',
@@ -191,5 +193,8 @@ describe('component registry', () => {
     assert.ok(getComponent('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));
     assert.ok(getComponent('chat-composer').contract.methods.some((method) => method.name === 'setValue'));
     assert.ok(getComponent('source-viewer').contract.methods.some((method) => method.name === 'showFile'));
+    assert.ok(getComponent('canvas-graph').contract.events.some((event) => event.name === 'file-selected'));
+    assert.ok(getComponent('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
+    assert.ok(getComponent('graph-explorer-shell').contract.slots.some((slot) => slot.name === 'canvas'));
   });
 });

@@ -186,6 +186,8 @@ describe('discover command', () => {
     it('exposes constructible contracts for first runtime UI surfaces', () => {
       let components = new Map(data.manifest.components.map((component) => [component.tagName, component]));
       for (let tag of [
+        'canvas-graph',
+        'graph-explorer-shell',
         'panel-layout',
         'project-tabs',
         'source-viewer',
@@ -209,6 +211,8 @@ describe('discover command', () => {
       assert.ok(components.get('source-editor').contract.events.some((event) => event.name === 'source-editor-input'));
       assert.ok(components.get('sn-list-item').contract.events.some((event) => event.name === 'sn-list-item-select'));
       assert.ok(components.get('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));
+      assert.ok(components.get('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
+      assert.ok(components.get('graph-explorer-shell').contract.slots.some((slot) => slot.name === 'canvas'));
     });
 
     it('exposes themes with token data', () => {

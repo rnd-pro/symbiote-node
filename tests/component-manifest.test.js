@@ -192,6 +192,12 @@ describe('component registry', () => {
       'chat-sidebar-sub-item',
       'sn-list-item',
       'sn-tree-view',
+      'node-socket',
+      'cell-bg',
+      'quick-toolbar',
+      'inspector-panel',
+      'palette-browser',
+      'node-minimap',
       'node-search',
       'graph-tabs',
       'graph-breadcrumb',
@@ -227,6 +233,12 @@ describe('component registry', () => {
     assert.ok(getComponent('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
     assert.ok(getComponent('chat-sidebar-item').contract.properties.some((property) => property.name === 'subChats'));
     assert.ok(getComponent('chat-sidebar-sub-item').contract.events.some((event) => event.name === 'chat-sidebar-delete'));
+    assert.ok(getComponent('node-socket').contract.attributes.some((attribute) => attribute.name === 'data-socket-shape'));
+    assert.ok(getComponent('cell-bg').contract.methods.some((method) => method.name === 'pulse'));
+    assert.ok(getComponent('quick-toolbar').contract.methods.some((method) => method.name === 'updatePosition'));
+    assert.ok(getComponent('inspector-panel').contract.events.some((event) => event.name === 'ctrl-change'));
+    assert.ok(getComponent('palette-browser').contract.methods.some((method) => method.name === 'setCategories'));
+    assert.ok(getComponent('node-minimap').contract.events.some((event) => event.name === 'minimap-navigate'));
     assert.ok(getComponent('node-search').contract.methods.some((method) => method.name === 'configure'));
     assert.ok(getComponent('graph-tabs').contract.methods.some((method) => method.name === 'addTab'));
     assert.ok(getComponent('graph-breadcrumb').contract.methods.some((method) => method.name === 'setPath'));

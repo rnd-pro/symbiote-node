@@ -78,6 +78,21 @@ export let COMPONENTS = [
     module: 'node/NodeSocket/NodeSocket.js',
     category: 'node',
     description: 'Socket endpoint component for graph node inputs and outputs.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/graph-model-v1.json',
+      capabilities: ['socket-endpoint', 'shape-variant', 'accent-color', 'connection-target'],
+      attributes: [
+        { name: 'data-socket-color', type: 'string', description: 'Socket color reflected to the local socket color variable.' },
+        { name: 'data-socket-shape', type: 'string', description: 'Socket shape: circle, square, diamond, or triangle.' },
+      ],
+      events: [],
+      themeAliases: [
+        '--sn-node-accent',
+        '--sn-node-bg',
+      ],
+    },
   },
   {
     tagName: 'node-canvas',
@@ -676,6 +691,24 @@ export let COMPONENTS = [
     module: 'effects/CellBg/CellBg.js',
     category: 'effects',
     description: 'Animated cellular automaton background effect.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['animated-background', 'canvas-effect', 'pulse', 'resize-aware', 'reduced-motion-friendly'],
+      properties: [
+        { name: 'active', type: 'boolean', description: 'Persistent animation state.' },
+      ],
+      methods: [
+        { name: 'toggle', type: 'function', description: 'Starts or stops persistent background animation.' },
+        { name: 'pulse', type: 'function', description: 'Runs a timed animation pulse.' },
+        { name: 'resize', type: 'function', description: 'Resizes the canvas to its host bounds.' },
+      ],
+      events: [],
+      themeAliases: [
+        '--sn-bg',
+      ],
+    },
   },
   {
     tagName: 'quick-toolbar',
@@ -683,6 +716,33 @@ export let COMPONENTS = [
     module: 'toolbar/QuickToolbar/QuickToolbar.js',
     category: 'toolbar',
     description: 'Floating quick action toolbar for graph editing.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/graph-model-v1.json',
+      capabilities: ['floating-toolbar', 'node-actions', 'position-follow', 'action-callback'],
+      properties: [
+        { name: 'items', type: 'array', description: 'Toolbar action descriptors.' },
+        { name: 'visible', type: 'boolean', description: 'Toolbar visibility state.' },
+      ],
+      methods: [
+        { name: 'show', type: 'function', description: 'Shows toolbar for a node element.' },
+        { name: 'hide', type: 'function', description: 'Hides toolbar and clears active node.' },
+        { name: 'updatePosition', type: 'function', description: 'Repositions toolbar above the active node.' },
+      ],
+      events: [],
+      themeAliases: [
+        '--sn-toolbar-bg',
+        '--sn-toolbar-border',
+        '--sn-toolbar-color',
+        '--sn-toolbar-hover',
+        '--sn-toolbar-active',
+        '--sn-toolbar-danger',
+        '--sn-toolbar-danger-color',
+        '--sn-shadow-color',
+        '--sn-cat-data',
+      ],
+    },
   },
   {
     tagName: 'inspector-panel',
@@ -690,6 +750,42 @@ export let COMPONENTS = [
     module: 'inspector/InspectorPanel/InspectorPanel.js',
     category: 'inspector',
     description: 'Inspector panel for selected graph node properties.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/graph-model-v1.json',
+      capabilities: ['node-inspector', 'port-summary', 'control-editing', 'subgraph-enter', 'fire-action', 'resizable-panel'],
+      properties: [
+        { name: 'visible', type: 'boolean', description: 'Inspector visibility state.' },
+        { name: 'nodeLabel', type: 'string', description: 'Selected node label.' },
+        { name: 'nodeType', type: 'string', description: 'Selected node type.' },
+        { name: 'nodeCategory', type: 'string', description: 'Selected node category.' },
+        { name: 'nodeId', type: 'string', description: 'Selected node id.' },
+        { name: 'inputsList', type: 'array', description: 'Selected node input port descriptors.' },
+        { name: 'outputsList', type: 'array', description: 'Selected node output port descriptors.' },
+        { name: 'controlsList', type: 'array', description: 'Selected node control descriptors.' },
+        { name: 'hasSelection', type: 'boolean', description: 'Whether a node is selected.' },
+      ],
+      methods: [
+        { name: 'inspect', type: 'function', description: 'Renders inspector state for a node-like object.' },
+        { name: 'clear', type: 'function', description: 'Clears selected node state.' },
+      ],
+      events: [
+        { name: 'node-fire', description: 'Requests firing the selected node.', detail: [{ name: 'nodeId', type: 'string' }] },
+        { name: 'ctrl-change', description: 'Reports edited control values.', detail: [{ name: 'key', type: 'string' }, { name: 'value', type: 'any' }] },
+      ],
+      themeAliases: [
+        '--sn-node-bg',
+        '--sn-node-border',
+        '--sn-node-selected',
+        '--sn-font',
+        '--sn-text',
+        '--sn-text-dim',
+        '--sn-cat-server',
+        '--sn-subgraph-accent',
+        '--sn-success-color',
+      ],
+    },
   },
   {
     tagName: 'insp-port-item',
@@ -718,6 +814,29 @@ export let COMPONENTS = [
     module: 'palette/PaletteBrowser/PaletteBrowser.js',
     category: 'palette',
     description: 'Node palette browser for adding graph nodes.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/graph-model-v1.json',
+      capabilities: ['node-palette', 'category-list', 'search-filter', 'factory-select'],
+      properties: [
+        { name: 'categories', type: 'array', description: 'Rendered palette category descriptors.' },
+      ],
+      methods: [
+        { name: 'setCategories', type: 'function', description: 'Sets palette categories and item factories.' },
+        { name: 'onSelect', type: 'function', description: 'Sets host callback for palette item selection.' },
+      ],
+      events: [],
+      themeAliases: [
+        '--sn-ctx-bg',
+        '--sn-ctx-hover',
+        '--sn-node-border',
+        '--sn-node-selected',
+        '--sn-font',
+        '--sn-text',
+        '--sn-text-dim',
+      ],
+    },
   },
   {
     tagName: 'pal-item',
@@ -739,6 +858,36 @@ export let COMPONENTS = [
     module: 'canvas/Minimap/Minimap.js',
     category: 'canvas',
     description: 'Canvas minimap for graph navigation.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/graph-model-v1.json',
+      capabilities: ['graph-minimap', 'viewport-overview', 'drag-navigation', 'state-getter'],
+      properties: [
+        { name: 'visible', type: 'boolean', description: 'Minimap visibility state.' },
+      ],
+      methods: [
+        { name: 'setStateGetter', type: 'function', description: 'Sets host callback returning nodes, transform, and container size.' },
+      ],
+      events: [
+        {
+          name: 'minimap-navigate',
+          description: 'Requests canvas pan after minimap interaction.',
+          detail: [
+            { name: 'x', type: 'number' },
+            { name: 'y', type: 'number' },
+          ],
+        },
+      ],
+      themeAliases: [
+        '--sn-node-bg',
+        '--sn-node-border',
+        '--sn-node-selected',
+        '--sn-shadow-color',
+        '--sn-text',
+        '--sn-text-dim',
+      ],
+    },
   },
   {
     tagName: 'node-search',

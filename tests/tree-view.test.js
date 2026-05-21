@@ -386,4 +386,12 @@ describe('TreeView behavior', () => {
     assert.match(tree.ref.tree.serialized, /draggable="true"/);
     assert.equal(tree.items[0].payload, payload);
   });
+
+  it('publishes light DOM host selectors for tree view sizing', async () => {
+    let { default: css } = await import('../tree/TreeView/TreeView.css.js');
+
+    assert.match(css, /sn-tree-view \{/);
+    assert.match(css, /sn-tree-view\[hidden\]/);
+    assert.match(css, /Material Symbols Outlined/);
+  });
 });

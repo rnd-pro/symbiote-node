@@ -1,11 +1,13 @@
 export default /*css*/ `
-:host {
+:host,
+sn-tree-view {
   display: block;
   color: var(--sn-text);
   font-family: var(--sn-font-family, inherit);
 }
 
-:host([hidden]) {
+:host([hidden]),
+sn-tree-view[hidden] {
   display: none !important;
 }
 
@@ -62,7 +64,8 @@ export default /*css*/ `
   width: 18px;
   height: 18px;
   color: var(--sn-tree-icon-color, var(--sn-text-dim));
-  font-family: var(--sn-icon-font, inherit);
+  font-family: var(--sn-icon-font, 'Material Symbols Outlined');
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
   font-size: var(--sn-tree-icon-size, 15px);
   line-height: 1;
 }

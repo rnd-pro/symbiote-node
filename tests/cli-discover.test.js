@@ -198,7 +198,10 @@ describe('discover command', () => {
         'source-viewer',
         'source-editor',
         'sn-loading-overlay',
+        'output-list-preview',
+        'output-graph-preview',
         'quick-open',
+        'chat-message-item',
         'chat-transcript',
         'chat-composer',
         'chat-list',
@@ -227,7 +230,10 @@ describe('discover command', () => {
       assert.ok(components.get('node-canvas').contract.events.some((event) => event.name === 'manualviewport'));
       assert.ok(components.get('layout-node').contract.events.some((event) => event.name === 'layout-change'));
       assert.ok(components.get('code-block').contract.methods.some((method) => method.name === 'setDiagnostics'));
+      assert.ok(components.get('output-list-preview').contract.methods.some((method) => method.name === 'setItems'));
+      assert.ok(components.get('output-graph-preview').contract.methods.some((method) => method.name === 'setGraph'));
       assert.ok(components.get('quick-open').contract.events.some((event) => event.name === 'quick-open-select'));
+      assert.ok(components.get('chat-message-item').contract.properties.some((property) => property.name === 'taskIds'));
       assert.ok(components.get('chat-list').contract.events.some((event) => event.name === 'chat-list-select'));
       assert.ok(components.get('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
       assert.ok(components.get('graph-frame').contract.properties.some((property) => property.name === 'color'));

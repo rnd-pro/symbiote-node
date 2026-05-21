@@ -178,7 +178,10 @@ describe('component registry', () => {
       'source-viewer',
       'source-editor',
       'sn-loading-overlay',
+      'output-list-preview',
+      'output-graph-preview',
       'quick-open',
+      'chat-message-item',
       'chat-transcript',
       'chat-composer',
       'chat-list',
@@ -210,7 +213,10 @@ describe('component registry', () => {
     assert.ok(getComponent('node-canvas').contract.events.some((event) => event.name === 'manualviewport'));
     assert.ok(getComponent('layout-node').contract.events.some((event) => event.name === 'layout-change'));
     assert.ok(getComponent('code-block').contract.methods.some((method) => method.name === 'setDiagnostics'));
+    assert.ok(getComponent('output-list-preview').contract.methods.some((method) => method.name === 'setItems'));
+    assert.ok(getComponent('output-graph-preview').contract.methods.some((method) => method.name === 'setGraph'));
     assert.ok(getComponent('quick-open').contract.events.some((event) => event.name === 'quick-open-select'));
+    assert.ok(getComponent('chat-message-item').contract.properties.some((property) => property.name === 'taskIds'));
     assert.ok(getComponent('chat-list').contract.events.some((event) => event.name === 'chat-list-select'));
     assert.ok(getComponent('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
     assert.ok(getComponent('chat-sidebar-item').contract.properties.some((property) => property.name === 'subChats'));

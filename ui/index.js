@@ -161,6 +161,7 @@ export let ChatSidebarSubItem;
 export let ListItem;
 export let TreeView;
 export let TreePanel;
+export let ActionButton;
 export let SurfaceCard;
 export let OutputListPreview;
 export let OutputGraphPreview;
@@ -235,6 +236,7 @@ if (hasDOMGlobals) {
     listItem,
     treeView,
     treePanel,
+    actionButton,
     surfaceCard,
     outputListPreview,
     outputGraphPreview,
@@ -275,6 +277,7 @@ if (hasDOMGlobals) {
     import('../list/ListItem/ListItem.js'),
     import('../tree/TreeView/TreeView.js'),
     import('../tree/TreePanel/TreePanel.js'),
+    import('../control/Button/Button.js'),
     import('../surface/Card/Card.js'),
     import('../display/OutputListPreview/OutputListPreview.js'),
     import('../display/OutputGraphPreview/OutputGraphPreview.js'),
@@ -326,6 +329,7 @@ if (hasDOMGlobals) {
   ({ ListItem } = listItem);
   ({ TreeView } = treeView);
   ({ TreePanel } = treePanel);
+  ({ ActionButton } = actionButton);
   ({ SurfaceCard } = surfaceCard);
   ({ OutputListPreview } = outputListPreview);
   ({ OutputGraphPreview } = outputGraphPreview);

@@ -38,6 +38,7 @@ describe('package exports resolution', () => {
     assert.ok('TreeView' in ui, 'UI entrypoint must expose TreeView binding');
     assert.ok('TreePanel' in ui, 'UI entrypoint must expose TreePanel binding');
     assert.ok('SurfaceCard' in ui, 'UI entrypoint must expose SurfaceCard binding');
+    assert.ok('ActionButton' in ui, 'UI entrypoint must expose ActionButton binding');
     assert.equal(typeof ui.sharedUiStyles, 'string');
     assert.match(ui.sharedUiStyles, /\.ui-container/);
     assert.equal(typeof ui.escapeHtml, 'function');

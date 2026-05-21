@@ -280,6 +280,14 @@ describe('With DOM shim', () => {
     assert.ok(customElements.get('sn-card'));
   });
 
+  it('ActionButton can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../control/Button/Button.js'),
+      'ActionButton must import without throwing'
+    );
+    assert.ok(customElements.get('sn-button'));
+  });
+
   it('SourceEditor can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../display/SourceEditor/SourceEditor.js'),

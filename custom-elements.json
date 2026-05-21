@@ -4348,6 +4348,171 @@
       ]
     },
     {
+      "kind": "javascript-module",
+      "path": "control/Button/Button.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "Generic themeable action control for buttons, icon buttons, and command rows.",
+          "name": "ActionButton",
+          "tagName": "sn-button",
+          "customElement": true,
+          "attributes": [
+            {
+              "name": "variant",
+              "description": "Control variant: default, primary, danger, or icon.",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "disabled",
+              "description": "Disables pointer and keyboard activation.",
+              "type": {
+                "text": "boolean"
+              }
+            }
+          ],
+          "slots": [
+            {
+              "name": "default",
+              "description": "Button label and optional icon content."
+            }
+          ],
+          "events": [
+            {
+              "name": "click",
+              "description": "Native click event emitted by pointer or keyboard activation."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-button-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-min-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-font-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-font-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-hover-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-hover-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-disabled-opacity",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-primary-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-primary-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-primary-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-primary-hover-filter",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-danger-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-danger-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-danger-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-danger-hover-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-danger-hover-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-danger-hover-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-icon-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-icon-font-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-button-focus-ring",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "ActionButton",
+          "declaration": {
+            "name": "ActionButton",
+            "module": "control/Button/Button.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-button",
+          "declaration": {
+            "name": "ActionButton",
+            "module": "control/Button/Button.js"
+          }
+        }
+      ]
+    },
+    {
       "path": "surface/Card/Card.js",
       "declarations": [
         {

@@ -1,4 +1,4 @@
-import { Symbiote } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
 import template from './CellBg.tpl.js';
 import css from './CellBg.css.js';
 

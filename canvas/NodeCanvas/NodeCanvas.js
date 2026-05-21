@@ -170,6 +170,7 @@ export class NodeCanvas extends Symbiote {
   /**
    * Bind editor to canvas
    * @param {import('../../core/Editor.js').NodeEditor} editor
+   * @returns {void}
    */
   setEditor(editor) {
 
@@ -424,11 +425,7 @@ export class NodeCanvas extends Symbiote {
    */
   setReadonly(enabled) {
     this._readonly = enabled;
-    if (enabled) {
-      this.setAttribute('data-readonly', '');
-    } else {
-      this.removeAttribute('data-readonly');
-    }
+    this.toggleAttribute('data-readonly', enabled);
     this._viewManager?.setReadonly(enabled);
     this._actions?.setReadonly(enabled);
   }
@@ -440,11 +437,7 @@ export class NodeCanvas extends Symbiote {
    * @param {boolean} enabled
    */
   setCompactMode(enabled) {
-    if (enabled) {
-      this.setAttribute('data-compact', '');
-    } else {
-      this.removeAttribute('data-compact');
-    }
+    this.toggleAttribute('data-compact', enabled);
   }
 
   /**
@@ -536,7 +529,7 @@ export class NodeCanvas extends Symbiote {
 
     this.clearNodeError(nodeId);
 
-    el.setAttribute('data-error', '');
+    el.toggleAttribute('data-error', true);
 
 
     let frame = document.createElement('div');
@@ -678,6 +671,7 @@ export class NodeCanvas extends Symbiote {
   /**
    * Alias for SubgraphManager
    * @param {string} nodeId
+   * @returns {HTMLElement|undefined}
    */
   getNodeView(nodeId) {
     return this._nodeViews.get(nodeId);
@@ -1017,9 +1011,7 @@ export class NodeCanvas extends Symbiote {
           this.dispatchEvent(new CustomEvent('manualviewport'));
 
 
-          if (!this.hasAttribute('data-interacting')) {
-            this.setAttribute('data-interacting', '');
-          }
+          this.toggleAttribute('data-interacting', true);
         },
         onDrop: (e) => {
 
@@ -1055,9 +1047,7 @@ export class NodeCanvas extends Symbiote {
         this.dispatchEvent(new CustomEvent('manualviewport'));
 
 
-        if (!this.hasAttribute('data-interacting')) {
-          this.setAttribute('data-interacting', '');
-        }
+        this.toggleAttribute('data-interacting', true);
         clearTimeout(interactingTimer);
         interactingTimer = setTimeout(() => {
           this.removeAttribute('data-interacting');
@@ -1109,7 +1099,7 @@ export class NodeCanvas extends Symbiote {
       minimap.update?.();
       clearTimeout(fadeTimer);
       fadeTimer = setTimeout(() => {
-        minimap.setAttribute('data-fading', '');
+        minimap.toggleAttribute('data-fading', true);
 
         setTimeout(() => {
           if (minimap.hasAttribute('data-fading')) {

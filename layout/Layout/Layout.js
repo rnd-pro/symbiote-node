@@ -127,7 +127,7 @@ export class Layout extends Symbiote {
               allPanels.forEach((p) => {
                 p.removeAttribute('fullscreen');
                 p.$.isFullscreen = false;
-                p.style.display = '';
+                this.#setPanelVisible(p, true);
               });
             }
           });
@@ -246,9 +246,9 @@ export class Layout extends Symbiote {
     }
   }
 
-  /**
+   /**
    * Called when action zone drag ends
-   * @param {CustomEvent} e
+   * @param {CustomEvent} _e
    */
   _onActionZoneEnd(_e) {
     this.$.activeGesture = null;
@@ -381,7 +381,7 @@ export class Layout extends Symbiote {
         p.removeAttribute('fullscreen');
         p.$.isFullscreen = false;
         p.$.fullscreenIcon = 'fullscreen';
-        p.style.display = '';
+        this.#setPanelVisible(p, true);
       });
 
 
@@ -394,12 +394,12 @@ export class Layout extends Symbiote {
 
       allPanels.forEach((p) => {
         if (p === panelNode) {
-          p.setAttribute('fullscreen', '');
+          p.toggleAttribute('fullscreen', true);
           p.$.isFullscreen = true;
           p.$.fullscreenIcon = 'fullscreen_exit';
-          p.style.display = '';
+          this.#setPanelVisible(p, true);
         } else {
-          p.style.display = 'none';
+          this.#setPanelVisible(p, false);
         }
       });
 
@@ -413,6 +413,7 @@ export class Layout extends Symbiote {
    * Update tabItems array for Itemize-based tab bar
    * @param {NodeListOf<Element>} [allPanels] - Optional, will query DOM if not provided
    * @param {string} [activePanelId] - Optional, defaults to fullscreenPanelId
+   * @returns {void}
    */
   _updateTabItems(allPanels, activePanelId) {
     let panels = allPanels || this.querySelectorAll('layout-node[node-type="panel"]');
@@ -444,15 +445,15 @@ export class Layout extends Symbiote {
 
     allPanels.forEach((p) => {
       if (p.$.nodeId === panelId) {
-        p.setAttribute('fullscreen', '');
+        p.toggleAttribute('fullscreen', true);
         p.$.isFullscreen = true;
         p.$.fullscreenIcon = 'fullscreen_exit';
-        p.style.display = '';
+        this.#setPanelVisible(p, true);
       } else {
         p.removeAttribute('fullscreen');
         p.$.isFullscreen = false;
         p.$.fullscreenIcon = 'fullscreen';
-        p.style.display = 'none';
+        this.#setPanelVisible(p, false);
       }
     });
 
@@ -480,8 +481,8 @@ export class Layout extends Symbiote {
   /**
    * Find the neighbor panel for join operation
    * @param {string} panelId
-   * @param {number} dx
-   * @param {number} dy
+   * @param {number} _dx
+   * @param {number} _dy
    * @returns {{id: string, direction: string}|null}
    */
   _findJoinTarget(panelId, _dx, _dy) {
@@ -568,8 +569,7 @@ export class Layout extends Symbiote {
         panelNode.removeAttribute('fullscreen');
         panelNode.$.isFullscreen = false;
         panelNode.$.fullscreenIcon = 'fullscreen';
-        panelNode.style.left = '';
-        panelNode.style.width = '';
+        this.#clearInlineProperties(panelNode, ['left', 'width']);
       }
       this.$.fullscreenPanelId = null;
       this.$.hasFullscreenTabs = false;
@@ -579,10 +579,7 @@ export class Layout extends Symbiote {
 
     this.querySelectorAll('layout-node[stripe]').forEach((node) => {
       node.removeAttribute('stripe');
-      node.style.left = '';
-      node.style.top = '';
-      node.style.width = '';
-      node.style.height = '';
+      this.#clearInlineProperties(node, ['left', 'top', 'width', 'height']);
     });
 
 
@@ -602,13 +599,21 @@ export class Layout extends Symbiote {
     this.querySelectorAll('[collapsed-child]').forEach((el) => {
       el.removeAttribute('collapsed-child');
       el.removeAttribute('saved-ratio');
-      el.style.width = '';
-      el.style.height = '';
-      el.style.flex = '';
+      this.#clearInlineProperties(el, ['width', 'height', 'flex']);
     });
 
     this.$.layoutTree = layout;
     this._saveLayout();
+  }
+
+  #setPanelVisible(panel, visible) {
+    let style = panel.style;
+    style.display = visible ? '' : 'none';
+  }
+
+  #clearInlineProperties(el, properties) {
+    let style = el.style;
+    properties.forEach((property) => style.removeProperty(property));
   }
 }
 

@@ -55,6 +55,102 @@ let items = [
   },
 ];
 
+function escapeText(value = '') {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function createMockElement(tagName = 'div') {
+  let attrs = new Map();
+  let children = [];
+  let element = {
+    tagName: tagName.toUpperCase(),
+    style: {
+      setProperty(name, value) {
+        attrs.set('style', `${name}: ${value};`);
+      },
+    },
+    dataset: new Proxy({}, {
+      set(target, prop, value) {
+        target[prop] = value;
+        let name = String(prop).replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+        attrs.set(`data-${name}`, String(value));
+        return true;
+      },
+    }),
+    content: {
+      cloneNode() {},
+    },
+    append(...nodes) {
+      for (let node of nodes) this.appendChild(node);
+    },
+    appendChild(node) {
+      children.push(node);
+      return node;
+    },
+    replaceChildren(...nodes) {
+      children = [];
+      this.append(...nodes);
+      this.serialized = children.map((node) => serializeNode(node)).join('');
+    },
+    setAttribute(name, value) {
+      attrs.set(name, String(value));
+    },
+    toggleAttribute(name, value) {
+      if (value) attrs.set(name, '');
+      else attrs.delete(name);
+    },
+    querySelector() {
+      return null;
+    },
+  };
+
+  Object.defineProperty(element, 'className', {
+    set(value) {
+      attrs.set('class', value);
+    },
+  });
+  Object.defineProperty(element, 'textContent', {
+    set(value) {
+      children = [String(value)];
+    },
+  });
+  Object.defineProperty(element, 'tabIndex', {
+    set(value) {
+      attrs.set('tabindex', String(value));
+    },
+  });
+  Object.defineProperty(element, 'hidden', {
+    set(value) {
+      if (value) attrs.set('hidden', '');
+      else attrs.delete('hidden');
+    },
+  });
+  Object.defineProperty(element, 'draggable', {
+    set(value) {
+      if (value) attrs.set('draggable', 'true');
+      else attrs.delete('draggable');
+    },
+  });
+
+  element.__attrs = attrs;
+  element.__children = () => children;
+  return element;
+}
+
+function serializeNode(node) {
+  if (typeof node === 'string') return escapeText(node);
+  let attrs = [...node.__attrs.entries()]
+    .map(([name, value]) => (value === '' ? name : `${name}="${escapeText(value)}"`))
+    .join(' ');
+  let attrText = attrs ? ` ${attrs}` : '';
+  let children = node.__children().map((child) => serializeNode(child)).join('');
+  return `<${node.tagName.toLowerCase()}${attrText}>${children}</${node.tagName.toLowerCase()}>`;
+}
+
 before(async () => {
   hadCustomElements = 'customElements' in globalThis;
   hadHTMLElement = 'HTMLElement' in globalThis;
@@ -85,7 +181,7 @@ before(async () => {
       return registry.get(name);
     },
   };
-  globalThis.document = { createElement() { return { content: { cloneNode() {} } }; } };
+  globalThis.document = { createElement: createMockElement };
   globalThis.CustomEvent = class {
     constructor(type, options = {}) {
       this.type = type;
@@ -122,12 +218,7 @@ after(() => {
 function createTree() {
   let tree = new TreeView();
   tree.ref = {
-    tree: {
-      innerHTML: '',
-      querySelector() {
-        return null;
-      },
-    },
+    tree: createMockElement('div'),
   };
   return tree;
 }
@@ -147,9 +238,9 @@ describe('TreeView behavior', () => {
     tree.setItems(items);
     tree.filterText = 'readme';
 
-    assert.match(tree.ref.tree.innerHTML, /Docs/);
-    assert.match(tree.ref.tree.innerHTML, /README\.md/);
-    assert.doesNotMatch(tree.ref.tree.innerHTML, /app\.js/);
+    assert.match(tree.ref.tree.serialized, /Docs/);
+    assert.match(tree.ref.tree.serialized, /README\.md/);
+    assert.doesNotMatch(tree.ref.tree.serialized, /app\.js/);
   });
 
   it('expands ancestors by id or path and collapses all branches', () => {
@@ -182,6 +273,103 @@ describe('TreeView behavior', () => {
     assert.deepEqual(second.expandedIds, ['docs']);
   });
 
+  it('uses default expanded ids when storage is empty', () => {
+    storage.clear();
+    let tree = createTree();
+    tree.defaultExpandedIds = ['src'];
+    tree.storageKey = 'sn-tree-defaults';
+    tree.setItems(items);
+
+    assert.deepEqual(tree.expandedIds, ['src']);
+    assert.match(tree.ref.tree.serialized, /app\.js/);
+
+    tree.collapseAll();
+    assert.deepEqual(tree.expandedIds, []);
+
+    let second = createTree();
+    second.defaultExpandedIds = ['src'];
+    second.storageKey = 'sn-tree-defaults';
+    second.setItems(items);
+    assert.deepEqual(second.expandedIds, []);
+  });
+
+  it('can toggle branch rows on select', () => {
+    storage.clear();
+    let tree = createTree();
+    tree.toggleBranchesOnSelect = true;
+    tree.setItems(items);
+    let row = { dataset: { index: '0' } };
+
+    tree.init$.onTreeClick({
+      target: {
+        closest(selector) {
+          return selector === '.sn-tree-row' ? row : null;
+        },
+      },
+    });
+
+    assert.deepEqual(tree.expandedIds, ['src']);
+    assert.equal(tree.selectedId, 'src');
+    assert.equal(tree.lastEvent.type, 'sn-tree-select');
+  });
+
+  it('uses path as the stable id for path-only items', () => {
+    let tree = createTree();
+    tree.toggleBranchesOnSelect = true;
+    tree.setItems([
+      {
+        path: 'root',
+        label: 'Root',
+        children: [
+          {
+            path: 'root/readme.md',
+            label: 'README.md',
+          },
+        ],
+      },
+    ]);
+
+    tree.init$.onTreeClick({
+      target: {
+        closest(selector) {
+          return selector === '.sn-tree-row' ? { dataset: { index: '0' } } : null;
+        },
+      },
+    });
+
+    assert.equal(tree.selectedId, 'root');
+    assert.deepEqual(tree.expandedIds, ['root']);
+    assert.equal(tree.expandAncestors('root/readme.md'), true);
+    assert.deepEqual(tree.expandedIds, ['root']);
+  });
+
+  it('sets native drag data and emits the native drag event', () => {
+    let tree = createTree();
+    tree.expandedIds = ['src'];
+    tree.setItems(items);
+    let row = { dataset: { index: '1' } };
+    let data = new Map();
+    let dataTransfer = {
+      setData(type, value) {
+        data.set(type, value);
+      },
+    };
+
+    tree.init$.onTreeDragStart({
+      dataTransfer,
+      target: {
+        closest() {
+          return row;
+        },
+      },
+    });
+
+    assert.equal(data.get('text/plain'), '{"path":"/repo/src/app.js"}');
+    assert.equal(dataTransfer.effectAllowed, 'copy');
+    assert.equal(tree.lastEvent.type, 'sn-tree-dragstart');
+    assert.equal(tree.lastEvent.detail.nativeEvent.dataTransfer, dataTransfer);
+  });
+
   it('escapes item labels and keeps payloads on draggable items', () => {
     let tree = createTree();
     let payload = { id: 1 };
@@ -194,8 +382,8 @@ describe('TreeView behavior', () => {
       },
     ]);
 
-    assert.match(tree.ref.tree.innerHTML, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
-    assert.match(tree.ref.tree.innerHTML, /draggable="true"/);
+    assert.match(tree.ref.tree.serialized, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+    assert.match(tree.ref.tree.serialized, /draggable="true"/);
     assert.equal(tree.items[0].payload, payload);
   });
 });

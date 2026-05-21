@@ -265,7 +265,7 @@ class InspCtrlItem extends Symbiote {
    * @param {string} type
    */
   _renderControl(container, type) {
-    container.innerHTML = '';
+    container.replaceChildren();
 
     if (type === 'textarea') {
       let el = document.createElement('textarea');

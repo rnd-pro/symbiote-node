@@ -72,6 +72,7 @@ export class PinExpansion {
    * Render pin labels around a node element's border
    * @param {HTMLElement} el
    * @param {Array<object>} pins
+   * @returns {void}
    */
   #renderPinsForNode(el, pins) {
     if (!pins || pins.length === 0) return;

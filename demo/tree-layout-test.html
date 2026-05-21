@@ -10,96 +10,161 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
-      background: #1a1a2e;
-      color: #d4d4d4;
+      background: var(--sn-bg, #1a1a1a);
+      color: var(--sn-text, #f0f0f0);
       height: 100vh;
       display: flex;
       flex-direction: column;
     }
-    header {
-      padding: 10px 20px;
-      background: #2d2d3d;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+    project-tabs {
+      flex: 0 0 auto;
+    }
+    main {
+      flex: 1;
       display: flex;
-      align-items: center;
-      gap: 12px;
+      overflow: hidden;
+      min-height: 0;
     }
-    header h1 { font-size: 14px; font-weight: 600; }
-    header .badge {
-      font-size: 11px; padding: 2px 8px; border-radius: 4px;
-      background: rgba(200,117,51,0.2); color: #c87533;
+    #content-area {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      min-width: 0;
     }
-    .spacer { flex: 1; }
-    .btn {
-      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
-      padding: 5px 12px; border: 1px solid #555; border-radius: 4px;
-      background: #3d3d4d; color: #d4d4d4; cursor: pointer;
-      transition: background 0.15s;
+    #content-area panel-layout {
+      position: absolute;
+      inset: 0;
     }
-    .btn:hover { background: #4d4d5d; }
-    .btn.active { background: rgba(92,216,122,0.2); border-color: #5cd87a; color: #5cd87a; }
-    #log {
-      position: fixed; bottom: 0; left: 0; right: 0; height: 120px;
-      background: #111; color: #0f0; font-family: monospace; font-size: 11px;
-      overflow-y: auto; padding: 8px; z-index: 100;
-      border-top: 1px solid #333;
+    node-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
     }
-    main { flex: 1; display: flex; overflow: hidden; }
-    #canvas-area { flex: 1; overflow: hidden; position: relative; }
+    tree-log-panel {
+      display: block;
+      height: 100%;
+      background: var(--sn-bg, #1a1a1a);
+      color: var(--sn-success-color, #4caf50);
+      font-family: var(--sn-font-mono, monospace);
+      font-size: 11px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    #error-report {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre-wrap;
+      background: var(--sn-bg, #1a1a1a);
+      color: var(--sn-danger-color, #f44336);
+      font-family: var(--sn-font-mono, monospace);
+      font-size: 12px;
+    }
+    #error-report:empty {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>TreeLayout Test</h1>
-    <span class="badge">Debug</span>
-    <span class="spacer"></span>
-    <button id="btnFit" class="btn">FIT</button>
-    <button id="btnMeasure" class="btn">Measure + Relayout</button>
-    <button id="btnDump" class="btn">Dump Positions</button>
-    <button id="btnClear" class="btn">Clear Log</button>
-  </header>
+  <project-tabs id="project-tabs"></project-tabs>
   <main>
-    <div id="canvas-area"></div>
+    <layout-sidebar id="layout-sidebar"></layout-sidebar>
+    <div id="content-area">
+      <panel-layout id="layout-smoke" min-panel-size="160"></panel-layout>
+    </div>
   </main>
-  <div id="log"></div>
+  <pre id="error-report"></pre>
 
   <script type="importmap">
     {
       "imports": {
-        "@symbiotejs/symbiote": "https://esm.sh/@symbiotejs/symbiote@3.2.1"
+        "symbiote-node": "../index.js",
+        "symbiote-node/ui": "../ui/index.js",
+        "symbiote-node/layout": "../layout/index.js",
+        "@symbiotejs/symbiote": "https://esm.sh/@symbiotejs/symbiote@3.2.1",
+        "@symbiotejs/symbiote/": "https://esm.sh/@symbiotejs/symbiote@3.2.1/"
       }
     }
+  </script>
+  <script>
+    const errorReport = document.getElementById('error-report');
+    window.addEventListener('error', (event) => {
+      errorReport.textContent += `${event.message}\n${event.filename}:${event.lineno}:${event.colno}\n`;
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+      errorReport.textContent += `${event.reason?.stack || event.reason}\n`;
+    });
   </script>
   <script type="module">
     import {
       NodeEditor, Node, SubgraphNode, Connection, Socket, Input, Output,
-      NodeCanvas, computeAutoLayout, computeTreeLayout, applyTheme,
-      DARK_DEFAULT,
-    } from '../index.js';
-    import { PCB_DARK } from '../themes/pcb.js';
+      computeTreeLayout, applyTheme, DEFAULT_THEME, LayoutTree,
+    } from 'symbiote-node/ui';
 
-    // --- Logging ---
-    const logEl = document.getElementById('log');
-    function log(msg) {
-      const line = document.createElement('div');
-      line.textContent = `[${new Date().toISOString().slice(11,19)}] ${msg}`;
-      logEl.appendChild(line);
-      logEl.scrollTop = logEl.scrollHeight;
+    applyTheme(document.documentElement, DEFAULT_THEME);
+
+    class TreeLogPanel extends HTMLElement {
+      appendLine(text) {
+        const line = document.createElement('div');
+        line.textContent = text;
+        this.appendChild(line);
+        this.scrollTop = this.scrollHeight;
+      }
     }
 
-    // Intercept console.log for [TreeLayout] and [AutoLayout] messages
-    const origLog = console.log;
-    console.log = (...args) => {
-      origLog(...args);
-      const str = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-      if (str.includes('[TreeLayout]') || str.includes('[DepGraph]') || str.includes('[AutoLayout]')) {
-        log(str);
-      }
-    };
+    customElements.define('tree-log-panel', TreeLogPanel);
+
+    const tabs = document.getElementById('project-tabs');
+    tabs.setTabs([
+      {
+        id: 'tree-layout',
+        name: 'Tree layout test',
+        icon: 'account_tree',
+        color: DEFAULT_THEME.tokens['--sn-node-selected'],
+        closeable: false,
+      },
+    ], 'tree-layout');
+
+    const sidebar = document.getElementById('layout-sidebar');
+    sidebar.routerSync = false;
+    sidebar.setSections([
+      { id: 'tree-layout', icon: 'account_tree', label: 'Tree layout' },
+      { id: 'tree-log', icon: 'terminal', label: 'Layout log' },
+    ]);
+
+    const layout = document.getElementById('layout-smoke');
+    layout.registerPanelType('tree-canvas', {
+      title: 'Tree canvas',
+      icon: 'account_tree',
+      component: 'node-canvas',
+    });
+    layout.registerPanelType('tree-log', {
+      title: 'Layout log',
+      icon: 'terminal',
+      component: 'tree-log-panel',
+    });
+    layout.setLayout(
+      LayoutTree.createSplit(
+        'vertical',
+        LayoutTree.createPanel('tree-canvas'),
+        LayoutTree.createPanel('tree-log'),
+        0.78
+      )
+    );
+
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    // --- Logging ---
+    const logEl = layout.querySelector('tree-log-panel');
+    function log(msg) {
+      logEl.appendLine(`[${new Date().toISOString().slice(11,19)}] ${msg}`);
+    }
 
     // --- Build a fake directory structure ---
-    const S_IMP = new Socket('import'); S_IMP.color = '#c87533';
-    const S_EXP = new Socket('export'); S_EXP.color = '#c87533';
+    const S_IMP = new Socket('import'); S_IMP.color = DEFAULT_THEME.tokens['--sn-conn-color'];
+    const S_EXP = new Socket('export'); S_EXP.color = DEFAULT_THEME.tokens['--sn-conn-color'];
 
     const editor = new NodeEditor();
 
@@ -176,10 +241,7 @@
     log(`dirPaths: ${JSON.stringify(dirPaths, null, 0)}`);
 
     // --- Canvas setup ---
-    const container = document.getElementById('canvas-area');
-    const canvas = new NodeCanvas();
-    container.appendChild(canvas);
-    applyTheme(canvas, PCB_DARK);
+    const canvas = layout.querySelector('node-canvas');
     canvas.setEditor(editor);
     canvas.setReadonly(true);
     canvas.setPathStyle('pcb');
@@ -243,15 +305,6 @@
       // Auto-fit
       canvas.fitView?.();
     });
-
-    // --- Buttons ---
-    document.getElementById('btnFit').onclick = () => canvas.fitView?.();
-    document.getElementById('btnMeasure').onclick = doPass2;
-    document.getElementById('btnDump').onclick = () => {
-      const pos = canvas.getPositions();
-      log('Positions: ' + JSON.stringify(pos, null, 2));
-    };
-    document.getElementById('btnClear').onclick = () => { logEl.innerHTML = ''; };
   </script>
 </body>
 </html>

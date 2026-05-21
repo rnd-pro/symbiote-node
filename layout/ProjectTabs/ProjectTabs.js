@@ -1,4 +1,4 @@
-import { Symbiote, html } from '@symbiotejs/symbiote';
+import Symbiote, { html } from '@symbiotejs/symbiote';
 import css from './ProjectTabs.css.js';
 import tpl from './ProjectTabs.tpl.js';
 

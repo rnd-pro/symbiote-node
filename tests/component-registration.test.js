@@ -118,6 +118,18 @@ describe('With DOM shim', () => {
       import('../ui/index.js'),
       'UI import must not crash with DOM shim'
     );
+    for (let tag of [
+      'context-menu',
+      'graph-frame',
+      'action-zone',
+      'layout-preview',
+      'panel-menu',
+      'port-item',
+      'ctrl-item',
+      'sidebar-section',
+    ]) {
+      assert.ok(customElements.get(tag), `${tag} must be registered by the UI entrypoint`);
+    }
   });
 
   it('NodeCanvas can be imported with DOM shim', async () => {

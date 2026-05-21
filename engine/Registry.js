@@ -4,7 +4,7 @@
  * Central registry for node types, drivers, and domain packs.
  * AI agents use this to discover, compose, and validate nodes.
  *
- * @module agi-graph/Registry
+ * @module symbiote-node/Registry
  */
 
 import { areSocketsCompatible, registerSocketTypes } from './SocketTypes.js';

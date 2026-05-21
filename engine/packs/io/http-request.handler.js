@@ -4,9 +4,13 @@
  * Performs HTTP requests using native fetch API.
  * Supports GET, POST, PUT, DELETE with configurable headers and timeout.
  *
- * @module agi-graph/packs/io/http-request
+ * @module symbiote-node/packs/io/http-request
  */
 
+/**
+ * Build an abort signal for request timeout handling.
+ * @returns {AbortSignal}
+ */
 function requestSignal(timeout, parentSignal) {
   let timeoutSignal = AbortSignal.timeout(timeout);
   return parentSignal && AbortSignal.any

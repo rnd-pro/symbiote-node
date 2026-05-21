@@ -1,4 +1,4 @@
-import { Symbiote } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
 import '../ChatSidebarItem/ChatSidebarItem.js';
 import template from './ChatSidebar.tpl.js';
 import css from './ChatSidebar.css.js';

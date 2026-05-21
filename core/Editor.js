@@ -243,7 +243,7 @@ export class NodeEditor {
 
 
   /**
-   * Serialize editor state to agi-graph workflow JSON format.
+   * Serialize editor state to symbiote-node workflow JSON format.
    * Output is directly compatible with engine/Graph.fromJSON().
    * @param {Object<string, number[]>} [positions] - Node positions {nodeId: [x, y]}
    * @returns {object} Workflow JSON
@@ -305,7 +305,7 @@ export class NodeEditor {
   }
 
   /**
-   * Reconstruct editor state from agi-graph workflow JSON.
+   * Reconstruct editor state from symbiote-node workflow JSON.
    * Enables round-trip: Editor → toJSON → fromJSON → Editor.
    * Also accepts output from engine/Graph.toJSON().
    * @param {object} data - Workflow JSON

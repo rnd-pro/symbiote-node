@@ -11,7 +11,7 @@
  * - mouth:      Mouth position detection (for speech bubble placement)
  * - frames-gpu: Face tracking on WebP frame sequences
  *
- * @module agi-graph/packs/ai/face-detect
+ * @module symbiote-node/packs/ai/face-detect
  */
 
 import path from 'path';
@@ -158,6 +158,7 @@ async function cleanupRemote(remotePath, host) {
 
 /**
  * analyze — Video face detection suitability
+ * @returns {Promise<object>}
  */
 async function analyze(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';
@@ -196,6 +197,7 @@ async function analyze(mediaPath, params) {
 
 /**
  * track — Dense face tracking with mouth + bbox
+ * @returns {Promise<object>}
  */
 async function track(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';
@@ -223,6 +225,7 @@ async function track(mediaPath, params) {
 
 /**
  * track-gpu — InsightFace GPU tracking with landmarks, bbox, age, gender
+ * @returns {Promise<object>}
  */
 async function trackGpu(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';
@@ -250,6 +253,7 @@ async function trackGpu(mediaPath, params) {
 
 /**
  * mouth — Mouth position detection (for speech bubble placement)
+ * @returns {Promise<object>}
  */
 async function mouth(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';
@@ -276,6 +280,7 @@ async function mouth(mediaPath, params) {
 
 /**
  * frames-gpu — GPU face tracking on WebP frame sequences
+ * @returns {Promise<object>}
  */
 async function framesGpu(mediaPath, params) {
   let endpoint = params.endpoint || 'http://localhost:5050';

@@ -1,12 +1,3 @@
-export let RULESETS = [
-  {
-    name: 'symbiote-3x',
-    version: '1.0.0',
-    path: 'rules/symbiote-3x.json',
-    description: 'Machine-readable Symbiote.js 3.x rules for reusable package, UI, and provider contracts.',
-  },
-];
-
 export let RULES = [
   {
     id: 'SYM-001',
@@ -91,8 +82,18 @@ export let RULES = [
   },
 ];
 
+export let RULESETS = [
+  {
+    name: 'symbiote-3x',
+    version: '1.0.0',
+    path: 'rules/symbiote-3x.json',
+    description: 'Machine-readable Symbiote.js 3.x rules for reusable package, UI, and provider contracts.',
+    ruleIds: RULES.map((rule) => rule.id),
+  },
+];
+
 export function listRuleSets() {
-  return [...RULESETS];
+  return RULESETS.map((ruleset) => ({ ...ruleset, ruleIds: [...ruleset.ruleIds] }));
 }
 
 export function getRuleSet(name) {
@@ -100,7 +101,14 @@ export function getRuleSet(name) {
 }
 
 export function listRules(filter = {}) {
+  let ruleIds = null;
+  if (filter.ruleset) {
+    let ruleset = getRuleSet(filter.ruleset);
+    ruleIds = ruleset ? new Set(ruleset.ruleIds) : new Set();
+  }
+
   return RULES.filter((rule) => {
+    if (ruleIds && !ruleIds.has(rule.id)) return false;
     if (filter.severity && rule.severity !== filter.severity) return false;
     if (filter.tag && !rule.tags.includes(filter.tag)) return false;
     return true;

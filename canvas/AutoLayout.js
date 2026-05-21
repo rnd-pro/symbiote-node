@@ -13,6 +13,7 @@
  * - Layout direction: 'LR' (left-right) or 'TB' (top-bottom)
  *
  * @module symbiote-node/canvas/AutoLayout
+ * @returns {Record<string, {x: number, y: number}>}
  */
 
 export function computeAutoLayout(editor, options = {}) {

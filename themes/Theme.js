@@ -19,8 +19,8 @@ export { LIGHT_CLEAN } from './light.js';
 export { SYNTHWAVE } from './synthwave.js';
 export { GREY_NEUTRAL } from './grey.js';
 export { NEON_GLOW } from './neon.js';
-export { AGENT_PORTAL } from './agent-portal.js';
-export { AGENT_PORTAL as DEFAULT_THEME } from './agent-portal.js';
+export { DEFAULT_DARK } from './default-dark.js';
+export { DEFAULT_DARK as DEFAULT_THEME } from './default-dark.js';
 
 /**
  * Mapping from layout global tokens to symbiote-node tokens.
@@ -30,6 +30,7 @@ export { AGENT_PORTAL as DEFAULT_THEME } from './agent-portal.js';
 const LAYOUT_TOKEN_MAP = {
   '--bg-panel': '--sn-node-bg',
   '--bg-deeper': '--sn-bg',
+  '--layout-gap-bg': '--sn-layout-gap-bg',
   '--bg-header': '--sn-node-header-bg',
   '--bg-hover': '--sn-node-hover',
   '--bg-popup': '--sn-ctx-bg',

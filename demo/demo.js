@@ -41,6 +41,7 @@ import '../layout/LayoutSidebar/LayoutSidebar.js';
 
 /**
  * Initialize AI content pipeline demo
+ * @returns {Promise<void>}
  */
 async function initDemo() {
   const editor = new NodeEditor();
@@ -381,6 +382,7 @@ async function initDemo() {
    * Subscribe to layoutTree changes and update sidebar sub-panels
    * @param {*} layout
    * @param {string} sectionId
+   * @returns {void}
    */
   function watchLayoutTree(layout, sectionId) {
     if (!sidebar) return;
@@ -633,7 +635,6 @@ async function initDemo() {
     window.switchPalette = () => {
       paletteIdx = (paletteIdx + 1) % palettes.length;
       canvas.setPalette(palettes[paletteIdx]);
-      console.log(`Palette: ${palettes[paletteIdx].name}`);
     };
 
     const skins = [MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN];
@@ -641,7 +642,6 @@ async function initDemo() {
     window.switchSkin = () => {
       skinIdx = (skinIdx + 1) % skins.length;
       canvas.setSkin(skins[skinIdx]);
-      console.log(`Skin: ${skins[skinIdx].name}`);
     };
   }, 300);
 }

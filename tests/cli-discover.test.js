@@ -168,6 +168,9 @@ describe('discover command', () => {
         assert.equal(typeof c.tagName, 'string');
         assert.equal(typeof c.className, 'string');
         assert.equal(typeof c.module, 'string');
+        assert.equal(c.specifier, 'symbiote-node/ui');
+        assert.ok(c.importKind === 'named' || c.importKind === 'side-effect');
+        if (c.importKind === 'named') assert.equal(typeof c.exportName, 'string');
         assert.equal(typeof c.category, 'string');
         assert.equal(typeof c.description, 'string');
       }
@@ -175,11 +178,13 @@ describe('discover command', () => {
       for (let tag of ['node-canvas', 'graph-node', 'source-editor', 'chat-transcript', 'chat-composer', 'chat-list', 'chat-list-item', 'project-tabs']) {
         assert.ok(tags.includes(tag), `${tag} must be discoverable`);
       }
+      assert.equal(tags.includes('project-tab-item'), false);
+      assert.equal(tags.includes('cb-squiggle'), false);
     });
 
     it('exposes themes with token data', () => {
       assert.ok(data.manifest.themes.length >= 8);
-      assert.ok(data.manifest.themes.some((theme) => theme.name === 'agent-portal'));
+      assert.ok(data.manifest.themes.some((theme) => theme.name === 'default-dark'));
       for (let t of data.manifest.themes) {
         assert.equal(typeof t.name, 'string');
         assert.ok(t.tokens, `${t.name} must have tokens`);
@@ -201,6 +206,7 @@ describe('discover command', () => {
       assert.ok(symbiote, 'symbiote-3x ruleset must exist');
       assert.equal(symbiote.version, '1.0.0');
       assert.ok(Array.isArray(symbiote.rules));
+      assert.deepEqual(symbiote.rules.map((r) => r.id), data.manifest.rules.map((r) => r.id));
     });
 
     it('exposes flat rules list', () => {

@@ -3,7 +3,7 @@
  *
  * Writes string or JSON content to disk. Creates directories if needed.
  *
- * @module agi-graph/packs/io/write-file
+ * @module symbiote-node/packs/io/write-file
  */
 
 import { promises as fs } from 'fs';

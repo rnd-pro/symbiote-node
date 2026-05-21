@@ -175,7 +175,10 @@ export class CanvasConnectionRenderer {
     this.redraw();
   }
 
-  /** Retrieve actual connector coordinate relative to the origin */
+  /**
+   * Retrieve actual connector coordinate relative to the origin.
+   * @returns {{x: number, y: number}}
+   */
   getSocketOffset(nodeEl, portKey, side, targetPos) {
     if (!nodeEl) return { x: 0, y: 0 };
     let w = nodeEl._cachedW || nodeEl.offsetWidth || 180;
@@ -532,6 +535,7 @@ export class CanvasConnectionRenderer {
   /**
    * Create a minimal proxy object for a phantom node so #plotPath can work.
    * Mimics the shape of a DOM nodeView element with _position and _cachedW/H.
+   * @returns {object|null}
    */
   #getPhantomProxy(nodeId) {
     let phantom = this.#phantomMap.get(nodeId);

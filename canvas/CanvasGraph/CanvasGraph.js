@@ -2,63 +2,29 @@ import Symbiote from '@symbiotejs/symbiote';
 import { ForceLayout } from '../ForceLayout.js';
 import { createCanvasGraphStore } from '../graph-model.js';
 import css from './CanvasGraph.css.js';
+import {
+  DOT_RADIUS,
+  HIT_RADIUS,
+  getGroupOrbitMetrics,
+  getLayerTransform,
+  getNodeColor,
+  getNodeRadius,
+  getRadialMenuHit,
+  getRadialMenuLayout,
+} from './CanvasGraphGeometry.js';
+import {
+  getDepthGroupsFrame,
+  getLayerAnimationFrame,
+  resolveDeactivationFrame,
+  resolveFocusFrame,
+  resolveIdleFrame,
+  resolveViewportAnimation,
+} from './CanvasGraphDrawState.js';
 
 const INIT_NODE_COUNT = 40;
 const EDGE_RATIO = 1.2;
-const DOT_RADIUS = 6;
-const HIT_RADIUS = 14;
-
-/**
- * Universal node radius calculator.
- * @param {object} node - Node object with isGroup, children, aScale
- * @param {number} conns - Number of connections (from adjMap)
- * @param {object} [opts] - Options
- * @param {number} [opts.scale] - Override aScale (default: node.aScale || 1)
- * @returns {number} Visual radius in world units
- */
-function getNodeRadius(node, conns, opts = {}) {
-  const hubScale = 1 + Math.min(conns, 8) * 0.1;
-  const aScale = opts.scale ?? (node.aScale || 1);
-  let baseR = DOT_RADIUS * hubScale * aScale;
-  if (node.isGroup) {
-    const childCount = Math.max(2, Math.min(12, node.children?.length || 3));
-    const innerR = baseR * Math.max(0.1, 0.18 - (childCount - 3) * 0.008);
-    const spacing = innerR * 2.5;
-    const orbitR = spacing / (2 * Math.sin(Math.PI / childCount));
-    // r = orbitR + innerR + ringW + padding
-    // ringW = r * 0.12
-    // r = (orbitR + innerR + 2) / 0.88
-    return (orbitR + innerR + 2) / 0.88;
-  }
-  return baseR;
-}
 
 const NODE_TYPES = ['data', 'action', 'output', 'config', 'external', 'style', 'docs', 'asset'];
-const TYPE_COLORS = {
-  action:   [255, 150, 140],   // Soft coral (JS/TS logic)
-  output:   [120, 210, 170],   // Sage green (HTML/Entry/UI)
-  data:     [120, 180, 255],   // Pastel blue (JSON data)
-  config:   [255, 200, 120],   // Warm amber (Configs, Env)
-  external: [190, 150, 255],   // Lavender (Tests, Specs)
-  style:    [255, 180, 220],   // Pastel pink (CSS/SCSS)
-  docs:     [200, 210, 215],   // Slate/grey-blue (MD/TXT)
-  asset:    [150, 230, 230],   // Mint/Cyan (SVG/PNG)
-  group:    [230, 180, 110],   // Golden pastel orange
-};
-
-function getNodeColor(node) {
-  return parseHexColor(node.color) || TYPE_COLORS[node.type] || TYPE_COLORS.data;
-}
-
-function parseHexColor(value) {
-  if (typeof value !== 'string') return null;
-  const hex = value.trim().replace(/^#/, '');
-  if (!/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(hex)) return null;
-  const parts = hex.length === 3
-    ? [...hex].map((part) => part + part)
-    : [hex.slice(0, 2), hex.slice(2, 4), hex.slice(4, 6)];
-  return parts.map((part) => parseInt(part, 16));
-}
 
 const DEFAULT_EVENT_NAMES = Object.freeze({
   fileSelected: 'file-selected',
@@ -753,33 +719,20 @@ export class CanvasGraph extends Symbiote {
     if (!this.canvas) return;
     const dpr = window.devicePixelRatio || 1;
 
-    // Smooth zoom interpolation
-    const zoomAnimating = Math.abs(this._targetZoom - this.zoom) > 0.0001;
-    if (zoomAnimating) {
-      const oldZoom = this.zoom;
-      this.zoom += (this._targetZoom - this.zoom) * 0.15;
-      // Keep anchor point stable during wheel zoom
-      if (this._zoomAnchor) {
-        const { mx, my } = this._zoomAnchor;
-        this.panX = mx - (mx - this.panX) * (this.zoom / oldZoom);
-        this.panY = my - (my - this.panY) * (this.zoom / oldZoom);
-      }
-    }
-
-    // Smooth pan interpolation (for fitView / flyToNode animations)
-    if (this._targetPanX !== null) {
-      const panDx = this._targetPanX - this.panX;
-      const panDy = this._targetPanY - this.panY;
-      if (Math.abs(panDx) < 0.5 && Math.abs(panDy) < 0.5) {
-        this.panX = this._targetPanX;
-        this.panY = this._targetPanY;
-        this._targetPanX = null;
-        this._targetPanY = null;
-      } else {
-        this.panX += panDx * 0.15;
-        this.panY += panDy * 0.15;
-      }
-    }
+    let viewport = resolveViewportAnimation({
+      zoom: this.zoom,
+      targetZoom: this._targetZoom,
+      panX: this.panX,
+      panY: this.panY,
+      targetPanX: this._targetPanX,
+      targetPanY: this._targetPanY,
+      zoomAnchor: this._zoomAnchor,
+    });
+    this.zoom = viewport.zoom;
+    this.panX = viewport.panX;
+    this.panY = viewport.panY;
+    this._targetPanX = viewport.targetPanX;
+    this._targetPanY = viewport.targetPanY;
 
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -788,77 +741,64 @@ export class CanvasGraph extends Symbiote {
     const mainCtx = this.ctx;
     const isIdle = (!this.activeNode && !this.currentGroupId) || this.deactivating;
 
-    if (this.deactivating && this.activeNode) {
-      const settled = Math.abs(this.layerAnim[0].scale - 1) < 0.01 && Math.abs(this.layerAnim[4].scale - 1) < 0.01;
-      if (settled) {
-        if (this.nextActiveNode) {
-          this.activeNode = this.nextActiveNode;
-          this.nextActiveNode = null;
-        } else {
-          this.activeNode = null;
-          this._emitGraphEvent('nodeDeselected');
-        }
-        this.deactivating = false;
-        this.updateInteractionDepths();
-      }
+    let deactivation = resolveDeactivationFrame({
+      deactivating: this.deactivating,
+      activeNode: this.activeNode,
+      nextActiveNode: this.nextActiveNode,
+      layerAnim: this.layerAnim,
+    });
+    this.activeNode = deactivation.activeNode;
+    this.nextActiveNode = deactivation.nextActiveNode;
+    this.deactivating = deactivation.deactivating;
+    if (deactivation.deselected) {
+      this._emitGraphEvent('nodeDeselected');
+    }
+    if (deactivation.interactionDepthsChanged) {
+      this.updateInteractionDepths();
     }
 
     const inGroupMode = !!this.currentGroupId;
-    const lerpSpeed = isIdle ? 0.08 : 0.06;
-    for (let d = 0; d <= 4; d++) {
-      const la = this.layerAnim[d];
-      const tScale    = isIdle ? 1 : this.LAYER_TARGETS.scale[d];
-      const tOpacity  = isIdle ? 1 : this.LAYER_TARGETS.opacity[d];
-      const tParallax = isIdle ? 0 : this.LAYER_TARGETS.parallax[d];
-
-      const speed = (inGroupMode && d >= 3) ? 0.3 : lerpSpeed;
-      la.scale    += (tScale    - la.scale)    * speed;
-      la.opacity  += (tOpacity  - la.opacity)  * speed;
-      la.parallax += (tParallax - la.parallax) * speed;
-    }
+    this.layerAnim = getLayerAnimationFrame({
+      layerAnim: this.layerAnim,
+      layerTargets: this.LAYER_TARGETS,
+      isIdle,
+      inGroupMode,
+    });
 
     const vcx = this.canvas.width / 2;
     const vcy = this.canvas.height / 2;
     let dragDeltaX = 0, dragDeltaY = 0;
 
-    if (this.activeNode && !this.deactivating) {
-      const dp = this.nodePositions.get(this.activeNode.id);
-      if (dp) {
-        // Center the combined node+panel area — only once per node activation
-        if (this._infoPanel._centeredForNode !== this.activeNode.id && this._infoPanel.totalExtent > 0) {
-          this._infoPanel._centeredForNode = this.activeNode.id;
-          const panelOffsetX = this._infoPanel.totalExtent / 2;
-          const panelOffsetY = this._infoPanel.totalExtentY / 2;
-          const rect = this.canvas.getBoundingClientRect();
-          if (rect.width > 0) {
-            this._targetPanX = rect.width / 2 - (dp.x + panelOffsetX) * this.zoom;
-            this._targetPanY = rect.height / 2 - (dp.y + panelOffsetY) * this.zoom;
-          }
-        }
-
-        const targetFX = dpr * this.zoom * dp.x + dpr * this.panX;
-        const targetFY = dpr * this.zoom * dp.y + dpr * this.panY;
-        if (!this.focusActive) {
-          this.focusX = targetFX;
-          this.focusY = targetFY;
-          this.focusActive = true;
-        } else {
-          this.focusX += (targetFX - this.focusX) * 0.12;
-          this.focusY += (targetFY - this.focusY) * 0.12;
-        }
-        dragDeltaX = this.focusX - vcx;
-        dragDeltaY = this.focusY - vcy;
-      }
-    } else {
-      this.focusX += (vcx - this.focusX) * 0.08;
-      this.focusY += (vcy - this.focusY) * 0.08;
-      dragDeltaX = this.focusX - vcx;
-      dragDeltaY = this.focusY - vcy;
-      if (Math.abs(dragDeltaX) < 1 && Math.abs(dragDeltaY) < 1) {
-        this.focusActive = false;
-        dragDeltaX = 0;
-        dragDeltaY = 0;
-      }
+    let activePosition = this.activeNode ? this.nodePositions.get(this.activeNode.id) : null;
+    let shouldCenterFocus = this.activeNode
+      && !this.deactivating
+      && this._infoPanel._centeredForNode !== this.activeNode.id
+      && this._infoPanel.totalExtent > 0;
+    let focus = resolveFocusFrame({
+      activeNode: this.activeNode,
+      deactivating: this.deactivating,
+      activePosition,
+      infoPanel: this._infoPanel,
+      canvasRect: shouldCenterFocus ? this.canvas.getBoundingClientRect() : null,
+      dpr,
+      zoom: this.zoom,
+      panX: this.panX,
+      panY: this.panY,
+      focusX: this.focusX,
+      focusY: this.focusY,
+      focusActive: this.focusActive,
+      vcx,
+      vcy,
+    });
+    this.focusX = focus.focusX;
+    this.focusY = focus.focusY;
+    this.focusActive = focus.focusActive;
+    dragDeltaX = focus.dragDeltaX;
+    dragDeltaY = focus.dragDeltaY;
+    this._infoPanel._centeredForNode = focus.centeredForNode;
+    if (focus.targetPanX !== null) {
+      this._targetPanX = focus.targetPanX;
+      this._targetPanY = focus.targetPanY;
     }
 
     for (let i = 1; i <= 4; i++) {
@@ -890,40 +830,30 @@ export class CanvasGraph extends Symbiote {
       }
     }
 
-    for (let i = 0; i <= 4; i++) {
-      this.depthGroups[i].edges.length = 0;
-      this.depthGroups[i].nodes.length = 0;
-    }
+    this.depthGroups = getDepthGroupsFrame({
+      edges: this.edges,
+      nodes: this.nodes,
+      activeNode: this.activeNode,
+      dragNode: this.dragNode,
+      hoverNode: this.hoverNode,
+    });
 
-    for (const edge of this.edges) {
-      this.depthGroups[edge.targetDepth !== undefined ? edge.targetDepth : 4].edges.push(edge);
-    }
-
-    const focusNodes = [];
-    for (const node of this.nodes) {
-      if (node === this.activeNode || node === this.dragNode || node === this.hoverNode) {
-        focusNodes.push(node);
-      } else {
-        this.depthGroups[node.targetDepth !== undefined ? node.targetDepth : 4].nodes.push(node);
-      }
-    }
-    for (const node of focusNodes) {
-      this.depthGroups[node.targetDepth !== undefined ? node.targetDepth : 4].nodes.push(node);
-    }
-
-    const getLayerTransform = (d) => {
-      const s = this.layerAnim[d].scale;
-      if (d > 0) {
-        const pOffX = -this.layerAnim[d].parallax * dragDeltaX;
-        const pOffY = -this.layerAnim[d].parallax * dragDeltaY;
-        return { A: s * dpr * this.zoom, E: s * dpr * this.panX + vcx * (1 - s) + pOffX, F: s * dpr * this.panY + vcy * (1 - s) + pOffY };
-      } else {
-        if (this.focusActive && Math.abs(s - 1) > 0.001) {
-          return { A: s * dpr * this.zoom, E: this.focusX * (1 - s) + s * dpr * this.panX, F: this.focusY * (1 - s) + s * dpr * this.panY };
-        } else {
-          return { A: dpr * this.zoom, E: dpr * this.panX, F: dpr * this.panY };
-        }
-      }
+    const resolveLayerTransform = (d) => {
+      return getLayerTransform({
+        depth: d,
+        layerAnim: this.layerAnim,
+        dpr,
+        zoom: this.zoom,
+        panX: this.panX,
+        panY: this.panY,
+        vcx,
+        vcy,
+        focusActive: this.focusActive,
+        focusX: this.focusX,
+        focusY: this.focusY,
+        dragDeltaX,
+        dragDeltaY,
+      });
     };
 
     const drawDepth = (d, currentCtx) => {
@@ -931,11 +861,11 @@ export class CanvasGraph extends Symbiote {
       const layerOpacity = la.opacity;
       const isGhost = inGroupMode && d >= 3;
       const GHOST_COLOR = this._ghostColor;
-      const tCurrent = getLayerTransform(d);
+      const tCurrent = resolveLayerTransform(d);
 
       const mapPosToEdgeLayer = (pos, nodeDepth) => {
         if (!pos || nodeDepth === d) return pos;
-        const tNode = getLayerTransform(nodeDepth);
+        const tNode = resolveLayerTransform(nodeDepth);
         const screenX = tNode.A * pos.x + tNode.E;
         const screenY = tNode.A * pos.y + tNode.F;
         return { x: (screenX - tCurrent.E) / tCurrent.A, y: (screenY - tCurrent.F) / tCurrent.A };
@@ -1039,7 +969,6 @@ export class CanvasGraph extends Symbiote {
         const isActive = this.activeNode && this.activeNode.id === node.id;
         const tc = getNodeColor(node);
         const conns = this.adjMap.get(node.id)?.size || 0;
-        const hubScale = 1 + Math.min(conns, 8) * 0.1;
 
         const targetScale = isActive ? 1.5 : 1;
         node.aScale = node.aScale !== undefined ? node.aScale : 1;
@@ -1069,13 +998,9 @@ export class CanvasGraph extends Symbiote {
             currentCtx.fillStyle = this.blendBg(tc[0], tc[1], tc[2], layerOpacity);
             currentCtx.fill();
 
-            let baseR = DOT_RADIUS * hubScale * (node.aScale || 1);
-            const childCount = Math.max(2, Math.min(12, node.children?.length || 3));
-            const innerR = baseR * Math.max(0.1, 0.18 - (childCount - 3) * 0.008);
-
-            // Calculate perfect orbit radius to maintain consistent spacing between dots
-            const spacing = innerR * 2.5; // Gap between dots
-            const orbitR = spacing / (2 * Math.sin(Math.PI / childCount));
+            const { childCount, innerR, orbitR } = getGroupOrbitMetrics(node, conns, {
+              scale: node.aScale || 1,
+            });
             const isHovered = this.hoverNode && this.hoverNode.id === node.id;
             node.aRotSpeed = node.aRotSpeed || 0;
             const targetRotSpeed = (isActive || isHovered) ? 0.025 : 0;
@@ -1170,13 +1095,15 @@ export class CanvasGraph extends Symbiote {
       const apos = this.getSmooth(this.activeNode.id);
       if (apos) {
         const conns = this.adjMap.get(this.activeNode.id)?.size || 0;
-        const nodeR = getNodeRadius(this.activeNode, conns, { scale: this.activeNode.aScale || 1.5 });
-        const menuDist = nodeR + 14;
-        const itemR = 6;
-
-        const easeOut = 1 - Math.pow(1 - this.menuAnim, 3);
-        const mr = menuDist * easeOut;
-        const ir = itemR * Math.max(0, easeOut);
+        const menuLayout = getRadialMenuLayout({
+          activeNode: this.activeNode,
+          activePosition: apos,
+          connectionCount: conns,
+          menuItems: this.getActionItems(),
+          menuAnim: this.menuAnim,
+        });
+        const easeOut = menuLayout.easeOut;
+        const ir = menuLayout.itemRadius;
 
         const s = this.layerAnim[0].scale;
         if (this.focusActive && Math.abs(s - 1) > 0.001) {
@@ -1186,25 +1113,25 @@ export class CanvasGraph extends Symbiote {
         }
 
         const tc = getNodeColor(this.activeNode);
-        const menuItems = this.getActionItems();
-        for (let i = 0; i < menuItems.length; i++) {
-          const item = menuItems[i];
-          const angle = (i / menuItems.length) * Math.PI * 2 - Math.PI / 2;
-          const ix = apos.x + Math.cos(angle) * mr;
-          const iy = apos.y + Math.sin(angle) * mr;
+        for (const entry of menuLayout.items) {
+          const item = entry.item;
 
           mainCtx.beginPath();
-          mainCtx.arc(ix, iy, ir, 0, Math.PI * 2);
-          mainCtx.fillStyle = item.danger ? `rgba(60, 20, 20, ${0.9 * easeOut})` : `rgba(${tc[0]}, ${tc[1]}, ${tc[2]}, ${0.9 * easeOut})`;
+          mainCtx.arc(entry.x, entry.y, ir, 0, Math.PI * 2);
+          mainCtx.fillStyle = item.danger
+            ? `rgba(60, 20, 20, ${0.9 * easeOut})`
+            : `rgba(${tc[0]}, ${tc[1]}, ${tc[2]}, ${0.9 * easeOut})`;
           mainCtx.fill();
 
           mainCtx.save();
           const iconScale = (ir * 1.2) / 24;
           if (iconScale > 0) {
-            mainCtx.translate(ix - 12 * iconScale, iy - 12 * iconScale);
+            mainCtx.translate(entry.x - 12 * iconScale, entry.y - 12 * iconScale);
             mainCtx.scale(iconScale, iconScale);
             const p = new Path2D(item.path);
-            mainCtx.fillStyle = item.danger ? `rgba(255, 107, 107, ${easeOut})` : `rgba(${this._bgR}, ${this._bgG}, ${this._bgB}, ${easeOut})`;
+            mainCtx.fillStyle = item.danger
+              ? `rgba(255, 107, 107, ${easeOut})`
+              : `rgba(${this._bgR}, ${this._bgG}, ${this._bgB}, ${easeOut})`;
             mainCtx.fill(p);
           }
           mainCtx.restore();
@@ -1215,30 +1142,30 @@ export class CanvasGraph extends Symbiote {
     // Info panel — typewriter HUD to the right of active node
     this._drawInfoPanel(mainCtx, dpr, dragDeltaX, dragDeltaY, vcx, vcy);
 
-    // Idle detection: stop the loop when nothing is animating
-    const zoomSettled = Math.abs(this._targetZoom - this.zoom) < 0.001;
-    // Track focus movement rate (delta-of-delta), not absolute offset
-    const prevDX = this._prevDragDeltaX || 0;
-    const prevDY = this._prevDragDeltaY || 0;
-    const focusMovement = Math.abs(dragDeltaX - prevDX) + Math.abs(dragDeltaY - prevDY);
-    this._prevDragDeltaX = dragDeltaX;
-    this._prevDragDeltaY = dragDeltaY;
-    const focusSettled = focusMovement < 0.1;
-    const layerSettled = this.layerAnim[0] && Math.abs(this.layerAnim[0].scale - (isIdle ? 1 : this.LAYER_TARGETS.scale[0])) < 0.005;
-    const workerActive = this.lastAlpha > 0.001;
-    const hasDrag = !!this.dragNode || this.isPanning;
-    const hasActiveAnim = this.deactivating;
-    const hasPanAnim = this._targetPanX !== null;
-
-    const infoPanelAnimating = this._infoPanel.opacity > 0.01 && (this._infoPanel.opacity < 0.99 || this._infoPanel.lines.some(l => l.revealed < l.text.length));
-    if (zoomSettled && focusSettled && layerSettled && !workerActive && !hasDrag && !hasActiveAnim && !hasPanAnim && !infoPanelAnimating) {
-      this._idleFrames++;
-    } else {
-      this._idleFrames = 0;
-    }
+    let idle = resolveIdleFrame({
+      targetZoom: this._targetZoom,
+      zoom: this.zoom,
+      dragDeltaX,
+      dragDeltaY,
+      prevDragDeltaX: this._prevDragDeltaX || 0,
+      prevDragDeltaY: this._prevDragDeltaY || 0,
+      layerAnim: this.layerAnim,
+      isIdle,
+      layerTargets: this.LAYER_TARGETS,
+      lastAlpha: this.lastAlpha,
+      dragNode: this.dragNode,
+      isPanning: this.isPanning,
+      deactivating: this.deactivating,
+      targetPanX: this._targetPanX,
+      infoPanel: this._infoPanel,
+      idleFrames: this._idleFrames,
+    });
+    this._prevDragDeltaX = idle.prevDragDeltaX;
+    this._prevDragDeltaY = idle.prevDragDeltaY;
+    this._idleFrames = idle.idleFrames;
 
     // Allow 3 extra frames after convergence to flush final sub-pixel lerps
-    if (this._idleFrames > 3) {
+    if (idle.shouldStop) {
       this._loopRunning = false;
       return;
     }
@@ -1480,29 +1407,28 @@ export class CanvasGraph extends Symbiote {
         const apos = this.getSmooth(this.activeNode.id);
         if (apos) {
           const conns = this.adjMap.get(this.activeNode.id)?.size || 0;
-          const nodeR = getNodeRadius(this.activeNode, conns, { scale: this.activeNode.aScale || 1.5 });
-          const menuDist = nodeR + 14;
-          const itemR = 6;
-
           const menuItems = this.getActionItems();
-          for (let i = 0; i < menuItems.length; i++) {
-            const angle = (i / menuItems.length) * Math.PI * 2 - Math.PI / 2;
-            const ix = apos.x + Math.cos(angle) * menuDist;
-            const iy = apos.y + Math.sin(angle) * menuDist;
-            const dx = world.x - ix, dy = world.y - iy;
-            if (dx * dx + dy * dy < itemR * itemR * 2) {
-              const action = menuItems[i].action;
-              if (action === 'drill') {
-                if (this.activeNode.isGroup && !this.activeNode.isSemanticCluster) this.loadLevel(this.activeNode.id);
-              } else {
-                this._emitGraphEvent('toolbarAction', { action, nodeId: this.activeNode.id }, {
-                  bubbles: true,
-                  composed: true,
-                });
+          const hitItem = getRadialMenuHit({
+            world,
+            activeNode: this.activeNode,
+            activePosition: apos,
+            connectionCount: conns,
+            menuItems,
+          });
+          if (hitItem) {
+            const action = hitItem.action;
+            if (action === 'drill') {
+              if (this.activeNode.isGroup && !this.activeNode.isSemanticCluster) {
+                this.loadLevel(this.activeNode.id);
               }
-              e.preventDefault();
-              return;
+            } else {
+              this._emitGraphEvent('toolbarAction', { action, nodeId: this.activeNode.id }, {
+                bubbles: true,
+                composed: true,
+              });
             }
+            e.preventDefault();
+            return;
           }
         }
       }

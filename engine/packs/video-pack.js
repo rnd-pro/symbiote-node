@@ -1,10 +1,10 @@
 /**
- * video-pack.js - Video domain pack for agi-graph
+ * video-pack.js - Video domain pack for symbiote-node
  *
  * Registers video-specific node types and socket types.
  * Extracted from symbiote-video/src/graph/NodeTypes.js + NodeProcessors.js.
  *
- * @module agi-graph/packs/video-pack
+ * @module symbiote-node/packs/video-pack
  */
 
 import { registerPack } from '../index.js';

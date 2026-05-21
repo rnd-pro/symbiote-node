@@ -215,23 +215,12 @@ export function getAllPanels(root) {
   return collectPanels(root);
 }
 
-/**
- * Check whether a node is a panel in either the current BSP format or
- * legacy/serialized layout formats used by host applications.
- * @param {Object} node
- * @returns {boolean}
- */
 export function isPanelNode(node) {
-  return !!node && (node.type || node.nodeType) === 'panel';
+  return !!node && node.type === 'panel';
 }
 
-/**
- * Check whether a node is a split/container in either supported format.
- * @param {Object} node
- * @returns {boolean}
- */
 export function isSplitNode(node) {
-  return !!node && (node.type || node.nodeType) === 'split';
+  return !!node && node.type === 'split';
 }
 
 /**
@@ -253,7 +242,6 @@ export function collectPanels(root, options = {}) {
     }
     if (node.first) walk(node.first);
     if (node.second) walk(node.second);
-    if (Array.isArray(node.children)) node.children.forEach(walk);
   }
 
   walk(root);
@@ -315,7 +303,7 @@ export function hasAnyPanelType(root, panelTypes, options = {}) {
 /**
  * Build sidebar submenu descriptors from panels in a layout tree.
  * @param {LayoutNode | Object | null} root
- * @param {Record<string, {title?: string, icon?: string}>} panelDefinitions
+ * @param {object} panelDefinitions
  * @param {Object} [options]
  * @param {boolean} [options.includeGlobal=false] Include panels marked as global.
  * @param {number} [options.minPanels=2] Minimum count required before returning items.

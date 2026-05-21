@@ -55,8 +55,7 @@ export class LayoutSidebar extends Symbiote {
       }
 
 
-      this.style.width = '';
-      this.style.minWidth = '';
+      this.#clearSidebarWidth();
 
 
       if (typeof window !== 'undefined') {
@@ -86,7 +85,7 @@ export class LayoutSidebar extends Symbiote {
 
 
       let savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
-      if (savedWidth) this.style.width = savedWidth + 'px';
+      if (savedWidth) this.#setSidebarWidth(savedWidth);
     }
 
 
@@ -95,14 +94,12 @@ export class LayoutSidebar extends Symbiote {
         localStorage.setItem(STORAGE_KEY_COLLAPSED, String(val));
 
         if (val) {
-          this.style.width = '';
-          this.style.minWidth = '';
+          this.#clearSidebarWidth();
         } else {
 
           let w = localStorage.getItem(STORAGE_KEY_WIDTH);
           if (w) {
-            this.style.width = w + 'px';
-            this.style.minWidth = w + 'px';
+            this.#setSidebarWidth(w);
           }
         }
       }
@@ -116,14 +113,13 @@ export class LayoutSidebar extends Symbiote {
 
       let onMove = (e) => {
         let newWidth = Math.max(120, Math.min(600, startW + (e.clientX - startX)));
-        this.style.width = newWidth + 'px';
-        this.style.minWidth = newWidth + 'px';
-        this.style.transition = 'none';
+        this.#setSidebarWidth(newWidth);
+        this.#setResizeActive(true);
       };
 
       let onUp = () => {
         handle.classList.remove('dragging');
-        this.style.transition = '';
+        this.#setResizeActive(false);
         let w = this.offsetWidth;
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem(STORAGE_KEY_WIDTH, w);
@@ -151,6 +147,7 @@ export class LayoutSidebar extends Symbiote {
   /**
    * Configure sidebar sections
    * @param {Array<{id: string, icon: string, label: string}>} items
+   * @returns {void}
    */
   setSections(items) {
     this.#allSections = items;
@@ -216,6 +213,7 @@ export class LayoutSidebar extends Symbiote {
   /**
    * Toggle visibility of a section
    * @param {string} sectionId
+   * @returns {void}
    */
   toggleVisibility(sectionId) {
     this.$.sections = this.$.sections.map((s) => {
@@ -281,6 +279,7 @@ export class LayoutSidebar extends Symbiote {
    * Update sub-panel list for a section
    * @param {string} sectionId
    * @param {Array<{title: string, icon: string}>} panels
+   * @returns {void}
    */
   updateSubPanels(sectionId, panels) {
     this.$.sections = this.$.sections.map((s) => {
@@ -299,6 +298,27 @@ export class LayoutSidebar extends Symbiote {
       ...s,
       isDisabled: disabledSet.has(s.sectionId),
     }));
+  }
+
+  #setSidebarWidth(width) {
+    let style = this.style;
+    style.setProperty('width', `${width}px`);
+    style.setProperty('min-width', `${width}px`);
+  }
+
+  #clearSidebarWidth() {
+    let style = this.style;
+    style.removeProperty('width');
+    style.removeProperty('min-width');
+  }
+
+  #setResizeActive(active) {
+    let style = this.style;
+    if (active) {
+      style.setProperty('transition', 'none');
+    } else {
+      style.removeProperty('transition');
+    }
   }
 }
 

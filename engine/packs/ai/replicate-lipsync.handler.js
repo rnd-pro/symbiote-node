@@ -12,7 +12,7 @@
  *
  * Ported from Mr-Computer/modules/ai-music-video/src/services/replicate-lipsync.js
  *
- * @module agi-graph/packs/ai/replicate-lipsync
+ * @module symbiote-node/packs/ai/replicate-lipsync
  */
 
 import { readFile, writeFile, mkdir } from 'fs/promises';

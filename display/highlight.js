@@ -31,10 +31,8 @@ function p(t){return c(t)||r(t)}
 function u(t){return'<span class="t-jd">'+t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(@\w+)/g,'<span class="t-jd-tag">$1</span>').replace(/\{([^}]+)\}/g,'<span class="t-jd-type">{$1}</span>')+"</span>"}
 
 /**
- * Highlight template literal content with inner HTML/CSS syntax.
- * Detects whether the content is HTML-like or CSS-like and applies
- * appropriate token coloring for tags, attributes, properties, values, etc.
- * Falls back to plain string coloring if content is neither.
+ * @param {string} raw
+ * @returns {string}
  */
 function highlightTemplateLiteral(raw) {
   const inner = raw.slice(1, -1); // strip backticks
@@ -56,7 +54,10 @@ function highlightTemplateLiteral(raw) {
   return '<span class="t-tl">`' + highlighted + '`</span>';
 }
 
-/** Highlight HTML content inside a template literal */
+/**
+ * @param {string} html
+ * @returns {string}
+ */
 function highlightTemplateHtml(html) {
   return html
     // ${...} interpolations
@@ -77,7 +78,10 @@ function highlightTemplateHtml(html) {
     .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="t-cm">$1</span>');
 }
 
-/** Highlight CSS content inside a template literal */
+/**
+ * @param {string} css
+ * @returns {string}
+ */
 function highlightTemplateCss(css) {
   return css
     // ${...} interpolations
@@ -93,7 +97,11 @@ function highlightTemplateCss(css) {
     .replace(/@([\w-]+)/g, '<span class="t-kw">@$1</span>');
 }
 
-/** Markdown → HTML renderer */
+/**
+ * @param {string} src
+ * @param {Object|string} [options]
+ * @returns {string}
+ */
 export function renderMarkdown(src, options = {}) {
   const { basePath = '', resolveImageSrc } = typeof options === 'string'
     ? { basePath: options }
@@ -287,7 +295,10 @@ export function renderMarkdown(src, options = {}) {
   }
 }
 
-/** SQL highlighter */
+/**
+ * @param {string} src
+ * @returns {string}
+ */
 export function highlightSQL(src) {
   const kw = new Set(['SELECT','FROM','WHERE','INSERT','INTO','VALUES','UPDATE','SET','DELETE','CREATE','ALTER','DROP','TABLE','INDEX','IF','NOT','EXISTS','PRIMARY','KEY','REFERENCES','DEFAULT','NULL','ON','AND','OR','IN','AS','JOIN','LEFT','RIGHT','INNER','OUTER','GROUP','BY','ORDER','HAVING','LIMIT','OFFSET','UNION','ALL','DISTINCT','CASE','WHEN','THEN','ELSE','END','CASCADE','SERIAL','CONSTRAINT','UNIQUE','CHECK','FOREIGN','INTEGER','INT','VARCHAR','TEXT','BOOLEAN','TIMESTAMP','JSONB','JSON','BIGINT','SMALLINT','NUMERIC','FLOAT','DOUBLE','DECIMAL','DATE','TIME','NOW','WITH','RECURSIVE','RETURNING']);
   return src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -297,7 +308,10 @@ export function highlightSQL(src) {
     .replace(/\b[A-Z_]{2,}\b/g, m => kw.has(m) ? `<span class="t-kw">${m}</span>` : m);
 }
 
-/** JSON highlighter */
+/**
+ * @param {string} src
+ * @returns {string}
+ */
 export function highlightJSON(src) {
   return src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     // Strings (keys and values)
@@ -311,7 +325,10 @@ export function highlightJSON(src) {
     .replace(/\b(true|false|null)\b/g, '<span class="t-lit">$1</span>');
 }
 
-/** CSS highlighter */
+/**
+ * @param {string} src
+ * @returns {string}
+ */
 export function highlightCSS(src) {
   let html = src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // Extract comments and strings as placeholders to avoid regex conflicts
@@ -331,7 +348,10 @@ export function highlightCSS(src) {
   return html;
 }
 
-/** HTML/XML highlighter */
+/**
+ * @param {string} src
+ * @returns {string}
+ */
 export function highlightHTML(src) {
   return src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     // Comments
@@ -353,7 +373,10 @@ export function highlightHTML(src) {
     .replace(/(&amp;\w+;)/g, '<span class="t-num">$1</span>');
 }
 
-/** YAML highlighter */
+/**
+ * @param {string} src
+ * @returns {string}
+ */
 export function highlightYAML(src) {
   let html = src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const placeholders = [];
@@ -377,7 +400,10 @@ export function highlightYAML(src) {
   return html;
 }
 
-/** Shell/Bash highlighter */
+/**
+ * @param {string} src
+ * @returns {string}
+ */
 export function highlightShell(src) {
   const kw = new Set(['if','then','else','elif','fi','for','while','do','done','case','esac','in','function','return','exit','export','local','readonly','declare','source','alias','unalias','set','unset','shift','trap','eval','exec','test']);
   let html = src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -400,7 +426,10 @@ export function highlightShell(src) {
   return html;
 }
 
-/** INI/ENV/CONF/TOML highlighter */
+/**
+ * @param {string} src
+ * @returns {string}
+ */
 export function highlightINI(src) {
   let html = src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const placeholders = [];
@@ -505,6 +534,7 @@ const LANG_DEFS = {
  * Uses the same tokenizer logic as the JS highlighter but with configurable keyword sets.
  * @param {string} src - Source code
  * @param {string} lang - Language key (must exist in LANG_DEFS)
+ * @returns {string}
  */
 export function highlightLang(src, lang) {
   const def = LANG_DEFS[lang];
@@ -620,7 +650,10 @@ function isHex(ch) { return isDigit(ch) || (ch >= 'a' && ch <= 'f') || (ch >= 'A
 function isIdentStart(ch) { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch === '_' || ch === '$'; }
 function isIdent(ch) { return isIdentStart(ch) || isDigit(ch); }
 
-/** Generic plain-text highlighter (no colors, just escape) */
+/**
+ * @param {string} src
+ * @returns {string}
+ */
 export function highlightPlain(src) {
   return src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }

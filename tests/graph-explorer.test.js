@@ -13,9 +13,8 @@ import {
 } from '../canvas/graph-explorer.js';
 
 describe('graph explorer view helpers', () => {
-  it('resolves initial view mode from current and legacy params', () => {
+  it('resolves initial view mode from query params', () => {
     assert.equal(resolveInitialGraphViewMode(new URLSearchParams('mode=flat')), 'flat');
-    assert.equal(resolveInitialGraphViewMode(new URLSearchParams('flat=true')), 'flat');
     assert.equal(resolveInitialGraphViewMode(new URLSearchParams('mode=tree')), 'structured');
     assert.equal(resolveInitialGraphViewMode(new URLSearchParams()), 'structured');
   });
@@ -36,8 +35,14 @@ describe('graph explorer view helpers', () => {
 
 test('graph explorer button render helpers update active state', () => {
   const attrs = new Set();
+  const icon = { textContent: '', nodeType: 1 };
+  const label = { textContent: ' FLAT', nodeType: 3 };
   const button = {
-    innerHTML: '',
+    childNodes: [icon, label],
+    querySelector(selector) {
+      assert.equal(selector, '.material-symbols-outlined');
+      return icon;
+    },
     setAttribute(name) {
       attrs.add(name);
     },
@@ -47,11 +52,13 @@ test('graph explorer button render helpers update active state', () => {
   };
 
   renderGraphViewModeButton(button, 'structured');
-  assert.match(button.innerHTML, /TREE/);
+  assert.equal(icon.textContent, 'grid_view');
+  assert.equal(label.textContent, ' TREE');
   assert.equal(attrs.has('data-active'), true);
 
   renderGraphPathStyleButton(button, 'bezier');
-  assert.match(button.innerHTML, /BEZIER/);
+  assert.equal(icon.textContent, 'timeline');
+  assert.equal(label.textContent, ' BEZIER');
   assert.equal(attrs.has('data-active'), false);
 });
 

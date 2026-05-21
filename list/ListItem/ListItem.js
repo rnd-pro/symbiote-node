@@ -1,4 +1,4 @@
-import { Symbiote } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
 import template from './ListItem.tpl.js';
 import css from './ListItem.css.js';
 

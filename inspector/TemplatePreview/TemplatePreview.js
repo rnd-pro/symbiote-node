@@ -51,6 +51,7 @@ export class TemplatePreview extends Symbiote {
 
   /**
    * Extract placeholders, interpolate template, update chips + preview.
+   * @returns {void}
    */
   _updatePreview() {
     let tpl = this.$.template;

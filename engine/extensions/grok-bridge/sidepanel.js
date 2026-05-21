@@ -40,25 +40,40 @@ function addEvent(event) {
 
 /**
  * Render events list
+ * @returns {void}
  */
 function renderEvents() {
+  eventsDiv.replaceChildren();
+
   if (events.length === 0) {
-    eventsDiv.innerHTML = '<div class="empty">Waiting for events...</div>';
+    let empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'Waiting for events...';
+    eventsDiv.append(empty);
     return;
   }
 
-  eventsDiv.innerHTML = events
-    .map((e) => {
-      let time = new Date(e.time).toLocaleTimeString();
-      return `
-      <div class="event">
-        <span class="event-time">${time}</span>
-        <span class="event-type ${e.type}">${e.type}</span>
-        <span class="event-data">${e.data}</span>
-      </div>
-    `;
-    })
-    .join('');
+  let fragment = document.createDocumentFragment();
+  for (let e of events) {
+    let item = document.createElement('div');
+    item.className = 'event';
+
+    let time = document.createElement('span');
+    time.className = 'event-time';
+    time.textContent = new Date(e.time).toLocaleTimeString();
+
+    let type = document.createElement('span');
+    type.className = `event-type ${e.type}`;
+    type.textContent = e.type;
+
+    let data = document.createElement('span');
+    data.className = 'event-data';
+    data.textContent = e.data;
+
+    item.append(time, type, data);
+    fragment.append(item);
+  }
+  eventsDiv.append(fragment);
 }
 
 

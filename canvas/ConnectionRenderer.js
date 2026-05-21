@@ -564,7 +564,7 @@ export class ConnectionRenderer {
   /**
    * Render a single connection SVG path with tangent-aware Bézier and gradient coloring
    * @param {import('../core/Connection.js').Connection} conn
-   * @param {string|null} [draggedNodeId=null]
+   * @returns {void}
    */
   #render(conn) {
     let fromEl = this.#nodeViews.get(conn.from);

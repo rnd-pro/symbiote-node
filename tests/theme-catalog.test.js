@@ -35,7 +35,7 @@ function assertLeaves(node, context = 'token') {
 describe('theme token files', () => {
   it('publishes the expected theme names', () => {
     assert.deepEqual(THEME_NAMES, [
-      'agent-portal',
+      'default-dark',
       'dark',
       'light',
       'carbon',
@@ -56,8 +56,11 @@ describe('theme token files', () => {
 
   it('catalog functions expose theme metadata and flatten tokens', () => {
     assert.equal(listThemes().length, THEME_NAMES.length);
-    assert.equal(getTheme('agent-portal').path, 'tokens/themes/agent-portal.json');
-    assert.equal(getThemeTokens('agent-portal').color.accent.$value, '#4c8bf5');
+    assert.equal(getTheme('default-dark').path, 'tokens/themes/default-dark.json');
+    assert.equal(getThemeTokens('default-dark').color.accent.$value, '#4c8bf5');
+    assert.equal(getThemeTokens('default-dark').component.panelBackground.$value, '#222222');
+    assert.equal(getThemeTokens('default-dark').component.layoutGapBackground.$value, 'transparent');
+    assert.equal(getThemeTokens('default-dark').component.accentBackground.$value, 'rgba(76, 139, 245, 0.12)');
     assert.equal(getTheme('dark').path, 'tokens/themes/dark.json');
     assert.equal(getThemeTokens('dark').color.accent.$type, 'color');
     assert.equal(flattenTokens(getThemeTokens('dark'))['color.accent'].$value, 'hsl(215, 60%, 65%)');

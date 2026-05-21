@@ -3,6 +3,14 @@ const VERSION = '6.1.1';
 
 const SERVER_URL = 'http://localhost:3333';
 const POLL_INTERVAL = 1000;
+const DEBUG = sessionStorage.getItem('GROK_BRIDGE_DEBUG') === '1';
+
+function debugLog(...args) {
+  if (!DEBUG) return;
+  chrome.runtime
+    .sendMessage({ action: 'debugLog', args: args.map((arg) => String(arg).slice(0, 200)) })
+    .catch(() => {});
+}
 
 function logBridgeError(context) {
   return (error) => {
@@ -25,7 +33,7 @@ if (!workerId) {
 }
 const WORKER_ID = workerId;
 
-console.log(`[GrokBridge] v${VERSION} loaded (Worker: ${WORKER_ID})`);
+debugLog(`[GrokBridge] v${VERSION} loaded (Worker: ${WORKER_ID})`);
 
 
 let eventLog = [];
@@ -92,6 +100,7 @@ function performCoordinateClick(el) {
 
 /**
  * Poll server for commands and execute them
+ * @returns {Promise<void>}
  */
 async function pollForCommands() {
   try {
@@ -101,14 +110,14 @@ async function pollForCommands() {
     let { commands } = await res.json();
 
     for (const cmd of commands) {
-      console.log(`[GrokBridge] Executing: ${cmd.action} (${cmd.id})`);
+      debugLog(`[GrokBridge] Executing: ${cmd.action} (${cmd.id})`);
       logEvent('command', { id: cmd.id, action: cmd.action });
 
       try {
         let result;
 
         let action = (cmd.action || '').trim();
-        console.log(
+        debugLog(
           `[GrokBridge] Executing trimmed action: "${action}" (len: ${action.length}) v${VERSION}`,
         );
 
@@ -417,7 +426,7 @@ async function pollForCommands() {
           let currentUrl = window.location.href.replace(/#.*$/, '');
 
           if (currentUrl === targetUrl) {
-            console.log(`[GrokBridge] Already on target URL: ${targetUrl}`);
+            debugLog(`[GrokBridge] Already on target URL: ${targetUrl}`);
             result = { navigated: false, alreadyThere: true };
             break;
           }
@@ -453,7 +462,7 @@ async function pollForCommands() {
             body: JSON.stringify({ id: cmd.id, result }),
           });
           logEvent('result', { id: cmd.id, success: true });
-          console.log('[GrokBridge] Refreshing page to recover from throttling...');
+          debugLog('[GrokBridge] Refreshing page to recover from throttling...');
 
 
           setTimeout(() => {
@@ -636,7 +645,7 @@ async function pollForCommands() {
               imgUrls.push(src);
             }
           }
-          console.log('[getImageUrls] Debug - sample URLs:', debugUrls);
+          debugLog('[getImageUrls] Debug - sample URLs:', debugUrls);
 
           result = { urls: [...new Set(imgUrls)], count: imgUrls.length, debug: debugUrls };
           break;
@@ -1212,6 +1221,7 @@ async function pollForCommands() {
 /**
  * Serialize result for JSON transport
  * Handles DOM elements, arrays, objects
+ * @returns {*}
  */
 function serializeResult(value) {
   if (value === null || value === undefined) return null;
@@ -1226,7 +1236,6 @@ function serializeResult(value) {
       id: value.id || null,
       className: value.className || null,
       textContent: value.textContent?.substring(0, 200),
-      innerHTML: value.innerHTML?.substring(0, 500),
     };
   }
 
@@ -1260,12 +1269,12 @@ let isTabVisible = !document.hidden;
 
 document.addEventListener('visibilitychange', () => {
   isTabVisible = !document.hidden;
-  console.log(`[GrokBridge] Tab visibility: ${isTabVisible ? 'VISIBLE' : 'HIDDEN'}`);
+  debugLog(`[GrokBridge] Tab visibility: ${isTabVisible ? 'VISIBLE' : 'HIDDEN'}`);
   if (isTabVisible) {
 
     let elapsed = Date.now() - lastPollTime;
     if (elapsed > 5000) {
-      console.log(
+      debugLog(
         `[GrokBridge] ⚠️ Missed polls! Last poll ${Math.round(elapsed / 1000)}s ago. Chrome throttled us.`,
       );
     }
@@ -1281,7 +1290,7 @@ function startPolling() {
 
 
   if (pollCount % 30 === 0) {
-    console.log(
+    debugLog(
       `[GrokBridge] ♥ Heartbeat #${pollCount}, tab ${isTabVisible ? 'visible' : 'hidden'}`,
     );
   }
@@ -1312,6 +1321,7 @@ logEvent('info', 'DOM Gateway initialized');
 
 /**
  * Get a unique CSS selector for an element
+ * @returns {string}
  */
 function getSelector(el) {
   if (!el || el === document.body) return 'body';
@@ -1409,7 +1419,7 @@ document.addEventListener(
       visibility: computed.visibility,
     };
 
-    console.log('[GrokBridge] Action:', action.type, action.selector);
+    debugLog('[GrokBridge] Action:', action.type, action.selector);
 
 
     fetch(`${SERVER_URL}/actions`, {
@@ -1454,7 +1464,7 @@ document.addEventListener(
   true,
 );
 
-console.log('[GrokBridge] Action recording enabled');
+debugLog('[GrokBridge] Action recording enabled');
 
 
 (function injectWebSocketInterceptorSync() {
@@ -1462,7 +1472,7 @@ console.log('[GrokBridge] Action recording enabled');
   script.src = chrome.runtime.getURL('websocket-interceptor.js');
   script.onload = () => {
     script.remove();
-    console.log('[GrokBridge] WebSocket interceptor loaded via src');
+    debugLog('[GrokBridge] WebSocket interceptor loaded via src');
   };
   script.onerror = (e) => console.error('[GrokBridge] Failed to load WS interceptor:', e);
   (document.documentElement || document.head || document.body).appendChild(script);
@@ -1471,7 +1481,7 @@ console.log('[GrokBridge] Action recording enabled');
 
 window.addEventListener('grok-ws-message', (event) => {
   let message = event.detail;
-  console.log(
+  debugLog(
     `[GrokBridge] WS ${message.direction}:`,
     message.data?.substring?.(0, 200) || message.data,
   );
@@ -1489,7 +1499,7 @@ window.addEventListener('grok-ws-message', (event) => {
 
 window.addEventListener('grok-fetch', (event) => {
   let logEntry = event.detail;
-  console.log(`[GrokBridge] Fetch: ${logEntry.method} ${logEntry.url}`);
+  debugLog(`[GrokBridge] Fetch: ${logEntry.method} ${logEntry.url}`);
 
 
   fetch(`${SERVER_URL}/fetch`, {

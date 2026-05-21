@@ -209,9 +209,17 @@ describe('Symlink escape guard', () => {
     );
   });
 
-  it('engine wildcard is not public', () => {
-    assert.equal(pkgJson.exports?.['./engine/*'], undefined, './engine/* must not expose internal files');
-  });
+	  it('engine wildcard is not public', () => {
+	    assert.equal(pkgJson.exports?.['./engine/*'], undefined, './engine/* must not expose internal files');
+	  });
+
+	  it('engine packs are not published as library artifacts', () => {
+	    assert.equal(pkgJson.exports?.['./engine/packs/*'], undefined, './engine/packs/* must not be public');
+	    assert.ok(
+	      !pkgJson.files.some((entry) => entry.replace(/\/$/, '') === 'engine/packs'),
+	      'files[] must not publish engine/packs/'
+	    );
+	  });
 
   it('browser implementation directories are not public wildcard exports', () => {
     let privateBrowserWildcards = [
@@ -294,18 +302,35 @@ describe('Packed package consumer boundary', () => {
         let root = await import('symbiote-node');
         let layout = await import('symbiote-node/layout');
         let manifest = await import('symbiote-node/manifest');
-        let formatter = await import('symbiote-node/display/markdown-formatter');
+        let ui = await import('symbiote-node/ui');
+	        let formatter = await import('symbiote-node/display/markdown-formatter');
 
         assert.equal(typeof root.NodeEditor, 'function');
         assert.equal(typeof layout.setupPanelRouting, 'function');
         assert.equal(typeof manifest.listComponents, 'function');
         assert.equal(typeof formatter.formatMarkdown, 'function');
 
-        await assert.rejects(
-          import('symbiote-node/display/SourceEditor/SourceEditor.js'),
-          (error) => error?.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
-        );
-      `);
+        for (let component of manifest.listComponents()) {
+          let advertised = await import(component.specifier);
+          assert.equal(advertised, ui);
+          if (component.exportName) {
+            assert.equal(
+              Object.prototype.hasOwnProperty.call(advertised, component.exportName),
+              true,
+              component.tagName + ' export must be available from ' + component.specifier
+            );
+          }
+        }
+
+	        await assert.rejects(
+	          import('symbiote-node/display/SourceEditor/SourceEditor.js'),
+	          (error) => error?.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+	        );
+	        await assert.rejects(
+	          import('symbiote-node/engine/packs/ai/grok-generate.handler.js'),
+	          (error) => error?.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+	        );
+	      `);
 
       execFileSync(process.execPath, [script], { cwd: tempRoot, stdio: 'pipe' });
     } finally {

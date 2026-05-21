@@ -4,7 +4,7 @@
  * Every node can define lifecycle hooks: validate, cacheKey, execute, postProcess.
  * The lifecycle runner orchestrates these steps with cache awareness.
  *
- * @module agi-graph/Lifecycle
+ * @module symbiote-node/Lifecycle
  */
 
 /**
@@ -55,7 +55,9 @@ function defaultCacheKey(inputs, params) {
  * @param {object} inputs - Resolved inputs from upstream
  * @param {object} params - Node parameters
  * @param {CacheState} cacheState - Cache state for this node
- * @param {{signal?: AbortSignal, deadline?: number}} [executionContext] - Execution cancellation context
+ * @param {Object} [executionContext]
+ * @param {AbortSignal} [executionContext.signal]
+ * @param {number} [executionContext.deadline]
  * @returns {Promise<LifecycleResult>}
  */
 export async function runLifecycle(hooks, inputs, params, cacheState, executionContext = {}) {

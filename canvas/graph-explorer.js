@@ -12,15 +12,33 @@ export const GRAPH_DIRECTORY_FRAME_COLORS = [
 ];
 
 export function resolveInitialGraphViewMode(urlParams) {
-  const modeParam = urlParams.get('mode') || (urlParams.get('flat') === 'true' ? 'flat' : null);
+  const modeParam = urlParams.get('mode');
   return modeParam === 'flat' ? 'flat' : 'structured';
+}
+
+function setGraphButtonVisual(button, icon, label) {
+  const iconElement = button.querySelector?.('.material-symbols-outlined');
+  if (!iconElement) {
+    button.textContent = label;
+    return;
+  }
+
+  iconElement.textContent = icon;
+  const labelNode = [...(button.childNodes || [])]
+    .find((node) => node !== iconElement && node.nodeType === 3 && node.textContent.trim());
+
+  if (labelNode) {
+    labelNode.textContent = ` ${label}`;
+  } else {
+    button.append?.(` ${label}`);
+  }
 }
 
 export function renderGraphViewModeButton(button, viewMode) {
   if (!button) return;
   const label = viewMode === 'flat' ? 'FLAT' : 'TREE';
   const icon = viewMode === 'flat' ? 'account_tree' : 'grid_view';
-  button.innerHTML = `<span class="material-symbols-outlined">${icon}</span>${label}`;
+  setGraphButtonVisual(button, icon, label);
   if (viewMode === 'structured') {
     button.setAttribute('data-active', '');
   } else {
@@ -50,7 +68,7 @@ export function getGraphPathStyleDisplay(style) {
 export function renderGraphPathStyleButton(button, style) {
   if (!button) return;
   const { icon, text, active } = getGraphPathStyleDisplay(style);
-  button.innerHTML = `<span class="material-symbols-outlined">${icon}</span>${text}`;
+  setGraphButtonVisual(button, icon, text);
   if (active) {
     button.setAttribute('data-active', '');
   } else {

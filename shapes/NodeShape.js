@@ -14,10 +14,10 @@ export class NodeShape {
 
   /**
    * Get socket position on the shape outline
-   * @param {'input'|'output'} side
-   * @param {number} index - ordinal index of this port
-   * @param {number} total - total ports on this side
-   * @param {{ width: number, height: number }} size - node dimensions
+   * @param {'input'|'output'} _side
+   * @param {number} _index - ordinal index of this port
+   * @param {number} _total - total ports on this side
+   * @param {{ width: number, height: number }} _size - node dimensions
    * @returns {{ x: number, y: number, angle: number }}
    *   x, y are relative to node top-left corner
    *   angle is in degrees: 0 = right, 90 = down, 180 = left, 270 = up
@@ -28,7 +28,7 @@ export class NodeShape {
 
   /**
    * Get SVG outline path for the shape
-   * @param {{ width: number, height: number }} size
+   * @param {{ width: number, height: number }} _size
    * @returns {string} SVG path d attribute
    */
   getOutlinePath(_size) {
@@ -37,7 +37,7 @@ export class NodeShape {
 
   /**
    * CSS border-radius value for the shape
-   * @param {{ width: number, height: number }} size
+   * @param {{ width: number, height: number }} _size
    * @returns {string}
    */
   getBorderRadius(_size) {
@@ -62,7 +62,7 @@ export class NodeShape {
 
   /**
    * CSS clip-path for non-rectangular shapes
-   * @param {{ width: number, height: number }} size
+   * @param {{ width: number, height: number }} _size
    * @returns {string|null} null = no clip
    */
   getClipPath(_size) {

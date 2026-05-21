@@ -1,3 +1,44 @@
+export const COMPONENT_UI_SPECIFIER = 'symbiote-node/ui';
+
+const UI_NAMED_EXPORTS = new Set([
+  'GraphNode',
+  'NodeSocket',
+  'NodeCanvas',
+  'CanvasGraph',
+  'GraphExplorerShell',
+  'ContextMenu',
+  'Layout',
+  'LayoutSidebar',
+  'LayoutNode',
+  'ProjectTabs',
+  'CodeBlock',
+  'SourceViewer',
+  'SourceEditor',
+  'LoadingOverlay',
+  'OutputListPreview',
+  'OutputGraphPreview',
+  'CellBg',
+  'QuickToolbar',
+  'InspectorPanel',
+  'PaletteBrowser',
+  'Minimap',
+  'NodeSearch',
+  'GraphTabs',
+  'Breadcrumb',
+  'QuickOpen',
+  'ChatMessageItem',
+  'ChatTranscript',
+  'ChatComposer',
+  'ChatList',
+  'ChatListItem',
+  'ChatSidebarShell',
+  'ChatSidebarItem',
+  'ChatSidebarSubItem',
+  'ListItem',
+  'TreeView',
+  'GraphFrame',
+]);
+
 export let COMPONENTS = [
   {
     tagName: 'graph-node',
@@ -35,6 +76,20 @@ export let COMPONENTS = [
     description: 'Generic graph explorer shell with toolbar, canvas, overlay, legend, and stats slots.',
   },
   {
+    tagName: 'context-menu',
+    className: 'ContextMenu',
+    module: 'menu/ContextMenu/ContextMenu.js',
+    category: 'menu',
+    description: 'Generic context menu custom element for graph and canvas actions.',
+  },
+  {
+    tagName: 'ctx-item',
+    className: 'CtxItem',
+    module: 'menu/ContextMenu/ContextMenu.js',
+    category: 'menu',
+    description: 'Internal item used by context-menu.',
+  },
+  {
     tagName: 'panel-layout',
     className: 'Layout',
     module: 'layout/Layout/Layout.js',
@@ -54,6 +109,27 @@ export let COMPONENTS = [
     module: 'layout/LayoutNode/LayoutNode.js',
     category: 'layout',
     description: 'Resizable and dockable layout node component.',
+  },
+  {
+    tagName: 'action-zone',
+    className: 'ActionZone',
+    module: 'layout/ActionZone/ActionZone.js',
+    category: 'layout',
+    description: 'Internal split and join gesture control used by layout-node.',
+  },
+  {
+    tagName: 'layout-preview',
+    className: 'LayoutPreview',
+    module: 'layout/LayoutPreview/LayoutPreview.js',
+    category: 'layout',
+    description: 'Internal split and join preview overlay used by panel-layout.',
+  },
+  {
+    tagName: 'panel-menu',
+    className: 'PanelMenu',
+    module: 'layout/PanelMenu/PanelMenu.js',
+    category: 'layout',
+    description: 'Internal panel type menu used by panel-layout.',
   },
   {
     tagName: 'project-tabs',
@@ -140,11 +216,46 @@ export let COMPONENTS = [
     description: 'Inspector panel for selected graph node properties.',
   },
   {
+    tagName: 'insp-port-item',
+    className: 'InspPortItem',
+    module: 'inspector/InspectorPanel/InspectorPanel.js',
+    category: 'inspector',
+    description: 'Internal port inspector item used by inspector-panel.',
+  },
+  {
+    tagName: 'insp-ctrl-item',
+    className: 'InspCtrlItem',
+    module: 'inspector/InspectorPanel/InspectorPanel.js',
+    category: 'inspector',
+    description: 'Internal control inspector item used by inspector-panel.',
+  },
+  {
+    tagName: 'template-preview',
+    className: 'TemplatePreview',
+    module: 'inspector/TemplatePreview/TemplatePreview.js',
+    category: 'inspector',
+    description: 'Internal template preview used by inspector-panel.',
+  },
+  {
     tagName: 'palette-browser',
     className: 'PaletteBrowser',
     module: 'palette/PaletteBrowser/PaletteBrowser.js',
     category: 'palette',
     description: 'Node palette browser for adding graph nodes.',
+  },
+  {
+    tagName: 'pal-item',
+    className: 'PalItem',
+    module: 'palette/PaletteBrowser/PaletteBrowser.js',
+    category: 'palette',
+    description: 'Internal palette item used by palette-browser.',
+  },
+  {
+    tagName: 'pal-category',
+    className: 'PalCategory',
+    module: 'palette/PaletteBrowser/PaletteBrowser.js',
+    category: 'palette',
+    description: 'Internal palette category used by palette-browser.',
   },
   {
     tagName: 'node-minimap',
@@ -161,6 +272,13 @@ export let COMPONENTS = [
     description: 'Search component for graph nodes and actions.',
   },
   {
+    tagName: 'search-result-item',
+    className: 'SearchResultItem',
+    module: 'canvas/NodeSearch/NodeSearch.js',
+    category: 'canvas',
+    description: 'Internal result item used by node-search.',
+  },
+  {
     tagName: 'graph-tabs',
     className: 'GraphTabs',
     module: 'canvas/GraphTabs/GraphTabs.js',
@@ -168,11 +286,25 @@ export let COMPONENTS = [
     description: 'Tab strip component for multiple graph views.',
   },
   {
+    tagName: 'tab-item',
+    className: 'TabItem',
+    module: 'canvas/GraphTabs/GraphTabs.js',
+    category: 'canvas',
+    description: 'Internal tab item used by graph-tabs.',
+  },
+  {
     tagName: 'graph-breadcrumb',
     className: 'Breadcrumb',
     module: 'canvas/Breadcrumb/Breadcrumb.js',
     category: 'canvas',
     description: 'Breadcrumb component for graph and subgraph navigation.',
+  },
+  {
+    tagName: 'breadcrumb-item',
+    className: 'BreadcrumbItem',
+    module: 'canvas/Breadcrumb/Breadcrumb.js',
+    category: 'canvas',
+    description: 'Internal breadcrumb item used by graph-breadcrumb.',
   },
   {
     tagName: 'quick-open',
@@ -238,6 +370,20 @@ export let COMPONENTS = [
     description: 'Generic chat sidebar child item.',
   },
   {
+    tagName: 'sidebar-section',
+    className: 'SidebarSection',
+    module: 'layout/LayoutSidebar/SidebarSection.js',
+    category: 'layout',
+    description: 'Internal section item used by layout-sidebar.',
+  },
+  {
+    tagName: 'sidebar-sub-item',
+    className: 'SidebarSubItem',
+    module: 'layout/LayoutSidebar/SidebarSection.js',
+    category: 'layout',
+    description: 'Internal sidebar child item used by layout-sidebar.',
+  },
+  {
     tagName: 'sn-list-item',
     className: 'ListItem',
     module: 'list/ListItem/ListItem.js',
@@ -251,11 +397,44 @@ export let COMPONENTS = [
     category: 'tree',
     description: 'Generic tree view with selection, expansion, filtering, drag payloads, and host-owned item data.',
   },
-];
+  {
+    tagName: 'ctrl-item',
+    className: 'CtrlItem',
+    module: 'node/CtrlItem/CtrlItem.js',
+    category: 'node',
+    description: 'Internal control item used by graph-node.',
+  },
+  {
+    tagName: 'port-item',
+    className: 'PortItem',
+    module: 'node/PortItem/PortItem.js',
+    category: 'node',
+    description: 'Internal port item used by graph-node.',
+  },
+  {
+    tagName: 'graph-frame',
+    className: 'GraphFrame',
+    module: 'node/GraphFrame/GraphFrame.js',
+    category: 'node',
+    description: 'Graph canvas frame primitive for grouped node regions.',
+  },
+].map((component) => {
+  let exportName = UI_NAMED_EXPORTS.has(component.className) ? component.className : null;
+  let internal = !exportName;
+  return {
+    ...component,
+    internal,
+    specifier: COMPONENT_UI_SPECIFIER,
+    exportName,
+    importKind: internal ? 'side-effect' : 'named',
+  };
+});
 
 export function listComponents(filter = {}) {
+  let { includeInternal = false, ...componentFilter } = filter;
   return COMPONENTS.filter((component) => {
-    for (let [key, value] of Object.entries(filter)) {
+    if (!includeInternal && component.internal) return false;
+    for (let [key, value] of Object.entries(componentFilter)) {
       if (component[key] !== value) return false;
     }
     return true;
@@ -274,6 +453,14 @@ export function getComponentModule(tagName) {
   return getComponent(tagName)?.module;
 }
 
-export function getComponentTags() {
-  return COMPONENTS.map((component) => component.tagName);
+export function getComponentSpecifier(tagName) {
+  return getComponent(tagName)?.specifier;
+}
+
+export function getComponentExportName(tagName) {
+  return getComponent(tagName)?.exportName;
+}
+
+export function getComponentTags(filter = {}) {
+  return listComponents(filter).map((component) => component.tagName);
 }

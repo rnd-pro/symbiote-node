@@ -1,18 +1,9 @@
-import { Symbiote } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
 import template from './TreeView.tpl.js';
 import css from './TreeView.css.js';
 
 function emit(el, type, detail = {}) {
   el.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
-}
-
-function escapeHtml(value = '') {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
 }
 
 function escapeCssValue(value = '') {
@@ -40,12 +31,24 @@ function hasStorage() {
   return typeof localStorage !== 'undefined' && localStorage;
 }
 
+function serializeDragPayload(payload) {
+  if (payload === null || payload === undefined) return '';
+  return typeof payload === 'string' ? payload : JSON.stringify(payload);
+}
+
+function getItemId(item) {
+  return String(item?.id || item?.path || '');
+}
+
 export class TreeView extends Symbiote {
   #items = [];
   #selectedId = '';
   #expandedIds = new Set();
+  #defaultExpandedIds = [];
+  #expandedIdsLoaded = false;
   #filterText = '';
   #storageKey = '';
+  #toggleBranchesOnSelect = false;
   #visibleItems = [];
 
   init$ = {
@@ -60,7 +63,10 @@ export class TreeView extends Symbiote {
         return;
       }
 
-      this.selectedId = item.id;
+      this.selectedId = getItemId(item);
+      if (this.#toggleBranchesOnSelect && Array.isArray(item.children) && item.children.length > 0) {
+        this.#toggleItem(item);
+      }
       emit(this, 'sn-tree-select', { item });
     },
 
@@ -80,7 +86,12 @@ export class TreeView extends Symbiote {
         event.preventDefault();
         return;
       }
-      emit(this, 'sn-tree-dragstart', { item, payload: item.payload });
+      let payload = item.payload ?? item.dragText ?? item.path ?? item.id ?? '';
+      if (payload && event.dataTransfer) {
+        event.dataTransfer.setData('text/plain', serializeDragPayload(payload));
+        event.dataTransfer.effectAllowed = item.dragEffect || 'copy';
+      }
+      emit(this, 'sn-tree-dragstart', { item, payload, nativeEvent: event });
     },
   };
 
@@ -107,7 +118,19 @@ export class TreeView extends Symbiote {
 
   set expandedIds(value) {
     this.#expandedIds = new Set(Array.from(value || []).map(String));
+    this.#expandedIdsLoaded = true;
     this.#persistExpandedIds();
+    this.#renderTree();
+  }
+
+  get defaultExpandedIds() {
+    return [...this.#defaultExpandedIds];
+  }
+
+  set defaultExpandedIds(value) {
+    this.#defaultExpandedIds = Array.from(value || []).map(String);
+    this.#expandedIdsLoaded = false;
+    this.#loadExpandedIds();
     this.#renderTree();
   }
 
@@ -126,8 +149,17 @@ export class TreeView extends Symbiote {
 
   set storageKey(value) {
     this.#storageKey = String(value || '');
+    this.#expandedIdsLoaded = false;
     this.#loadExpandedIds();
     this.#renderTree();
+  }
+
+  get toggleBranchesOnSelect() {
+    return this.#toggleBranchesOnSelect;
+  }
+
+  set toggleBranchesOnSelect(value) {
+    this.#toggleBranchesOnSelect = Boolean(value);
   }
 
   static filterItems(items = [], filterText = '') {
@@ -164,6 +196,11 @@ export class TreeView extends Symbiote {
     this.#renderTree();
   }
 
+  toggleItem(item) {
+    if (!item) return;
+    this.#toggleItem(item);
+  }
+
   expandAncestors(idOrPath) {
     let target = String(idOrPath || '');
     if (!target) return false;
@@ -171,7 +208,8 @@ export class TreeView extends Symbiote {
     let found = this.#collectAncestors(this.#items, target, ancestors);
     if (!found) return false;
     for (let item of ancestors) {
-      this.#expandedIds.add(String(item.id));
+      let id = getItemId(item);
+      if (id) this.#expandedIds.add(id);
     }
     this.#persistExpandedIds();
     this.#renderTree();
@@ -185,7 +223,8 @@ export class TreeView extends Symbiote {
   }
 
   #toggleItem(item) {
-    let id = String(item.id);
+    let id = getItemId(item);
+    if (!id) return;
     let expanded = !this.#expandedIds.has(id);
     if (expanded) {
       this.#expandedIds.add(id);
@@ -200,7 +239,7 @@ export class TreeView extends Symbiote {
   #collectAncestors(items, target, ancestors) {
     for (let item of items) {
       if (!item || typeof item !== 'object') continue;
-      let id = String(item.id || '');
+      let id = getItemId(item);
       let path = String(item.path || '');
       if (id === target || path === target) return true;
 
@@ -213,10 +252,19 @@ export class TreeView extends Symbiote {
   }
 
   #loadExpandedIds() {
-    if (!this.#storageKey || !hasStorage()) return;
+    if (this.#expandedIdsLoaded) return;
+    if (!this.#storageKey || !hasStorage()) {
+      this.#expandedIds = new Set(this.#defaultExpandedIds);
+      this.#expandedIdsLoaded = true;
+      return;
+    }
     try {
       let value = localStorage.getItem(this.#storageKey);
-      if (!value) return;
+      if (!value) {
+        this.#expandedIds = new Set(this.#defaultExpandedIds);
+        this.#expandedIdsLoaded = true;
+        return;
+      }
       let ids = JSON.parse(value);
       if (Array.isArray(ids)) {
         this.#expandedIds = new Set(ids.map(String));
@@ -224,6 +272,7 @@ export class TreeView extends Symbiote {
     } catch {
       this.#expandedIds = new Set();
     }
+    this.#expandedIdsLoaded = true;
   }
 
   #persistExpandedIds() {
@@ -235,42 +284,67 @@ export class TreeView extends Symbiote {
     if (!this.ref.tree) return;
     this.#visibleItems = [];
     let filtered = TreeView.filterItems(this.#items, this.#filterText);
-    this.ref.tree.innerHTML = this.#renderBranches(filtered, 0, Boolean(this.#filterText.trim()));
+    let nodes = [];
+    this.#appendBranches(nodes, filtered, 0, Boolean(this.#filterText.trim()));
+    this.ref.tree.replaceChildren(...nodes);
   }
 
-  #renderBranches(branches, depth, forceExpanded) {
-    return branches.map(({ item, children }) => {
-      let id = String(item.id || item.path || '');
+  #appendBranches(parent, branches, depth, forceExpanded) {
+    for (let { item, children } of branches) {
+      let id = getItemId(item);
       let hasChildren = children.length > 0;
       let expanded = forceExpanded || this.#expandedIds.has(id);
       let rowIndex = this.#visibleItems.push(item) - 1;
-      let childHtml = hasChildren && expanded ? this.#renderBranches(children, depth + 1, forceExpanded) : '';
-      let badges = normalizeBadges(item.badges)
-        .map((badge) => `<span class="sn-tree-badge">${escapeHtml(badge)}</span>`)
-        .join('');
+      let row = document.createElement('div');
+      row.className = 'sn-tree-row';
+      row.setAttribute('role', 'treeitem');
+      row.tabIndex = 0;
+      row.dataset.index = String(rowIndex);
+      row.dataset.treeId = id;
+      row.style.setProperty('--sn-tree-depth', String(depth));
+      row.setAttribute('aria-selected', String(id === this.#selectedId));
+      row.setAttribute('aria-expanded', hasChildren ? String(expanded) : 'false');
+      row.toggleAttribute('muted', Boolean(item.muted));
+      row.draggable = Boolean(item.draggable);
 
-      return `
-<div
-  class="sn-tree-row"
-  role="treeitem"
-  tabindex="0"
-  data-index="${rowIndex}"
-  data-tree-id="${escapeHtml(id)}"
-  style="--sn-tree-depth: ${depth};"
-  aria-selected="${String(id === this.#selectedId)}"
-  aria-expanded="${hasChildren ? String(expanded) : 'false'}"
-  ${item.muted ? 'muted' : ''}
-  ${item.draggable ? 'draggable="true"' : ''}
->
-  <button class="sn-tree-toggle" type="button" ${hasChildren ? '' : 'hidden'}>
-    ${expanded ? 'expand_more' : 'chevron_right'}
-  </button>
-  <span class="sn-tree-icon" ${item.icon ? '' : 'hidden'}>${escapeHtml(item.icon || '')}</span>
-  <span class="sn-tree-label">${escapeHtml(item.label || id)}</span>
-  <span class="sn-tree-kind" ${item.kind ? '' : 'hidden'}>${escapeHtml(item.kind || '')}</span>
-  <span class="sn-tree-badges" ${badges ? '' : 'hidden'}>${badges}</span>
-</div>${childHtml}`;
-    }).join('');
+      let toggle = document.createElement('button');
+      toggle.className = 'sn-tree-toggle';
+      toggle.type = 'button';
+      toggle.hidden = !hasChildren;
+      toggle.textContent = expanded ? 'expand_more' : 'chevron_right';
+
+      let icon = document.createElement('span');
+      icon.className = 'sn-tree-icon';
+      icon.hidden = !item.icon;
+      icon.textContent = item.icon || '';
+
+      let label = document.createElement('span');
+      label.className = 'sn-tree-label';
+      label.textContent = item.label || id;
+
+      let kind = document.createElement('span');
+      kind.className = 'sn-tree-kind';
+      kind.hidden = !item.kind;
+      kind.textContent = item.kind || '';
+
+      let badges = document.createElement('span');
+      badges.className = 'sn-tree-badges';
+      let normalizedBadges = normalizeBadges(item.badges);
+      badges.hidden = normalizedBadges.length === 0;
+      for (let badge of normalizedBadges) {
+        let badgeEl = document.createElement('span');
+        badgeEl.className = 'sn-tree-badge';
+        badgeEl.textContent = badge;
+        badges.appendChild(badgeEl);
+      }
+
+      row.append(toggle, icon, label, kind, badges);
+      parent.push(row);
+
+      if (hasChildren && expanded) {
+        this.#appendBranches(parent, children, depth + 1, forceExpanded);
+      }
+    }
   }
 }
 

@@ -8,6 +8,10 @@
  *
  * @module symbiote-node/packs/data/rss-feed */
 
+/**
+ * Build an abort signal for request timeout handling.
+ * @returns {AbortSignal}
+ */
 function requestSignal(timeout, parentSignal) {
   let timeoutSignal = AbortSignal.timeout(timeout);
   return parentSignal && AbortSignal.any

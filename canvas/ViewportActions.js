@@ -231,7 +231,6 @@ export class ViewportActions {
   /**
    * Highlight sockets compatible with picked socket
    * @param {object} socketData
-   * @param {HTMLElement} nodesLayer
    */
   highlightCompatibleSockets(socketData) {
     let node = this.#editor.getNode(socketData.nodeId);

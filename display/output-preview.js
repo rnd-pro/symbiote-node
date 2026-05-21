@@ -97,7 +97,9 @@ function normalizeListItem(item, index, options) {
 
 /**
  * @param {*} value
- * @param {{ limit?: number, maxTextLength?: number }} [options]
+ * @param {Object} [options]
+ * @param {number} [options.limit]
+ * @param {number} [options.maxTextLength]
  * @returns {{ items: Array<object>, total: number, visible: number, truncated: boolean, empty: boolean }}
  */
 export function normalizeOutputList(value, options = {}) {
@@ -224,7 +226,10 @@ function readGraphArrays(value) {
 
 /**
  * @param {*} value
- * @param {{ nodeLimit?: number, edgeLimit?: number, maxTextLength?: number }} [options]
+ * @param {Object} [options]
+ * @param {number} [options.nodeLimit]
+ * @param {number} [options.edgeLimit]
+ * @param {number} [options.maxTextLength]
  * @returns {{ nodes: Array<object>, edges: Array<object>, totalNodes: number, totalEdges: number, truncated: boolean, empty: boolean }}
  */
 export function normalizePreviewGraph(value, options = {}) {

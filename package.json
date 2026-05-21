@@ -20,7 +20,6 @@
       "default": "./engine/index.js"
     },
     "./engine/cli": "./engine/cli.js",
-    "./engine/packs/*": "./engine/packs/*",
     "./manifest": {
       "import": "./manifest/index.js",
       "default": "./manifest/index.js"
@@ -51,7 +50,6 @@
     "custom-elements.json",
     "core/",
     "engine/*.js",
-    "engine/packs/",
     "manifest/",
     "tokens/",
     "rules/",

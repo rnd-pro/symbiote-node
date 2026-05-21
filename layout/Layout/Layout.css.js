@@ -17,6 +17,7 @@ export let styles = css`
       display: flex;
       width: 100%;
       height: 100%;
+      background: var(--layout-gap-bg, transparent);
     }
 
     /* Fullscreen tab bar */

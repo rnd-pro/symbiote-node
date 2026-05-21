@@ -68,6 +68,20 @@ const RESPONSES = [
 const FALLBACK =
   'I can help with this workflow! Try asking about specific nodes like "AI Agent", "Auth Guard", or "Filter error". You can also ask about the flow simulation or subgraph previews.';
 
+function appendCodeMarkup(parent, message) {
+  let parts = String(message).split(/(<code>.*?<\/code>)/g);
+  for (let part of parts) {
+    let codeMatch = part.match(/^<code>(.*)<\/code>$/);
+    if (codeMatch) {
+      let code = document.createElement('code');
+      code.textContent = codeMatch[1];
+      parent.appendChild(code);
+    } else if (part) {
+      parent.append(part);
+    }
+  }
+}
+
 export class AiChat extends Symbiote {
   init$ = {
     status: 'online',
@@ -130,13 +144,18 @@ export class AiChat extends Symbiote {
    * Add a chat bubble
    * @param {'user'|'ai'} role
    * @param {string} html
+   * @returns {HTMLElement}
    */
   _addBubble(role, html) {
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble';
     bubble.setAttribute('data-role', role);
     if (role === 'ai') {
-      bubble.innerHTML = `<span class="ai-prefix">✦ Assistant</span>${html}`;
+      let prefix = document.createElement('span');
+      prefix.className = 'ai-prefix';
+      prefix.textContent = '✦ Assistant';
+      bubble.appendChild(prefix);
+      appendCodeMarkup(bubble, html);
     } else {
       bubble.textContent = html;
     }
@@ -147,13 +166,21 @@ export class AiChat extends Symbiote {
     return bubble;
   }
 
-  /** Add typing indicator */
+  /**
+   * Add typing indicator.
+   * @returns {HTMLElement}
+   */
   _addTyping() {
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble';
     bubble.setAttribute('data-role', 'ai');
-    bubble.innerHTML =
-      '<span class="ai-prefix">✦ Assistant</span><div class="typing-dots"><span></span><span></span><span></span></div>';
+    let prefix = document.createElement('span');
+    prefix.className = 'ai-prefix';
+    prefix.textContent = '✦ Assistant';
+    let dots = document.createElement('div');
+    dots.className = 'typing-dots';
+    dots.append(document.createElement('span'), document.createElement('span'), document.createElement('span'));
+    bubble.append(prefix, dots);
     this.ref.messages.appendChild(bubble);
     requestAnimationFrame(() => {
       this.ref.messages.scrollTop = this.ref.messages.scrollHeight;

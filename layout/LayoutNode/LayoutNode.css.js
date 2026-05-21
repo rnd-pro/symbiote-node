@@ -259,7 +259,7 @@ export let styles = css`
 
     .split-resizer {
       flex-shrink: 0;
-      background: var(--layout-border, var(--sn-node-border, #333));
+      background: var(--layout-gap-bg, var(--layout-border, var(--sn-node-border, #333)));
       transition: background 0.15s ease;
       z-index: 10;
     }

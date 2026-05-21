@@ -198,7 +198,7 @@ export class SubgraphRouter {
    * - `#graph/src/analysis/?in=1&focus=file.js`      → drill into analysis, focus file.js
    * - `#graph/src/analysis/file.js?in=1`             → drill into analysis, drill into file
    * - `#graph/src/analysis/file.js?in=1&symbol=name` → drill into file, focus symbol
-   * - `#graph/src/analysis/`                         → (legacy) focus analysis at root
+   * - `#graph/src/analysis/`                         → root, fly to analysis node
    *
    * @param {NodeEditor} editor
    */

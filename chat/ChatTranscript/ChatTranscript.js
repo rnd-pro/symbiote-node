@@ -1,6 +1,5 @@
 import Symbiote, { html } from '@symbiotejs/symbiote';
 import '../ChatMessageItem/ChatMessageItem.js';
-import { escapeHtml } from '../../display/markdown-formatter.js';
 import css from './ChatTranscript.css.js';
 
 function emit(el, type, detail = {}) {
@@ -143,7 +142,13 @@ export class ChatTranscript extends Symbiote {
 
     let indicator = document.createElement('div');
     indicator.className = 'live-status-indicator';
-    indicator.innerHTML = `<span class="material-symbols-outlined ${spinClass}" style="font-size:14px">${icon}</span> <span>${escapeHtml(text)}</span>`;
+    let iconEl = document.createElement('span');
+    iconEl.className = `material-symbols-outlined ${spinClass}`.trim();
+    iconEl.style.fontSize = '14px';
+    iconEl.textContent = icon;
+    let textEl = document.createElement('span');
+    textEl.textContent = text;
+    indicator.append(iconEl, ' ', textEl);
     container.appendChild(indicator);
     requestAnimationFrame(() => this.scrollToBottom());
   }

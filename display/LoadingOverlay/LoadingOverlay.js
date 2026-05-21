@@ -1,4 +1,4 @@
-import { Symbiote } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
 import template from './LoadingOverlay.tpl.js';
 import css from './LoadingOverlay.css.js';
 

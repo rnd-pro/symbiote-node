@@ -35,7 +35,7 @@ export {
   SYNTHWAVE,
   GREY_NEUTRAL,
   NEON_GLOW,
-  AGENT_PORTAL,
+  DEFAULT_DARK,
   DEFAULT_THEME,
 } from '../themes/Theme.js';
 
@@ -45,7 +45,7 @@ export {
   LIGHT_PALETTE,
   SYNTHWAVE_PALETTE,
   GREY_PALETTE,
-  AGENT_PORTAL_PALETTE,
+  DEFAULT_DARK_PALETTE,
   DEFAULT_PALETTE,
 } from '../themes/Palette.js';
 
@@ -114,7 +114,9 @@ export { NEON_PALETTE } from '../themes/neon.js';
 export let NodeCanvas;
 export let CanvasGraph;
 export let GraphExplorerShell;
+export let ContextMenu;
 export let GraphNode;
+export let GraphFrame;
 export let NodeSocket;
 export let QuickToolbar;
 export let InspectorPanel;
@@ -166,6 +168,17 @@ export { escapeHtml } from '../display/markdown-formatter.js';
 export { normalizeOutputList, normalizePreviewGraph } from '../display/output-preview.js';
 export { uiAlert, uiConfirm, uiPrompt } from './dialogs.js';
 export {
+  bindListItemSelect,
+  collapseTree,
+  highlightTreePath,
+  setTreeItems,
+  setupTreePanel,
+  showTree,
+  showTreePlaceholder,
+  syncListItem,
+  syncTreeFilter,
+} from './host-adapters.js';
+export {
   buildChatMessageItems,
   buildSessionMetaHtml,
   buildWorkMetaHtml,
@@ -186,7 +199,9 @@ if (hasDOMGlobals) {
     nodeCanvas,
     canvasGraph,
     graphExplorerShell,
+    contextMenu,
     graphNode,
+    graphFrame,
     nodeSocket,
     quickToolbar,
     inspectorPanel,
@@ -222,7 +237,9 @@ if (hasDOMGlobals) {
     import('../canvas/NodeCanvas/NodeCanvas.js'),
     import('../canvas/CanvasGraph/CanvasGraph.js'),
     import('../canvas/GraphExplorerShell/GraphExplorerShell.js'),
+    import('../menu/ContextMenu/ContextMenu.js'),
     import('../node/GraphNode/GraphNode.js'),
+    import('../node/GraphFrame/GraphFrame.js'),
     import('../node/NodeSocket/NodeSocket.js'),
     import('../toolbar/QuickToolbar/QuickToolbar.js'),
     import('../inspector/InspectorPanel/InspectorPanel.js'),
@@ -259,7 +276,9 @@ if (hasDOMGlobals) {
   ({ NodeCanvas } = nodeCanvas);
   ({ CanvasGraph } = canvasGraph);
   ({ GraphExplorerShell } = graphExplorerShell);
+  ({ ContextMenu } = contextMenu);
   ({ GraphNode } = graphNode);
+  ({ GraphFrame } = graphFrame);
   ({ NodeSocket } = nodeSocket);
   ({ QuickToolbar } = quickToolbar);
   ({ InspectorPanel } = inspectorPanel);

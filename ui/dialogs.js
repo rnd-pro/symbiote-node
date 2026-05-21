@@ -1,5 +1,3 @@
-import { escapeHtml } from '../display/markdown-formatter.js';
-
 const dialogStyles = `
 .sn-dialog {
   border: 1px solid var(--sn-node-border);
@@ -118,29 +116,53 @@ function closeDialog(dialog, resolve, value) {
   resolve(value);
 }
 
-function createDialog(className, bodyHtml) {
-  const doc = ensureDocument();
-  const dialog = doc.createElement('dialog');
+function createButton(action, className, label) {
+  let button = document.createElement('button');
+  button.type = 'button';
+  button.dataset.dialogAction = action;
+  button.className = className;
+  button.textContent = label;
+  return button;
+}
+
+function createActions(...buttons) {
+  let actions = document.createElement('div');
+  actions.className = 'sn-dialog-actions';
+  actions.append(...buttons);
+  return actions;
+}
+
+function createMessage(message) {
+  let el = document.createElement('p');
+  el.className = 'sn-dialog-message';
+  el.textContent = message;
+  return el;
+}
+
+function createDialog(className) {
+  let doc = ensureDocument();
+  let dialog = doc.createElement('dialog');
   dialog.className = `sn-dialog ${className}`.trim();
-  dialog.innerHTML = `
-    <style>${dialogStyles}</style>
-    ${bodyHtml}
-  `;
+  let style = doc.createElement('style');
+  style.textContent = dialogStyles;
+  dialog.appendChild(style);
   doc.body.appendChild(dialog);
   return dialog;
 }
 
 export function uiConfirm(message) {
   return new Promise((resolve) => {
-    const dialog = createDialog('sn-dialog-confirm', `
-      <div class="sn-dialog-body">
-        <p class="sn-dialog-message">${escapeHtml(message)}</p>
-        <div class="sn-dialog-actions">
-          <button type="button" data-dialog-action="cancel" class="sn-dialog-btn">Cancel</button>
-          <button type="button" data-dialog-action="confirm" class="sn-dialog-btn sn-dialog-btn-danger">Confirm</button>
-        </div>
-      </div>
-    `);
+    let dialog = createDialog('sn-dialog-confirm');
+    let body = document.createElement('div');
+    body.className = 'sn-dialog-body';
+    body.append(
+      createMessage(message),
+      createActions(
+        createButton('cancel', 'sn-dialog-btn', 'Cancel'),
+        createButton('confirm', 'sn-dialog-btn sn-dialog-btn-danger', 'Confirm')
+      )
+    );
+    dialog.appendChild(body);
     openDialog(dialog);
     dialog.querySelector('[data-dialog-action="cancel"]').onclick = () => closeDialog(dialog, resolve, false);
     dialog.querySelector('[data-dialog-action="confirm"]').onclick = () => closeDialog(dialog, resolve, true);
@@ -149,18 +171,24 @@ export function uiConfirm(message) {
 
 export function uiPrompt(message, defaultValue = '') {
   return new Promise((resolve) => {
-    const dialog = createDialog('sn-dialog-prompt', `
-      <div class="sn-dialog-body">
-        <p class="sn-dialog-message">${escapeHtml(message)}</p>
-        <input type="text" data-dialog-input class="sn-dialog-input" value="${escapeHtml(defaultValue)}" />
-        <div class="sn-dialog-actions">
-          <button type="button" data-dialog-action="cancel" class="sn-dialog-btn">Cancel</button>
-          <button type="button" data-dialog-action="confirm" class="sn-dialog-btn sn-dialog-btn-primary">OK</button>
-        </div>
-      </div>
-    `);
+    let dialog = createDialog('sn-dialog-prompt');
+    let body = document.createElement('div');
+    body.className = 'sn-dialog-body';
+    let input = document.createElement('input');
+    input.type = 'text';
+    input.dataset.dialogInput = '';
+    input.className = 'sn-dialog-input';
+    input.value = defaultValue;
+    body.append(
+      createMessage(message),
+      input,
+      createActions(
+        createButton('cancel', 'sn-dialog-btn', 'Cancel'),
+        createButton('confirm', 'sn-dialog-btn sn-dialog-btn-primary', 'OK')
+      )
+    );
+    dialog.appendChild(body);
     openDialog(dialog);
-    const input = dialog.querySelector('[data-dialog-input]');
     input.focus();
     input.onkeydown = (event) => {
       if (event.key === 'Enter') closeDialog(dialog, resolve, input.value);
@@ -172,14 +200,14 @@ export function uiPrompt(message, defaultValue = '') {
 
 export function uiAlert(message) {
   return new Promise((resolve) => {
-    const dialog = createDialog('sn-dialog-alert', `
-      <div class="sn-dialog-body">
-        <p class="sn-dialog-message">${escapeHtml(message)}</p>
-        <div class="sn-dialog-actions">
-          <button type="button" data-dialog-action="ok" class="sn-dialog-btn sn-dialog-btn-primary">OK</button>
-        </div>
-      </div>
-    `);
+    let dialog = createDialog('sn-dialog-alert');
+    let body = document.createElement('div');
+    body.className = 'sn-dialog-body';
+    body.append(
+      createMessage(message),
+      createActions(createButton('ok', 'sn-dialog-btn sn-dialog-btn-primary', 'OK'))
+    );
+    dialog.appendChild(body);
     openDialog(dialog);
     dialog.querySelector('[data-dialog-action="ok"]').onclick = () => closeDialog(dialog, resolve);
   });

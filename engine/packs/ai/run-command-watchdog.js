@@ -15,7 +15,7 @@ import { spawn } from 'child_process';
 /**
  * Runs a shell command with inactivity, hard timeout, output limit, and abort handling.
  * @param {string} command - Shell command to run.
- * @param {CommandWatchdogOptions} [options]
+ * @param {object} [options]
  * @returns {Promise<string>} stdout text.
  * @throws {Error} When the command fails, stalls, exceeds limits, or is aborted.
  */

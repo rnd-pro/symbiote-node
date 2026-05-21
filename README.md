@@ -8,7 +8,7 @@
 A **visual node graph editor** and **execution engine** built on [Symbiote.js](https://github.com/symbiotejs/symbiote.js) — extensible, themeable, zero-dependency. Pure Web Components, works anywhere: vanilla HTML, React, Vue, Svelte, or any framework that supports custom elements.
 
 > [!TIP]
-> **22K lines, 150 files, zero external dependencies.** 70+ public API exports. Clone, serve, and start building node graphs in under a minute.
+> **Node-safe core, browser Web Components, and agent-readable metadata.** Clone, serve, and start building node graphs in under a minute.
 
 ### Graph Editor
 
@@ -159,12 +159,12 @@ if (await uiConfirm('Delete this item?')) {
 
 ### Execution Engine
 
-Server-side graph runtime with handler packs for data flow, control flow, I/O, and transforms. Graphs serialize to JSON and execute with topological ordering, retry logic, and parallel barriers.
+Server-side graph runtime with custom handler loading. Graphs serialize to JSON and execute with topological ordering, retry logic, and parallel barriers.
 
 ```javascript
 import { Graph, Executor, loadHandlers } from 'symbiote-node/engine';
 
-await loadHandlers('./engine/packs');
+await loadHandlers('./handlers');
 
 const graph = new Graph({
   version: 'v1',
@@ -200,7 +200,7 @@ Separate **Palette** (colors), **Skin** (geometry), and **Theme** (combined) lay
 
 | Theme | Description |
 |-------|-------------|
-| `AGENT_PORTAL` | Agent Portal design system (default) |
+| `DEFAULT_DARK` | Default dark design system |
 | `GREY_NEUTRAL` | Balanced grey UI |
 | `DARK_DEFAULT` | Professional dark interface |
 | `LIGHT_CLEAN` | Light mode |
@@ -210,7 +210,7 @@ Separate **Palette** (colors), **Skin** (geometry), and **Theme** (combined) lay
 | `EBOOK` | Warm paper-like reading theme |
 
 ```javascript
-import { applyTheme, CARBON, applyPalette, SYNTHWAVE_PALETTE } from 'symbiote-node';
+import { applyTheme, CARBON, applyPalette, SYNTHWAVE_PALETTE } from 'symbiote-node/ui';
 
 applyTheme(canvasElement, CARBON);           // Full theme
 applyPalette(canvasElement, SYNTHWAVE_PALETTE); // Colors only
@@ -259,7 +259,7 @@ const sidebarItems = LayoutTree.createSidebarSubPanels(tree, {
 });
 ```
 
-`LayoutTree` helpers accept both canonical BSP nodes (`type`, `first`, `second`) and legacy serialized shapes (`nodeType`, `children`), which makes them suitable for host applications that migrate saved layouts over time.
+`LayoutTree` helpers use canonical BSP nodes (`type`, `first`, `second`) so host shells can serialize and inspect layouts through one stable shape.
 
 The same `symbiote-node/layout` entrypoint also exposes URL-backed routing helpers for host shells and panels. In Node/SSR imports these helpers are safe to import; URL mutating functions are no-ops until browser globals exist.
 
@@ -346,20 +346,9 @@ Use `--json` with `run`, `validate`, `list`, and `inspect` when integrating with
 - `schemas/` — graph JSON schemas
 - `node engine/cli.js discover` — one JSON payload for component, theme, rule, token, schema, and export discovery
 
-## Engine Handler Packs
+## Engine Handlers
 
-Built-in node types organized by domain:
-
-| Pack | Handlers | Description |
-|------|----------|-------------|
-| `flow` | `if`, `switch`, `loop`, `merge`, `retry`, `wait-all`, `agent` | Control flow and branching |
-| `data` | `db-query`, `prompt-loader`, `rss-feed` | Data sources |
-| `transform` | `json-parse`, `set`, `template`, `template-builder` | Data transformation |
-| `io` | `http-request`, `read-file`, `write-file` | External I/O |
-| `util` | `delay`, `log` | Utility nodes |
-| `debug` | `inject` | Testing and debugging |
-
-Custom handler packs can be loaded from any directory via `registry.loadDir()`.
+Custom handlers can be loaded from any directory with `loadHandlers()`. Handler files use the `*.handler.js` convention and are registered as node types at runtime. Provider-specific automation packs are intentionally not part of the public package surface.
 
 ## Project Structure
 
@@ -378,15 +367,13 @@ symbiote-node/
 ├── interactions/     — Drag, Zoom, Selector, SnapGrid, ConnectFlow
 ├── display/          — CodeBlock, SourceViewer, SourceEditor, markdown formatting
 ├── shapes/           — SVG shape system with 10 presets
-├── themes/           — Theme, Palette, Skin (7 themes)
+├── themes/           — Theme, Palette, Skin, and built-in theme definitions
 ├── layout/           — BSP layout engine + LayoutSidebar + LayoutRouter
 ├── toolbar/          — QuickToolbar
 ├── inspector/        — InspectorPanel
 ├── palette/          — PaletteBrowser
 ├── plugins/          — Readonly, History
-├── engine/           — Server-side graph runtime
-│   ├── packs/        — Built-in handler packs (flow, data, transform, io, util)
-│   └── cli.js        — CLI runner
+├── engine/           — Server-side graph runtime and CLI runner
 ├── demo/             — Interactive demo
 └── tests/            — Node test suites for package contracts and behavior
 ```
@@ -399,8 +386,6 @@ node --test tests/*.test.js
 
 ## Related Projects
 
-- [project-graph-mcp](https://github.com/rnd-pro/project-graph-mcp) — MCP server for AI agents: project graph, code analysis, 18 tools
-- [agent-pool-mcp](https://github.com/rnd-pro/agent-pool-mcp) — Multi-agent orchestration via Gemini CLI
 - [Symbiote.js](https://github.com/symbiotejs/symbiote.js) — Isomorphic Reactive Web Components framework
 
 ## License

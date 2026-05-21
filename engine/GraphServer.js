@@ -28,7 +28,12 @@ import { deserialize } from './Persistence.js';
  */
 
 /**
- * Create an symbiote-node server instance * @param {ServerOptions} options
+ * @param {Object} [options]
+ * @param {number} [options.port]
+ * @param {string} [options.handlersDir]
+ * @param {string} [options.workflowFile]
+ * @param {boolean} [options.watchFiles]
+ * @param {boolean} [options.verbose]
  * @returns {Promise<{server: import('http').Server, wss: WebSocketServer, graph: Graph, close: () => Promise<void>}>}
  */
 export async function createServer(options = {}) {
@@ -225,9 +230,9 @@ export async function createServer(options = {}) {
   };
 
   /**
-   * Handle incoming WebSocket message
    * @param {{type: string, payload: object}} msg
    * @param {import('ws').WebSocket} ws
+   * @returns {Promise<void>}
    */
   async function handleWsMessage(msg, ws) {
     let { type, payload } = msg;
@@ -247,7 +252,10 @@ export async function createServer(options = {}) {
   }
 
   /**
-   * Execute graph and stream progress via WebSocket
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal]
+   * @param {number} [options.deadline]
+   * @returns {Promise<object>}
    */
   async function executeAndStream(options = {}) {
     let result = await executor.run(graph, {

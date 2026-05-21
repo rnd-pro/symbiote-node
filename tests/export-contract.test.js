@@ -43,23 +43,19 @@ const ROOT_EXPORTS = [
   ['SVGShape', 'function'],
   ['createSVGShape', 'function'],
   ['SVG_PRESETS', 'object'],
-  ['applyTheme', 'function'],
-  ['extractTheme', 'function'],
   ['DARK_DEFAULT', 'object'],
   ['LIGHT_CLEAN', 'object'],
   ['SYNTHWAVE', 'object'],
   ['GREY_NEUTRAL', 'object'],
   ['NEON_GLOW', 'object'],
-  ['AGENT_PORTAL', 'object'],
+  ['DEFAULT_DARK', 'object'],
   ['DEFAULT_THEME', 'object'],
-  ['applyPalette', 'function'],
   ['DARK_PALETTE', 'object'],
   ['LIGHT_PALETTE', 'object'],
   ['SYNTHWAVE_PALETTE', 'object'],
   ['GREY_PALETTE', 'object'],
-  ['AGENT_PORTAL_PALETTE', 'object'],
+  ['DEFAULT_DARK_PALETTE', 'object'],
   ['DEFAULT_PALETTE', 'object'],
-  ['applySkin', 'function'],
   ['MODERN_SKIN', 'object'],
   ['COMPACT_SKIN', 'object'],
   ['ROUNDED_SKIN', 'object'],
@@ -68,7 +64,6 @@ const ROOT_EXPORTS = [
   ['History', 'function'],
   ['computeAutoLayout', 'function'],
   ['computeTreeLayout', 'function'],
-  ['ForceLayout', 'function'],
   ['createCanvasGraphStore', 'function'],
   ['normalizeCanvasGraphModel', 'function'],
   ['computeInitialGraphPositions', 'function'],
@@ -81,11 +76,7 @@ const ROOT_EXPORTS = [
   ['addGraphDirectoryFrames', 'function'],
   ['getGraphPathStyleDisplay', 'function'],
   ['getNextGraphPathStyle', 'function'],
-  ['renderGraphPathStyleButton', 'function'],
-  ['renderGraphViewModeButton', 'function'],
   ['resolveInitialGraphViewMode', 'function'],
-  ['setGraphLayerVisible', 'function'],
-  ['toggleGraphLayerButtonState', 'function'],
   ['collectQuickOpenFilesFromSkeleton', 'function'],
   ['fuzzyScore', 'function'],
   ['searchQuickOpenItems', 'function'],
@@ -171,6 +162,15 @@ const UI_EXPORTS = [
   ['uiAlert', 'function'],
   ['uiConfirm', 'function'],
   ['uiPrompt', 'function'],
+  ['bindListItemSelect', 'function'],
+  ['collapseTree', 'function'],
+  ['highlightTreePath', 'function'],
+  ['setTreeItems', 'function'],
+  ['setupTreePanel', 'function'],
+  ['showTree', 'function'],
+  ['showTreePlaceholder', 'function'],
+  ['syncListItem', 'function'],
+  ['syncTreeFilter', 'function'],
   ['clampChatSidebarWidth', 'function'],
   ['buildChatMessageItems', 'function'],
   ['buildSessionMetaHtml', 'function'],
@@ -206,7 +206,6 @@ const ENGINE_EXPORTS = [
   ['Graph', 'function'],
   ['Executor', 'function'],
   ['GraphHistory', 'function'],
-  ['History', 'function'],
   ['nanoid', 'function'],
   ['registerNodeType', 'function'],
   ['registerPack', 'function'],
@@ -295,7 +294,17 @@ describe('symbiote-node root exports', () => {
     });
   }
 
-  for (const name of ['NodeCanvas', 'CanvasGraph', 'Layout', 'GraphNode', 'NodeSocket']) {
+  for (const name of [
+    'NodeCanvas',
+    'CanvasGraph',
+    'Layout',
+    'GraphNode',
+    'NodeSocket',
+    'renderGraphPathStyleButton',
+    'renderGraphViewModeButton',
+    'setGraphLayerVisible',
+    'toggleGraphLayerButtonState',
+  ]) {
     it(`${name} is not exported from Node-safe root`, () => {
       assert.equal(lib[name], undefined);
     });
@@ -348,9 +357,13 @@ describe('symbiote-node UI exports', () => {
     assert.notEqual(ui.History, ui.GraphHistory);
   });
 
-  it('uses Agent Portal as the default theme and palette', () => {
-    assert.equal(ui.DEFAULT_THEME, ui.AGENT_PORTAL);
-    assert.equal(ui.DEFAULT_PALETTE, ui.AGENT_PORTAL_PALETTE);
+  it('uses default dark as the default theme and palette', () => {
+    assert.equal(ui.DEFAULT_THEME, ui.DEFAULT_DARK);
+    assert.equal(ui.DEFAULT_PALETTE, ui.DEFAULT_DARK_PALETTE);
+    assert.equal(ui.DEFAULT_THEME.tokens['--sn-panel-bg'], '#222222');
+    assert.equal(ui.DEFAULT_THEME.tokens['--sn-layout-gap-bg'], 'transparent');
+    assert.equal(ui.DEFAULT_THEME.tokens['--sn-bg-overlay'], 'rgba(0, 0, 0, 0.45)');
+    assert.equal(ui.DEFAULT_THEME.tokens['--border-color'], 'var(--sn-node-border)');
   });
 });
 
@@ -361,8 +374,9 @@ describe('symbiote-node engine exports', () => {
     });
   }
 
-  it('keeps History as a backward-compatible GraphHistory alias', () => {
-    assert.equal(engine.History, engine.GraphHistory);
+  it('keeps graph history explicit in the engine entrypoint', () => {
+    assert.equal(engine.GraphHistory.name, 'GraphHistory');
+    assert.equal(Object.hasOwn(engine, 'History'), false);
   });
 });
 

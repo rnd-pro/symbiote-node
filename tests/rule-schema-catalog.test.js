@@ -28,6 +28,8 @@ describe('rule catalog', () => {
     assert.equal('alignsWithSkills' in catalogRuleset, false);
     assert.equal('alignsWithSkills' in ruleset, false);
     assert.equal(listRuleSets().length, 1);
+    assert.deepEqual(catalogRuleset.ruleIds, ruleset.rules.map((rule) => rule.id));
+    assert.deepEqual(listRules({ ruleset: 'missing' }), []);
     assert.ok(listRules({ severity: 'error' }).length >= 5);
     assert.ok(listRules({ tag: 'library' }).some((rule) => rule.id === 'SYM-007'));
     assert.ok(listRules({ tag: 'exports' }).some((rule) => rule.id === 'SYM-009'));
@@ -35,6 +37,7 @@ describe('rule catalog', () => {
 
   it('catalog rules match the published ruleset JSON', () => {
     assert.deepEqual(listRules(), ruleset.rules);
+    assert.deepEqual(listRules({ ruleset: 'symbiote-3x' }), ruleset.rules);
   });
 });
 

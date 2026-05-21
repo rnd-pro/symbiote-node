@@ -14,7 +14,7 @@
  *   list    — list all personas (optionally filtered)
  *   random  — pick N random personas
  *
- * @module agi-graph/packs/data/personas
+ * @module symbiote-node/packs/data/personas
  */
 
 /** @typedef {Object} Persona

@@ -1,4 +1,4 @@
-import { Symbiote } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
 import template from './ChatListItem.tpl.js';
 import css from './ChatListItem.css.js';
 

@@ -7,7 +7,9 @@ import { fileURLToPath } from 'node:url';
 import {
   COMPONENTS,
   getComponent,
+  getComponentExportName,
   getComponentModule,
+  getComponentSpecifier,
   getComponentTags,
   hasComponent,
   listComponents,
@@ -16,44 +18,70 @@ import {
 let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
 let manifestPath = path.join(PKG_ROOT, 'custom-elements.json');
 let manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-let requiredTags = [
-  'graph-node',
-  'node-socket',
-  'node-canvas',
-  'canvas-graph',
-  'graph-explorer-shell',
-  'panel-layout',
-  'layout-sidebar',
-  'layout-node',
-  'project-tabs',
-  'project-tab-item',
-  'code-block',
-  'cb-squiggle',
-  'source-viewer',
-  'source-editor',
-  'sn-loading-overlay',
-  'output-list-preview',
-  'output-graph-preview',
-  'cell-bg',
-  'quick-toolbar',
-  'inspector-panel',
-  'palette-browser',
-  'node-minimap',
-  'node-search',
-  'graph-tabs',
-  'graph-breadcrumb',
-  'quick-open',
-  'chat-message-item',
-  'chat-transcript',
-  'chat-composer',
-  'chat-list',
-  'chat-list-item',
-  'chat-sidebar-shell',
-  'chat-sidebar-item',
-  'chat-sidebar-sub-item',
-  'sn-list-item',
-  'sn-tree-view',
+let componentDirs = [
+  'canvas',
+  'chat',
+  'display',
+  'effects',
+  'inspector',
+  'layout',
+  'list',
+  'menu',
+  'navigation',
+  'node',
+  'palette',
+  'toolbar',
+  'tree',
 ];
+let sideEffectTags = [
+  'action-zone',
+  'breadcrumb-item',
+  'cb-squiggle',
+  'ctrl-item',
+  'ctx-item',
+  'insp-ctrl-item',
+  'insp-port-item',
+  'layout-preview',
+  'pal-category',
+  'pal-item',
+  'panel-menu',
+  'port-item',
+  'project-tab-item',
+  'search-result-item',
+  'sidebar-section',
+  'sidebar-sub-item',
+  'tab-item',
+  'template-preview',
+];
+
+function jsFiles(dir) {
+  let entries = fs.readdirSync(dir, { withFileTypes: true });
+  let files = [];
+  for (let entry of entries) {
+    let fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...jsFiles(fullPath));
+    } else if (entry.isFile() && entry.name.endsWith('.js')) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+function runtimeRegistrationTags() {
+  let tags = [];
+  let regPattern = /\.reg\(["']([^"']+)["']\)/g;
+  for (let dir of componentDirs) {
+    for (let file of jsFiles(path.join(PKG_ROOT, dir))) {
+      let source = fs.readFileSync(file, 'utf-8');
+      let match;
+      while ((match = regPattern.exec(source))) {
+        tags.push(match[1]);
+      }
+    }
+  }
+  return [...new Set(tags)].sort();
+}
 
 function declarationTags() {
   return manifest.modules.flatMap((mod) => {
@@ -62,10 +90,17 @@ function declarationTags() {
 }
 
 describe('custom-elements manifest', () => {
-  it('declares the required public custom elements', () => {
+  it('declares every public custom element', () => {
     let tags = declarationTags();
-    for (let tag of requiredTags) {
+    for (let tag of getComponentTags()) {
       assert.ok(tags.includes(tag), `${tag} must be declared`);
+    }
+  });
+
+  it('keeps internal child elements out of the public custom-elements manifest', () => {
+    let tags = declarationTags();
+    for (let tag of sideEffectTags) {
+      assert.equal(tags.includes(tag), false, `${tag} must remain internal registry metadata`);
     }
   });
 
@@ -77,15 +112,18 @@ describe('custom-elements manifest', () => {
 });
 
 describe('component registry', () => {
-  it('contains the same required tags', () => {
-    assert.deepEqual(getComponentTags().sort(), requiredTags.sort());
-    assert.equal(COMPONENTS.length, requiredTags.length);
+  it('contains the same tags as runtime custom element registration', () => {
+    let runtimeTags = runtimeRegistrationTags();
+    assert.deepEqual(getComponentTags({ includeInternal: true }).sort(), runtimeTags);
+    assert.equal(COMPONENTS.length, runtimeTags.length);
   });
 
   it('supports lookups and category filtering', () => {
     assert.equal(hasComponent('node-canvas'), true);
     assert.equal(getComponent('node-canvas').className, 'NodeCanvas');
     assert.equal(getComponentModule('node-canvas'), 'canvas/NodeCanvas/NodeCanvas.js');
+    assert.equal(getComponentSpecifier('node-canvas'), 'symbiote-node/ui');
+    assert.equal(getComponentExportName('node-canvas'), 'NodeCanvas');
     assert.equal(getComponent('canvas-graph').className, 'CanvasGraph');
     assert.equal(getComponentModule('canvas-graph'), 'canvas/CanvasGraph/CanvasGraph.js');
     assert.equal(getComponentModule('graph-explorer-shell'), 'canvas/GraphExplorerShell/GraphExplorerShell.js');
@@ -96,6 +134,33 @@ describe('component registry', () => {
     assert.equal(getComponentModule('sn-loading-overlay'), 'display/LoadingOverlay/LoadingOverlay.js');
     assert.equal(getComponent('output-list-preview').category, 'display');
     assert.equal(getComponentModule('output-graph-preview'), 'display/OutputGraphPreview/OutputGraphPreview.js');
+    assert.equal(getComponentExportName('project-tab-item'), null);
+    assert.equal(getComponent('project-tab-item').importKind, 'side-effect');
+    assert.equal(getComponentExportName('context-menu'), 'ContextMenu');
+    assert.equal(getComponentExportName('graph-frame'), 'GraphFrame');
     assert.ok(listComponents({ category: 'canvas' }).length >= 4);
+  });
+
+  it('marks internal child elements as side-effect components', () => {
+    for (let tag of sideEffectTags) {
+      assert.equal(getComponentExportName(tag), null, `${tag} must not be a named export`);
+      assert.equal(getComponent(tag).importKind, 'side-effect', `${tag} must be side-effect metadata`);
+      assert.equal(getComponent(tag).internal, true, `${tag} must be internal metadata`);
+    }
+  });
+
+  it('keeps internal child elements out of the default public catalog', () => {
+    let publicTags = getComponentTags();
+    for (let tag of sideEffectTags) {
+      assert.equal(publicTags.includes(tag), false, `${tag} must not be listed by default`);
+    }
+    assert.equal(getComponentTags({ includeInternal: true }).includes('project-tab-item'), true);
+  });
+
+  it('advertises public package specifiers instead of private implementation imports', () => {
+    for (let component of COMPONENTS) {
+      assert.equal(component.specifier, 'symbiote-node/ui');
+      assert.ok(component.module.endsWith('.js'), `${component.tagName} keeps source metadata`);
+    }
   });
 });

@@ -8,7 +8,7 @@
  * Ported from Mr-Computer/automations/argentine-spanish-bot/src/utils/transliteration/riopla.js
  * and instruct-generator.js
  *
- * @module agi-graph/packs/transform/riopla-adapt
+ * @module symbiote-node/packs/transform/riopla-adapt
  */
 
 

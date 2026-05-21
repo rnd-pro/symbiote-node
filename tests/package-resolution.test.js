@@ -21,6 +21,10 @@ describe('package exports resolution', () => {
 
     assert.equal(typeof root.NodeEditor, 'function');
     assert.equal(typeof root.createForceLayoutPayload, 'function');
+    assert.equal(root.applyTheme, undefined, 'DOM theme helpers must live in symbiote-node/ui');
+    assert.equal(root.applyPalette, undefined, 'DOM palette helpers must live in symbiote-node/ui');
+    assert.equal(root.applySkin, undefined, 'DOM skin helpers must live in symbiote-node/ui');
+    assert.equal(root.ForceLayout, undefined, 'Worker-backed layout must live in symbiote-node/ui');
     assert.equal(typeof ui.ForceLayout, 'function');
     assert.ok('GraphExplorerShell' in ui, 'UI entrypoint must expose GraphExplorerShell binding');
     assert.equal(typeof ui.computeInitialGraphPositions, 'function');
@@ -88,6 +92,8 @@ describe('package exports resolution', () => {
       'symbiote-node/display/CodeBlock/CodeBlock.js',
       'symbiote-node/display/SourceViewer/SourceViewer.js',
       'symbiote-node/display/SourceEditor/SourceEditor.js',
+      'symbiote-node/engine/packs/ai/grok-generate.handler.js',
+      'symbiote-node/engine/packs/ai/opencode.handler.js',
     ];
 
     for (let specifier of privateSubpaths) {

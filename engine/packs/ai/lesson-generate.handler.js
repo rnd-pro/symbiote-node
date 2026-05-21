@@ -7,7 +7,7 @@
  *
  * Ported from Mr-Computer/automations/argentine-spanish-bot/src/services/learning-by-examples.js
  *
- * @module agi-graph/packs/ai/lesson-generate
+ * @module symbiote-node/packs/ai/lesson-generate
  */
 
 import { readFile, readdir } from 'node:fs/promises';
@@ -155,7 +155,6 @@ function parseResponse(response) {
 /**
  * Validate lesson segments
  * @param {Object} lesson
- * @param {Array} newsItems
  * @returns {Array<string>}
  */
 function validateLesson(lesson) {

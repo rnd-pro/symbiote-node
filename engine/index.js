@@ -8,7 +8,7 @@
 
 export { Graph } from './Graph.js';
 export { Executor } from './Executor.js';
-export { GraphHistory, History } from './History.js';
+export { GraphHistory } from './History.js';
 export { nanoid } from './nanoid.js';
 
 

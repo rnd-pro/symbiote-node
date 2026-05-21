@@ -1,4 +1,4 @@
-import { Symbiote } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
 import { slotProcessor } from '@symbiotejs/symbiote/core/slotProcessor.js';
 import template from './GraphExplorerShell.tpl.js';
 import css from './GraphExplorerShell.css.js';
@@ -6,15 +6,6 @@ import {
   getNextGraphPathStyle,
   renderGraphPathStyleButton,
 } from '../graph-explorer.js';
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
 
 export class GraphExplorerShell extends Symbiote {
   init$ = {
@@ -112,11 +103,10 @@ export class GraphExplorerShell extends Symbiote {
   setStats(items = []) {
     const stats = this.querySelector('.graph-explorer-stats');
     if (!stats) return;
-    stats.innerHTML = items.map((item) => {
-      const value = escapeHtml(item.value);
-      const label = escapeHtml(item.label);
-      return `<span><span class="graph-explorer-stat-val">${value}</span> ${label}</span>`;
-    }).join('');
+    stats.textContent = items
+      .map((item) => `${item.value ?? ''} ${item.label ?? ''}`.trim())
+      .filter(Boolean)
+      .join(' ');
   }
 
   setToolbarConfig(config = {}) {

@@ -474,6 +474,7 @@ export class SVGShape extends NodeShape {
  * @param {string} name
  * @param {string} pathData - SVG d attribute
  * @param {object} [options]
+ * @returns {SVGShape}
  */
 export function createSVGShape(name, pathData, options = {}) {
   return new SVGShape(name, { pathData, ...options });

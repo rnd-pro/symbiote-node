@@ -198,6 +198,7 @@ function qtVisit(tree, callback) {
  * @param {Array<Object>} nodes
  * @param {number} strength
  * @param {number} theta
+ * @returns {void}
  */
 function applyChargeForce(nodes, strength, theta) {
   let tree = quadtreeCreate(nodes);
@@ -925,6 +926,7 @@ function getPositions() {
  * Pack positions into a Float32Array for efficient transfer.
  * Layout: [x0, y0, x1, y1, ...] in node index order.
  * The ID-to-index mapping is stable from initSimulation.
+ * @returns {Float32Array}
  */
 function getPositionsPacked() {
   let buf = new Float32Array(nodes.length * 2);
@@ -935,7 +937,10 @@ function getPositionsPacked() {
   return buf;
 }
 
-/** Get ordered node IDs (sent once at init, used to unpack Float32Array). */
+/**
+ * Get ordered node IDs (sent once at init, used to unpack Float32Array).
+ * @returns {string[]}
+ */
 function getNodeIds() {
   return nodes.map((n) => n.id);
 }

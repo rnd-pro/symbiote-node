@@ -46,7 +46,7 @@ before(() => {
   };
   globalThis.document = {
     createElement() {
-      return {
+      const template = {
         content: {
           cloneNode() {
             return {
@@ -56,8 +56,8 @@ before(() => {
             };
           },
         },
-        innerHTML: '',
       };
+      return template;
     },
   };
 });
@@ -78,7 +78,10 @@ test('GraphExplorerShell exposes graph shell API without Portal policy', async (
   const structuredOnly = {};
   const flatOnly = {};
   const pathButton = {
-    innerHTML: '',
+    textContent: '',
+    querySelector() {
+      return null;
+    },
     setAttribute(name) {
       this[name] = true;
     },
@@ -86,7 +89,7 @@ test('GraphExplorerShell exposes graph shell API without Portal policy', async (
       delete this[name];
     },
   };
-  const stats = { innerHTML: '' };
+  const stats = { textContent: '' };
   const nodeCanvas = { tagName: 'NODE-CANVAS' };
   const canvasGraph = { tagName: 'CANVAS-GRAPH' };
   const loaderCalls = [];
@@ -125,10 +128,10 @@ test('GraphExplorerShell exposes graph shell API without Portal policy', async (
   assert.equal(flatOnly.hidden, false);
 
   shell.setPathStyle('bezier');
-  assert.match(pathButton.innerHTML, /BEZIER/);
+  assert.equal(pathButton.textContent, 'BEZIER');
 
   shell.setStats([{ label: 'files', value: '<2>' }]);
-  assert.match(stats.innerHTML, /&lt;2&gt;/);
+  assert.equal(stats.textContent, '<2> files');
 
   shell.setLoading({ visible: true, pct: 50, phase: 'layout', sub: 'nodes' });
   shell.setLoading({ visible: false });

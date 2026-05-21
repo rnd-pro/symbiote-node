@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * cli.js - AGI-Graph command-line runner
+ * cli.js - symbiote-node command-line runner
  *
  * Execute, validate, and inspect workflow JSON files.
  * Agent-facing --json mode available for commands that produce structured output.
@@ -33,7 +33,7 @@ import {
 } from './index.js';
 
 import {
-  COMPONENTS,
+  listComponents,
   THEME_NAMES,
   getTheme,
   getThemeTokens,
@@ -185,7 +185,9 @@ async function loadSecrets(secretsPath) {
 /**
  * Load domain packs by name
  * @param {string|string[]} packs
- * @param {{quiet?: boolean}} [options]
+ * @param {Object} [options]
+ * @param {boolean} [options.quiet]
+ * @returns {Promise<void>}
  */
 async function loadPacks(packs, options = {}) {
   let packList = Array.isArray(packs) ? packs : packs.split(',');
@@ -205,6 +207,7 @@ async function loadPacks(packs, options = {}) {
  * Run a workflow JSON file
  * @param {string} filePath
  * @param {Record<string, string|boolean>} options
+ * @returns {Promise<object>}
  */
 async function cmdRun(filePath, options) {
   let verbose = !!options.verbose;
@@ -333,6 +336,7 @@ async function cmdRun(filePath, options) {
  * Validate a workflow JSON file without executing
  * @param {string} filePath
  * @param {Record<string, string|boolean>} options
+ * @returns {Promise<object>}
  */
 async function cmdValidate(filePath, options) {
   let json = !!options.json;
@@ -430,6 +434,7 @@ async function cmdValidate(filePath, options) {
 /**
  * List all registered node types
  * @param {Record<string, string|boolean>} options
+ * @returns {Promise<object>}
  */
 async function cmdList(options) {
   let json = !!options.json;
@@ -495,7 +500,8 @@ async function cmdList(options) {
 /**
  * Inspect a workflow — show structure without executing
  * @param {string} filePath
- * @param {Record<string, string|boolean>} [options]
+ * @param {Object} [options]
+ * @returns {Promise<object>}
  */
 async function cmdInspect(filePath, options = {}) {
   let json = !!options.json;
@@ -565,7 +571,8 @@ async function cmdInspect(filePath, options = {}) {
 /**
  * Discover — expose manifests, rules, themes, schemas, and registry for agents.
  * Always outputs machine-readable JSON.
- * @param {Record<string, string|boolean>} [options]
+ * @param {Object} [options]
+ * @returns {Promise<object>}
  */
 async function cmdDiscover(options = {}) {
   if (options.pack) {
@@ -617,10 +624,13 @@ async function cmdDiscover(options = {}) {
       description: s.description || null,
     })),
     manifest: {
-      components: COMPONENTS.map((c) => ({
+      components: listComponents().map((c) => ({
         tagName: c.tagName,
         className: c.className,
         module: c.module,
+        specifier: c.specifier,
+        exportName: c.exportName,
+        importKind: c.importKind,
         category: c.category,
         description: c.description,
       })),
@@ -635,7 +645,7 @@ async function cmdDiscover(options = {}) {
         version: rs.version,
         path: rs.path,
         description: rs.description,
-        rules: listRules().filter((r) => true),
+        rules: listRules({ ruleset: rs.name }),
       })),
       rules: listRules(),
       schemas: GRAPH_SCHEMA_VERSIONS.map((sv) => ({

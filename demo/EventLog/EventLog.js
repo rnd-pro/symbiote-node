@@ -20,6 +20,21 @@ const ICONS = {
   info: 'ℹ',
 };
 
+function appendLabelMarkup(parent, message) {
+  let parts = String(message).split(/(<span class="log-label">.*?<\/span>)/g);
+  for (let part of parts) {
+    let labelMatch = part.match(/^<span class="log-label">(.*)<\/span>$/);
+    if (labelMatch) {
+      let span = document.createElement('span');
+      span.className = 'log-label';
+      span.textContent = labelMatch[1];
+      parent.appendChild(span);
+    } else if (part) {
+      parent.append(part);
+    }
+  }
+}
+
 export class EventLog extends Symbiote {
   init$ = {
     logCount: 0,
@@ -107,7 +122,16 @@ export class EventLog extends Symbiote {
     const elapsed = Date.now() - (this._startTime || Date.now());
     const sec = (elapsed / 1000).toFixed(1);
 
-    entry.innerHTML = `<span class="log-time">${sec}s</span><span class="log-icon">${ICONS[type] || '•'}</span><span class="log-msg">${message}</span>`;
+    let time = document.createElement('span');
+    time.className = 'log-time';
+    time.textContent = `${sec}s`;
+    let icon = document.createElement('span');
+    icon.className = 'log-icon';
+    icon.textContent = ICONS[type] || '•';
+    let msg = document.createElement('span');
+    msg.className = 'log-msg';
+    appendLabelMarkup(msg, message);
+    entry.append(time, icon, msg);
 
     const entries = this.ref.entries;
     entries.appendChild(entry);
@@ -124,7 +148,7 @@ export class EventLog extends Symbiote {
     this.$.logCount = 0;
     this._startTime = Date.now();
     if (this.ref.entries) {
-      this.ref.entries.innerHTML = '';
+      this.ref.entries.replaceChildren();
     }
   }
 

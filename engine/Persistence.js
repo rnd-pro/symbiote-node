@@ -4,7 +4,7 @@
  * Serializes Graph to .workflow.json and loads it back.
  * Works in Node.js (fs) and browser (Blob/FileReader).
  *
- * @module agi-graph/Persistence
+ * @module symbiote-node/Persistence
  */
 
 import { Graph } from './Graph.js';

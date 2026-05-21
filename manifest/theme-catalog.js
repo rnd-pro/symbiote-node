@@ -1,5 +1,5 @@
 export let THEME_NAMES = [
-  'agent-portal',
+  'default-dark',
   'dark',
   'light',
   'carbon',
@@ -21,8 +21,8 @@ export let TOKEN_FILES = [
 ];
 
 export let THEME_TOKENS = {
-  'agent-portal': {
-    name: 'agent-portal',
+  'default-dark': {
+    name: 'default-dark',
     extends: '../base.json',
     color: {
       background: { $type: 'color', $value: '#1a1a1a' },
@@ -31,6 +31,21 @@ export let THEME_TOKENS = {
       text: { $type: 'color', $value: '#f0f0f0' },
       textDim: { $type: 'color', $value: '#999999' },
       accent: { $type: 'color', $value: '#4c8bf5' },
+      success: { $type: 'color', $value: '#4caf50' },
+      warning: { $type: 'color', $value: '#ff9800' },
+      danger: { $type: 'color', $value: '#f44336' },
+      overlay: { $type: 'color', $value: 'rgba(0, 0, 0, 0.45)' },
+    },
+    component: {
+      panelBackground: { $type: 'color', $value: '#222222' },
+      layoutGapBackground: { $type: 'color', $value: 'transparent' },
+      nodeHover: { $type: 'color', $value: '#444444' },
+      accentBackground: { $type: 'color', $value: 'rgba(76, 139, 245, 0.12)' },
+      accentBackgroundSubtle: { $type: 'color', $value: 'rgba(76, 139, 245, 0.06)' },
+      accentBorder: { $type: 'color', $value: 'rgba(76, 139, 245, 0.2)' },
+      successBorder: { $type: 'color', $value: 'rgba(76, 175, 80, 0.2)' },
+      dangerBorder: { $type: 'color', $value: 'rgba(244, 67, 54, 0.2)' },
+      dangerBackground: { $type: 'color', $value: 'rgba(244, 67, 54, 0.12)' },
     },
   },
   dark: {

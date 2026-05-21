@@ -71,13 +71,8 @@ export class LayoutNode extends Symbiote {
 
       if (data.type === 'panel') {
         this.$.isCollapsed = data.collapsed || false;
-        if (this.$.isCollapsed) {
-          this.setAttribute('collapsed', '');
-          this.setAttribute('collapse-dir', this.$.collapseDirection);
-        } else {
-          this.removeAttribute('collapsed');
-          this.removeAttribute('collapse-dir');
-        }
+        this.toggleAttribute('collapsed', this.$.isCollapsed);
+        this.#syncHostAttribute('collapse-dir', this.$.isCollapsed ? this.$.collapseDirection : '');
 
         if (this.$.isCollapsed) {
           if (this.$.collapseDirection === 'horizontal') {
@@ -212,7 +207,7 @@ export class LayoutNode extends Symbiote {
           let parentDir = parentNode.getAttribute('direction');
           this.$.collapseDirection = parentDir;
           if (this.$.isCollapsed) {
-            this.setAttribute('collapse-dir', parentDir);
+            this.#syncHostAttribute('collapse-dir', parentDir);
           }
 
 
@@ -256,25 +251,25 @@ export class LayoutNode extends Symbiote {
 
 
     let component = document.createElement(componentTag);
-    component.setAttribute('data-panel-id', this.$.nodeData?.id || '');
+    component.dataset.panelId = this.$.nodeData?.id || '';
     contentEl.appendChild(component);
   }
 
   _renderNode(data) {
 
     let prevType = this.getAttribute('node-type');
-    this.setAttribute('node-type', data.type);
+    this.#syncHostAttribute('node-type', data.type);
 
     if (data.type === 'split') {
-      this.setAttribute('direction', data.direction);
+      this.#syncHostAttribute('direction', data.direction);
       this._renderSplit(data);
     } else {
       this.removeAttribute('direction');
 
 
       if (prevType === 'split') {
-        if (this.ref.first) this.ref.first.innerHTML = '';
-        if (this.ref.second) this.ref.second.innerHTML = '';
+        if (this.ref.first) this.ref.first.replaceChildren();
+        if (this.ref.second) this.ref.second.replaceChildren();
       }
 
 
@@ -323,7 +318,7 @@ export class LayoutNode extends Symbiote {
 
   _startResize(e) {
     e.preventDefault();
-    this.setAttribute('resizing', '');
+    this.toggleAttribute('resizing', true);
 
 
     const COLLAPSE_THRESHOLD = 0.05;
@@ -391,6 +386,16 @@ export class LayoutNode extends Symbiote {
 
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
+  }
+
+  #syncHostAttribute(name, value) {
+    if (value === undefined || value === null || value === '') {
+      this.removeAttribute(name);
+      return;
+    }
+    this.toggleAttribute(name, true);
+    let attr = this.getAttributeNode(name);
+    if (attr) attr.value = String(value);
   }
 
   _notifyChange() {

@@ -9,7 +9,9 @@ export default /*css*/ `
   pointer-events: none;
 }
 
-:host([hidden]) {
+:host([hidden]),
+sn-loading-overlay[hidden],
+loading-overlay[hidden] {
   display: none !important;
 }
 
@@ -27,7 +29,9 @@ export default /*css*/ `
   transition: opacity 0.3s ease-out;
 }
 
-:host([hidden-state]) .sn-loading-overlay {
+:host([hidden-state]) .sn-loading-overlay,
+sn-loading-overlay[hidden-state] .sn-loading-overlay,
+loading-overlay[hidden-state] .sn-loading-overlay {
   opacity: 0;
 }
 

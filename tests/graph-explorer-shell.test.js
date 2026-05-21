@@ -177,3 +177,22 @@ test('GraphExplorerShell emits generic action events', async () => {
   assert.equal(events[0].type, 'graph-shell-action');
   assert.deepEqual(events[0].detail, { action: 'fit' });
 });
+
+test('light DOM CSS contracts cover slotted graph shell and loading overlay state', async () => {
+  const [{ default: shellCss }, { default: loadingCss }] = await Promise.all([
+    import('../canvas/GraphExplorerShell/GraphExplorerShell.css.js'),
+    import('../display/LoadingOverlay/LoadingOverlay.css.js'),
+  ]);
+
+  assert.match(shellCss, /graph-explorer-shell > \[slot="canvas"\]/);
+  assert.match(shellCss, /graph-explorer-shell > \[slot="overlay"\]/);
+  assert.match(loadingCss, /sn-loading-overlay\[hidden-state\] \.sn-loading-overlay/);
+});
+
+test('chat sidebar item CSS supports light DOM active and expanded state', async () => {
+  const { default: css } = await import('../chat/ChatSidebarItem/ChatSidebarItem.css.js');
+
+  assert.match(css, /chat-sidebar-item\[data-active\] > \.chat-item/);
+  assert.match(css, /chat-sidebar-sub-item\[data-active\] > \.chat-item-child/);
+  assert.match(css, /chat-sidebar-item\[data-expanded\] > \.chat-sub-items/);
+});

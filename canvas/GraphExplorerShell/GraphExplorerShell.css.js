@@ -16,6 +16,20 @@ graph-explorer-shell pg-canvas-graph {
   height: 100%;
 }
 
+graph-explorer-shell > [slot="canvas"],
+graph-explorer-shell > .graph-explorer-canvas-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+graph-explorer-shell > [slot="overlay"] {
+  position: absolute;
+  inset: 0;
+  z-index: var(--sn-graph-explorer-overlay-z, 100);
+}
+
 graph-explorer-shell node-canvas[hidden],
 graph-explorer-shell canvas-graph[hidden],
 graph-explorer-shell pg-canvas-graph[hidden] {

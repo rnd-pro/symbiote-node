@@ -24,7 +24,9 @@ chat-sidebar-sub-item {
 }
 
 :host([data-active]) > .chat-item,
-:host([data-active]) > .chat-item-child {
+:host([data-active]) > .chat-item-child,
+chat-sidebar-item[data-active] > .chat-item,
+chat-sidebar-sub-item[data-active] > .chat-item-child {
   color: var(--sn-text);
   background: var(--sn-node-hover);
   border-left: 2px solid var(--sn-cat-server, #5cb8ff);
@@ -133,15 +135,18 @@ chat-sidebar-sub-item {
   opacity: 0.2;
 }
 
-:host([data-has-sub]) .chat-expand-icon {
+:host([data-has-sub]) .chat-expand-icon,
+chat-sidebar-item[data-has-sub] > .chat-item .chat-expand-icon {
   opacity: 0.5;
 }
 
-:host([data-has-sub]) .chat-expand-icon:hover {
+:host([data-has-sub]) .chat-expand-icon:hover,
+chat-sidebar-item[data-has-sub] > .chat-item .chat-expand-icon:hover {
   opacity: 1;
 }
 
-:host([data-expanded]) .chat-expand-icon {
+:host([data-expanded]) .chat-expand-icon,
+chat-sidebar-item[data-expanded] > .chat-item .chat-expand-icon {
   transform: rotate(90deg);
 }
 
@@ -152,7 +157,8 @@ chat-sidebar-sub-item {
   transition: max-height 0.2s ease;
 }
 
-:host([data-expanded]) .chat-sub-items {
+:host([data-expanded]) .chat-sub-items,
+chat-sidebar-item[data-expanded] > .chat-sub-items {
   max-height: 500px;
 }
 

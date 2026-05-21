@@ -196,7 +196,7 @@ const node = new Node('Custom', { shape: 'myshape' });
 
 ### Theme System
 
-Separate **Palette** (colors), **Skin** (geometry), and **Theme** (combined) layers — all driven by CSS custom properties. Switch at runtime without page reload.
+Separate **Palette** (colors), **Skin** (geometry), and **Theme** (combined) layers — all driven by CSS custom properties. Apply the active theme once at the app shell or subtree owner; components inherit tokens through the normal cascade.
 
 | Theme | Description |
 |-------|-------------|
@@ -210,11 +210,13 @@ Separate **Palette** (colors), **Skin** (geometry), and **Theme** (combined) lay
 | `EBOOK` | Warm paper-like reading theme |
 
 ```javascript
-import { applyTheme, CARBON, applyPalette, SYNTHWAVE_PALETTE } from 'symbiote-node/ui';
+import { applyTheme, DEFAULT_THEME, applyPalette, SYNTHWAVE_PALETTE } from 'symbiote-node/ui';
 
-applyTheme(canvasElement, CARBON);           // Full theme
+applyTheme(appShellElement, DEFAULT_THEME);     // Full provider theme
 applyPalette(canvasElement, SYNTHWAVE_PALETTE); // Colors only
 ```
+
+Agent-readable theme construction data is published through `symbiote-node/manifest` and `node engine/cli.js discover`. The default provider theme is described as composable rule blocks: source accents, color cascade, geometry cascade, typography cascade, motion/effects, semantic aliases, and component aliases. Each block exposes inputs, outputs, parameters, and derivations so agents can compose new themes from root accents and density rules instead of writing one-off component overrides.
 
 ### Layout System (BSP)
 

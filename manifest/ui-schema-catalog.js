@@ -159,6 +159,7 @@ export let UI_SCHEMAS = {
     required: ['name', 'kind', 'description'],
     properties: {
       name: { type: 'string', minLength: 1 },
+      theme: { type: 'string', minLength: 1 },
       kind: {
         enum: [
           'source-accent',
@@ -171,6 +172,21 @@ export let UI_SCHEMAS = {
         ],
       },
       description: { type: 'string', minLength: 1 },
+      parameters: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['name', 'type', 'description'],
+          properties: {
+            name: { type: 'string', minLength: 1 },
+            type: { type: 'string', minLength: 1 },
+            description: { type: 'string', minLength: 1 },
+            default: { type: 'string' },
+            unit: { type: 'string' },
+          },
+        },
+      },
       inputs: {
         type: 'array',
         items: { type: 'string', minLength: 1 },
@@ -182,6 +198,24 @@ export let UI_SCHEMAS = {
         uniqueItems: true,
       },
       formula: { type: 'string' },
+      derivations: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['output', 'expression'],
+          properties: {
+            output: { type: 'string', minLength: 1 },
+            inputs: {
+              type: 'array',
+              items: { type: 'string', minLength: 1 },
+              uniqueItems: true,
+            },
+            expression: { type: 'string', minLength: 1 },
+            description: { type: 'string' },
+          },
+        },
+      },
       appliesTo: {
         type: 'array',
         items: { type: 'string', minLength: 1 },

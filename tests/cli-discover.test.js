@@ -236,8 +236,13 @@ describe('discover command', () => {
         assert.ok(kinds.includes(kind), `${kind} theme rule block must be discoverable`);
       }
       let componentAlias = data.manifest.themeRuleBlocks.find((block) => block.kind === 'component-alias');
+      assert.equal(componentAlias.theme, 'default-dark');
       assert.ok(componentAlias.outputs.includes('--sn-layout-gap-bg'));
       assert.ok(componentAlias.appliesTo.includes('chat-composer'));
+      assert.ok(componentAlias.derivations.some((item) => item.output === '--sn-layout-border'));
+      let geometry = data.manifest.themeRuleBlocks.find((block) => block.kind === 'geometry-cascade');
+      assert.ok(geometry.parameters.some((item) => item.name === 'size.unit'));
+      assert.ok(geometry.derivations.some((item) => item.output === 'geometry.treeRowHeight'));
     });
 
     it('exposes rulesets with inline rules', () => {

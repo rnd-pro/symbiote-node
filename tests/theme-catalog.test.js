@@ -8,11 +8,14 @@ import {
   THEME_NAMES,
   flattenTokens,
   getTheme,
+  getThemeRuleBlocks,
   getThemeTokens,
   listThemeRuleBlocks,
   listThemes,
   listTokenFiles,
 } from '../manifest/theme-catalog.js';
+import { listComponents } from '../manifest/component-registry.js';
+import { DEFAULT_DARK } from '../themes/default-dark.js';
 
 let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
 
@@ -93,10 +96,46 @@ describe('theme token files', () => {
     ]);
     for (let block of blocks) {
       assert.equal(typeof block.name, 'string');
+      assert.equal(block.theme, 'default-dark');
       assert.equal(typeof block.description, 'string');
+      assert.ok(Array.isArray(block.parameters));
       assert.ok(Array.isArray(block.inputs));
       assert.ok(Array.isArray(block.outputs));
+      assert.ok(Array.isArray(block.derivations));
+      assert.ok(block.derivations.length > 0);
+      for (let derivation of block.derivations) {
+        assert.equal(typeof derivation.output, 'string');
+        assert.equal(typeof derivation.expression, 'string');
+      }
     }
     assert.equal(listThemeRuleBlocks({ kind: 'component-alias' }).length, 1);
+    assert.equal(listThemeRuleBlocks({ theme: 'default-dark' }).length, blocks.length);
+    assert.deepEqual(getThemeRuleBlocks('default-dark'), blocks);
+    assert.ok(
+      listThemeRuleBlocks({ kind: 'geometry-cascade' })[0].derivations.some((item) => item.output === 'geometry.treeRowHeight')
+    );
+  });
+
+  it('keeps rule block outputs linked to real theme and component contracts', () => {
+    let knownThemes = new Set(THEME_NAMES);
+    let componentTags = new Set(listComponents().map((component) => component.tagName));
+    let tokenPathsByTheme = new Map(
+      THEME_NAMES.map((name) => [name, new Set(Object.keys(flattenTokens(getThemeTokens(name))))])
+    );
+    let runtimeTokens = new Set(Object.keys(DEFAULT_DARK.tokens));
+    let isKnownOutput = (theme, output) => tokenPathsByTheme.get(theme)?.has(output) || runtimeTokens.has(output);
+
+    for (let block of listThemeRuleBlocks()) {
+      assert.ok(knownThemes.has(block.theme), `${block.name} references a known theme`);
+      for (let output of block.outputs) {
+        assert.ok(isKnownOutput(block.theme, output), `${block.name} output ${output} must exist in theme tokens`);
+      }
+      for (let derivation of block.derivations) {
+        assert.ok(isKnownOutput(block.theme, derivation.output), `${block.name} derivation ${derivation.output} must exist in theme tokens`);
+      }
+      for (let tagName of block.appliesTo || []) {
+        assert.ok(componentTags.has(tagName), `${block.name} applies to registered component ${tagName}`);
+      }
+    }
   });
 });

@@ -192,6 +192,11 @@ const DEFAULT_DARK_TOKENS = {
   '--sn-loading-bar-bg': 'var(--sn-node-selected)',
   '--sn-loading-track-radius': '2px',
 
+  '--sn-effect-hover-transition': 'background-color 120ms ease, border-color 120ms ease',
+  '--sn-effect-focus-ring': '0 0 0 2px rgba(76, 139, 245, 0.35)',
+  '--sn-effect-drag-shadow': '0 14px 32px rgba(0, 0, 0, 0.35)',
+  '--sn-effect-loading-pulse': 'linear-gradient(90deg, transparent, rgba(76, 139, 245, 0.6), transparent)',
+
   '--sn-shape-fill': 'var(--sn-node-bg)',
   '--sn-shape-stroke': 'var(--sn-node-border)',
   '--sn-shape-stroke-width': '0.4',

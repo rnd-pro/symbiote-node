@@ -76,5 +76,15 @@
     "sourceHeaderBackground": { "$type": "color", "$value": "var(--sn-node-header-bg)" },
     "sourceEditorBackground": { "$type": "color", "$value": "var(--sn-bg)" },
     "loadingBackground": { "$type": "color", "$value": "var(--sn-bg)" }
+  },
+  "radius": {
+    "node": { "$type": "dimension", "$value": "8px" },
+    "control": { "$type": "dimension", "$value": "4px" }
+  },
+  "effect": {
+    "hoverTransition": { "$type": "transition", "$value": "background-color 120ms ease, border-color 120ms ease" },
+    "focusRing": { "$type": "shadow", "$value": "0 0 0 2px rgba(76, 139, 245, 0.35)" },
+    "dragShadow": { "$type": "shadow", "$value": "0 14px 32px rgba(0, 0, 0, 0.35)" },
+    "loadingPulse": { "$type": "gradient", "$value": "linear-gradient(90deg, transparent, rgba(76, 139, 245, 0.6), transparent)" }
   }
 }

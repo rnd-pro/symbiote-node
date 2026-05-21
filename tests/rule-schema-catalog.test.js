@@ -86,5 +86,11 @@ describe('runtime UI schema catalog', () => {
     assert.ok(getUiSchema('component-descriptor-v1').$defs.componentContract);
     assert.ok(getUiSchema('runtime-ui-v1').$defs.node);
     assert.ok(getUiSchema('theme-rule-block-v1').properties.kind.enum.includes('geometry-cascade'));
+    assert.ok(getUiSchema('theme-rule-block-v1').properties.parameters);
+    assert.ok(getUiSchema('theme-rule-block-v1').properties.derivations);
+    assert.deepEqual(
+      getUiSchema('theme-rule-block-v1').properties.derivations.items.required,
+      ['output', 'expression']
+    );
   });
 });

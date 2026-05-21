@@ -168,6 +168,7 @@ const UI_EXPORTS = [
   ['TreeView', 'function'],
   ['TreePanel', 'function'],
   ['ActionButton', 'function'],
+  ['FormField', 'function'],
   ['SurfaceCard', 'function'],
   ['OutputListPreview', 'function'],
   ['OutputGraphPreview', 'function'],

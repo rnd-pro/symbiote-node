@@ -88,7 +88,34 @@ describe('With DOM shim', () => {
       },
     };
 
-    globalThis.HTMLElement = class {};
+    globalThis.HTMLElement = class {
+      #attributes = new Map();
+
+      getAttribute(name) {
+        return this.#attributes.get(name) ?? null;
+      }
+
+      hasAttribute(name) {
+        return this.#attributes.has(name);
+      }
+
+      removeAttribute(name) {
+        this.#attributes.delete(name);
+      }
+
+      setAttribute(name, value) {
+        this.#attributes.set(name, String(value));
+      }
+
+      toggleAttribute(name, force) {
+        if (force) {
+          this.setAttribute(name, '');
+          return true;
+        }
+        this.removeAttribute(name);
+        return false;
+      }
+    };
     globalThis.window = globalThis;
     globalThis.CSSStyleSheet = class {
       replaceSync(cssText) {
@@ -281,11 +308,24 @@ describe('With DOM shim', () => {
   });
 
   it('ActionButton can be imported with DOM shim', async () => {
+    let { ActionButton } = await import('../control/Button/Button.js');
     await assert.doesNotReject(
       import('../control/Button/Button.js'),
       'ActionButton must import without throwing'
     );
     assert.ok(customElements.get('sn-button'));
+    let button = new ActionButton();
+    button.disabled = true;
+    assert.equal(button.hasAttribute('disabled'), true);
+    assert.equal(button.getAttribute('aria-disabled'), 'true');
+  });
+
+  it('FormField can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../control/Field/Field.js'),
+      'FormField must import without throwing'
+    );
+    assert.ok(customElements.get('sn-field'));
   });
 
   it('SourceEditor can be imported with DOM shim', async () => {

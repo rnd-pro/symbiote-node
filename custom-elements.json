@@ -4513,6 +4513,162 @@
       ]
     },
     {
+      "kind": "javascript-module",
+      "path": "control/Field/Field.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "Themeable form field wrapper for native inputs, selects, textareas, labels, and hints.",
+          "name": "FormField",
+          "tagName": "sn-field",
+          "customElement": true,
+          "attributes": [
+            {
+              "name": "variant",
+              "description": "Field density/layout variant: default, compact, or inline.",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "slots": [
+            {
+              "name": "default",
+              "description": "Native input, select, textarea, label, and optional hint content."
+            },
+            {
+              "name": "label",
+              "description": "Optional explicit label slot when the label is not a direct child."
+            },
+            {
+              "name": "hint",
+              "description": "Optional helper text rendered under the control."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-field-margin-block-end",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-label-margin-block-end",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-label-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-label-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-label-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-label-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-label-transform",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-control-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-control-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-control-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-control-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-control-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-control-font-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-control-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-control-focus-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-control-focus-shadow",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-placeholder-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-textarea-min-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-hint-margin-block-start",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-hint-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-hint-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-hint-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-inline-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-compact-margin-block-end",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-field-compact-control-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "FormField",
+          "declaration": {
+            "name": "FormField",
+            "module": "control/Field/Field.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-field",
+          "declaration": {
+            "name": "FormField",
+            "module": "control/Field/Field.js"
+          }
+        }
+      ]
+    },
+    {
       "path": "surface/Card/Card.js",
       "declarations": [
         {

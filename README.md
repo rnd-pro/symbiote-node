@@ -106,14 +106,18 @@ item.addEventListener('sn-list-item-select', (event) => {
 
 ### Surface UI
 
-`SurfaceCard` and `ActionButton` are generic browser-only composition primitives from `symbiote-node/ui`. They own the standard card background, border, radius, spacing, action control variants, keyboard activation, and interactive hover state. Host applications keep content and command policy product-specific.
+`SurfaceCard`, `ActionButton`, and `FormField` are generic browser-only composition primitives from `symbiote-node/ui`. They own the standard card background, border, radius, spacing, action control variants, form label/control geometry, keyboard activation, and interactive hover/focus states. Host applications keep content, native input data, validation, and command policy product-specific.
 
 ```javascript
-import { ActionButton, SurfaceCard } from 'symbiote-node/ui';
+import { ActionButton, FormField, SurfaceCard } from 'symbiote-node/ui';
 
 document.body.innerHTML = `
   <sn-card interactive>
     <span slot="title">Runtime</span>
+    <sn-field>
+      <label>Filter</label>
+      <input type="search" placeholder="Search instances">
+    </sn-field>
     <p>3 active instances</p>
     <sn-button slot="footer" variant="primary">Refresh</sn-button>
   </sn-card>

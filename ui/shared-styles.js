@@ -179,37 +179,40 @@ const sharedUiStyles = `
 
 /* === Forms === */
 .ui-field {
-  margin-bottom: 12px;
+  margin-bottom: var(--sn-field-margin-block-end);
 }
 
 .ui-field label {
   display: block;
-  font-size: 11px;
-  color: var(--sn-text-dim);
-  margin-bottom: 4px;
-  font-weight: 500;
-  text-transform: uppercase;
+  font-size: var(--sn-field-label-size);
+  color: var(--sn-field-label-color);
+  margin-bottom: var(--sn-field-label-margin-block-end);
+  font-weight: var(--sn-field-label-weight);
+  line-height: var(--sn-field-label-line-height);
+  text-transform: var(--sn-field-label-transform);
 }
 
 .ui-field input, .ui-field select, .ui-field textarea {
   width: 100%;
-  background: var(--sn-bg);
-  border: 1px solid var(--sn-node-border);
-  color: var(--sn-text);
-  padding: 8px 12px;
-  border-radius: 6px;
+  background: var(--sn-field-control-bg);
+  border: 1px solid var(--sn-field-control-border);
+  color: var(--sn-field-control-color);
+  padding: var(--sn-field-control-padding);
+  border-radius: var(--sn-field-control-radius);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--sn-field-control-font-size);
+  line-height: var(--sn-field-control-line-height);
   transition: border-color 0.15s;
 }
 
 .ui-field input:focus, .ui-field select:focus, .ui-field textarea:focus {
   outline: none;
-  border-color: var(--sn-node-selected);
+  border-color: var(--sn-field-control-focus-border);
+  box-shadow: var(--sn-field-control-focus-shadow);
 }
 
 .ui-field textarea {
-  min-height: 120px;
+  min-height: var(--sn-field-textarea-min-height);
   resize: vertical;
 }
 

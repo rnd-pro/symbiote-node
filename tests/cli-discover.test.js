@@ -214,6 +214,7 @@ describe('discover command', () => {
         'sn-tree-view',
         'sn-tree-panel',
         'sn-button',
+        'sn-field',
         'sn-card',
         'node-socket',
         'cell-bg',
@@ -242,6 +243,7 @@ describe('discover command', () => {
       assert.ok(components.get('sn-tree-panel').contract.methods.some((method) => method.name === 'showPlaceholder'));
       assert.ok(components.get('sn-tree-panel').contract.events.some((event) => event.name === 'sn-tree-panel-filter'));
       assert.ok(components.get('sn-button').contract.events.some((event) => event.name === 'click'));
+      assert.ok(components.get('sn-field').contract.slots.some((slot) => slot.name === 'default'));
       assert.ok(components.get('sn-card').contract.slots.some((slot) => slot.name === 'default'));
       assert.ok(components.get('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
       assert.ok(components.get('graph-explorer-shell').contract.slots.some((slot) => slot.name === 'canvas'));

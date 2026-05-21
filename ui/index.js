@@ -162,6 +162,7 @@ export let ListItem;
 export let TreeView;
 export let TreePanel;
 export let ActionButton;
+export let FormField;
 export let SurfaceCard;
 export let OutputListPreview;
 export let OutputGraphPreview;
@@ -237,6 +238,7 @@ if (hasDOMGlobals) {
     treeView,
     treePanel,
     actionButton,
+    formField,
     surfaceCard,
     outputListPreview,
     outputGraphPreview,
@@ -278,6 +280,7 @@ if (hasDOMGlobals) {
     import('../tree/TreeView/TreeView.js'),
     import('../tree/TreePanel/TreePanel.js'),
     import('../control/Button/Button.js'),
+    import('../control/Field/Field.js'),
     import('../surface/Card/Card.js'),
     import('../display/OutputListPreview/OutputListPreview.js'),
     import('../display/OutputGraphPreview/OutputGraphPreview.js'),
@@ -330,6 +333,7 @@ if (hasDOMGlobals) {
   ({ TreeView } = treeView);
   ({ TreePanel } = treePanel);
   ({ ActionButton } = actionButton);
+  ({ FormField } = formField);
   ({ SurfaceCard } = surfaceCard);
   ({ OutputListPreview } = outputListPreview);
   ({ OutputGraphPreview } = outputGraphPreview);

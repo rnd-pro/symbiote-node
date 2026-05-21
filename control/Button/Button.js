@@ -4,8 +4,14 @@ import template from './Button.tpl.js';
 import css from './Button.css.js';
 
 export class ActionButton extends Symbiote {
+  #onClick = (event) => {
+    if (!this.disabled) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+
   #onKeyDown = (event) => {
-    if (this.hasAttribute('disabled')) return;
+    if (this.disabled) return;
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     this.click();
@@ -20,12 +26,23 @@ export class ActionButton extends Symbiote {
     super.connectedCallback?.();
     if (!this.hasAttribute('role')) this.setAttribute('role', 'button');
     if (!this.hasAttribute('tabindex')) this.tabIndex = 0;
+    this.addEventListener('click', this.#onClick, { capture: true });
     this.addEventListener('keydown', this.#onKeyDown);
   }
 
   disconnectedCallback() {
+    this.removeEventListener('click', this.#onClick, { capture: true });
     this.removeEventListener('keydown', this.#onKeyDown);
     super.disconnectedCallback?.();
+  }
+
+  get disabled() {
+    return this.hasAttribute('disabled');
+  }
+
+  set disabled(value) {
+    this.toggleAttribute('disabled', Boolean(value));
+    this.setAttribute('aria-disabled', Boolean(value) ? 'true' : 'false');
   }
 }
 

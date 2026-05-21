@@ -20,6 +20,87 @@ export let TOKEN_FILES = [
   })),
 ];
 
+export let THEME_RULE_BLOCKS = [
+  {
+    name: 'default-dark-source-accents',
+    kind: 'source-accent',
+    description: 'Minimal human or agent-selected inputs for the default dark provider theme.',
+    inputs: ['accent.primary', 'accent.success', 'accent.warning', 'accent.danger', 'neutral.background'],
+    outputs: ['color.accent', 'color.success', 'color.warning', 'color.danger', 'color.background'],
+    formula: 'Source accents define the stable roots used by color, semantic, and component aliases.',
+  },
+  {
+    name: 'default-dark-color-cascade',
+    kind: 'color-cascade',
+    description: 'Derives surfaces, text, borders, overlays, hover, and selected states from source accents.',
+    inputs: ['color.background', 'color.surface', 'color.accent'],
+    outputs: [
+      'color.text',
+      'color.textDim',
+      'color.border',
+      'color.overlay',
+      'component.accentBackground',
+      'component.accentBackgroundSubtle',
+      'component.accentBorder',
+    ],
+    formula: 'Surface and state colors are derived as transparent mixes over the background and accent roots.',
+  },
+  {
+    name: 'default-dark-geometry-cascade',
+    kind: 'geometry-cascade',
+    description: 'Derives density, panel gaps, row heights, radii, and control sizes from one spacing scale.',
+    inputs: ['size.grid', 'density.scale'],
+    outputs: [
+      'component.layoutGapBackground',
+      'component.treeRowHeight',
+      'component.composerInputMinHeight',
+      'radius.node',
+      'radius.control',
+    ],
+    formula: 'Spacing values are multiples of the base grid; radii and control sizes follow density scale.',
+  },
+  {
+    name: 'default-dark-typography-cascade',
+    kind: 'typography-cascade',
+    description: 'Defines compact application typography for panels, lists, chat, and code surfaces.',
+    inputs: ['font.family', 'font.scale'],
+    outputs: ['font.body', 'font.label', 'font.caption', 'font.code'],
+    formula: 'Typography sizes use a compact fixed scale suitable for repeated operational UI work.',
+  },
+  {
+    name: 'default-dark-motion-effects',
+    kind: 'motion-effects',
+    description: 'Defines transition and shadow aliases for hover, active, focus, drag, and loading states.',
+    inputs: ['motion.duration.fast', 'motion.easing.standard', 'shadow.node'],
+    outputs: ['effect.hoverTransition', 'effect.focusRing', 'effect.dragShadow', 'effect.loadingPulse'],
+    formula: 'Interactive effects reuse fast duration and a single focus/accent ring family.',
+  },
+  {
+    name: 'default-dark-semantic-aliases',
+    kind: 'semantic-alias',
+    description: 'Maps cascade outputs to semantic application aliases without component ownership.',
+    inputs: ['color.*', 'size.*', 'radius.*', 'shadow.*', 'font.*'],
+    outputs: ['--sn-bg', '--sn-panel-bg', '--sn-node-bg', '--sn-node-border', '--sn-text', '--sn-text-dim'],
+    formula: 'Semantic aliases are CSS custom properties consumed through normal cascade inheritance.',
+  },
+  {
+    name: 'default-dark-component-aliases',
+    kind: 'component-alias',
+    description: 'Maps semantic theme aliases to reusable Symbiote Node component surfaces.',
+    inputs: ['--sn-*'],
+    outputs: [
+      '--sn-layout-gap-bg',
+      '--sn-tree-row-height',
+      '--sn-composer-bg',
+      '--sn-chat-message-bg',
+      '--sn-tabs-active-bg',
+      '--sn-source-header-bg',
+    ],
+    appliesTo: ['panel-layout', 'sn-tree-view', 'chat-composer', 'chat-transcript', 'project-tabs', 'source-viewer'],
+    formula: 'Component aliases bridge design tokens to component CSS without product-level style patches.',
+  },
+];
+
 export let THEME_TOKENS = {
   'default-dark': {
     name: 'default-dark',
@@ -155,6 +236,15 @@ export function getThemeTokens(name) {
 
 export function listTokenFiles() {
   return [...TOKEN_FILES];
+}
+
+export function listThemeRuleBlocks(filter = {}) {
+  return THEME_RULE_BLOCKS.filter((block) => {
+    for (let [key, value] of Object.entries(filter)) {
+      if (block[key] !== value) return false;
+    }
+    return true;
+  });
 }
 
 export function flattenTokens(tokenTree, prefix = '', out = {}) {

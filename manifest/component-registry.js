@@ -1,4 +1,5 @@
 export const COMPONENT_UI_SPECIFIER = 'symbiote-node/ui';
+export const COMPONENT_DESCRIPTOR_SCHEMA = 'schemas/component-descriptor-v1.json';
 
 const UI_NAMED_EXPORTS = new Set([
   'GraphNode',
@@ -95,6 +96,32 @@ export let COMPONENTS = [
     module: 'layout/Layout/Layout.js',
     category: 'layout',
     description: 'Panel-based application layout shell.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['layout-tree', 'split-panels', 'panel-registry', 'local-storage'],
+      attributes: [
+        { name: 'storage-key', type: 'string', description: 'Optional key for persisted layout state.' },
+        { name: 'min-panel-size', type: 'number', description: 'Minimum panel size in pixels.' },
+      ],
+      properties: [
+        { name: 'layoutTree', type: 'object', description: 'Pure layout tree data rendered by layout-node children.' },
+        { name: 'panelTypes', type: 'object', description: 'Host-provided panel type descriptors keyed by panel type.' },
+      ],
+      methods: [
+        { name: 'registerPanelType', type: 'function', description: 'Registers a renderable panel type descriptor.' },
+      ],
+      events: [
+        { name: 'layout-change', description: 'Bubbles when the layout tree changes.' },
+      ],
+      themeAliases: [
+        '--sn-layout-bg',
+        '--sn-layout-gap-bg',
+        '--sn-layout-border',
+        '--sn-layout-resizer-size',
+      ],
+    },
   },
   {
     tagName: 'layout-sidebar',
@@ -137,6 +164,43 @@ export let COMPONENTS = [
     module: 'layout/ProjectTabs/ProjectTabs.js',
     category: 'layout',
     description: 'Generic project/workspace tab strip with add, select, and close events.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['tab-list', 'select', 'close', 'create'],
+      properties: [
+        { name: 'tabs', type: 'array', description: 'Array of tab descriptors with id, name, color, icon, and closeable fields.' },
+        { name: 'activeId', type: 'string', description: 'Active tab id.' },
+        { name: 'homeIcon', type: 'string', description: 'Material Symbols icon for the home tab.' },
+        { name: 'homeLabel', type: 'string', description: 'Accessible home tab label.' },
+        { name: 'addTitle', type: 'string', description: 'Accessible add button title.' },
+      ],
+      methods: [
+        { name: 'setTabs', type: 'function', description: 'Replaces tab data and active tab id.' },
+      ],
+      events: [
+        { name: 'project-tabs-home', description: 'Requests navigation to the home surface.' },
+        { name: 'project-tabs-add', description: 'Requests creation or opening of a tab.' },
+        {
+          name: 'project-tabs-select',
+          description: 'Requests tab selection.',
+          detail: [{ name: 'id', type: 'string', required: true }],
+        },
+        {
+          name: 'project-tabs-close',
+          description: 'Requests tab close.',
+          detail: [{ name: 'id', type: 'string', required: true }],
+        },
+      ],
+      themeAliases: [
+        '--sn-tabs-height',
+        '--sn-tabs-bg',
+        '--sn-tabs-active-bg',
+        '--sn-tabs-border',
+        '--sn-tabs-radius',
+      ],
+    },
   },
   {
     tagName: 'project-tab-item',
@@ -165,6 +229,49 @@ export let COMPONENTS = [
     module: 'display/SourceViewer/SourceViewer.js',
     category: 'display',
     description: 'Source file viewer with code, markdown, image, metadata, actions, and transform modes.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['source-code', 'markdown-preview', 'image-preview', 'diagnostics', 'transform-toggle'],
+      attributes: [
+        { name: 'image-api-base', type: 'string', description: 'Optional base URL for resolving image preview sources.' },
+      ],
+      properties: [
+        { name: 'filename', type: 'string', description: 'Current file name or empty-state label.' },
+        { name: 'hasFile', type: 'boolean', description: 'Whether a file is currently displayed.' },
+        { name: 'viewMode', type: 'string', description: 'Current display mode: source, rendered, or transformed.' },
+      ],
+      methods: [
+        { name: 'showFile', type: 'function', description: 'Displays a source file from pure path, language, code, and optional transform data.' },
+        { name: 'showDirectory', type: 'function', description: 'Displays normalized directory text.' },
+        { name: 'showImage', type: 'function', description: 'Displays an image path through the nested code-block renderer.' },
+        { name: 'showError', type: 'function', description: 'Displays an error state.' },
+        { name: 'scrollToLine', type: 'function', description: 'Scrolls nested code-block to a line.' },
+        { name: 'setDiagnostics', type: 'function', description: 'Passes diagnostics to nested code-block.' },
+      ],
+      events: [
+        {
+          name: 'source-viewer-show-graph',
+          description: 'Requests graph focus for the current source path.',
+          detail: [{ name: 'path', type: 'string' }],
+        },
+        {
+          name: 'source-viewer-toggle-mode',
+          description: 'Fires after the viewer switches source/rendered/transformed mode.',
+          detail: [
+            { name: 'path', type: 'string' },
+            { name: 'mode', type: 'string' },
+          ],
+        },
+      ],
+      themeAliases: [
+        '--sn-source-bg',
+        '--sn-source-header-bg',
+        '--sn-source-border',
+        '--sn-source-toolbar-gap',
+      ],
+    },
   },
   {
     tagName: 'source-editor',
@@ -172,6 +279,48 @@ export let COMPONENTS = [
     module: 'display/SourceEditor/SourceEditor.js',
     category: 'display',
     description: 'Generic source text editor with content, dirty state, readonly, disabled, focus, and tab handling.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['source-editing', 'dirty-state', 'keyboard-tab-indent'],
+      properties: [
+        { name: 'value', type: 'string', description: 'Editor content.' },
+        { name: 'language', type: 'string', description: 'Language label reflected to data-language.' },
+        { name: 'placeholder', type: 'string', description: 'Textarea placeholder.' },
+        { name: 'ariaLabel', type: 'string', description: 'Accessible editor label.' },
+        { name: 'readonly', type: 'boolean', description: 'Readonly editor state.' },
+        { name: 'disabled', type: 'boolean', description: 'Disabled editor state.' },
+        { name: 'dirty', type: 'boolean', description: 'Whether content differs from host baseline.' },
+      ],
+      methods: [
+        { name: 'getContent', type: 'function', description: 'Returns current editor text.' },
+        { name: 'setContent', type: 'function', description: 'Sets editor text and optional dirty state.' },
+        { name: 'setEditable', type: 'function', description: 'Toggles disabled state from an editable flag.' },
+        { name: 'setLanguage', type: 'function', description: 'Sets language metadata.' },
+        { name: 'setDirty', type: 'function', description: 'Sets dirty state.' },
+        { name: 'focus', type: 'function', description: 'Focuses the textarea.' },
+        { name: 'select', type: 'function', description: 'Selects textarea content.' },
+      ],
+      events: [
+        {
+          name: 'source-editor-input',
+          description: 'Emits after text changes.',
+          detail: [
+            { name: 'value', type: 'string', required: true },
+            { name: 'dirty', type: 'boolean', required: true },
+            { name: 'language', type: 'string', required: true },
+          ],
+        },
+      ],
+      themeAliases: [
+        '--sn-editor-bg',
+        '--sn-editor-text',
+        '--sn-editor-border',
+        '--sn-editor-radius',
+        '--sn-editor-font',
+      ],
+    },
   },
   {
     tagName: 'sn-loading-overlay',
@@ -179,6 +328,31 @@ export let COMPONENTS = [
     module: 'display/LoadingOverlay/LoadingOverlay.js',
     category: 'display',
     description: 'Generic loading overlay with label, phase, progress, and secondary status text.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['loading-state', 'progress', 'hide-transition'],
+      properties: [
+        { name: 'label', type: 'string', description: 'Primary loading label.' },
+        { name: 'pct', type: 'number', description: 'Progress percentage from 0 to 100.' },
+        { name: 'phase', type: 'string', description: 'Current loading phase.' },
+        { name: 'sub', type: 'string', description: 'Secondary loading text.' },
+        { name: 'isHidden', type: 'boolean', description: 'Hidden transition state.' },
+      ],
+      methods: [
+        { name: 'show', type: 'function', description: 'Shows the overlay.' },
+        { name: 'hide', type: 'function', description: 'Hides the overlay and optionally calls completion after transition.' },
+        { name: 'setProgress', type: 'function', description: 'Sets clamped progress, phase, and secondary text.' },
+      ],
+      events: [],
+      themeAliases: [
+        '--sn-loading-bg',
+        '--sn-loading-text',
+        '--sn-loading-accent',
+        '--sn-loading-radius',
+      ],
+    },
   },
   {
     tagName: 'output-list-preview',
@@ -326,6 +500,34 @@ export let COMPONENTS = [
     module: 'chat/ChatTranscript/ChatTranscript.js',
     category: 'chat',
     description: 'Generic chat transcript shell with message rendering, scroll controls, live status, and delegation card events.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['chat-transcript', 'message-list', 'scroll-state', 'delegation-card-events'],
+      properties: [
+        { name: 'messageItems', type: 'array', description: 'Normalized message item descriptors rendered by chat-message-item.' },
+      ],
+      methods: [
+        { name: 'setMessageItems', type: 'function', description: 'Replaces transcript messages from pure data.' },
+        { name: 'scrollToBottom', type: 'function', description: 'Scrolls the message container to the bottom.' },
+        { name: 'getScrollState', type: 'function', description: 'Returns overflow and bottom-position state.' },
+        { name: 'renderLiveStatus', type: 'function', description: 'Renders host-provided live status metadata.' },
+        { name: 'updateDelegationTask', type: 'function', description: 'Updates a delegation card by task id.' },
+      ],
+      events: [
+        { name: 'chat-transcript-scroll', description: 'Emits current scroll state.', detail: [{ name: 'isAtBottom', type: 'boolean' }] },
+        { name: 'chat-transcript-scroll-bottom', description: 'Emits after scroll-to-bottom is requested.' },
+        { name: 'delegation-card-open', description: 'Requests opening a linked delegated chat or task card.' },
+        { name: 'message-copy', description: 'Reports copy result for message text.' },
+      ],
+      themeAliases: [
+        '--sn-chat-bg',
+        '--sn-chat-message-bg',
+        '--sn-chat-message-radius',
+        '--sn-chat-gap',
+      ],
+    },
   },
   {
     tagName: 'chat-composer',
@@ -333,6 +535,43 @@ export let COMPONENTS = [
     module: 'chat/ChatComposer/ChatComposer.js',
     category: 'chat',
     description: 'Generic chat composer with input, context chips, footer controls, and autocomplete host.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['chat-input', 'context-chips', 'footer-controls', 'autocomplete-host', 'drag-drop-context'],
+      properties: [
+        { name: 'value', type: 'string', description: 'Current input value.' },
+        { name: 'disabled', type: 'boolean', description: 'Disables the textarea.' },
+        { name: 'placeholder', type: 'string', description: 'Textarea placeholder.' },
+        { name: 'attachedContext', type: 'array', description: 'Context chip descriptors.' },
+        { name: 'footerHtml', type: 'string', description: 'Trusted footer controls HTML owned by the host adapter.' },
+        { name: 'isSending', type: 'boolean', description: 'Switches send button into stop state.' },
+      ],
+      methods: [
+        { name: 'setValue', type: 'function', description: 'Sets input value.' },
+        { name: 'setAttachedContext', type: 'function', description: 'Sets context chip descriptors.' },
+        { name: 'setFooterHtml', type: 'function', description: 'Sets trusted footer controls HTML.' },
+        { name: 'setDisabled', type: 'function', description: 'Sets disabled state.' },
+        { name: 'setSending', type: 'function', description: 'Sets sending state.' },
+      ],
+      events: [
+        { name: 'chat-composer-input', description: 'Emits input value and caret position.' },
+        { name: 'chat-composer-submit', description: 'Requests submit from Enter.' },
+        { name: 'chat-composer-send', description: 'Requests send or stop from the send button.' },
+        { name: 'chat-composer-key', description: 'Passes navigation/autocomplete keys to the host.' },
+        { name: 'chat-composer-param-change', description: 'Emits footer control value changes.' },
+        { name: 'chat-composer-context-remove', description: 'Requests context chip removal.' },
+        { name: 'chat-composer-context-drop', description: 'Requests dropped context attachment.' },
+      ],
+      themeAliases: [
+        '--sn-composer-bg',
+        '--sn-composer-border',
+        '--sn-composer-radius',
+        '--sn-composer-control-gap',
+        '--sn-composer-input-min-height',
+      ],
+    },
   },
   {
     tagName: 'chat-list',
@@ -389,6 +628,38 @@ export let COMPONENTS = [
     module: 'list/ListItem/ListItem.js',
     category: 'list',
     description: 'Generic selectable list item with label, description, icon, meta text, and item payload event.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['selectable-list-item', 'keyboard-select', 'payload-event'],
+      properties: [
+        { name: 'label', type: 'string', description: 'Primary row text.' },
+        { name: 'description', type: 'string', description: 'Secondary row text.' },
+        { name: 'icon', type: 'string', description: 'Optional Material Symbols icon name.' },
+        { name: 'meta', type: 'string', description: 'Trailing metadata text.' },
+        { name: 'active', type: 'boolean', description: 'Active row state reflected to host attribute.' },
+        { name: 'disabled', type: 'boolean', description: 'Disabled row state reflected to host attribute.' },
+        { name: 'item', type: 'object', description: 'Host-owned payload emitted on select.' },
+      ],
+      methods: [
+        { name: 'setItem', type: 'function', description: 'Sets payload and row display properties from one item descriptor.' },
+      ],
+      events: [
+        {
+          name: 'sn-list-item-select',
+          description: 'Emits selected payload unless the row is disabled.',
+          detail: [{ name: 'item', type: 'object' }],
+        },
+      ],
+      themeAliases: [
+        '--sn-list-item-bg',
+        '--sn-list-item-hover-bg',
+        '--sn-list-item-active-bg',
+        '--sn-list-item-radius',
+        '--sn-list-item-gap',
+      ],
+    },
   },
   {
     tagName: 'sn-tree-view',
@@ -396,6 +667,49 @@ export let COMPONENTS = [
     module: 'tree/TreeView/TreeView.js',
     category: 'tree',
     description: 'Generic tree view with selection, expansion, filtering, drag payloads, and host-owned item data.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['tree-data', 'select', 'expand-collapse', 'filter', 'drag-payload', 'local-storage'],
+      properties: [
+        { name: 'items', type: 'array', description: 'Tree item descriptors with id/path, label, icon, badges, children, and payload fields.' },
+        { name: 'selectedId', type: 'string', description: 'Selected item id or path.' },
+        { name: 'expandedIds', type: 'array', description: 'Expanded item ids.' },
+        { name: 'defaultExpandedIds', type: 'array', description: 'Initial expanded ids when storage has no value.' },
+        { name: 'filterText', type: 'string', description: 'Filter text matched against item labels and metadata.' },
+        { name: 'storageKey', type: 'string', description: 'Optional localStorage key for expanded state.' },
+        { name: 'toggleBranchesOnSelect', type: 'boolean', description: 'Toggles branch rows when selected.' },
+      ],
+      methods: [
+        { name: 'setItems', type: 'function', description: 'Replaces tree data.' },
+        { name: 'collapseAll', type: 'function', description: 'Collapses all branches.' },
+        { name: 'expandAncestors', type: 'function', description: 'Expands ancestors for an id or path.' },
+        { name: 'scrollSelectedIntoView', type: 'function', description: 'Scrolls selected row into view.' },
+      ],
+      events: [
+        {
+          name: 'sn-tree-select',
+          description: 'Emits the selected item descriptor.',
+          detail: [{ name: 'item', type: 'object', required: true }],
+        },
+        {
+          name: 'sn-tree-dragstart',
+          description: 'Emits drag item and payload metadata.',
+          detail: [
+            { name: 'item', type: 'object', required: true },
+            { name: 'payload', type: 'any' },
+          ],
+        },
+      ],
+      themeAliases: [
+        '--sn-tree-row-height',
+        '--sn-tree-indent',
+        '--sn-tree-icon-size',
+        '--sn-tree-row-radius',
+        '--sn-tree-selected-bg',
+      ],
+    },
   },
   {
     tagName: 'ctrl-item',

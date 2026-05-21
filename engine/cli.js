@@ -38,10 +38,12 @@ import {
   getTheme,
   getThemeTokens,
   listTokenFiles,
+  listThemeRuleBlocks,
   RULESETS,
   listRules,
-  GRAPH_SCHEMA_VERSIONS,
-  getGraphSchema,
+  listGraphSchemas,
+  UI_SCHEMA_VERSIONS,
+  getUiSchema,
 } from '../manifest/index.js';
 
 let __dirname = dirname(fileURLToPath(import.meta.url));
@@ -633,12 +635,14 @@ async function cmdDiscover(options = {}) {
         importKind: c.importKind,
         category: c.category,
         description: c.description,
+        contract: c.contract || null,
       })),
       themes: THEME_NAMES.map((name) => ({
         name,
         ...getTheme(name),
         tokens: getThemeTokens(name),
       })),
+      themeRuleBlocks: listThemeRuleBlocks(),
       tokenFiles: listTokenFiles(),
       rulesets: RULESETS.map((rs) => ({
         name: rs.name,
@@ -648,12 +652,15 @@ async function cmdDiscover(options = {}) {
         rules: listRules({ ruleset: rs.name }),
       })),
       rules: listRules(),
-      schemas: GRAPH_SCHEMA_VERSIONS.map((sv) => ({
-        version: sv.version,
-        path: sv.path,
-        description: sv.description,
-        ...getGraphSchema(sv.version),
-      })),
+      schemas: [
+        ...listGraphSchemas(),
+        ...UI_SCHEMA_VERSIONS.map((sv) => ({
+          version: sv.version,
+          path: sv.path,
+          description: sv.description,
+          ...getUiSchema(sv.version),
+        })),
+      ],
     },
   };
 

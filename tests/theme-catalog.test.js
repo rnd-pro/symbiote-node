@@ -9,6 +9,7 @@ import {
   flattenTokens,
   getTheme,
   getThemeTokens,
+  listThemeRuleBlocks,
   listThemes,
   listTokenFiles,
 } from '../manifest/theme-catalog.js';
@@ -72,5 +73,26 @@ describe('theme token files', () => {
       let parsed = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, file.path), 'utf-8'));
       assert.deepEqual(getThemeTokens(name), parsed, `${name} catalog tokens must match ${file.path}`);
     }
+  });
+
+  it('publishes rule blocks for cascading theme construction', () => {
+    let blocks = listThemeRuleBlocks();
+    let kinds = blocks.map((block) => block.kind);
+    assert.deepEqual(kinds, [
+      'source-accent',
+      'color-cascade',
+      'geometry-cascade',
+      'typography-cascade',
+      'motion-effects',
+      'semantic-alias',
+      'component-alias',
+    ]);
+    for (let block of blocks) {
+      assert.equal(typeof block.name, 'string');
+      assert.equal(typeof block.description, 'string');
+      assert.ok(Array.isArray(block.inputs));
+      assert.ok(Array.isArray(block.outputs));
+    }
+    assert.equal(listThemeRuleBlocks({ kind: 'component-alias' }).length, 1);
   });
 });

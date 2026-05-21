@@ -107,3 +107,10 @@ export function listGraphVersions() {
 export function getGraphSchema(version = 'v1') {
   return GRAPH_SCHEMAS[version];
 }
+
+export function listGraphSchemas() {
+  return GRAPH_SCHEMA_VERSIONS.map((schema) => ({
+    ...schema,
+    ...getGraphSchema(schema.version),
+  }));
+}

@@ -6,10 +6,16 @@ import { fileURLToPath } from 'node:url';
 
 import { getGraphSchema, listGraphVersions } from '../manifest/graph-schema.js';
 import { getRule, getRuleSet, listRuleSets, listRules } from '../manifest/rule-catalog.js';
+import { getUiSchema, listUiSchemaVersions } from '../manifest/ui-schema-catalog.js';
 
 let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
 let ruleset = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'rules/symbiote-3x.json'), 'utf-8'));
 let graphSchema = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/graph-v1.json'), 'utf-8'));
+let uiSchemas = {
+  'component-descriptor-v1': JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/component-descriptor-v1.json'), 'utf-8')),
+  'runtime-ui-v1': JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/runtime-ui-v1.json'), 'utf-8')),
+  'theme-rule-block-v1': JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/theme-rule-block-v1.json'), 'utf-8')),
+};
 
 describe('rule catalog', () => {
   it('has unique rule ids and expected library rules', () => {
@@ -58,5 +64,27 @@ describe('graph schema catalog', () => {
 
   it('catalog graph schema matches the published schema JSON', () => {
     assert.deepEqual(getGraphSchema('v1'), graphSchema);
+  });
+});
+
+describe('runtime UI schema catalog', () => {
+  it('exposes provider UI schema versions', () => {
+    assert.deepEqual(listUiSchemaVersions(), [
+      'component-descriptor-v1',
+      'runtime-ui-v1',
+      'theme-rule-block-v1',
+    ]);
+  });
+
+  it('catalog UI schemas match published schema JSON files', () => {
+    for (let [version, schema] of Object.entries(uiSchemas)) {
+      assert.deepEqual(getUiSchema(version), schema);
+    }
+  });
+
+  it('defines constructible component, runtime UI, and theme rule block contracts', () => {
+    assert.ok(getUiSchema('component-descriptor-v1').$defs.componentContract);
+    assert.ok(getUiSchema('runtime-ui-v1').$defs.node);
+    assert.ok(getUiSchema('theme-rule-block-v1').properties.kind.enum.includes('geometry-cascade'));
   });
 });

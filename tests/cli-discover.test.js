@@ -173,6 +173,7 @@ describe('discover command', () => {
         if (c.importKind === 'named') assert.equal(typeof c.exportName, 'string');
         assert.equal(typeof c.category, 'string');
         assert.equal(typeof c.description, 'string');
+        assert.ok('contract' in c);
       }
       let tags = data.manifest.components.map((c) => c.tagName);
       for (let tag of ['node-canvas', 'graph-node', 'source-editor', 'chat-transcript', 'chat-composer', 'chat-list', 'chat-list-item', 'project-tabs']) {
@@ -180,6 +181,34 @@ describe('discover command', () => {
       }
       assert.equal(tags.includes('project-tab-item'), false);
       assert.equal(tags.includes('cb-squiggle'), false);
+    });
+
+    it('exposes constructible contracts for first runtime UI surfaces', () => {
+      let components = new Map(data.manifest.components.map((component) => [component.tagName, component]));
+      for (let tag of [
+        'panel-layout',
+        'project-tabs',
+        'source-viewer',
+        'source-editor',
+        'sn-loading-overlay',
+        'chat-transcript',
+        'chat-composer',
+        'sn-list-item',
+        'sn-tree-view',
+      ]) {
+        let component = components.get(tag);
+        assert.ok(component, `${tag} must be discoverable`);
+        assert.ok(component.contract, `${tag} must expose a component contract`);
+        assert.equal(component.contract.schemaVersion, 'component-descriptor-v1');
+        assert.ok(Array.isArray(component.contract.capabilities), `${tag} capabilities must be data`);
+        assert.ok(Array.isArray(component.contract.events), `${tag} events must be data`);
+        assert.ok(Array.isArray(component.contract.themeAliases), `${tag} theme aliases must be data`);
+        assert.equal(/\bhost-app-specific\b/.test(JSON.stringify(component.contract)), false, `${tag} contract must stay provider-neutral`);
+      }
+      assert.ok(components.get('chat-composer').contract.events.some((event) => event.name === 'chat-composer-send'));
+      assert.ok(components.get('source-editor').contract.events.some((event) => event.name === 'source-editor-input'));
+      assert.ok(components.get('sn-list-item').contract.events.some((event) => event.name === 'sn-list-item-select'));
+      assert.ok(components.get('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));
     });
 
     it('exposes themes with token data', () => {
@@ -198,6 +227,17 @@ describe('discover command', () => {
       let baseFile = data.manifest.tokenFiles.find((f) => f.name === 'base');
       assert.ok(baseFile, 'base token file must exist');
       assert.equal(baseFile.kind, 'base');
+    });
+
+    it('exposes theme rule blocks for cascading agent-built themes', () => {
+      assert.ok(Array.isArray(data.manifest.themeRuleBlocks));
+      let kinds = data.manifest.themeRuleBlocks.map((block) => block.kind);
+      for (let kind of ['source-accent', 'color-cascade', 'geometry-cascade', 'typography-cascade', 'motion-effects', 'semantic-alias', 'component-alias']) {
+        assert.ok(kinds.includes(kind), `${kind} theme rule block must be discoverable`);
+      }
+      let componentAlias = data.manifest.themeRuleBlocks.find((block) => block.kind === 'component-alias');
+      assert.ok(componentAlias.outputs.includes('--sn-layout-gap-bg'));
+      assert.ok(componentAlias.appliesTo.includes('chat-composer'));
     });
 
     it('exposes rulesets with inline rules', () => {
@@ -220,6 +260,15 @@ describe('discover command', () => {
         assert.equal(typeof r.name, 'string');
         assert.equal(typeof r.severity, 'string');
         assert.ok(Array.isArray(r.tags));
+      }
+    });
+
+    it('exposes graph and runtime UI schemas', () => {
+      let schemas = new Map(data.manifest.schemas.map((schema) => [schema.version, schema]));
+      for (let version of ['v1', 'component-descriptor-v1', 'runtime-ui-v1', 'theme-rule-block-v1']) {
+        assert.ok(schemas.has(version), `${version} schema must be discoverable`);
+        assert.equal(typeof schemas.get(version).path, 'string');
+        assert.equal(typeof schemas.get(version).$id, 'string');
       }
     });
 

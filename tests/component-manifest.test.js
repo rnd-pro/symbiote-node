@@ -163,4 +163,33 @@ describe('component registry', () => {
       assert.ok(component.module.endsWith('.js'), `${component.tagName} keeps source metadata`);
     }
   });
+
+  it('publishes data-only contracts for first runtime UI surfaces', () => {
+    for (let tag of [
+      'panel-layout',
+      'project-tabs',
+      'source-viewer',
+      'source-editor',
+      'sn-loading-overlay',
+      'chat-transcript',
+      'chat-composer',
+      'sn-list-item',
+      'sn-tree-view',
+    ]) {
+      let component = getComponent(tag);
+      assert.ok(component.contract, `${tag} must expose contract metadata`);
+      assert.equal(component.contract.schemaVersion, 'component-descriptor-v1');
+      assert.ok(Array.isArray(component.contract.capabilities));
+      assert.ok(Array.isArray(component.contract.themeAliases));
+      assert.equal(JSON.stringify(component.contract).includes('function '), false);
+      assert.equal(JSON.stringify(component.contract).includes('document.'), false);
+      assert.equal(/\bhost-app-specific\b/.test(JSON.stringify(component.contract)), false);
+    }
+    assert.ok(getComponent('sn-list-item').contract.events.some((event) => event.name === 'sn-list-item-select'));
+    assert.ok(getComponent('source-editor').contract.events.some((event) => event.name === 'source-editor-input'));
+    assert.ok(getComponent('sn-loading-overlay').contract.methods.some((method) => method.name === 'setProgress'));
+    assert.ok(getComponent('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));
+    assert.ok(getComponent('chat-composer').contract.methods.some((method) => method.name === 'setValue'));
+    assert.ok(getComponent('source-viewer').contract.methods.some((method) => method.name === 'showFile'));
+  });
 });

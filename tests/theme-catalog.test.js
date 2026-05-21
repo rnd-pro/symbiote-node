@@ -8,6 +8,8 @@ import {
   THEME_NAMES,
   flattenTokens,
   getTheme,
+  getThemeCssTokens,
+  getThemeRecipe,
   getThemeRuleBlocks,
   getThemeTokens,
   listThemeRuleBlocks,
@@ -137,5 +139,26 @@ describe('theme token files', () => {
         assert.ok(componentTags.has(tagName), `${block.name} applies to registered component ${tagName}`);
       }
     }
+  });
+
+  it('builds agent-readable theme recipes from tokens, CSS variables, and rule blocks', () => {
+    let recipe = getThemeRecipe('default-dark');
+    assert.equal(recipe.name, 'default-dark');
+    assert.equal(recipe.tokenFile, 'tokens/themes/default-dark.json');
+    assert.equal(recipe.theme.path, 'tokens/themes/default-dark.json');
+    assert.equal(recipe.tokens.color.accent.$value, '#4c8bf5');
+    assert.equal(recipe.flatTokens['geometry.treeRowHeight'].$value, '22px');
+    assert.equal(recipe.cssTokens['--sn-layout-border'], 'transparent');
+    assert.equal(recipe.cssTokenSource, 'runtime-theme');
+    assert.equal(recipe.cssTokens['--sn-effect-hover-transition'], 'background-color 120ms ease, border-color 120ms ease');
+    assert.equal(recipe.ruleBlocks.length, listThemeRuleBlocks({ theme: 'default-dark' }).length);
+    recipe.tokens.color.accent.$value = '#000000';
+    recipe.ruleBlocks.length = 0;
+    assert.equal(getThemeTokens('default-dark').color.accent.$value, '#4c8bf5');
+    assert.ok(getThemeRecipe('default-dark').ruleBlocks.length > 0);
+    assert.equal(getThemeRecipe('dark').cssTokenSource, 'not-runtime-complete');
+    assert.deepEqual(getThemeRecipe('dark').cssTokens, {});
+    assert.deepEqual(getThemeCssTokens('missing'), {});
+    assert.equal(getThemeRecipe('missing'), undefined);
   });
 });

@@ -1,3 +1,5 @@
+import { DEFAULT_DARK } from '../themes/default-dark.js';
+
 export let THEME_NAMES = [
   'default-dark',
   'dark',
@@ -19,6 +21,14 @@ export let TOKEN_FILES = [
     extends: 'tokens/base.json',
   })),
 ];
+
+const RUNTIME_THEMES = {
+  'default-dark': DEFAULT_DARK,
+};
+
+function copyData(value) {
+  return JSON.parse(JSON.stringify(value));
+}
 
 export let THEME_RULE_BLOCKS = [
   {
@@ -399,6 +409,27 @@ export function listThemeRuleBlocks(filter = {}) {
 
 export function getThemeRuleBlocks(themeName) {
   return listThemeRuleBlocks({ theme: themeName });
+}
+
+export function getThemeCssTokens(themeName) {
+  return { ...(RUNTIME_THEMES[themeName]?.tokens || {}) };
+}
+
+export function getThemeRecipe(themeName) {
+  let theme = getTheme(themeName);
+  let tokens = getThemeTokens(themeName);
+  if (!theme || !tokens) return undefined;
+  let cssTokens = getThemeCssTokens(themeName);
+  return {
+    name: themeName,
+    theme: { ...theme },
+    tokenFile: theme.path,
+    tokens: copyData(tokens),
+    flatTokens: copyData(flattenTokens(tokens)),
+    cssTokens,
+    cssTokenSource: RUNTIME_THEMES[themeName] ? 'runtime-theme' : 'not-runtime-complete',
+    ruleBlocks: copyData(getThemeRuleBlocks(themeName)),
+  };
 }
 
 export function flattenTokens(tokenTree, prefix = '', out = {}) {

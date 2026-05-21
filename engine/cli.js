@@ -37,6 +37,7 @@ import {
   THEME_NAMES,
   getTheme,
   getThemeTokens,
+  getThemeRecipe,
   listTokenFiles,
   listThemeRuleBlocks,
   RULESETS,
@@ -643,6 +644,7 @@ async function cmdDiscover(options = {}) {
         tokens: getThemeTokens(name),
       })),
       themeRuleBlocks: listThemeRuleBlocks(),
+      themeRecipes: THEME_NAMES.map((name) => getThemeRecipe(name)).filter(Boolean),
       tokenFiles: listTokenFiles(),
       rulesets: RULESETS.map((rs) => ({
         name: rs.name,

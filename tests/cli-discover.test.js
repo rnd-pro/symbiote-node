@@ -245,6 +245,19 @@ describe('discover command', () => {
       assert.ok(geometry.derivations.some((item) => item.output === 'geometry.treeRowHeight'));
     });
 
+    it('exposes theme recipes for agent composition', () => {
+      assert.ok(Array.isArray(data.manifest.themeRecipes));
+      let recipe = data.manifest.themeRecipes.find((item) => item.name === 'default-dark');
+      assert.ok(recipe, 'default-dark recipe must be discoverable');
+      assert.equal(recipe.tokenFile, 'tokens/themes/default-dark.json');
+      assert.equal(recipe.flatTokens['color.accent'].$value, '#4c8bf5');
+      assert.equal(recipe.cssTokens['--sn-layout-border'], 'transparent');
+      assert.equal(recipe.cssTokenSource, 'runtime-theme');
+      assert.ok(recipe.ruleBlocks.some((block) => block.kind === 'component-alias'));
+      let darkRecipe = data.manifest.themeRecipes.find((item) => item.name === 'dark');
+      assert.equal(darkRecipe.cssTokenSource, 'not-runtime-complete');
+    });
+
     it('exposes rulesets with inline rules', () => {
       assert.ok(data.manifest.rulesets.length >= 1);
       let symbiote = data.manifest.rulesets.find((r) => r.name === 'symbiote-3x');

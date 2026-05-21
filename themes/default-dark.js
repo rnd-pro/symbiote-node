@@ -144,6 +144,11 @@ const DEFAULT_DARK_TOKENS = {
   '--sn-tree-badge-bg': 'var(--sn-node-hover)',
   '--sn-tree-badge-color': 'var(--sn-text-dim)',
   '--sn-tree-badge-size': '10px',
+  '--sn-tree-panel-font-size': '12px',
+  '--sn-tree-panel-toolbar-gap': '6px',
+  '--sn-tree-panel-toolbar-padding': '6px 8px',
+  '--sn-tree-panel-row-min-height': 'var(--sn-tree-row-min-height)',
+  '--sn-tree-panel-label-weight': 'var(--sn-tree-label-weight)',
 
   '--sn-list-item-bg': 'transparent',
   '--sn-list-item-hover-bg': 'var(--sn-node-hover)',

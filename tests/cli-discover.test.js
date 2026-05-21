@@ -212,6 +212,7 @@ describe('discover command', () => {
         'chat-sidebar-sub-item',
         'sn-list-item',
         'sn-tree-view',
+        'sn-tree-panel',
         'node-socket',
         'cell-bg',
         'quick-toolbar',
@@ -236,6 +237,8 @@ describe('discover command', () => {
       assert.ok(components.get('source-editor').contract.events.some((event) => event.name === 'source-editor-input'));
       assert.ok(components.get('sn-list-item').contract.events.some((event) => event.name === 'sn-list-item-select'));
       assert.ok(components.get('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));
+      assert.ok(components.get('sn-tree-panel').contract.methods.some((method) => method.name === 'showPlaceholder'));
+      assert.ok(components.get('sn-tree-panel').contract.events.some((event) => event.name === 'sn-tree-panel-filter'));
       assert.ok(components.get('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
       assert.ok(components.get('graph-explorer-shell').contract.slots.some((slot) => slot.name === 'canvas'));
       assert.ok(components.get('context-menu').contract.methods.some((method) => method.name === 'show'));

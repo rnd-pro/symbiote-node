@@ -37,6 +37,7 @@ const UI_NAMED_EXPORTS = new Set([
   'ChatSidebarSubItem',
   'ListItem',
   'TreeView',
+  'TreePanel',
   'GraphFrame',
 ]);
 
@@ -1449,6 +1450,80 @@ export let COMPONENTS = [
         '--sn-tree-indent',
         '--sn-tree-icon-size',
         '--sn-tree-row-radius',
+        '--sn-tree-row-selected-bg',
+      ],
+    },
+  },
+  {
+    tagName: 'sn-tree-panel',
+    className: 'TreePanel',
+    module: 'tree/TreePanel/TreePanel.js',
+    category: 'tree',
+    description: 'Generic tree panel with filter input, collapse action, placeholder state, and an embedded tree view.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['tree-data', 'tree-panel-chrome', 'filter', 'expand-collapse', 'placeholder', 'local-storage'],
+      attributes: [
+        { name: 'title', type: 'string', description: 'Optional panel heading text.' },
+        { name: 'title-icon', type: 'string', description: 'Optional Material Symbols icon name shown before the title.' },
+        { name: 'placeholder', type: 'string', description: 'Placeholder text shown before tree data is available.' },
+        { name: 'filter-placeholder', type: 'string', description: 'Search input placeholder.' },
+        { name: 'collapse-title', type: 'string', description: 'Accessible title for the collapse-all action.' },
+      ],
+      properties: [
+        { name: 'items', type: 'array', description: 'Tree item descriptors forwarded to the embedded tree view.' },
+        { name: 'selectedId', type: 'string', description: 'Selected item id or path.' },
+        { name: 'expandedIds', type: 'array', description: 'Expanded item ids.' },
+        { name: 'defaultExpandedIds', type: 'array', description: 'Initial expanded ids when storage has no value.' },
+        { name: 'filterText', type: 'string', description: 'Filter text mirrored to the input and embedded tree view.' },
+        { name: 'storageKey', type: 'string', description: 'Optional localStorage key for expanded state.' },
+        { name: 'toggleBranchesOnSelect', type: 'boolean', description: 'Toggles branch rows when selected.' },
+      ],
+      methods: [
+        { name: 'setItems', type: 'function', description: 'Replaces tree data.' },
+        { name: 'collapseAll', type: 'function', description: 'Collapses all branches.' },
+        { name: 'expandAncestors', type: 'function', description: 'Expands ancestors for an id or path.' },
+        { name: 'scrollSelectedIntoView', type: 'function', description: 'Scrolls selected row into view.' },
+        { name: 'showPlaceholder', type: 'function', description: 'Shows placeholder text and hides the embedded tree.' },
+        { name: 'showTree', type: 'function', description: 'Shows the embedded tree and hides the placeholder.' },
+      ],
+      events: [
+        {
+          name: 'sn-tree-select',
+          description: 'Bubbles selected item events from the embedded tree view.',
+          detail: [{ name: 'item', type: 'object', required: true }],
+        },
+        {
+          name: 'sn-tree-dragstart',
+          description: 'Bubbles drag item and payload metadata from the embedded tree view.',
+          detail: [
+            { name: 'item', type: 'object', required: true },
+            { name: 'payload', type: 'any' },
+          ],
+        },
+        {
+          name: 'sn-tree-toggle',
+          description: 'Bubbles branch toggle events from the embedded tree view.',
+          detail: [{ name: 'item', type: 'object' }],
+        },
+        {
+          name: 'sn-tree-panel-filter',
+          description: 'Emits when the panel filter input changes.',
+          detail: [{ name: 'filterText', type: 'string' }],
+        },
+        {
+          name: 'sn-tree-panel-collapse',
+          description: 'Emits after the panel collapse-all action is requested.',
+        },
+      ],
+      themeAliases: [
+        '--sn-tree-panel-font-size',
+        '--sn-tree-panel-toolbar-gap',
+        '--sn-tree-panel-toolbar-padding',
+        '--sn-tree-panel-row-min-height',
+        '--sn-tree-panel-label-weight',
         '--sn-tree-row-selected-bg',
       ],
     },

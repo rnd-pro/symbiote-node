@@ -264,6 +264,14 @@ describe('With DOM shim', () => {
     assert.ok(customElements.get('sn-tree-view'));
   });
 
+  it('TreePanel can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../tree/TreePanel/TreePanel.js'),
+      'TreePanel must import without throwing'
+    );
+    assert.ok(customElements.get('sn-tree-panel'));
+  });
+
   it('SourceEditor can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../display/SourceEditor/SourceEditor.js'),

@@ -173,6 +173,8 @@ describe('component registry', () => {
     assert.equal(getComponentModule('sn-list-item'), 'list/ListItem/ListItem.js');
     assert.equal(getComponent('sn-tree-view').category, 'tree');
     assert.equal(getComponentModule('sn-tree-view'), 'tree/TreeView/TreeView.js');
+    assert.equal(getComponent('sn-tree-panel').category, 'tree');
+    assert.equal(getComponentModule('sn-tree-panel'), 'tree/TreePanel/TreePanel.js');
     assert.equal(getComponentModule('sn-loading-overlay'), 'display/LoadingOverlay/LoadingOverlay.js');
     assert.equal(getComponent('output-list-preview').category, 'display');
     assert.equal(getComponentModule('output-graph-preview'), 'display/OutputGraphPreview/OutputGraphPreview.js');
@@ -234,6 +236,7 @@ describe('component registry', () => {
       'chat-sidebar-sub-item',
       'sn-list-item',
       'sn-tree-view',
+      'sn-tree-panel',
       'node-socket',
       'cell-bg',
       'quick-toolbar',
@@ -258,6 +261,8 @@ describe('component registry', () => {
     assert.ok(getComponent('source-editor').contract.events.some((event) => event.name === 'source-editor-input'));
     assert.ok(getComponent('sn-loading-overlay').contract.methods.some((method) => method.name === 'setProgress'));
     assert.ok(getComponent('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));
+    assert.ok(getComponent('sn-tree-panel').contract.methods.some((method) => method.name === 'showPlaceholder'));
+    assert.ok(getComponent('sn-tree-panel').contract.events.some((event) => event.name === 'sn-tree-panel-filter'));
     assert.ok(getComponent('chat-composer').contract.methods.some((method) => method.name === 'setValue'));
     assert.ok(getComponent('source-viewer').contract.methods.some((method) => method.name === 'showFile'));
     assert.ok(getComponent('canvas-graph').contract.events.some((event) => event.name === 'file-selected'));

@@ -4121,6 +4121,233 @@
       ]
     },
     {
+      "path": "tree/TreePanel/TreePanel.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "TreePanel",
+          "tagName": "sn-tree-panel",
+          "description": "Generic tree panel with filter input, collapse action, placeholder state, and an embedded tree view.",
+          "attributes": [
+            {
+              "name": "title",
+              "description": "Optional panel heading text.",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "title-icon",
+              "description": "Optional Material Symbols icon name shown before the title.",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "placeholder",
+              "description": "Placeholder text shown before tree data is available.",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "filter-placeholder",
+              "description": "Search input placeholder.",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "collapse-title",
+              "description": "Accessible title for the collapse-all action.",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "items",
+              "type": {
+                "text": "array"
+              },
+              "description": "Tree item descriptors forwarded to the embedded tree view."
+            },
+            {
+              "kind": "field",
+              "name": "selectedId",
+              "type": {
+                "text": "string"
+              },
+              "description": "Selected item id or path."
+            },
+            {
+              "kind": "field",
+              "name": "expandedIds",
+              "type": {
+                "text": "array"
+              },
+              "description": "Expanded item ids."
+            },
+            {
+              "kind": "field",
+              "name": "defaultExpandedIds",
+              "type": {
+                "text": "array"
+              },
+              "description": "Initial expanded ids when storage has no value."
+            },
+            {
+              "kind": "field",
+              "name": "filterText",
+              "type": {
+                "text": "string"
+              },
+              "description": "Filter text mirrored to the input and embedded tree view."
+            },
+            {
+              "kind": "field",
+              "name": "storageKey",
+              "type": {
+                "text": "string"
+              },
+              "description": "Optional localStorage key for expanded state."
+            },
+            {
+              "kind": "field",
+              "name": "toggleBranchesOnSelect",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Toggles branch rows when selected."
+            },
+            {
+              "kind": "method",
+              "name": "setItems",
+              "type": {
+                "text": "function"
+              },
+              "description": "Replaces tree data."
+            },
+            {
+              "kind": "method",
+              "name": "collapseAll",
+              "type": {
+                "text": "function"
+              },
+              "description": "Collapses all branches."
+            },
+            {
+              "kind": "method",
+              "name": "expandAncestors",
+              "type": {
+                "text": "function"
+              },
+              "description": "Expands ancestors for an id or path."
+            },
+            {
+              "kind": "method",
+              "name": "scrollSelectedIntoView",
+              "type": {
+                "text": "function"
+              },
+              "description": "Scrolls selected row into view."
+            },
+            {
+              "kind": "method",
+              "name": "showPlaceholder",
+              "type": {
+                "text": "function"
+              },
+              "description": "Shows placeholder text and hides the embedded tree."
+            },
+            {
+              "kind": "method",
+              "name": "showTree",
+              "type": {
+                "text": "function"
+              },
+              "description": "Shows the embedded tree and hides the placeholder."
+            }
+          ],
+          "events": [
+            {
+              "name": "sn-tree-select",
+              "description": "Bubbles selected item events from the embedded tree view.",
+              "type": {
+                "text": "CustomEvent"
+              }
+            },
+            {
+              "name": "sn-tree-dragstart",
+              "description": "Bubbles drag item and payload metadata from the embedded tree view.",
+              "type": {
+                "text": "CustomEvent"
+              }
+            },
+            {
+              "name": "sn-tree-toggle",
+              "description": "Bubbles branch toggle events from the embedded tree view.",
+              "type": {
+                "text": "CustomEvent"
+              }
+            },
+            {
+              "name": "sn-tree-panel-filter",
+              "description": "Emits when the panel filter input changes.",
+              "type": {
+                "text": "CustomEvent"
+              }
+            },
+            {
+              "name": "sn-tree-panel-collapse",
+              "description": "Emits after the panel collapse-all action is requested.",
+              "type": {
+                "text": "CustomEvent"
+              }
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-tree-panel-font-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-tree-panel-toolbar-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-tree-panel-toolbar-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-tree-panel-row-min-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-tree-panel-label-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-tree-row-selected-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-tree-panel",
+          "declaration": {
+            "name": "TreePanel"
+          }
+        }
+      ]
+    },
+    {
       "path": "node/GraphFrame/GraphFrame.js",
       "declarations": [
         {

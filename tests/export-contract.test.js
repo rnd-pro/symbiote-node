@@ -166,6 +166,7 @@ const UI_EXPORTS = [
   ['ChatSidebarSubItem', 'function'],
   ['ListItem', 'function'],
   ['TreeView', 'function'],
+  ['TreePanel', 'function'],
   ['OutputListPreview', 'function'],
   ['OutputGraphPreview', 'function'],
   ['sharedUiStyles', 'string'],

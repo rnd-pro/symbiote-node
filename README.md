@@ -106,12 +106,13 @@ item.addEventListener('sn-list-item-select', (event) => {
 
 ### Tree UI
 
-`TreeView` is a generic browser-only tree primitive from `symbiote-node/ui`. It owns neutral tree rendering, selection, expansion state, branch-aware filtering, optional expanded-state persistence, and drag payload events. Host applications provide data, routing, file loading, and persistence policy.
+`TreeView` is a generic browser-only tree primitive from `symbiote-node/ui`. It owns neutral tree rendering, selection, expansion state, branch-aware filtering, optional expanded-state persistence, and drag payload events. `TreePanel` wraps that primitive with standard filter, collapse, and placeholder chrome for application sidebars. Host applications provide data, routing, file loading, and persistence policy.
 
 ```javascript
-import { TreeView } from 'symbiote-node/ui';
+import { TreePanel, TreeView } from 'symbiote-node/ui';
 
 const tree = document.querySelector('sn-tree-view');
+const panel = document.querySelector('sn-tree-panel');
 
 tree.setItems([
   {
@@ -139,6 +140,11 @@ tree.expandedIds = ['src'];
 tree.filterText = 'app';
 tree.addEventListener('sn-tree-select', (event) => {
   openItem(event.detail.item);
+});
+
+panel.setItems(tree.items);
+panel.addEventListener('sn-tree-panel-filter', (event) => {
+  saveFilterPreference(event.detail.filterText);
 });
 ```
 

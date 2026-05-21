@@ -24,58 +24,89 @@ export function bindListItemSelect(host, eventName, detailFactory, options = {})
   });
 }
 
+function getTreePanel(host) {
+  return host.ref?.panel || null;
+}
+
+function getTree(host) {
+  return host.ref?.tree || getTreePanel(host)?.tree || null;
+}
+
+function getTreeController(host) {
+  return getTreePanel(host) || getTree(host);
+}
+
 export function setupTreePanel(host, options = {}) {
-  let tree = host.ref?.tree;
-  if (!tree?.setItems || host._treePanelReady) return tree || null;
+  let target = getTreeController(host);
+  if (!target?.setItems || host._treePanelReady) return target || null;
   host._treePanelReady = true;
   if (options.storageKey) {
-    tree.storageKey = options.storageKey;
-    if (options.defaultExpandedIds) tree.defaultExpandedIds = options.defaultExpandedIds;
+    target.storageKey = options.storageKey;
+    if (options.defaultExpandedIds) target.defaultExpandedIds = options.defaultExpandedIds;
   }
-  tree.toggleBranchesOnSelect = options.toggleBranchesOnSelect !== false;
+  target.toggleBranchesOnSelect = options.toggleBranchesOnSelect !== false;
   if (options.onSelect) {
-    tree.addEventListener('sn-tree-select', (event) => options.onSelect(event.detail?.item, event));
+    target.addEventListener('sn-tree-select', (event) => options.onSelect(event.detail?.item, event));
   }
-  tree.addEventListener('sn-tree-toggle', (event) => {
+  target.addEventListener('sn-tree-toggle', (event) => {
     options.onToggle?.(event.detail?.item, event);
   });
-  return tree;
+  target.addEventListener('sn-tree-panel-filter', (event) => {
+    if (host.$ && Object.hasOwn(host.$, 'filterText')) {
+      host.$.filterText = event.detail?.filterText || '';
+    }
+    options.onFilter?.(event.detail?.filterText || '', event);
+  });
+  return target;
 }
 
 export function setTreeItems(host, items, filterText = '') {
-  let tree = host.ref?.tree;
-  if (!tree) return;
-  if (tree.setItems) {
-    tree.setItems(items);
+  let target = getTreeController(host);
+  if (!target) return;
+  if (target.setItems) {
+    target.setItems(items);
   } else {
-    tree.items = items;
+    target.items = items;
   }
-  tree.filterText = filterText;
+  target.filterText = filterText;
 }
 
 export function showTreePlaceholder(host, message) {
+  let panel = getTreePanel(host);
+  if (panel?.showPlaceholder) {
+    panel.showPlaceholder(message);
+    return;
+  }
   if (host.ref?.placeholder) {
     host.ref.placeholder.textContent = message;
     host.ref.placeholder.hidden = false;
   }
-  if (host.ref?.tree) host.ref.tree.hidden = true;
+  let tree = getTree(host);
+  if (tree) tree.hidden = true;
 }
 
 export function showTree(host) {
+  let panel = getTreePanel(host);
+  if (panel?.showTree) {
+    panel.showTree();
+    return;
+  }
   if (host.ref?.placeholder) host.ref.placeholder.hidden = true;
-  if (host.ref?.tree) host.ref.tree.hidden = false;
+  let tree = getTree(host);
+  if (tree) tree.hidden = false;
 }
 
 export function syncTreeFilter(host, filterText) {
-  if (host.ref?.tree) host.ref.tree.filterText = filterText;
+  let target = getTreeController(host);
+  if (target) target.filterText = filterText;
 }
 
 export function collapseTree(host) {
-  host.ref?.tree?.collapseAll?.();
+  getTreeController(host)?.collapseAll?.();
 }
 
 export function highlightTreePath(host, path, { scroll = false } = {}) {
-  let tree = host.ref?.tree;
+  let tree = getTreeController(host);
   if (!tree || !path) return;
   tree.expandAncestors?.(path);
   tree.selectedId = path;

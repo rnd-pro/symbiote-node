@@ -92,8 +92,8 @@ export let THEME_ELEMENT_GROUPS = [
   {
     name: 'row',
     description: 'Reusable list/tree/navigation rows with hover, active, selected, and focus states.',
-    tokens: ['--sn-tree-row-height', '--sn-tree-row-hover-bg', '--sn-tree-row-selected-bg', '--sn-list-item-hover-bg', '--sn-list-item-active-bg'],
-    usedBy: ['sn-tree-view', 'sn-list-item', 'chat-list-item', 'chat-sidebar-item'],
+    tokens: ['--sn-tree-row-height', '--sn-tree-panel-row-min-height', '--sn-tree-row-hover-bg', '--sn-tree-row-selected-bg', '--sn-list-item-hover-bg', '--sn-list-item-active-bg'],
+    usedBy: ['sn-tree-view', 'sn-tree-panel', 'sn-list-item', 'chat-list-item', 'chat-sidebar-item'],
   },
   {
     name: 'input',
@@ -277,6 +277,7 @@ export let THEME_RULE_BLOCKS = [
       '--sn-layout-gap-bg',
       '--sn-layout-border',
       '--sn-tree-row-height',
+      '--sn-tree-panel-row-min-height',
       '--sn-tree-row-selected-bg',
       '--sn-composer-bg',
       '--sn-chat-message-bg',
@@ -285,11 +286,12 @@ export let THEME_RULE_BLOCKS = [
       '--sn-source-editor-bg',
       '--sn-list-item-active-bg',
     ],
-    appliesTo: ['panel-layout', 'sn-tree-view', 'chat-composer', 'chat-transcript', 'project-tabs', 'source-viewer', 'source-editor', 'sn-list-item', 'sn-loading-overlay'],
+    appliesTo: ['panel-layout', 'sn-tree-view', 'sn-tree-panel', 'chat-composer', 'chat-transcript', 'project-tabs', 'source-viewer', 'source-editor', 'sn-list-item', 'sn-loading-overlay'],
     formula: 'Component aliases bridge design tokens to component CSS without product-level style patches.',
     derivations: [
       { output: '--sn-layout-border', inputs: ['component.layoutBorder'], expression: 'transparent', description: 'Layout split gaps stay transparent without mutating the generic node border.' },
       { output: '--sn-tree-row-selected-bg', inputs: ['--sn-accent-bg-subtle'], expression: 'var(--sn-accent-bg-subtle)', description: 'Tree selection uses the shared subtle accent surface.' },
+      { output: '--sn-tree-panel-row-min-height', inputs: ['--sn-tree-row-min-height'], expression: 'var(--sn-tree-row-min-height)', description: 'Tree panels inherit the tree row geometry unless a host specializes the panel.' },
       { output: '--sn-composer-bg', inputs: ['--sn-node-bg'], expression: 'var(--sn-node-bg)', description: 'Chat composer inherits the normal node surface.' },
       { output: '--sn-tabs-active-bg', inputs: ['--sn-node-bg'], expression: 'var(--sn-node-bg)', description: 'Active project tabs align with node surfaces.' },
       { output: '--sn-source-editor-bg', inputs: ['--sn-bg'], expression: 'var(--sn-bg)', description: 'Source editing uses the root background for code contrast.' },

@@ -46,6 +46,9 @@ function createTree() {
 
 function createHost(tree = createTree()) {
   return {
+    $: {
+      filterText: '',
+    },
     ref: {
       placeholder: {
         hidden: true,
@@ -54,6 +57,21 @@ function createHost(tree = createTree()) {
       tree,
     },
   };
+}
+
+function createPanel(tree = createTree()) {
+  let panel = createTree();
+  panel.tree = tree;
+  panel.placeholderText = '';
+  panel.showingTree = false;
+  panel.showPlaceholder = (message) => {
+    panel.placeholderText = message;
+    panel.showingTree = false;
+  };
+  panel.showTree = () => {
+    panel.showingTree = true;
+  };
+  return panel;
 }
 
 test('setupTreePanel wires provider tree defaults and events once', () => {
@@ -81,6 +99,37 @@ test('setupTreePanel wires provider tree defaults and events once', () => {
 
   assert.deepEqual(selected, [{ id: 'a' }]);
   assert.deepEqual(toggled, [{ id: 'b' }]);
+});
+
+test('tree panel helpers prefer library panel controller when present', () => {
+  let selected = [];
+  let tree = createTree();
+  let panel = createPanel(tree);
+  let host = {
+    $: { filterText: '' },
+    ref: { panel },
+  };
+
+  assert.equal(setupTreePanel(host, {
+    storageKey: 'panel-tree',
+    onSelect: (item) => selected.push(item),
+  }), panel);
+
+  assert.equal(panel.storageKey, 'panel-tree');
+  panel.emit('sn-tree-select', { item: { id: 'panel-item' } });
+  panel.emit('sn-tree-panel-filter', { filterText: 'panel' });
+  assert.deepEqual(selected, [{ id: 'panel-item' }]);
+  assert.equal(host.$.filterText, 'panel');
+
+  setTreeItems(host, [{ id: 'a' }], 'a');
+  assert.deepEqual(panel.items, [{ id: 'a' }]);
+  assert.equal(panel.filterText, 'a');
+
+  showTreePlaceholder(host, 'No matches');
+  assert.equal(panel.placeholderText, 'No matches');
+
+  showTree(host);
+  assert.equal(panel.showingTree, true);
 });
 
 test('tree panel helpers update provider tree and placeholder state', () => {

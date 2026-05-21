@@ -118,7 +118,7 @@ export class GraphExplorerShell extends Symbiote {
   }
 
   getCanvasGraph() {
-    return this.querySelector('canvas-graph, pg-canvas-graph');
+    return this.querySelector('canvas-graph');
   }
 }
 

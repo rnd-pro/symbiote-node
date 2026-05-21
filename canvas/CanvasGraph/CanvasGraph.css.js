@@ -1,5 +1,6 @@
 export default `
-  :host {
+  :host,
+  canvas-graph {
     display: block;
     position: relative;
     width: 100%;

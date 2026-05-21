@@ -118,7 +118,7 @@ test('GraphExplorerShell exposes graph shell API without Portal policy', async (
     if (selector === '.graph-explorer-stats') return stats;
     if (selector === 'sn-loading-overlay, loading-overlay') return loader;
     if (selector === 'node-canvas') return nodeCanvas;
-    if (selector === 'canvas-graph, pg-canvas-graph') return canvasGraph;
+    if (selector === 'canvas-graph') return canvasGraph;
     return null;
   };
 
@@ -186,6 +186,7 @@ test('light DOM CSS contracts cover slotted graph shell and loading overlay stat
 
   assert.match(shellCss, /graph-explorer-shell > \[slot="canvas"\]/);
   assert.match(shellCss, /graph-explorer-shell > \[slot="overlay"\]/);
+  assert.doesNotMatch(shellCss, /pg-canvas-graph/);
   assert.match(loadingCss, /sn-loading-overlay\[hidden-state\] \.sn-loading-overlay/);
 });
 

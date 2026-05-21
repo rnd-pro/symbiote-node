@@ -176,6 +176,12 @@ describe('With DOM shim', () => {
     assert.equal(graph._isSemanticPath('cluster:cluster-a'), false);
   });
 
+  it('CanvasGraph publishes light DOM host styles for provider consumers', async () => {
+    let { default: css } = await import('../canvas/CanvasGraph/CanvasGraph.css.js');
+    assert.match(css, /canvas-graph\s*\{/);
+    assert.match(css, /canvas-graph\s*>\s*canvas/);
+  });
+
   it('GraphExplorerShell can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../canvas/GraphExplorerShell/GraphExplorerShell.js'),

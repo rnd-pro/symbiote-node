@@ -10,8 +10,7 @@ graph-explorer-shell {
 
 graph-explorer-shell .graph-explorer-canvas-layer,
 graph-explorer-shell node-canvas,
-graph-explorer-shell canvas-graph,
-graph-explorer-shell pg-canvas-graph {
+graph-explorer-shell canvas-graph {
   width: 100%;
   height: 100%;
 }
@@ -31,8 +30,7 @@ graph-explorer-shell > [slot="overlay"] {
 }
 
 graph-explorer-shell node-canvas[hidden],
-graph-explorer-shell canvas-graph[hidden],
-graph-explorer-shell pg-canvas-graph[hidden] {
+graph-explorer-shell canvas-graph[hidden] {
   display: none;
 }
 
@@ -68,7 +66,7 @@ graph-explorer-shell .graph-explorer-btn {
 
 graph-explorer-shell .graph-explorer-btn:focus-visible,
 graph-explorer-shell .graph-explorer-icon-btn:focus-visible {
-  outline: 2px solid var(--sn-node-selected, #d4a04a);
+  outline: 2px solid var(--sn-node-selected, #4c8bf5);
   outline-offset: 2px;
 }
 
@@ -77,8 +75,8 @@ graph-explorer-shell .graph-explorer-btn:hover {
 }
 
 graph-explorer-shell .graph-explorer-btn[data-active] {
-  border-color: var(--sn-node-selected, #d4a04a);
-  background: var(--sn-warning-bg, rgba(212, 160, 74, 0.1));
+  border-color: var(--sn-node-selected, #4c8bf5);
+  background: var(--sn-accent-bg-subtle, rgba(76, 139, 245, 0.1));
 }
 
 graph-explorer-shell .graph-explorer-btn .material-symbols-outlined {

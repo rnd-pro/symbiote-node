@@ -1,8 +1,8 @@
 export default /*css*/ `
 :host {
   display: block;
-  height: 38px;
-  background: transparent;
+  height: var(--sn-tabs-height, 38px);
+  background: var(--sn-tabs-bg, transparent);
   flex-shrink: 0;
   user-select: none;
   position: relative;
@@ -15,7 +15,7 @@ export default /*css*/ `
   left: 0;
   right: 0;
   height: 1px;
-  background: var(--sn-node-border, rgba(255,255,255,0.08));
+  background: var(--sn-tabs-border, var(--sn-node-border, rgba(255,255,255,0.08)));
   z-index: 1;
 }
 
@@ -41,7 +41,7 @@ project-tab-item {
   align-items: center;
   gap: 6px;
   padding: 0 10px 0 12px;
-  height: 32px;
+  height: var(--sn-tabs-item-height, 32px);
   border: 1px solid transparent;
   border-bottom: none;
   background: transparent;
@@ -52,7 +52,7 @@ project-tab-item {
   white-space: nowrap;
   transition: background 0.15s, color 0.15s;
   position: relative;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--sn-tabs-radius, 8px 8px 0 0);
   margin: 0 2px;
 }
 
@@ -63,13 +63,13 @@ project-tab-item .material-symbols-outlined {
 
 .tab:hover,
 project-tab-item:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--sn-tabs-hover-bg, rgba(255, 255, 255, 0.04));
   color: var(--sn-text, #e0e0e0);
 }
 
 .tab[active],
 project-tab-item[active] {
-  background: var(--sn-node-bg, #2a2a2a);
+  background: var(--sn-tabs-active-bg, var(--sn-node-bg, #2a2a2a));
   color: var(--sn-text, #e0e0e0);
 }
 
@@ -82,7 +82,7 @@ project-tab-item[active]::before {
   width: 12px;
   height: 12px;
   pointer-events: none;
-  background: radial-gradient(circle at 0 0, transparent 11.5px, var(--sn-node-bg, #2a2a2a) 12px);
+  background: radial-gradient(circle at 0 0, transparent 11.5px, var(--sn-tabs-active-bg, var(--sn-node-bg, #2a2a2a)) 12px);
 }
 
 .tab[active]::after,
@@ -94,7 +94,7 @@ project-tab-item[active]::after {
   width: 12px;
   height: 12px;
   pointer-events: none;
-  background: radial-gradient(circle at 100% 0, transparent 11.5px, var(--sn-node-bg, #2a2a2a) 12px);
+  background: radial-gradient(circle at 100% 0, transparent 11.5px, var(--sn-tabs-active-bg, var(--sn-node-bg, #2a2a2a)) 12px);
 }
 
 .tab:not([active]):not(:hover)::after,
@@ -105,7 +105,7 @@ project-tab-item:not([active]):not(:hover)::after {
   top: 25%;
   height: 50%;
   width: 1px;
-  background: var(--sn-node-border, rgba(255,255,255,0.1));
+  background: var(--sn-tabs-divider, var(--sn-node-border, rgba(255,255,255,0.1)));
 }
 
 .tab:not([active]):not(:hover):has(+ .tab[active])::after,

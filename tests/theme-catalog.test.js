@@ -61,7 +61,11 @@ describe('theme token files', () => {
     assert.equal(getThemeTokens('default-dark').color.accent.$value, '#4c8bf5');
     assert.equal(getThemeTokens('default-dark').component.panelBackground.$value, '#222222');
     assert.equal(getThemeTokens('default-dark').component.layoutGapBackground.$value, 'transparent');
+    assert.equal(getThemeTokens('default-dark').component.layoutBorder.$value, 'transparent');
     assert.equal(getThemeTokens('default-dark').component.accentBackground.$value, 'rgba(76, 139, 245, 0.12)');
+    assert.equal(getThemeTokens('default-dark').geometry.treeRowHeight.$value, '22px');
+    assert.equal(getThemeTokens('default-dark').typography.iconFont.$value, "'Material Symbols Outlined'");
+    assert.equal(getThemeTokens('default-dark').alias.composerBackground.$value, 'var(--sn-node-bg)');
     assert.equal(getTheme('dark').path, 'tokens/themes/dark.json');
     assert.equal(getThemeTokens('dark').color.accent.$type, 'color');
     assert.equal(flattenTokens(getThemeTokens('dark'))['color.accent'].$value, 'hsl(215, 60%, 65%)');

@@ -27,7 +27,7 @@ sn-tree-view[hidden] {
   grid-template-columns: 18px 18px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: var(--sn-tree-gap, 6px);
-  min-height: var(--sn-tree-row-min-height, 28px);
+  min-height: var(--sn-tree-row-min-height, var(--sn-tree-row-height, 28px));
   padding-block: var(--sn-tree-row-padding-block, 3px);
   padding-inline: calc(var(--sn-tree-depth, 0) * var(--sn-tree-indent-width)) 8px;
   border: 1px solid transparent;

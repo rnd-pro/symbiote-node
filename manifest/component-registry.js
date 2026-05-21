@@ -314,6 +314,10 @@ export let COMPONENTS = [
         },
       ],
       themeAliases: [
+        '--sn-source-editor-bg',
+        '--sn-source-editor-color',
+        '--sn-source-editor-padding',
+        '--sn-source-editor-font-size',
         '--sn-editor-bg',
         '--sn-editor-text',
         '--sn-editor-border',

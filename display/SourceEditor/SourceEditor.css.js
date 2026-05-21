@@ -28,7 +28,7 @@ source-editor textarea {
 }
 
 source-editor textarea::placeholder {
-  color: var(--sn-text-dim, hsl(30, 10%, 55%));
+  color: var(--sn-source-editor-placeholder-color, var(--sn-text-dim, hsl(30, 10%, 55%)));
 }
 
 source-editor textarea:disabled,

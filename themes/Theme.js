@@ -37,7 +37,7 @@ const LAYOUT_TOKEN_MAP = {
   '--text-main': '--sn-text',
   '--text-dim': '--sn-text-dim',
   '--text-muted': '--sn-text-dim',
-  '--layout-border': '--sn-node-border',
+  '--layout-border': '--sn-layout-border',
   '--layout-highlight': '--sn-node-selected',
   '--border-popup': '--sn-ctx-border',
   '--accent': '--sn-node-selected',

@@ -1,9 +1,9 @@
 export default `
 :host {
-  --chat-composer-bg: var(--sn-node-bg, #222222);
-  --chat-composer-action-bg: var(--sn-node-hover, #444444);
+  --chat-composer-bg: var(--sn-composer-bg, var(--sn-node-bg, #222222));
+  --chat-composer-action-bg: var(--sn-composer-action-bg, var(--sn-node-hover, #444444));
   display: block;
-  padding: 12px 20px 16px;
+  padding: var(--sn-composer-padding, 12px 20px 16px);
   position: relative;
   z-index: 2;
 }
@@ -11,10 +11,10 @@ export default `
 .composer-body {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: var(--sn-composer-control-gap, 8px);
   background: var(--chat-composer-bg);
-  border-radius: 20px;
-  padding: 8px 8px 8px 16px;
+  border-radius: var(--sn-composer-radius, 20px);
+  padding: var(--sn-composer-body-padding, 8px 8px 8px 16px);
   transition: background 0.15s;
 }
 
@@ -33,7 +33,7 @@ export default `
   font-size: 13px;
   line-height: 1.4;
   resize: none;
-  min-height: 20px;
+  min-height: var(--sn-composer-input-min-height, 20px);
   max-height: 200px;
   overflow-y: auto;
 }

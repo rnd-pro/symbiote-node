@@ -20,9 +20,9 @@ export default `
     font-family: 'SF Mono', 'Fira Code', monospace;
     font-size: 11px;
     color: var(--sn-text-dim, hsl(30, 10%, 45%));
-    border-bottom: 1px solid var(--sn-node-border, hsl(35, 18%, 80%));
-    background: var(--sn-node-header-bg, hsl(37, 25%, 93%));
-    gap: 8px;
+    border-bottom: 1px solid var(--sn-source-border, var(--sn-node-border, hsl(35, 18%, 80%)));
+    background: var(--sn-source-header-bg, var(--sn-node-header-bg, hsl(37, 25%, 93%)));
+    gap: var(--sn-source-toolbar-gap, 8px);
   }
   .sv-filename {
     white-space: nowrap;
@@ -33,7 +33,7 @@ export default `
   .sv-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--sn-source-toolbar-gap, 8px);
     flex-shrink: 0;
   }
   .sv-stats {
@@ -46,9 +46,9 @@ export default `
     align-items: center;
     gap: 3px;
     padding: 2px 8px;
-    border: 1px solid var(--sn-node-border, hsl(35, 18%, 80%));
-    border-radius: 4px;
-    background: var(--sn-bg, hsl(37, 30%, 91%));
+    border: 1px solid var(--sn-source-border, var(--sn-node-border, hsl(35, 18%, 80%)));
+    border-radius: var(--sn-source-action-radius, 4px);
+    background: var(--sn-source-action-bg, var(--sn-bg, hsl(37, 30%, 91%)));
     color: var(--sn-text-dim, hsl(30, 10%, 45%));
     font-family: inherit;
     font-size: 10px;
@@ -58,7 +58,7 @@ export default `
     transition: all 120ms ease;
   }
   .sv-action:hover {
-    background: var(--sn-node-hover, hsl(36, 22%, 88%));
+    background: var(--sn-source-action-hover-bg, var(--sn-node-hover, hsl(36, 22%, 88%)));
     color: var(--sn-text, hsl(30, 15%, 18%));
   }
   source-viewer[mode-raw] .sv-action {

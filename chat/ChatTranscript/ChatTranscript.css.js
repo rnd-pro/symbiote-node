@@ -4,15 +4,16 @@ export default `
   flex: 1;
   min-height: 0;
   position: relative;
+  background: var(--sn-chat-bg, transparent);
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 20px 12px;
+  padding: var(--sn-chat-transcript-padding, 24px 20px 12px);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sn-chat-gap, 8px);
   position: relative;
   z-index: 1;
 }
@@ -24,7 +25,7 @@ chat-message-item {
 .scroll-bottom-btn {
   position: absolute;
   left: 50%;
-  bottom: var(--chat-transcript-scroll-bottom, 92px);
+  bottom: var(--sn-chat-scroll-bottom, var(--chat-transcript-scroll-bottom, 92px));
   z-index: 30;
   width: 32px;
   height: 32px;

@@ -176,6 +176,31 @@ describe('With DOM shim', () => {
     assert.equal(graph._isSemanticPath('cluster:cluster-a'), false);
   });
 
+  it('CanvasGraph can enter semantic clusters when focusing a child node', async () => {
+    let { CanvasGraph } = await import('../canvas/CanvasGraph/CanvasGraph.js');
+    let graph = new CanvasGraph();
+    let loadedLevels = [];
+    graph.graphDB = {
+      nodes: new Map([
+        ['cluster:backend', { id: 'cluster:backend', isGroup: true, isSemanticCluster: true }],
+        ['src/backend/file.js', { id: 'src/backend/file.js', parentId: 'cluster:backend' }],
+      ]),
+    };
+    graph.currentGroupId = null;
+    graph.loadLevel = (groupId, options) => {
+      loadedLevels.push({ groupId, options });
+      graph.currentGroupId = groupId;
+    };
+    graph.getSmooth = () => null;
+    graph.nodePositions = new Map();
+
+    graph.flyToNode('src/backend/file.js');
+
+    assert.deepEqual(loadedLevels, [
+      { groupId: 'cluster:backend', options: { enterSemanticCluster: true } },
+    ]);
+  });
+
   it('CanvasGraph publishes light DOM host styles for provider consumers', async () => {
     let { default: css } = await import('../canvas/CanvasGraph/CanvasGraph.css.js');
     assert.match(css, /canvas-graph\s*\{/);

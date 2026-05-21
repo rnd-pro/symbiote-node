@@ -45,6 +45,31 @@ export function resolveViewportAnimation(options) {
   return next;
 }
 
+export function getNextPulseQueue({ pulses = [], nodeId, startTime, duration }) {
+  return [
+    ...pulses.filter((pulse) => pulse.id !== nodeId),
+    { id: nodeId, startTime, duration },
+  ];
+}
+
+export function resolveGroupOrbitRotationFrame(options) {
+  let {
+    rotation = 0,
+    rotationSpeed = 0,
+    hovered = false,
+    dragged = false,
+  } = options;
+
+  let targetSpeed = (hovered || dragged) ? 0.025 : 0;
+  let nextSpeed = rotationSpeed + (targetSpeed - rotationSpeed) * 0.05;
+  if (Math.abs(nextSpeed) < 0.0001) nextSpeed = 0;
+
+  return {
+    rotation: rotation + nextSpeed,
+    rotationSpeed: nextSpeed,
+  };
+}
+
 export function resolveDeactivationFrame(options) {
   let { deactivating, activeNode, nextActiveNode, layerAnim } = options;
   let settled = Math.abs(layerAnim[0].scale - 1) < 0.01

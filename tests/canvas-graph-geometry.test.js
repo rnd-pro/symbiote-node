@@ -13,6 +13,8 @@ import {
 import {
   getDepthGroupsFrame,
   getLayerAnimationFrame,
+  getNextPulseQueue,
+  resolveGroupOrbitRotationFrame,
   resolveDeactivationFrame,
   resolveFocusFrame,
   resolveIdleFrame,
@@ -207,6 +209,45 @@ describe('CanvasGraph draw state helpers', () => {
     assert.equal(Number(frame[3].scale.toFixed(4)), 0.964);
     assert.equal(Number(frame[3].opacity.toFixed(4)), 0.718);
     assert.equal(layerAnim[3].scale, 1);
+  });
+
+  it('replaces an existing pulse for the same node instead of stacking rings', () => {
+    let queue = getNextPulseQueue({
+      pulses: [
+        { id: 'node-a', startTime: 10, duration: 1000 },
+        { id: 'node-b', startTime: 20, duration: 1000 },
+      ],
+      nodeId: 'node-a',
+      startTime: 30,
+      duration: 1500,
+    });
+
+    assert.deepEqual(queue, [
+      { id: 'node-b', startTime: 20, duration: 1000 },
+      { id: 'node-a', startTime: 30, duration: 1500 },
+    ]);
+  });
+
+  it('keeps active group orbit static unless the group is hovered or dragged', () => {
+    let inactive = resolveGroupOrbitRotationFrame({
+      rotation: 4,
+      rotationSpeed: 0,
+      hovered: false,
+      dragged: false,
+    });
+
+    assert.equal(inactive.rotation, 4);
+    assert.equal(inactive.rotationSpeed, 0);
+
+    let hovered = resolveGroupOrbitRotationFrame({
+      rotation: 4,
+      rotationSpeed: 0,
+      hovered: true,
+      dragged: false,
+    });
+
+    assert.equal(hovered.rotation > 4, true);
+    assert.equal(hovered.rotationSpeed > 0, true);
   });
 
   it('centers active focus around the combined node and panel bounds once', () => {

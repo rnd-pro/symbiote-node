@@ -15,6 +15,8 @@ import {
 import {
   getDepthGroupsFrame,
   getLayerAnimationFrame,
+  getNextPulseQueue,
+  resolveGroupOrbitRotationFrame,
   resolveDeactivationFrame,
   resolveFocusFrame,
   resolveIdleFrame,
@@ -287,11 +289,11 @@ export class CanvasGraph extends Symbiote {
   }
 
   pulseNode(nodeId, durationMs = 1500) {
-    this._pulses = this._pulses || [];
-    this._pulses.push({
-      id: nodeId,
+    this._pulses = getNextPulseQueue({
+      pulses: this._pulses || [],
+      nodeId,
       startTime: performance.now(),
-      duration: durationMs
+      duration: durationMs,
     });
     this.needsDraw = true;
     this._wakeLoop();
@@ -301,7 +303,7 @@ export class CanvasGraph extends Symbiote {
     const node = this.graphDB?.nodes.get(nodeId);
     if (node && node.parentId) {
       if (node.parentId !== this.currentGroupId) {
-        this.loadLevel(node.parentId);
+        this.loadLevel(node.parentId, { enterSemanticCluster: true });
         setTimeout(() => this.flyToNode(nodeId, options), 500);
         return;
       }
@@ -498,9 +500,9 @@ export class CanvasGraph extends Symbiote {
     }
   }
 
-  loadLevel(groupId = null) {
+  loadLevel(groupId = null, levelOptions = {}) {
     const requestedGroup = groupId ? this.graphDB.nodes.get(groupId) : null;
-    if (requestedGroup?.isSemanticCluster) {
+    if (requestedGroup?.isSemanticCluster && !levelOptions.enterSemanticCluster) {
       this.focusSemanticCluster(groupId);
       return;
     }
@@ -1002,10 +1004,16 @@ export class CanvasGraph extends Symbiote {
               scale: node.aScale || 1,
             });
             const isHovered = this.hoverNode && this.hoverNode.id === node.id;
+            const isDragged = this.dragNode && this.dragNode.id === node.id;
             node.aRotSpeed = node.aRotSpeed || 0;
-            const targetRotSpeed = (isActive || isHovered) ? 0.025 : 0;
-            node.aRotSpeed += (targetRotSpeed - node.aRotSpeed) * 0.05;
-            node.aRot = (node.aRot || 0) + node.aRotSpeed;
+            const rotation = resolveGroupOrbitRotationFrame({
+              rotation: node.aRot || 0,
+              rotationSpeed: node.aRotSpeed,
+              hovered: isHovered,
+              dragged: isDragged,
+            });
+            node.aRotSpeed = rotation.rotationSpeed;
+            node.aRot = rotation.rotation;
 
             for (let k = 0; k < childCount; k++) {
               const angle = (k * Math.PI * 2 / childCount) - Math.PI / 2 + node.aRot;

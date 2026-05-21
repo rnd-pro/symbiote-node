@@ -46,6 +46,7 @@ const DEFAULT_DARK_TOKENS = {
 
   '--sn-bg': 'hsl(0 0% var(--sn-lit-bg))',
   '--sn-panel-bg': 'hsl(0 0% var(--sn-lit-surface))',
+  '--sn-layout-bg': 'var(--sn-bg)',
   '--sn-layout-gap-bg': 'transparent',
   '--sn-layout-border': 'transparent',
   '--sn-layout-resizer-bg': 'transparent',
@@ -62,6 +63,7 @@ const DEFAULT_DARK_TOKENS = {
   '--sn-shadow-color': 'rgba(0, 0, 0, 0.4)',
   '--sn-node-header-bg': 'var(--sn-panel-bg)',
   '--sn-node-selected': 'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent))',
+  '--sn-node-accent': 'var(--sn-node-selected)',
   '--sn-node-hover': '#444444',
 
   '--sn-font': "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -157,6 +159,7 @@ const DEFAULT_DARK_TOKENS = {
   '--sn-list-item-meta-size': '10px',
 
   '--sn-composer-bg': 'var(--sn-node-bg)',
+  '--sn-composer-border': 'var(--sn-node-border)',
   '--sn-composer-action-bg': 'var(--sn-node-hover)',
   '--sn-composer-radius': 'calc(20px * var(--sn-theme-radius-scale))',
   '--sn-composer-control-gap': '8px',
@@ -210,6 +213,11 @@ const DEFAULT_DARK_TOKENS = {
   '--sn-shape-fill': 'var(--sn-node-bg)',
   '--sn-shape-stroke': 'var(--sn-node-border)',
   '--sn-shape-stroke-width': '0.4',
+  '--sn-frame-border-width': '2px',
+  '--sn-frame-border-style': 'solid',
+  '--sn-frame-radius': 'calc(12px * var(--sn-theme-radius-scale))',
+  '--sn-frame-font': 'var(--sn-font)',
+  '--sn-frame-font-size': '13px',
 
   '--bg-level-2': 'var(--sn-node-bg)',
   '--border-color': 'var(--sn-node-border)',

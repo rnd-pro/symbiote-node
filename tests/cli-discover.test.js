@@ -186,17 +186,28 @@ describe('discover command', () => {
     it('exposes constructible contracts for first runtime UI surfaces', () => {
       let components = new Map(data.manifest.components.map((component) => [component.tagName, component]));
       for (let tag of [
+        'graph-node',
+        'node-canvas',
         'canvas-graph',
         'graph-explorer-shell',
         'panel-layout',
+        'layout-sidebar',
+        'layout-node',
         'project-tabs',
+        'code-block',
         'source-viewer',
         'source-editor',
         'sn-loading-overlay',
+        'quick-open',
         'chat-transcript',
         'chat-composer',
+        'chat-list',
+        'chat-list-item',
+        'chat-sidebar-shell',
+        'chat-sidebar-item',
         'sn-list-item',
         'sn-tree-view',
+        'graph-frame',
       ]) {
         let component = components.get(tag);
         assert.ok(component, `${tag} must be discoverable`);
@@ -213,6 +224,13 @@ describe('discover command', () => {
       assert.ok(components.get('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));
       assert.ok(components.get('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
       assert.ok(components.get('graph-explorer-shell').contract.slots.some((slot) => slot.name === 'canvas'));
+      assert.ok(components.get('node-canvas').contract.events.some((event) => event.name === 'manualviewport'));
+      assert.ok(components.get('layout-node').contract.events.some((event) => event.name === 'layout-change'));
+      assert.ok(components.get('code-block').contract.methods.some((method) => method.name === 'setDiagnostics'));
+      assert.ok(components.get('quick-open').contract.events.some((event) => event.name === 'quick-open-select'));
+      assert.ok(components.get('chat-list').contract.events.some((event) => event.name === 'chat-list-select'));
+      assert.ok(components.get('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
+      assert.ok(components.get('graph-frame').contract.properties.some((property) => property.name === 'color'));
     });
 
     it('exposes themes with token data', () => {

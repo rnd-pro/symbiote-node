@@ -186,6 +186,15 @@ describe('theme token files', () => {
     }
   });
 
+  it('resolves component theme aliases against the default runtime theme', () => {
+    let runtimeTokens = new Set(Object.keys(DEFAULT_DARK.tokens));
+    for (let component of listComponents()) {
+      for (let alias of component.contract?.themeAliases || []) {
+        assert.ok(runtimeTokens.has(alias), `${component.tagName} theme alias ${alias} must exist in DEFAULT_DARK`);
+      }
+    }
+  });
+
   it('builds agent-readable theme recipes from tokens, CSS variables, and rule blocks', () => {
     let recipe = getThemeRecipe('default-dark');
     assert.equal(recipe.name, 'default-dark');

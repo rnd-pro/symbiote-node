@@ -166,17 +166,28 @@ describe('component registry', () => {
 
   it('publishes data-only contracts for first runtime UI surfaces', () => {
     for (let tag of [
+      'graph-node',
+      'node-canvas',
       'canvas-graph',
       'graph-explorer-shell',
       'panel-layout',
+      'layout-sidebar',
+      'layout-node',
       'project-tabs',
+      'code-block',
       'source-viewer',
       'source-editor',
       'sn-loading-overlay',
+      'quick-open',
       'chat-transcript',
       'chat-composer',
+      'chat-list',
+      'chat-list-item',
+      'chat-sidebar-shell',
+      'chat-sidebar-item',
       'sn-list-item',
       'sn-tree-view',
+      'graph-frame',
     ]) {
       let component = getComponent(tag);
       assert.ok(component.contract, `${tag} must expose contract metadata`);
@@ -196,5 +207,13 @@ describe('component registry', () => {
     assert.ok(getComponent('canvas-graph').contract.events.some((event) => event.name === 'file-selected'));
     assert.ok(getComponent('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
     assert.ok(getComponent('graph-explorer-shell').contract.slots.some((slot) => slot.name === 'canvas'));
+    assert.ok(getComponent('node-canvas').contract.events.some((event) => event.name === 'manualviewport'));
+    assert.ok(getComponent('layout-node').contract.events.some((event) => event.name === 'layout-change'));
+    assert.ok(getComponent('code-block').contract.methods.some((method) => method.name === 'setDiagnostics'));
+    assert.ok(getComponent('quick-open').contract.events.some((event) => event.name === 'quick-open-select'));
+    assert.ok(getComponent('chat-list').contract.events.some((event) => event.name === 'chat-list-select'));
+    assert.ok(getComponent('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
+    assert.ok(getComponent('chat-sidebar-item').contract.properties.some((property) => property.name === 'subChats'));
+    assert.ok(getComponent('graph-frame').contract.properties.some((property) => property.name === 'color'));
   });
 });

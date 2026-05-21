@@ -316,6 +316,18 @@ describe('With DOM shim', () => {
     assert.ok(customElements.get('sn-button'));
     let button = new ActionButton();
     button.disabled = true;
+    assert.equal(button.disabled, true);
+    assert.equal(button.hasAttribute('disabled'), true);
+    assert.equal(button.getAttribute('aria-disabled'), 'true');
+    assert.equal(button.tabIndex, -1);
+    button.disabled = false;
+    assert.equal(button.disabled, false);
+    assert.equal(button.hasAttribute('disabled'), false);
+    assert.equal(button.getAttribute('aria-disabled'), 'false');
+    assert.equal(button.tabIndex, 0);
+    button.setAttribute('disabled', '');
+    button.attributeChangedCallback('disabled', null, '');
+    assert.equal(button.disabled, true);
     assert.equal(button.hasAttribute('disabled'), true);
     assert.equal(button.getAttribute('aria-disabled'), 'true');
   });

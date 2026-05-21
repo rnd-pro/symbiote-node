@@ -4,6 +4,10 @@ import template from './Button.tpl.js';
 import css from './Button.css.js';
 
 export class ActionButton extends Symbiote {
+  static observedAttributes = ['disabled'];
+
+  #disabled = false;
+
   #onClick = (event) => {
     if (!this.disabled) return;
     event.preventDefault();
@@ -26,6 +30,8 @@ export class ActionButton extends Symbiote {
     super.connectedCallback?.();
     if (!this.hasAttribute('role')) this.setAttribute('role', 'button');
     if (!this.hasAttribute('tabindex')) this.tabIndex = 0;
+    this.#disabled = this.hasAttribute('disabled');
+    this._syncDisabled(this.#disabled);
     this.addEventListener('click', this.#onClick, { capture: true });
     this.addEventListener('keydown', this.#onKeyDown);
   }
@@ -37,12 +43,31 @@ export class ActionButton extends Symbiote {
   }
 
   get disabled() {
-    return this.hasAttribute('disabled');
+    return this.#disabled || this.hasAttribute('disabled');
   }
 
   set disabled(value) {
-    this.toggleAttribute('disabled', Boolean(value));
-    this.setAttribute('aria-disabled', Boolean(value) ? 'true' : 'false');
+    this.#disabled = Boolean(value);
+    this._syncDisabled(this.#disabled);
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name !== 'disabled') {
+      super.attributeChangedCallback?.(name, oldValue, newValue);
+      return;
+    }
+    if (oldValue === newValue) return;
+    this.#disabled = newValue !== null;
+    this._syncDisabled(this.#disabled, { reflect: false });
+  }
+
+  _syncDisabled(value, options = {}) {
+    let disabled = Boolean(value);
+    if (options.reflect !== false) {
+      this.toggleAttribute('disabled', disabled);
+    }
+    this.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+    this.tabIndex = disabled ? -1 : 0;
   }
 }
 

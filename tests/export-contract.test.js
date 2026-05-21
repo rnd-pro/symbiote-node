@@ -167,6 +167,7 @@ const UI_EXPORTS = [
   ['ListItem', 'function'],
   ['TreeView', 'function'],
   ['TreePanel', 'function'],
+  ['SurfaceCard', 'function'],
   ['OutputListPreview', 'function'],
   ['OutputGraphPreview', 'function'],
   ['sharedUiStyles', 'string'],

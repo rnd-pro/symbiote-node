@@ -34,6 +34,7 @@ const CSS_TOKEN_CLASSIFIERS = [
   { kind: 'semantic-alias', group: 'surface', pattern: /^--sn-(bg|panel-bg|node-bg|node-border|node-selected|node-accent|node-hover|node-header-bg|node-radius|node-shadow|text|text-dim|bg-overlay|shadow-color)$/ },
   { kind: 'semantic-alias', group: 'status', pattern: /^--sn-(success|warning|danger|cat|subgraph)-/ },
   { kind: 'component-alias', group: 'layout', pattern: /^--sn-layout-/ },
+  { kind: 'component-alias', group: 'surface', pattern: /^--sn-card-/ },
   { kind: 'component-alias', group: 'navigation-row', pattern: /^--sn-(tree|list-item)-/ },
   { kind: 'component-alias', group: 'chat', pattern: /^--sn-(composer|chat)-/ },
   { kind: 'component-alias', group: 'tabs', pattern: /^--sn-tabs-/ },
@@ -80,8 +81,8 @@ export let THEME_ELEMENT_GROUPS = [
   {
     name: 'panel',
     description: 'Framed layout surfaces such as sidebars, graph panels, source panes, and dialogs.',
-    tokens: ['--sn-panel-bg', '--sn-node-border', '--sn-node-shadow', '--sn-node-radius'],
-    usedBy: ['panel-layout', 'source-viewer', 'source-editor', 'chat-transcript', 'sn-loading-overlay'],
+    tokens: ['--sn-panel-bg', '--sn-card-bg', '--sn-card-border', '--sn-card-radius', '--sn-card-padding', '--sn-node-border', '--sn-node-shadow', '--sn-node-radius'],
+    usedBy: ['panel-layout', 'sn-card', 'source-viewer', 'source-editor', 'chat-transcript', 'sn-loading-overlay'],
   },
   {
     name: 'control',
@@ -270,12 +271,14 @@ export let THEME_RULE_BLOCKS = [
     kind: 'component-alias',
     description: 'Maps semantic theme aliases to reusable Symbiote Node component surfaces.',
     parameters: [
-      { name: 'component.scope', type: 'string', default: 'layout|tree|chat|tabs|source|list|loading', description: 'Component token domains served by the default provider theme.' },
+      { name: 'component.scope', type: 'string', default: 'layout|surface|tree|chat|tabs|source|list|loading', description: 'Component token domains served by the default provider theme.' },
     ],
     inputs: ['--sn-*'],
     outputs: [
       '--sn-layout-gap-bg',
       '--sn-layout-border',
+      '--sn-card-bg',
+      '--sn-card-border',
       '--sn-tree-row-height',
       '--sn-tree-panel-row-min-height',
       '--sn-tree-row-selected-bg',
@@ -286,10 +289,12 @@ export let THEME_RULE_BLOCKS = [
       '--sn-source-editor-bg',
       '--sn-list-item-active-bg',
     ],
-    appliesTo: ['panel-layout', 'sn-tree-view', 'sn-tree-panel', 'chat-composer', 'chat-transcript', 'project-tabs', 'source-viewer', 'source-editor', 'sn-list-item', 'sn-loading-overlay'],
+    appliesTo: ['panel-layout', 'sn-card', 'sn-tree-view', 'sn-tree-panel', 'chat-composer', 'chat-transcript', 'project-tabs', 'source-viewer', 'source-editor', 'sn-list-item', 'sn-loading-overlay'],
     formula: 'Component aliases bridge design tokens to component CSS without product-level style patches.',
     derivations: [
       { output: '--sn-layout-border', inputs: ['component.layoutBorder'], expression: 'transparent', description: 'Layout split gaps stay transparent without mutating the generic node border.' },
+      { output: '--sn-card-bg', inputs: ['--sn-node-bg'], expression: 'var(--sn-node-bg)', description: 'Cards inherit the reusable node surface by default.' },
+      { output: '--sn-card-border', inputs: ['--sn-node-border'], expression: 'var(--sn-node-border)', description: 'Cards share the provider border color.' },
       { output: '--sn-tree-row-selected-bg', inputs: ['--sn-accent-bg-subtle'], expression: 'var(--sn-accent-bg-subtle)', description: 'Tree selection uses the shared subtle accent surface.' },
       { output: '--sn-tree-panel-row-min-height', inputs: ['--sn-tree-row-min-height'], expression: 'var(--sn-tree-row-min-height)', description: 'Tree panels inherit the tree row geometry unless a host specializes the panel.' },
       { output: '--sn-composer-bg', inputs: ['--sn-node-bg'], expression: 'var(--sn-node-bg)', description: 'Chat composer inherits the normal node surface.' },

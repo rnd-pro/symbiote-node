@@ -104,6 +104,22 @@ item.addEventListener('sn-list-item-select', (event) => {
 });
 ```
 
+### Surface UI
+
+`SurfaceCard` is a generic browser-only surface primitive from `symbiote-node/ui`. It owns the standard card background, border, radius, spacing, title slot, footer slot, and interactive hover state. Host applications keep card content and actions product-specific.
+
+```javascript
+import { SurfaceCard } from 'symbiote-node/ui';
+
+document.body.innerHTML = `
+  <sn-card interactive>
+    <span slot="title">Runtime</span>
+    <p>3 active instances</p>
+    <button slot="footer">Refresh</button>
+  </sn-card>
+`;
+```
+
 ### Tree UI
 
 `TreeView` is a generic browser-only tree primitive from `symbiote-node/ui`. It owns neutral tree rendering, selection, expansion state, branch-aware filtering, optional expanded-state persistence, and drag payload events. `TreePanel` wraps that primitive with standard filter, collapse, and placeholder chrome for application sidebars. Host applications provide data, routing, file loading, and persistence policy.

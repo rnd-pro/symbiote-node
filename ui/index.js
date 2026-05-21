@@ -161,6 +161,7 @@ export let ChatSidebarSubItem;
 export let ListItem;
 export let TreeView;
 export let TreePanel;
+export let SurfaceCard;
 export let OutputListPreview;
 export let OutputGraphPreview;
 export let stringifyBlock;
@@ -234,6 +235,7 @@ if (hasDOMGlobals) {
     listItem,
     treeView,
     treePanel,
+    surfaceCard,
     outputListPreview,
     outputGraphPreview,
   ] = await Promise.all([
@@ -273,6 +275,7 @@ if (hasDOMGlobals) {
     import('../list/ListItem/ListItem.js'),
     import('../tree/TreeView/TreeView.js'),
     import('../tree/TreePanel/TreePanel.js'),
+    import('../surface/Card/Card.js'),
     import('../display/OutputListPreview/OutputListPreview.js'),
     import('../display/OutputGraphPreview/OutputGraphPreview.js'),
   ]);
@@ -323,6 +326,7 @@ if (hasDOMGlobals) {
   ({ ListItem } = listItem);
   ({ TreeView } = treeView);
   ({ TreePanel } = treePanel);
+  ({ SurfaceCard } = surfaceCard);
   ({ OutputListPreview } = outputListPreview);
   ({ OutputGraphPreview } = outputGraphPreview);
 }

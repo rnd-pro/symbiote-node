@@ -4348,6 +4348,117 @@
       ]
     },
     {
+      "path": "surface/Card/Card.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "SurfaceCard",
+          "tagName": "sn-card",
+          "description": "Generic themeable surface card for dashboard, list, detail, and settings UI composition.",
+          "attributes": [
+            {
+              "name": "variant",
+              "description": "Surface variant: default, flat, or panel.",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "interactive",
+              "description": "Enables hover affordance for clickable cards.",
+              "type": {
+                "text": "boolean"
+              }
+            }
+          ],
+          "members": [],
+          "events": [],
+          "slots": [
+            {
+              "name": "default",
+              "description": "Main card content."
+            },
+            {
+              "name": "title",
+              "description": "Optional card title content."
+            },
+            {
+              "name": "footer",
+              "description": "Optional footer/action row content."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-card-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-margin-block-end",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-hover-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-hover-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-title-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-title-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-title-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-title-margin-block-end",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-footer-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-footer-margin-block-start",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-footer-padding-block-start",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-card",
+          "declaration": {
+            "name": "SurfaceCard"
+          }
+        }
+      ]
+    },
+    {
       "path": "node/GraphFrame/GraphFrame.js",
       "declarations": [
         {

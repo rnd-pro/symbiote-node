@@ -272,6 +272,14 @@ describe('With DOM shim', () => {
     assert.ok(customElements.get('sn-tree-panel'));
   });
 
+  it('SurfaceCard can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../surface/Card/Card.js'),
+      'SurfaceCard must import without throwing'
+    );
+    assert.ok(customElements.get('sn-card'));
+  });
+
   it('SourceEditor can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../display/SourceEditor/SourceEditor.js'),

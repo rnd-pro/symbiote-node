@@ -34,25 +34,6 @@ export default /*css*/ `
   color: var(--sn-text);
 }
 
-.ui-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-height: 24px;
-  border: 1px solid var(--sn-node-border);
-  border-radius: 4px;
-  background: var(--sn-node-hover);
-  color: var(--sn-text);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.ui-btn:hover {
-  border-color: var(--sn-node-selected);
-}
-
 .ui-sidebar-content {
   min-height: 0;
   overflow: auto;
@@ -75,7 +56,6 @@ export default /*css*/ `
 
 .chat-list-new-btn {
   margin-left: auto;
-  padding: 4px 10px;
 }
 
 .chat-list-new-btn-icon {

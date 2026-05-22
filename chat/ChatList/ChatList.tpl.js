@@ -5,10 +5,10 @@ export default html`
   <div class="ui-sidebar-header">
     <span class="material-symbols-outlined chat-list-icon">forum</span>
     <span class="ui-title chat-list-title" ${{ textContent: 'title' }}></span>
-    <button class="ui-btn chat-list-new-btn" ${{ onclick: 'onNewChat' }}>
+    <sn-button class="chat-list-new-btn" ${{ onclick: 'onNewChat' }}>
       <span class="material-symbols-outlined chat-list-new-btn-icon">add</span>
       <span ${{ textContent: 'newLabel' }}></span>
-    </button>
+    </sn-button>
   </div>
   <div class="chat-list-filter-bar">
     <button class="chat-list-filter-btn" active data-filter="all" ${{ onclick: 'onFilterClick' }}>All</button>

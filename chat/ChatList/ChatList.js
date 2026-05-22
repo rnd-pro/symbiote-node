@@ -1,5 +1,6 @@
 import Symbiote from '@symbiotejs/symbiote';
 import '../ChatListItem/ChatListItem.js';
+import '../../control/Button/Button.js';
 import '../../display/EmptyState/EmptyState.js';
 import template from './ChatList.tpl.js';
 import css from './ChatList.css.js';

@@ -166,6 +166,14 @@ describe('With DOM shim', () => {
     );
   });
 
+  it('ListDetailShell can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../list/ListDetailShell/ListDetailShell.js'),
+      'ListDetailShell must import without throwing'
+    );
+    assert.ok(customElements.get('sn-list-detail-shell'));
+  });
+
   it('CanvasGraph can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../canvas/CanvasGraph/CanvasGraph.js'),

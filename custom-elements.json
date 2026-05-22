@@ -3972,6 +3972,202 @@
       ]
     },
     {
+      "path": "list/ListDetailShell/ListDetailShell.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "ListDetailShell",
+          "tagName": "sn-list-detail-shell",
+          "description": "Generic two-pane list and detail shell with host-owned content slots.",
+          "attributes": [
+            {
+              "name": "sidebar-title",
+              "type": "string",
+              "description": "Sidebar header title."
+            },
+            {
+              "name": "sidebar-icon",
+              "type": "string",
+              "description": "Optional sidebar Material Symbols icon name."
+            },
+            {
+              "name": "detail-title",
+              "type": "string",
+              "description": "Detail header title."
+            },
+            {
+              "name": "detail-icon",
+              "type": "string",
+              "description": "Optional detail Material Symbols icon name."
+            },
+            {
+              "name": "detail-description",
+              "type": "string",
+              "description": "Optional detail header description."
+            },
+            {
+              "name": "detail-mode",
+              "type": "string",
+              "description": "Detail density mode, such as compact."
+            },
+            {
+              "name": "has-detail",
+              "type": "boolean",
+              "description": "Shows detail content and hides the detail empty state."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "sidebarTitle",
+              "type": {
+                "text": "string"
+              },
+              "description": "Sidebar header title."
+            },
+            {
+              "kind": "field",
+              "name": "sidebarIcon",
+              "type": {
+                "text": "string"
+              },
+              "description": "Optional sidebar icon name."
+            },
+            {
+              "kind": "field",
+              "name": "detailTitle",
+              "type": {
+                "text": "string"
+              },
+              "description": "Detail header title."
+            },
+            {
+              "kind": "field",
+              "name": "detailIcon",
+              "type": {
+                "text": "string"
+              },
+              "description": "Optional detail icon name."
+            },
+            {
+              "kind": "field",
+              "name": "detailDescription",
+              "type": {
+                "text": "string"
+              },
+              "description": "Optional detail header description."
+            },
+            {
+              "kind": "field",
+              "name": "detailMode",
+              "type": {
+                "text": "string"
+              },
+              "description": "Detail density mode."
+            },
+            {
+              "kind": "field",
+              "name": "hasDetail",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Detail availability reflected by the has-detail attribute."
+            }
+          ],
+          "slots": [
+            {
+              "name": "list-header",
+              "description": "Optional host-owned sidebar header content."
+            },
+            {
+              "name": "sidebar-actions",
+              "description": "Optional commands aligned in the sidebar header."
+            },
+            {
+              "name": "list",
+              "description": "Host-owned list content."
+            },
+            {
+              "name": "list-empty",
+              "description": "Host-owned list empty state."
+            },
+            {
+              "name": "detail-header",
+              "description": "Optional host-owned detail header content."
+            },
+            {
+              "name": "detail-actions",
+              "description": "Optional commands aligned in the detail header."
+            },
+            {
+              "name": "detail",
+              "description": "Host-owned detail content."
+            },
+            {
+              "name": "detail-empty",
+              "description": "Host-owned detail empty state."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-list-detail-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-sidebar-width",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-sidebar-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-main-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-header-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-header-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-main-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-title-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-detail-title-color",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-list-detail-shell",
+          "declaration": {
+            "name": "ListDetailShell"
+          }
+        }
+      ]
+    },
+    {
       "path": "tree/TreeView/TreeView.js",
       "declarations": [
         {

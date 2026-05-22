@@ -162,6 +162,7 @@ export let ChatSidebarShell;
 export let ChatSidebarItem;
 export let ChatSidebarSubItem;
 export let ListItem;
+export let ListDetailShell;
 export let TreeView;
 export let TreePanel;
 export let ActionButton;
@@ -241,6 +242,7 @@ if (hasDOMGlobals) {
     chatSidebar,
     chatSidebarItem,
     listItem,
+    listDetailShell,
     treeView,
     treePanel,
     actionButton,
@@ -286,6 +288,7 @@ if (hasDOMGlobals) {
     import('../chat/ChatSidebar/ChatSidebar.js'),
     import('../chat/ChatSidebarItem/ChatSidebarItem.js'),
     import('../list/ListItem/ListItem.js'),
+    import('../list/ListDetailShell/ListDetailShell.js'),
     import('../tree/TreeView/TreeView.js'),
     import('../tree/TreePanel/TreePanel.js'),
     import('../control/Button/Button.js'),
@@ -342,6 +345,7 @@ if (hasDOMGlobals) {
   ({ ChatSidebarShell } = chatSidebar);
   ({ ChatSidebarItem, ChatSidebarSubItem } = chatSidebarItem);
   ({ ListItem } = listItem);
+  ({ ListDetailShell } = listDetailShell);
   ({ TreeView } = treeView);
   ({ TreePanel } = treePanel);
   ({ ActionButton } = actionButton);

@@ -249,6 +249,7 @@ describe('component registry', () => {
       'chat-sidebar-item',
       'chat-sidebar-sub-item',
       'sn-list-item',
+      'sn-list-detail-shell',
       'sn-tree-view',
       'sn-tree-panel',
       'sn-button',
@@ -278,6 +279,9 @@ describe('component registry', () => {
       assert.equal(/\bhost-app-specific\b/.test(JSON.stringify(component.contract)), false);
     }
     assert.ok(getComponent('sn-list-item').contract.events.some((event) => event.name === 'sn-list-item-select'));
+    assert.ok(getComponent('sn-list-detail-shell').contract.slots.some((slot) => slot.name === 'list'));
+    assert.ok(getComponent('sn-list-detail-shell').contract.slots.some((slot) => slot.name === 'detail'));
+    assert.ok(getComponent('sn-list-detail-shell').contract.attributes.some((attribute) => attribute.name === 'has-detail'));
     assert.ok(getComponent('source-editor').contract.events.some((event) => event.name === 'source-editor-input'));
     assert.ok(getComponent('sn-loading-overlay').contract.methods.some((method) => method.name === 'setProgress'));
     assert.ok(getComponent('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));

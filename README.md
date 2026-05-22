@@ -86,9 +86,10 @@ viewer.showFile({ path: 'README.md', raw: editor.getContent(), lang: 'md' });
 ### List UI
 
 `ListItem` is a generic browser-only list primitive from `symbiote-node/ui`. It owns neutral item presentation, active/disabled state, keyboard selection, and the `sn-list-item-select` event; host applications decide routing, persistence, and item-specific actions.
+`ListDetailShell` is a generic two-pane list/detail shell. It owns split geometry, responsive stacking, empty/detail visibility, and theme aliases; host applications provide list rows, detail content, loading states, commands, and selection policy through slots.
 
 ```javascript
-import { ListItem } from 'symbiote-node/ui';
+import { ListDetailShell, ListItem } from 'symbiote-node/ui';
 
 const item = document.querySelector('sn-list-item');
 item.setItem({
@@ -102,6 +103,8 @@ item.setItem({
 item.addEventListener('sn-list-item-select', (event) => {
   runItem(event.detail.item);
 });
+
+document.querySelector('sn-list-detail-shell').hasDetail = true;
 ```
 
 ### Surface UI

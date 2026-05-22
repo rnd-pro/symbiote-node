@@ -36,6 +36,7 @@ const CSS_TOKEN_CLASSIFIERS = [
   { kind: 'component-alias', group: 'layout', pattern: /^--sn-layout-/ },
   { kind: 'component-alias', group: 'surface', pattern: /^--sn-card-/ },
   { kind: 'component-alias', group: 'control', pattern: /^--sn-(button|field)-/ },
+  { kind: 'component-alias', group: 'status', pattern: /^--sn-badge-/ },
   { kind: 'component-alias', group: 'navigation-row', pattern: /^--sn-(tree|list-item)-/ },
   { kind: 'component-alias', group: 'chat', pattern: /^--sn-(composer|chat)-/ },
   { kind: 'component-alias', group: 'tabs', pattern: /^--sn-tabs-/ },
@@ -112,7 +113,7 @@ export let THEME_ELEMENT_GROUPS = [
   {
     name: 'status',
     description: 'Badges, loading, success, warning, danger, and transient status feedback.',
-    tokens: ['--sn-success-color', '--sn-warning-color', '--sn-danger-color', '--sn-loading-bar-bg', '--sn-effect-loading-pulse'],
+    tokens: ['--sn-success-color', '--sn-warning-color', '--sn-danger-color', '--sn-badge-bg', '--sn-badge-border', '--sn-badge-color', '--sn-loading-bar-bg', '--sn-effect-loading-pulse'],
     usedBy: ['sn-loading-overlay', 'chat-transcript', 'chat-composer'],
   },
   {
@@ -272,7 +273,7 @@ export let THEME_RULE_BLOCKS = [
     kind: 'component-alias',
     description: 'Maps semantic theme aliases to reusable Symbiote Node component surfaces.',
     parameters: [
-      { name: 'component.scope', type: 'string', default: 'layout|surface|control|tree|chat|tabs|source|list|loading', description: 'Component token domains served by the default provider theme.' },
+      { name: 'component.scope', type: 'string', default: 'layout|surface|control|status|tree|chat|tabs|source|list|loading', description: 'Component token domains served by the default provider theme.' },
     ],
     inputs: ['--sn-*'],
     outputs: [
@@ -286,6 +287,9 @@ export let THEME_RULE_BLOCKS = [
       '--sn-field-control-bg',
       '--sn-field-control-border',
       '--sn-field-control-focus-border',
+      '--sn-badge-bg',
+      '--sn-badge-border',
+      '--sn-badge-info-color',
       '--sn-tree-row-height',
       '--sn-tree-panel-row-min-height',
       '--sn-tree-row-selected-bg',
@@ -296,7 +300,7 @@ export let THEME_RULE_BLOCKS = [
       '--sn-source-editor-bg',
       '--sn-list-item-active-bg',
     ],
-    appliesTo: ['panel-layout', 'sn-card', 'sn-button', 'sn-field', 'sn-tree-view', 'sn-tree-panel', 'chat-composer', 'chat-transcript', 'project-tabs', 'source-viewer', 'source-editor', 'sn-list-item', 'sn-loading-overlay'],
+    appliesTo: ['panel-layout', 'sn-card', 'sn-button', 'sn-field', 'sn-badge', 'sn-tree-view', 'sn-tree-panel', 'chat-composer', 'chat-transcript', 'project-tabs', 'source-viewer', 'source-editor', 'sn-list-item', 'sn-loading-overlay'],
     formula: 'Component aliases bridge design tokens to component CSS without product-level style patches.',
     derivations: [
       { output: '--sn-layout-border', inputs: ['component.layoutBorder'], expression: 'transparent', description: 'Layout split gaps stay transparent without mutating the generic node border.' },
@@ -306,6 +310,8 @@ export let THEME_RULE_BLOCKS = [
       { output: '--sn-button-primary-bg', inputs: ['--sn-node-selected'], expression: 'var(--sn-node-selected)', description: 'Primary actions use the shared selected/accent color.' },
       { output: '--sn-field-control-bg', inputs: ['--sn-bg'], expression: 'var(--sn-bg)', description: 'Form controls inherit the app background inside reusable fields.' },
       { output: '--sn-field-control-focus-border', inputs: ['--sn-node-selected'], expression: 'var(--sn-node-selected)', description: 'Field focus uses the shared selected/accent color.' },
+      { output: '--sn-badge-bg', inputs: ['--sn-node-bg'], expression: 'var(--sn-node-bg)', description: 'Badges inherit compact reusable node surfaces.' },
+      { output: '--sn-badge-info-color', inputs: ['--sn-node-selected'], expression: 'var(--sn-node-selected)', description: 'Informational badges use the shared selected/accent color.' },
       { output: '--sn-tree-row-selected-bg', inputs: ['--sn-accent-bg-subtle'], expression: 'var(--sn-accent-bg-subtle)', description: 'Tree selection uses the shared subtle accent surface.' },
       { output: '--sn-tree-panel-row-min-height', inputs: ['--sn-tree-row-min-height'], expression: 'var(--sn-tree-row-min-height)', description: 'Tree panels inherit the tree row geometry unless a host specializes the panel.' },
       { output: '--sn-composer-bg', inputs: ['--sn-node-bg'], expression: 'var(--sn-node-bg)', description: 'Chat composer inherits the normal node surface.' },

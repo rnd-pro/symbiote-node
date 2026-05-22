@@ -4780,6 +4780,114 @@
       ]
     },
     {
+      "path": "display/Badge/Badge.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "StatusBadge",
+          "tagName": "sn-badge",
+          "description": "Generic themeable status badge for compact state, type, and metadata labels.",
+          "attributes": [
+            {
+              "name": "variant",
+              "description": "Status variant: default, success, info, warning, or error.",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "members": [],
+          "events": [],
+          "slots": [
+            {
+              "name": "default",
+              "description": "Badge label and optional icon content."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-badge-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-font-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-font-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-success-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-success-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-info-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-info-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-warning-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-warning-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-error-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-badge-error-border",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-badge",
+          "declaration": {
+            "name": "StatusBadge"
+          }
+        }
+      ]
+    },
+    {
       "path": "node/GraphFrame/GraphFrame.js",
       "declarations": [
         {

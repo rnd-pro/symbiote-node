@@ -340,6 +340,14 @@ describe('With DOM shim', () => {
     assert.ok(customElements.get('sn-field'));
   });
 
+  it('StatusBadge can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../display/Badge/Badge.js'),
+      'StatusBadge must import without throwing'
+    );
+    assert.ok(customElements.get('sn-badge'));
+  });
+
   it('SourceEditor can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../display/SourceEditor/SourceEditor.js'),

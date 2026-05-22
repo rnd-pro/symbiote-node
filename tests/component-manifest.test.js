@@ -183,6 +183,8 @@ describe('component registry', () => {
     assert.equal(getComponentModule('sn-field'), 'control/Field/Field.js');
     assert.equal(getComponent('sn-card').category, 'surface');
     assert.equal(getComponentModule('sn-card'), 'surface/Card/Card.js');
+    assert.equal(getComponent('sn-badge').category, 'display');
+    assert.equal(getComponentModule('sn-badge'), 'display/Badge/Badge.js');
     assert.equal(getComponentModule('sn-loading-overlay'), 'display/LoadingOverlay/LoadingOverlay.js');
     assert.equal(getComponent('output-list-preview').category, 'display');
     assert.equal(getComponentModule('output-graph-preview'), 'display/OutputGraphPreview/OutputGraphPreview.js');
@@ -248,6 +250,7 @@ describe('component registry', () => {
       'sn-button',
       'sn-field',
       'sn-card',
+      'sn-badge',
       'node-socket',
       'cell-bg',
       'quick-toolbar',
@@ -277,6 +280,7 @@ describe('component registry', () => {
     assert.ok(getComponent('sn-button').contract.events.some((event) => event.name === 'click'));
     assert.ok(getComponent('sn-field').contract.slots.some((slot) => slot.name === 'default'));
     assert.ok(getComponent('sn-card').contract.slots.some((slot) => slot.name === 'default'));
+    assert.ok(getComponent('sn-badge').contract.slots.some((slot) => slot.name === 'default'));
     assert.ok(getComponent('chat-composer').contract.methods.some((method) => method.name === 'setValue'));
     assert.ok(getComponent('source-viewer').contract.methods.some((method) => method.name === 'showFile'));
     assert.ok(getComponent('canvas-graph').contract.events.some((event) => event.name === 'file-selected'));

@@ -131,6 +131,7 @@ export let CodeBlock;
 export let SourceViewer;
 export let SourceEditor;
 export let LoadingOverlay;
+export let StatusBadge;
 export let getSourceLanguage;
 export let isDirectoryLikePath;
 export let buildDirectoryInfo;
@@ -220,6 +221,7 @@ if (hasDOMGlobals) {
     sourceViewer,
     sourceEditor,
     loadingOverlay,
+    statusBadge,
     quickOpen,
     layoutRouter,
     routerSync,
@@ -262,6 +264,7 @@ if (hasDOMGlobals) {
     import('../display/SourceViewer/SourceViewer.js'),
     import('../display/SourceEditor/SourceEditor.js'),
     import('../display/LoadingOverlay/LoadingOverlay.js'),
+    import('../display/Badge/Badge.js'),
     import('../navigation/QuickOpen/QuickOpen.js'),
     import('../layout/LayoutRouter/LayoutRouter.js'),
     import('../layout/LayoutRouter/routerSync.js'),
@@ -305,6 +308,7 @@ if (hasDOMGlobals) {
   ({ SourceViewer, getSourceLanguage, isDirectoryLikePath, buildDirectoryInfo } = sourceViewer);
   ({ SourceEditor } = sourceEditor);
   ({ LoadingOverlay } = loadingOverlay);
+  ({ StatusBadge } = statusBadge);
   ({ QuickOpen } = quickOpen);
   ({
     navigate,

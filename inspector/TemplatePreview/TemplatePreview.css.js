@@ -21,7 +21,7 @@ export let styles = css`
       font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      color: var(--sn-text-dim, #888);
+      color: var(--sn-text-dim);
       margin-bottom: 4px;
       letter-spacing: 0.5px;
     }
@@ -40,7 +40,7 @@ export let styles = css`
 
     & .tpl-chips-empty {
       font-size: 11px;
-      color: var(--sn-text-dim, #666);
+      color: var(--sn-text-dim);
       font-style: italic;
       padding: 4px 0;
 
@@ -53,10 +53,10 @@ export let styles = css`
       width: 100%;
       padding: 6px 8px;
       font-size: 11px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      color: var(--sn-text, #d4d4d4);
+      font-family: var(--sn-font-mono);
+      color: var(--sn-text);
       background: color-mix(in srgb, currentColor 6%, transparent);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--sn-node-border);
       border-radius: 4px;
       outline: none;
       resize: vertical;
@@ -66,16 +66,16 @@ export let styles = css`
       transition: border-color 0.15s;
 
       &:focus {
-        border-color: var(--sn-node-selected, #4a9eff);
+        border-color: var(--sn-node-selected);
       }
     }
 
     & .tpl-preview-result {
       font-size: 12px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      color: var(--sn-text, #d4d4d4);
+      font-family: var(--sn-font-mono);
+      color: var(--sn-text);
       background: color-mix(in srgb, currentColor 4%, transparent);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--sn-node-border);
       border-radius: 4px;
       padding: 8px;
       white-space: pre-wrap;
@@ -89,16 +89,16 @@ export let styles = css`
     display: inline-block;
     padding: 2px 8px;
     font-size: 11px;
-    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-family: var(--sn-font-mono);
     border-radius: 10px;
-    background: color-mix(in srgb, var(--sn-success-color, #4caf50) 20%, transparent);
-    color: var(--sn-success-color, #81c784);
-    border: 1px solid rgba(76, 175, 80, 0.3);
+    background: var(--sn-success-bg);
+    color: var(--sn-success-color);
+    border: 1px solid var(--sn-success-border);
 
     &[data-missing] {
-      background: color-mix(in srgb, var(--sn-danger-color, #f44336) 20%, transparent);
-      color: var(--sn-danger-color, #ef9a9a);
-      border-color: rgba(244, 67, 54, 0.3);
+      background: var(--sn-danger-bg);
+      color: var(--sn-danger-color);
+      border-color: var(--sn-danger-border);
     }
   }
 `;

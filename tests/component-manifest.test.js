@@ -301,6 +301,7 @@ describe('component registry', () => {
     assert.ok(getComponent('context-menu').contract.methods.some((method) => method.name === 'show'));
     assert.ok(getComponent('node-canvas').contract.events.some((event) => event.name === 'manualviewport'));
     assert.ok(getComponent('layout-node').contract.events.some((event) => event.name === 'layout-change'));
+    assert.ok(getComponent('code-block').contract.methods.some((method) => method.name === 'setContent'));
     assert.ok(getComponent('code-block').contract.methods.some((method) => method.name === 'setDiagnostics'));
     assert.ok(getComponent('output-list-preview').contract.methods.some((method) => method.name === 'setItems'));
     assert.ok(getComponent('output-graph-preview').contract.methods.some((method) => method.name === 'setGraph'));

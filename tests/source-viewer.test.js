@@ -11,6 +11,7 @@ let hadHTMLElement;
 let hadWindow;
 let hadDocument;
 let hadCSSStyleSheet;
+let CodeBlock;
 let getSourceLanguage;
 let isDirectoryLikePath;
 let buildDirectoryInfo;
@@ -42,6 +43,7 @@ before(async () => {
     getSourceLanguage,
     isDirectoryLikePath,
   } = await import('../display/SourceViewer/SourceViewer.js'));
+  ({ CodeBlock } = await import('../display/CodeBlock/CodeBlock.js'));
 });
 
 after(() => {
@@ -104,9 +106,37 @@ describe('SourceViewer display helpers', () => {
         'hsl(37, 30%',
         'hsl(210, 45%',
         'hsla(210',
+        'rgb(254, 165, 176)',
+        'rgb(251, 182, 79)',
+        'rgb(180, 243, 255)',
+        'hsla(0, 80%, 55%',
+        'hsla(40, 80%, 55%',
       ]) {
         assert.equal(source.includes(literal), false, `${relative} must not copy provider fallback ${literal}`);
       }
     }
+
+    let codeBlockCss = fs.readFileSync(path.join(ROOT, 'display/CodeBlock/CodeBlock.css.js'), 'utf8');
+    for (let token of ['--sn-syntax-keyword', '--sn-syntax-string', '--sn-syntax-comment', '--sn-diagnostic-error-bg']) {
+      assert.ok(codeBlockCss.includes(token), `CodeBlock must consume ${token}`);
+    }
+  });
+
+  it('exposes a public content setter for host display adapters', () => {
+    let block = {
+      $: { code: '', lang: '', imageApiBase: '' },
+      setBasePath: CodeBlock.prototype.setBasePath,
+      setImageApiBase: CodeBlock.prototype.setImageApiBase,
+    };
+
+    CodeBlock.prototype.setContent.call(block, '# Title', 'markdown', {
+      basePath: 'docs/guide.md',
+      imageApiBase: '/api/image?path=',
+    });
+
+    assert.equal(block.$.code, '# Title');
+    assert.equal(block.$.lang, 'markdown');
+    assert.equal(block._basePath, 'docs/guide.md');
+    assert.equal(block.$.imageApiBase, '/api/image?path=');
   });
 });

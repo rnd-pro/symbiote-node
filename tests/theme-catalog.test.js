@@ -78,6 +78,22 @@ describe('theme token files', () => {
       getThemeTokens('default-dark').component.accentBackground.$value,
       'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.12)'
     );
+    assert.equal(
+      getThemeTokens('default-dark').component.successBackground.$value,
+      'color-mix(in srgb, var(--sn-success-color) 18%, transparent)'
+    );
+    assert.equal(
+      getThemeTokens('default-dark').component.dangerBackground.$value,
+      'color-mix(in srgb, var(--sn-danger-color) 18%, transparent)'
+    );
+    assert.equal(
+      getThemeTokens('default-dark').syntax.keyword.$value,
+      'hsl(var(--sn-hue-danger) var(--sn-sat-vivid) 82%)'
+    );
+    assert.equal(
+      getThemeTokens('default-dark').diagnostic.warningBackground.$value,
+      'color-mix(in srgb, var(--sn-warning-color) 5%, transparent)'
+    );
     assert.equal(getThemeTokens('default-dark').geometry.treeRowHeight.$value, '22px');
     assert.equal(getThemeTokens('default-dark').typography.iconFont.$value, "'Material Symbols Outlined'");
     assert.equal(getThemeTokens('default-dark').alias.composerBackground.$value, 'var(--sn-node-bg)');
@@ -215,6 +231,10 @@ describe('theme token files', () => {
     );
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-theme-hue' && item.kind === 'source-control'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-provider-rnd-pro-color' && item.group === 'provider-accent'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-success-bg' && item.group === 'status'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-danger-border' && item.group === 'status'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-syntax-keyword' && item.group === 'syntax'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-diagnostic-error-bg' && item.group === 'diagnostic'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-layout-gap-bg' && item.group === 'layout'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-tree-row-height' && item.group === 'navigation-row'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-effect-focus-ring' && item.kind === 'motion-effects'));
@@ -243,5 +263,16 @@ describe('theme token files', () => {
     assert.deepEqual(listThemeCssTokenClassifications('dark'), []);
     assert.deepEqual(getThemeCssTokens('missing'), {});
     assert.equal(getThemeRecipe('missing'), undefined);
+  });
+
+  it('keeps template preview status styling token-driven', () => {
+    let css = fs.readFileSync(path.join(PKG_ROOT, 'inspector/TemplatePreview/TemplatePreview.css.js'), 'utf-8');
+    for (let literal of ['#4caf50', '#81c784', '#f44336', '#ef9a9a', 'rgba(76, 175, 80', 'rgba(244, 67, 54']) {
+      assert.equal(css.includes(literal), false, `TemplatePreview must not hardcode ${literal}`);
+    }
+    for (let token of ['--sn-success-bg', '--sn-success-border', '--sn-danger-bg', '--sn-danger-border']) {
+      assert.ok(css.includes(token), `TemplatePreview must consume ${token}`);
+      assert.ok(DEFAULT_DARK.tokens[token], `${token} must exist in DEFAULT_DARK`);
+    }
   });
 });

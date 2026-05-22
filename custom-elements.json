@@ -1104,6 +1104,14 @@
             },
             {
               "kind": "method",
+              "name": "setContent",
+              "type": {
+                "text": "function"
+              },
+              "description": "Sets source content, language mode, and optional render bases."
+            },
+            {
+              "kind": "method",
               "name": "setBasePath",
               "type": {
                 "text": "function"
@@ -1166,6 +1174,34 @@
             },
             {
               "name": "--sn-warning-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-syntax-keyword",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-syntax-string",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-syntax-comment",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-syntax-function",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-syntax-property",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-diagnostic-error-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-diagnostic-warning-bg",
               "description": "Theme CSS custom property consumed by this component."
             }
           ]

@@ -34,9 +34,10 @@
     "accentBackground": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.12)" },
     "accentBackgroundSubtle": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.06)" },
     "accentBorder": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent) / 0.2)" },
-    "successBorder": { "$type": "color", "$value": "rgba(76, 175, 80, 0.2)" },
-    "dangerBorder": { "$type": "color", "$value": "rgba(244, 67, 54, 0.2)" },
-    "dangerBackground": { "$type": "color", "$value": "rgba(244, 67, 54, 0.12)" },
+    "successBackground": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-success-color) 18%, transparent)" },
+    "successBorder": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-success-color) 32%, transparent)" },
+    "dangerBackground": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-danger-color) 18%, transparent)" },
+    "dangerBorder": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-danger-color) 32%, transparent)" },
     "scrollbarThumb": { "$type": "color", "$value": "rgba(255, 255, 255, 0.08)" },
     "scrollbarThumbHover": { "$type": "color", "$value": "rgba(255, 255, 255, 0.25)" }
   },
@@ -120,6 +121,33 @@
       "color": { "$type": "color", "$value": "var(--sn-text-dim)" },
       "background": { "$type": "color", "$value": "var(--sn-node-hover)" }
     }
+  },
+  "syntax": {
+    "keyword": { "$type": "color", "$value": "hsl(var(--sn-hue-danger) var(--sn-sat-vivid) 82%)" },
+    "string": { "$type": "color", "$value": "hsl(var(--sn-hue-warning) var(--sn-sat-vivid) 65%)" },
+    "comment": { "$type": "color", "$value": "var(--sn-text-dim)" },
+    "function": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) 84%)" },
+    "number": { "$type": "color", "$value": "var(--sn-syntax-string)" },
+    "builtin": { "$type": "color", "$value": "var(--sn-syntax-function)" },
+    "property": { "$type": "color", "$value": "hsl(var(--sn-hue-data) var(--sn-sat-vivid) 78%)" },
+    "literal": { "$type": "color", "$value": "var(--sn-syntax-keyword)" },
+    "doc": { "$type": "color", "$value": "hsl(var(--sn-hue-success) 22% 56%)" },
+    "docTag": { "$type": "color", "$value": "hsl(var(--sn-hue-success) 50% 70%)" },
+    "docType": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) 72% 72%)" },
+    "template": { "$type": "color", "$value": "hsl(var(--sn-hue-warning) 44% 64%)" },
+    "templateTag": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) 48% 58%)" },
+    "templateAttr": { "$type": "color", "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) 80%)" },
+    "templateBracket": { "$type": "color", "$value": "var(--sn-text-dim)" },
+    "templateInterpolation": { "$type": "color", "$value": "hsl(var(--sn-hue-warning) 50% 76%)" },
+    "templateSelector": { "$type": "color", "$value": "hsl(var(--sn-hue-warning) 56% 68%)" },
+    "templateProperty": { "$type": "color", "$value": "var(--sn-syntax-template-attr)" },
+    "templateValue": { "$type": "color", "$value": "var(--sn-syntax-template)" }
+  },
+  "diagnostic": {
+    "errorBackground": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-danger-color) 7%, transparent)" },
+    "errorBorder": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-danger-color) 55%, transparent)" },
+    "warningBackground": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-warning-color) 5%, transparent)" },
+    "warningBorder": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-warning-color) 45%, transparent)" }
   },
   "radius": {
     "node": { "$type": "dimension", "$value": "8px" },

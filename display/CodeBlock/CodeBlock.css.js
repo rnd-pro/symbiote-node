@@ -164,31 +164,31 @@ export default `
     background: var(--sn-bg-overlay);
   }
   /* Token colors */
-  code-block .t-kw   { color: rgb(254, 165, 176); }
-  code-block .t-str  { color: rgb(251, 182, 79); }
-  code-block .t-cm   { color: rgb(149, 149, 149); font-style: italic; }
-  code-block .t-fn   { color: rgb(180, 243, 255); }
-  code-block .t-num  { color: rgb(251, 182, 79); }
-  code-block .t-bi   { color: rgb(180, 243, 255); }
-  code-block .t-prop { color: rgb(238, 131, 252); }
-  code-block .t-lit  { color: rgb(254, 165, 176); }
+  code-block .t-kw   { color: var(--sn-syntax-keyword); }
+  code-block .t-str  { color: var(--sn-syntax-string); }
+  code-block .t-cm   { color: var(--sn-syntax-comment); font-style: italic; }
+  code-block .t-fn   { color: var(--sn-syntax-function); }
+  code-block .t-num  { color: var(--sn-syntax-number); }
+  code-block .t-bi   { color: var(--sn-syntax-builtin); }
+  code-block .t-prop { color: var(--sn-syntax-property); }
+  code-block .t-lit  { color: var(--sn-syntax-literal); }
   /* JSDoc */
-  code-block .t-jd   { color: rgb(130, 155, 130); font-style: italic; }
-  code-block .t-jd-tag  { color: rgb(180, 220, 140); font-style: normal; font-weight: 500; }
-  code-block .t-jd-type { color: rgb(130, 210, 240); font-style: normal; }
+  code-block .t-jd   { color: var(--sn-syntax-doc); font-style: italic; }
+  code-block .t-jd-tag  { color: var(--sn-syntax-doc-tag); font-style: normal; font-weight: 500; }
+  code-block .t-jd-type { color: var(--sn-syntax-doc-type); font-style: normal; }
   /* Template literal inner highlighting */
-  code-block .t-tl       { color: rgb(206, 145, 120); }
-  code-block .t-tl-tag   { color: rgb(86, 182, 194); }
-  code-block .t-tl-attr  { color: rgb(156, 220, 254); }
-  code-block .t-tl-bracket { color: rgb(128, 128, 128); }
-  code-block .t-tl-interp { color: rgb(220, 220, 170); }
-  code-block .t-tl-sel   { color: rgb(215, 186, 125); }
-  code-block .t-tl-prop  { color: rgb(156, 220, 254); }
-  code-block .t-tl-val   { color: rgb(206, 145, 120); }
+  code-block .t-tl       { color: var(--sn-syntax-template); }
+  code-block .t-tl-tag   { color: var(--sn-syntax-template-tag); }
+  code-block .t-tl-attr  { color: var(--sn-syntax-template-attr); }
+  code-block .t-tl-bracket { color: var(--sn-syntax-template-bracket); }
+  code-block .t-tl-interp { color: var(--sn-syntax-template-interpolation); }
+  code-block .t-tl-sel   { color: var(--sn-syntax-template-selector); }
+  code-block .t-tl-prop  { color: var(--sn-syntax-template-property); }
+  code-block .t-tl-val   { color: var(--sn-syntax-template-value); }
   /* Lint squiggles */
   code-block .cb-scroll { position: relative; }
   code-block .cb-squiggle-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 2; }
   code-block .cb-squiggle { position: absolute; right: 0; height: 19.2px; pointer-events: auto; cursor: help; border-radius: 2px; }
-  code-block .cb-sev-2 { background: hsla(0, 80%, 55%, 0.07); border-bottom: 2px wavy hsla(0, 80%, 55%, 0.55); }
-  code-block .cb-sev-1 { background: hsla(40, 80%, 55%, 0.05); border-bottom: 2px wavy hsla(40, 80%, 55%, 0.45); }
+  code-block .cb-sev-2 { background: var(--sn-diagnostic-error-bg); border-bottom: 2px wavy var(--sn-diagnostic-error-border); }
+  code-block .cb-sev-1 { background: var(--sn-diagnostic-warning-bg); border-bottom: 2px wavy var(--sn-diagnostic-warning-border); }
 `;

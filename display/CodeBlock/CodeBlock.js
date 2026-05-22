@@ -130,6 +130,14 @@ export class CodeBlock extends Symbiote {
     this.$.imageApiBase = base || "";
   }
 
+  setContent(code, lang = "plain", options = {}) {
+    if (options.basePath !== undefined) this.setBasePath(options.basePath);
+    if (options.imageApiBase !== undefined) this.setImageApiBase(options.imageApiBase);
+    this.$.lang = lang || "plain";
+    this.$.code = "";
+    this.$.code = code || "";
+  }
+
   _resolveImageSrc(src) {
     if (!src) return "";
     if (/^(https?:|data:|blob:|file:)/.test(src)) return src;

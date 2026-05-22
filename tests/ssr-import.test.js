@@ -56,7 +56,8 @@ describe('SSR-safe import boundary', () => {
     let module = await import(`../ui/shared-styles.js?ssr=${Date.now()}`);
 
     assert.equal(typeof module.sharedUiStyles, 'string');
-    assert.match(module.sharedUiStyles, /\.ui-container/);
+    assert.match(module.sharedUiStyles, /:host/);
+    assert.doesNotMatch(module.sharedUiStyles, /\.ui-/);
     for (let name of domGlobals) {
       assert.equal(globalThis[name], undefined, `shared styles import must not create globalThis.${name}`);
     }

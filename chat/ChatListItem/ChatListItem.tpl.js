@@ -1,7 +1,7 @@
 import { html } from '@symbiotejs/symbiote';
 
 export default html`
-<div class="ui-item" ref="item" ${{ onclick: '^onChatSelect' }}>
+<div class="chat-list-item" ref="item" ${{ onclick: '^onChatSelect' }}>
   <div class="chat-item-top">
     <span class="chat-project-badge" ${{ textContent: 'project', hidden: '!project' }}></span>
     <span class="chat-name" ${{ textContent: 'name' }}></span>

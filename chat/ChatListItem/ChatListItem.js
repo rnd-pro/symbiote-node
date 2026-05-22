@@ -17,10 +17,10 @@ export class ChatListItem extends Symbiote {
 
   renderCallback() {
     this.sub('isActive', (isActive) => {
-      this.ref.item.classList.toggle('active', Boolean(isActive));
+      this.toggleAttribute('active', Boolean(isActive));
     });
     this.sub('depth', (depth) => {
-      this.ref.item.classList.toggle('chat-item-nested', Number(depth) > 0);
+      this.toggleAttribute('nested', Number(depth) > 0);
     });
   }
 }

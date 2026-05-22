@@ -14,7 +14,7 @@ export default /*css*/ `
   overflow: hidden;
 }
 
-.ui-sidebar-header {
+.chat-list-header {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -24,7 +24,7 @@ export default /*css*/ `
   flex-shrink: 0;
 }
 
-.ui-title {
+.chat-list-title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -34,7 +34,7 @@ export default /*css*/ `
   color: var(--sn-text);
 }
 
-.ui-sidebar-content {
+.chat-list-content {
   min-height: 0;
   overflow: auto;
 }

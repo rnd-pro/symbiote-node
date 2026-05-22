@@ -3,7 +3,7 @@ export default /*css*/ `
   display: block;
 }
 
-.ui-item {
+.chat-list-item {
   padding: 10px 14px;
   background: transparent;
   cursor: pointer;
@@ -14,11 +14,11 @@ export default /*css*/ `
   transition: background 0.15s;
 }
 
-.ui-item:hover {
+.chat-list-item:hover {
   background: var(--sn-node-hover);
 }
 
-.ui-item.active {
+:host([active]) .chat-list-item {
   background: var(--sn-node-bg);
   border-left: 3px solid var(--sn-node-selected);
   padding-left: 11px;
@@ -30,13 +30,13 @@ export default /*css*/ `
   gap: 6px;
 }
 
-.chat-item-nested {
+:host([nested]) .chat-list-item {
   margin-left: 16px;
   border-left: 2px solid var(--sn-border-color, var(--sn-node-border));
   position: relative;
 }
 
-.chat-item-nested::before {
+:host([nested]) .chat-list-item::before {
   content: '';
   position: absolute;
   top: 14px;
@@ -103,7 +103,7 @@ export default /*css*/ `
   transition: color 0.15s;
 }
 
-.ui-item:hover .chat-delete {
+.chat-list-item:hover .chat-delete {
   display: inline;
 }
 

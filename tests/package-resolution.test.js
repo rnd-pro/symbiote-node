@@ -41,7 +41,8 @@ describe('package exports resolution', () => {
     assert.ok('ActionButton' in ui, 'UI entrypoint must expose ActionButton binding');
     assert.ok('FormField' in ui, 'UI entrypoint must expose FormField binding');
     assert.equal(typeof ui.sharedUiStyles, 'string');
-    assert.match(ui.sharedUiStyles, /\.ui-container/);
+    assert.match(ui.sharedUiStyles, /:host/);
+    assert.doesNotMatch(ui.sharedUiStyles, /\.ui-/);
     assert.equal(typeof ui.escapeHtml, 'function');
     assert.equal(typeof ui.uiAlert, 'function');
     assert.equal(typeof ui.uiConfirm, 'function');

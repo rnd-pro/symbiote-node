@@ -348,6 +348,14 @@ describe('With DOM shim', () => {
     assert.ok(customElements.get('sn-badge'));
   });
 
+  it('StatusBanner can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../display/Banner/Banner.js'),
+      'StatusBanner must import without throwing'
+    );
+    assert.ok(customElements.get('sn-banner'));
+  });
+
   it('EmptyState can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../display/EmptyState/EmptyState.js'),

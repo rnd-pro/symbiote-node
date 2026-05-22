@@ -132,6 +132,7 @@ export let SourceViewer;
 export let SourceEditor;
 export let LoadingOverlay;
 export let StatusBadge;
+export let StatusBanner;
 export let EmptyState;
 export let getSourceLanguage;
 export let isDirectoryLikePath;
@@ -223,6 +224,7 @@ if (hasDOMGlobals) {
     sourceEditor,
     loadingOverlay,
     statusBadge,
+    statusBanner,
     emptyState,
     quickOpen,
     layoutRouter,
@@ -267,6 +269,7 @@ if (hasDOMGlobals) {
     import('../display/SourceEditor/SourceEditor.js'),
     import('../display/LoadingOverlay/LoadingOverlay.js'),
     import('../display/Badge/Badge.js'),
+    import('../display/Banner/Banner.js'),
     import('../display/EmptyState/EmptyState.js'),
     import('../navigation/QuickOpen/QuickOpen.js'),
     import('../layout/LayoutRouter/LayoutRouter.js'),
@@ -312,6 +315,7 @@ if (hasDOMGlobals) {
   ({ SourceEditor } = sourceEditor);
   ({ LoadingOverlay } = loadingOverlay);
   ({ StatusBadge } = statusBadge);
+  ({ StatusBanner } = statusBanner);
   ({ EmptyState } = emptyState);
   ({ QuickOpen } = quickOpen);
   ({

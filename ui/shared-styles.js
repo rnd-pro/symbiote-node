@@ -214,34 +214,6 @@ const sharedUiStyles = `
 .ui-badge.warning { color: var(--sn-warning-color); border-color: var(--sn-warning-color); }
 .ui-badge.error { color: var(--sn-danger-color); border-color: var(--sn-danger-color); }
 
-.ui-banner {
-  padding: 10px 14px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  font-size: 12px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--sn-node-bg);
-  border: 1px solid var(--sn-node-border);
-}
-
-.ui-banner.running {
-  color: var(--sn-node-selected);
-  border-color: var(--sn-node-selected);
-}
-
-.ui-banner.success {
-  color: var(--sn-success-color);
-  border-color: var(--sn-success-color);
-}
-
-.ui-banner.error {
-  color: var(--sn-danger-color);
-  border-color: var(--sn-danger-color);
-}
-
 /* Specific Detail views inside main */
 .ui-details {
   max-width: 800px;

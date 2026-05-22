@@ -4968,6 +4968,126 @@
       ]
     },
     {
+      "path": "display/Banner/Banner.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "StatusBanner",
+          "tagName": "sn-banner",
+          "description": "Generic themeable status banner for inline feedback and transient process state.",
+          "attributes": [
+            {
+              "name": "variant",
+              "description": "Banner variant: default, info, running, success, warning, or error.",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "members": [],
+          "events": [],
+          "slots": [
+            {
+              "name": "default",
+              "description": "Banner message and optional icon content."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-banner-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-margin-block-end",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-font-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-font-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-icon-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-info-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-info-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-success-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-success-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-warning-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-warning-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-error-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-error-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-banner-running-spin-duration",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-banner",
+          "declaration": {
+            "name": "StatusBanner"
+          }
+        }
+      ]
+    },
+    {
       "path": "node/GraphFrame/GraphFrame.js",
       "declarations": [
         {

@@ -218,6 +218,21 @@ describe('project-transaction-v1 contract', () => {
       }),
       /operation.panel.component is required/
     );
+
+    const next = applyProjectTransaction(project, {
+      version: 'project-transaction-v1',
+      id: 'tx:portal-component',
+      operations: [
+        {
+          type: 'layout.addPanel',
+          layout: 'main',
+          panel: { component: 'pg-agent-chat', componentRegistry: 'portal/runtime' },
+        },
+      ],
+    });
+
+    assert.equal(next.layouts.main.root.children[0].component, 'pg-agent-chat');
+    assert.equal(next.layouts.main.root.children[0].componentRegistry, 'portal/runtime');
   });
 
   it('rejects unknown operations and unsafe project data', () => {

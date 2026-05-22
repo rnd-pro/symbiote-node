@@ -174,6 +174,34 @@ describe('project-package-v1 contract', () => {
     );
   });
 
+  it('preserves runtime layout registry metadata for provider and domain components', () => {
+    const project = normalizeProjectPackage({
+      version: 'project-package-v1',
+      id: 'runtime-ui-registry-metadata',
+      entry: { graph: 'main', layout: 'main', theme: 'default' },
+      graphs: { main: { version: 'graph-model-v1', nodes: [] } },
+      layouts: {
+        main: {
+          version: 'runtime-ui-v1',
+          componentRegistries: [
+            { id: 'symbiote-node/ui', provider: 'symbiote-node' },
+            { id: 'portal/runtime', provider: 'agent-portal' },
+          ],
+          root: {
+            component: 'panel-layout',
+            componentRegistry: 'symbiote-node/ui',
+            children: [{ component: 'pg-agent-chat', componentRegistry: 'portal/runtime' }],
+          },
+        },
+      },
+      themes: { default: { extends: 'symbiote-default' } },
+    });
+
+    assert.equal(project.layouts.main.componentRegistries[0].id, 'symbiote-node/ui');
+    assert.equal(project.layouts.main.root.children[0].component, 'pg-agent-chat');
+    assert.equal(project.layouts.main.root.children[0].componentRegistry, 'portal/runtime');
+  });
+
   it('rejects absolute local paths in public project configs', () => {
     assert.throws(
       () => normalizeProjectPackage({

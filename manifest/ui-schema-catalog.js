@@ -118,10 +118,25 @@ export let UI_SCHEMAS = {
     properties: {
       version: { const: 'runtime-ui-v1' },
       metadata: { type: 'object', additionalProperties: true },
+      componentRegistries: {
+        type: 'array',
+        items: { $ref: '#/$defs/componentRegistry' },
+        uniqueItems: true,
+      },
       theme: { $ref: '#/$defs/themeRef' },
       root: { $ref: '#/$defs/node' },
     },
     $defs: {
+      componentRegistry: {
+        type: 'object',
+        additionalProperties: true,
+        required: ['id'],
+        properties: {
+          id: { type: 'string', minLength: 1 },
+          provider: { type: 'string', minLength: 1 },
+          schema: { type: 'string', minLength: 1 },
+        },
+      },
       themeRef: {
         type: 'object',
         additionalProperties: false,
@@ -137,6 +152,7 @@ export let UI_SCHEMAS = {
         properties: {
           id: { type: 'string' },
           component: { type: 'string', minLength: 1 },
+          componentRegistry: { type: 'string', minLength: 1 },
           props: { type: 'object', additionalProperties: true },
           attrs: { type: 'object', additionalProperties: { type: ['string', 'number', 'boolean'] } },
           bindings: { type: 'object', additionalProperties: { type: 'string' } },

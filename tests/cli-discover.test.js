@@ -217,6 +217,7 @@ describe('discover command', () => {
         'sn-field',
         'sn-card',
         'sn-badge',
+        'sn-empty-state',
         'node-socket',
         'cell-bg',
         'quick-toolbar',
@@ -247,6 +248,7 @@ describe('discover command', () => {
       assert.ok(components.get('sn-field').contract.slots.some((slot) => slot.name === 'default'));
       assert.ok(components.get('sn-card').contract.slots.some((slot) => slot.name === 'default'));
       assert.ok(components.get('sn-badge').contract.slots.some((slot) => slot.name === 'default'));
+      assert.ok(components.get('sn-empty-state').contract.slots.some((slot) => slot.name === 'default'));
       assert.ok(components.get('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
       assert.ok(components.get('graph-explorer-shell').contract.slots.some((slot) => slot.name === 'canvas'));
       assert.ok(components.get('context-menu').contract.methods.some((method) => method.name === 'show'));

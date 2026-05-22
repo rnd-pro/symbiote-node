@@ -58,15 +58,15 @@ export default /*css*/ `
   overflow: auto;
 }
 
-.ui-empty-state {
-  padding: 20px 16px;
-  color: var(--sn-text-dim);
-  text-align: center;
-  font-size: 12px;
-}
-
 .chat-list-icon {
   font-size: 16px;
+}
+
+.chat-list-empty-icon {
+  display: block;
+  margin-block-end: 8px;
+  font-size: 32px;
+  opacity: 0.3;
 }
 
 .chat-list-title {

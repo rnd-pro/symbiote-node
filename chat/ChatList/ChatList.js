@@ -1,5 +1,6 @@
 import Symbiote from '@symbiotejs/symbiote';
 import '../ChatListItem/ChatListItem.js';
+import '../../display/EmptyState/EmptyState.js';
 import template from './ChatList.tpl.js';
 import css from './ChatList.css.js';
 
@@ -70,14 +71,9 @@ export class ChatList extends Symbiote {
   renderEmptyState() {
     let container = this.ref.items;
     if (!container || this.$.chatItems.length > 0) return;
-    let empty = document.createElement('div');
-    empty.className = 'ui-empty-state';
+    let empty = document.createElement('sn-empty-state');
     let icon = document.createElement('span');
-    icon.className = 'material-symbols-outlined';
-    icon.style.fontSize = '32px';
-    icon.style.display = 'block';
-    icon.style.marginBottom = '8px';
-    icon.style.opacity = '0.3';
+    icon.className = 'material-symbols-outlined chat-list-empty-icon';
     icon.textContent = 'chat_bubble_outline';
     empty.appendChild(icon);
     empty.append(this.$.emptyMessage);

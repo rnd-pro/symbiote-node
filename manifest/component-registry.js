@@ -42,6 +42,7 @@ const UI_NAMED_EXPORTS = new Set([
   'FormField',
   'SurfaceCard',
   'StatusBadge',
+  'EmptyState',
   'GraphFrame',
 ]);
 
@@ -1707,6 +1708,38 @@ export let COMPONENTS = [
         '--sn-badge-warning-border',
         '--sn-badge-error-color',
         '--sn-badge-error-border',
+      ],
+    },
+  },
+  {
+    tagName: 'sn-empty-state',
+    className: 'EmptyState',
+    module: 'display/EmptyState/EmptyState.js',
+    category: 'display',
+    description: 'Generic themeable placeholder for empty lists, loading gaps, and unavailable content.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['empty-state', 'placeholder', 'slots', 'themeable'],
+      attributes: [
+        { name: 'variant', type: 'string', description: 'Placeholder variant: default or error.' },
+      ],
+      slots: [
+        { name: 'default', description: 'Placeholder label and optional icon content.' },
+      ],
+      events: [],
+      themeAliases: [
+        '--sn-empty-state-color',
+        '--sn-empty-state-error-color',
+        '--sn-empty-state-padding',
+        '--sn-empty-state-gap',
+        '--sn-empty-state-min-height',
+        '--sn-empty-state-height',
+        '--sn-empty-state-font-size',
+        '--sn-empty-state-font-style',
+        '--sn-empty-state-line-height',
+        '--sn-empty-state-icon-size',
       ],
     },
   },

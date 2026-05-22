@@ -4888,6 +4888,86 @@
       ]
     },
     {
+      "path": "display/EmptyState/EmptyState.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "EmptyState",
+          "tagName": "sn-empty-state",
+          "description": "Generic themeable placeholder for empty lists, loading gaps, and unavailable content.",
+          "attributes": [
+            {
+              "name": "variant",
+              "description": "Placeholder variant: default or error.",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "members": [],
+          "events": [],
+          "slots": [
+            {
+              "name": "default",
+              "description": "Placeholder label and optional icon content."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-empty-state-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-empty-state-error-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-empty-state-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-empty-state-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-empty-state-min-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-empty-state-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-empty-state-font-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-empty-state-font-style",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-empty-state-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-empty-state-icon-size",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-empty-state",
+          "declaration": {
+            "name": "EmptyState"
+          }
+        }
+      ]
+    },
+    {
       "path": "node/GraphFrame/GraphFrame.js",
       "declarations": [
         {

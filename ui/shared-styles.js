@@ -222,18 +222,6 @@ const sharedUiStyles = `
   flex-direction: column;
 }
 
-.ui-empty-state {
-  padding: 20px;
-  text-align: center;
-  color: var(--sn-text-dim);
-  font-size: 13px;
-  font-style: italic;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
 .ui-item {
   padding: 10px 14px;
   background: transparent;

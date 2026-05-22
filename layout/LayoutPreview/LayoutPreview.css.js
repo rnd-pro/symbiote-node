@@ -16,8 +16,8 @@ export let styles = css`
 
     .preview-overlay {
       position: absolute;
-      background: color-mix(in srgb, var(--sn-danger-color, #ef4444) 30%, transparent);
-      border: 2px solid color-mix(in srgb, var(--sn-danger-color, #ef4444) 60%, transparent);
+      background: var(--sn-layout-preview-join-bg);
+      border: 2px solid var(--sn-layout-preview-join-border);
       display: none;
     }
 
@@ -27,8 +27,8 @@ export let styles = css`
 
     .preview-line {
       position: absolute;
-      background: var(--layout-highlight, #888);
-      box-shadow: 0 0 8px var(--layout-highlight, #888);
+      background: var(--sn-layout-preview-line);
+      box-shadow: var(--sn-layout-preview-line-shadow);
       display: none;
     }
 

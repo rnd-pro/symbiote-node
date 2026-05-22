@@ -11,13 +11,13 @@ export let styles = css`
     right: 0;
     bottom: 0;
     width: 280px;
-    background: var(--sn-node-bg, #2a2a3e);
-    border-left: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
+    background: var(--sn-node-bg);
+    border-left: 1px solid var(--sn-node-border);
     display: flex;
     flex-direction: column;
     z-index: 100;
-    font-family: var(--sn-font, 'Inter', sans-serif);
-    color: var(--sn-text, #d4d4d4);
+    font-family: var(--sn-font);
+    color: var(--sn-text);
     overflow-y: auto;
     transition: transform 0.2s ease;
 
@@ -37,7 +37,7 @@ export let styles = css`
 
       &:hover,
       &.dragging {
-        background: var(--sn-node-selected, #4a9eff);
+        background: var(--sn-node-selected);
         opacity: 0.5;
       }
     }
@@ -49,8 +49,8 @@ export let styles = css`
       padding: 12px 16px;
       font-size: 14px;
       font-weight: 600;
-      border-bottom: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
-      background: var(--sn-node-bg, #2a2a3e);
+      border-bottom: 1px solid var(--sn-node-border);
+      background: var(--sn-node-bg);
     }
 
     & .insp-header .material-symbols-outlined {
@@ -69,7 +69,7 @@ export let styles = css`
       align-items: center;
       gap: 8px;
       padding: 40px 0;
-      color: var(--sn-text-dim, #888);
+      color: var(--sn-text-dim);
       font-size: 13px;
 
       &[hidden] {
@@ -91,7 +91,7 @@ export let styles = css`
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
-      color: var(--sn-text-dim, #888);
+      color: var(--sn-text-dim);
       margin-bottom: 4px;
       letter-spacing: 0.5px;
     }
@@ -108,8 +108,8 @@ export let styles = css`
       padding: 2px 8px;
       font-size: 11px;
       border-radius: 4px;
-      background: color-mix(in srgb, var(--sn-cat-server, #5cb8ff) 15%, transparent);
-      color: var(--sn-cat-server, #5cb8ff);
+      background: color-mix(in srgb, var(--sn-cat-server) 15%, transparent);
+      color: var(--sn-cat-server);
     }
 
     & .insp-mono {
@@ -128,7 +128,7 @@ export let styles = css`
       gap: 6px;
       font-size: 12px;
       font-weight: 600;
-      color: var(--sn-text-dim, #888);
+      color: var(--sn-text-dim);
       margin-bottom: 8px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -158,7 +158,7 @@ export let styles = css`
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--sn-cat-server, #5cb8ff);
+    background: var(--sn-cat-server);
     flex-shrink: 0;
   }
 
@@ -168,7 +168,7 @@ export let styles = css`
 
   .insp-port-type {
     font-size: 10px;
-    color: var(--sn-text-dim, #888);
+    color: var(--sn-text-dim);
     font-family: 'SF Mono', 'Fira Code', monospace;
   }
 
@@ -181,7 +181,7 @@ export let styles = css`
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    color: var(--sn-text-dim, #888);
+    color: var(--sn-text-dim);
     margin-bottom: 4px;
     letter-spacing: 0.5px;
   }
@@ -192,16 +192,16 @@ export let styles = css`
     padding: 6px 8px;
     font-size: 12px;
     font-family: 'SF Mono', 'Fira Code', monospace;
-    color: var(--sn-text, #d4d4d4);
+    color: var(--sn-text);
     background: color-mix(in srgb, currentColor 6%, transparent);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--sn-field-control-subtle-border);
     border-radius: 4px;
     outline: none;
     box-sizing: border-box;
     transition: border-color 0.15s;
 
     &:focus {
-      border-color: var(--sn-node-selected, #4a9eff);
+      border-color: var(--sn-node-selected);
     }
   }
 
@@ -210,9 +210,9 @@ export let styles = css`
     padding: 6px 8px;
     font-size: 11px;
     font-family: 'SF Mono', 'Fira Code', monospace;
-    color: var(--sn-text, #d4d4d4);
+    color: var(--sn-text);
     background: color-mix(in srgb, currentColor 6%, transparent);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--sn-field-control-subtle-border);
     border-radius: 4px;
     outline: none;
     resize: vertical;
@@ -222,21 +222,26 @@ export let styles = css`
     transition: border-color 0.15s;
 
     &:focus {
-      border-color: var(--sn-node-selected, #4a9eff);
+      border-color: var(--sn-node-selected);
     }
   }
 
   .insp-ctrl-select {
     appearance: none;
     cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-image: var(--sn-field-select-indicator);
     background-repeat: no-repeat;
-    background-position: right 6px center;
+    background-position:
+      right 10px center,
+      right 6px center;
+    background-size:
+      6px 6px,
+      6px 6px;
     padding-right: 24px;
 
     & option {
-      background: var(--sn-node-bg, #2a2a3e);
-      color: var(--sn-text, #d4d4d4);
+      background: var(--sn-node-bg);
+      color: var(--sn-text);
     }
   }
 
@@ -256,7 +261,7 @@ export let styles = css`
     & .insp-ctrl-slider {
       position: absolute;
       inset: 0;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--sn-field-toggle-bg);
       border-radius: 10px;
       transition: background 0.2s;
 
@@ -267,7 +272,7 @@ export let styles = css`
         height: 14px;
         left: 3px;
         bottom: 3px;
-        background: var(--sn-text-dim, #aaa);
+        background: var(--sn-field-toggle-thumb-bg);
         border-radius: 50%;
         transition:
           transform 0.2s,
@@ -276,11 +281,11 @@ export let styles = css`
     }
 
     & input:checked + .insp-ctrl-slider {
-      background: var(--sn-node-selected, #4a9eff);
+      background: var(--sn-node-selected);
 
       &::before {
         transform: translateX(16px);
-        background: white;
+        background: var(--sn-field-toggle-thumb-active-bg);
       }
     }
   }
@@ -293,15 +298,11 @@ export let styles = css`
     width: 100%;
     padding: 10px 16px;
     margin-top: 12px;
-    border: 1px solid rgba(167, 139, 250, 0.3);
+    border: 1px solid var(--sn-subgraph-border);
     border-radius: 8px;
-    background: linear-gradient(
-      135deg,
-      rgba(167, 139, 250, 0.12) 0%,
-      rgba(109, 40, 217, 0.08) 100%
-    );
-    color: var(--sn-subgraph-accent, #a78bfa);
-    font-family: var(--sn-font, 'Inter', sans-serif);
+    background: var(--sn-subgraph-bg);
+    color: var(--sn-subgraph-accent);
+    font-family: var(--sn-font);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
@@ -312,12 +313,8 @@ export let styles = css`
   }
 
   .insp-enter-btn:hover {
-    background: linear-gradient(
-      135deg,
-      rgba(167, 139, 250, 0.22) 0%,
-      rgba(109, 40, 217, 0.15) 100%
-    );
-    border-color: rgba(167, 139, 250, 0.5);
+    background: var(--sn-subgraph-bg-hover);
+    border-color: var(--sn-subgraph-border-hover);
   }
 
   .insp-enter-btn:active {
@@ -339,11 +336,11 @@ export let styles = css`
     gap: 6px;
     width: 100%;
     padding: 10px 16px;
-    border: 1px solid rgba(76, 175, 80, 0.4);
+    border: 1px solid var(--sn-success-border);
     border-radius: 8px;
-    background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(46, 125, 50, 0.1) 100%);
-    color: var(--sn-success-color, #66bb6a);
-    font-family: var(--sn-font, 'Inter', sans-serif);
+    background: var(--sn-success-bg);
+    color: var(--sn-success-color);
+    font-family: var(--sn-font);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -353,8 +350,8 @@ export let styles = css`
       transform 0.1s;
 
     &:hover {
-      background: linear-gradient(135deg, rgba(76, 175, 80, 0.25) 0%, rgba(46, 125, 50, 0.18) 100%);
-      border-color: rgba(76, 175, 80, 0.6);
+      background: var(--sn-success-bg-hover);
+      border-color: var(--sn-success-border-hover);
     }
 
     &:active {
@@ -368,7 +365,7 @@ export let styles = css`
 
   .insp-template-preview {
     padding: 0 16px 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid var(--sn-field-control-subtle-border);
     margin-top: 8px;
 
     &[hidden] {

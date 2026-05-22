@@ -70,6 +70,10 @@ describe('theme token files', () => {
     assert.equal(getThemeTokens('default-dark').component.panelBackground.$value, '#222222');
     assert.equal(getThemeTokens('default-dark').component.layoutGapBackground.$value, 'transparent');
     assert.equal(getThemeTokens('default-dark').component.layoutBorder.$value, 'transparent');
+    assert.equal(
+      getThemeTokens('default-dark').component.layoutPreviewJoinBackground.$value,
+      'color-mix(in srgb, var(--sn-danger-color) 30%, transparent)'
+    );
     assert.equal(getThemeTokens('default-dark').provider.rndPro.color.$value, 'var(--sn-cat-data)');
     assert.equal(getThemeTokens('default-dark').provider.official.color.$value, 'var(--sn-node-selected)');
     assert.equal(getThemeTokens('default-dark').control.hue.$value, '218');
@@ -81,6 +85,18 @@ describe('theme token files', () => {
     assert.equal(
       getThemeTokens('default-dark').component.successBackground.$value,
       'color-mix(in srgb, var(--sn-success-color) 18%, transparent)'
+    );
+    assert.equal(
+      getThemeTokens('default-dark').component.successBackgroundHover.$value,
+      'color-mix(in srgb, var(--sn-success-color) 28%, transparent)'
+    );
+    assert.equal(
+      getThemeTokens('default-dark').component.subgraphBackground.$value,
+      'linear-gradient(135deg, color-mix(in srgb, var(--sn-subgraph-accent) 12%, transparent) 0%, color-mix(in srgb, var(--sn-subgraph-accent) 8%, transparent) 100%)'
+    );
+    assert.equal(
+      getThemeTokens('default-dark').component.fieldControlSubtleBorder.$value,
+      'hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / var(--sn-alpha-faint))'
     );
     assert.equal(
       getThemeTokens('default-dark').component.dangerBackground.$value,
@@ -160,7 +176,7 @@ describe('theme token files', () => {
 
     let groups = listThemeElementGroups();
     let groupNames = groups.map((group) => group.name);
-    for (let name of ['panel', 'control', 'row', 'input', 'code-surface', 'status', 'graph', 'tab']) {
+    for (let name of ['panel', 'control', 'row', 'input', 'code-surface', 'status', 'graph', 'layout-preview', 'tab']) {
       assert.ok(groupNames.includes(name), `${name} group must be published`);
     }
 
@@ -232,7 +248,10 @@ describe('theme token files', () => {
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-theme-hue' && item.kind === 'source-control'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-provider-rnd-pro-color' && item.group === 'provider-accent'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-success-bg' && item.group === 'status'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-success-bg-hover' && item.group === 'status'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-danger-border' && item.group === 'status'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-subgraph-bg' && item.group === 'status'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-field-control-subtle-border' && item.group === 'control'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-syntax-keyword' && item.group === 'syntax'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-diagnostic-error-bg' && item.group === 'diagnostic'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-layout-gap-bg' && item.group === 'layout'));
@@ -247,6 +266,8 @@ describe('theme token files', () => {
       recipe.cssTokens['--sn-effect-hover-transition'],
       'background-color calc(120ms * var(--sn-theme-motion-scale)) ease, border-color calc(120ms * var(--sn-theme-motion-scale)) ease'
     );
+    assert.equal(recipe.cssTokens['--sn-layout-preview-line'], 'var(--sn-node-selected)');
+    assert.equal(recipe.cssTokens['--sn-field-toggle-thumb-active-bg'], 'var(--sn-text)');
     assert.equal(recipe.controls.length, getThemeControls('default-dark').length);
     assert.ok(recipe.elementGroups.some((group) => group.name === 'graph'));
     assert.equal(recipe.ruleBlocks.length, listThemeRuleBlocks({ theme: 'default-dark' }).length);
@@ -272,6 +293,35 @@ describe('theme token files', () => {
     }
     for (let token of ['--sn-success-bg', '--sn-success-border', '--sn-danger-bg', '--sn-danger-border']) {
       assert.ok(css.includes(token), `TemplatePreview must consume ${token}`);
+      assert.ok(DEFAULT_DARK.tokens[token], `${token} must exist in DEFAULT_DARK`);
+    }
+  });
+
+  it('keeps inspector and layout preview styling token-driven', () => {
+    let files = [
+      'inspector/InspectorPanel/InspectorPanel.css.js',
+      'layout/LayoutPreview/LayoutPreview.css.js',
+    ];
+    let forbidden = [
+      /#[0-9a-fA-F]{3,8}/,
+      /rgba\(/,
+      /var\([^)]*,/,
+      /linear-gradient\(/,
+    ];
+    for (let file of files) {
+      let css = fs.readFileSync(path.join(PKG_ROOT, file), 'utf-8');
+      for (let pattern of forbidden) {
+        assert.equal(pattern.test(css), false, `${file} must not include ${pattern}`);
+      }
+    }
+    for (let token of [
+      '--sn-subgraph-bg',
+      '--sn-subgraph-bg-hover',
+      '--sn-success-bg-hover',
+      '--sn-layout-preview-join-bg',
+      '--sn-layout-preview-line-shadow',
+      '--sn-field-control-subtle-border',
+    ]) {
       assert.ok(DEFAULT_DARK.tokens[token], `${token} must exist in DEFAULT_DARK`);
     }
   });

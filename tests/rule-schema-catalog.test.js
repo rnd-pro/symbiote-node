@@ -25,7 +25,7 @@ describe('rule catalog', () => {
   it('has unique rule ids and expected library rules', () => {
     let ids = ruleset.rules.map((rule) => rule.id);
     assert.equal(new Set(ids).size, ids.length);
-    for (let id of ['SYM-001', 'SYM-003', 'SYM-005', 'SYM-007', 'SYM-008', 'SYM-009']) {
+    for (let id of ['SYM-001', 'SYM-003', 'SYM-005', 'SYM-007', 'SYM-008', 'SYM-009', 'SYM-018']) {
       assert.ok(ids.includes(id), `${id} must exist`);
       assert.equal(getRule(id).id, id);
     }

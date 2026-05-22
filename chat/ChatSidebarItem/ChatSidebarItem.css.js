@@ -67,6 +67,23 @@ chat-sidebar-sub-item[data-active] > .chat-item-child {
   align-items: center;
 }
 
+.chat-status-icon {
+  margin-left: 4px;
+  font-size: 12px !important;
+}
+
+.chat-status-running {
+  color: var(--sn-node-selected);
+}
+
+.chat-status-done {
+  color: var(--sn-success-color);
+}
+
+.chat-status-error {
+  color: var(--sn-danger-color);
+}
+
 .chat-item-adapter {
   font-size: 9px;
   color: var(--sn-text-dim);

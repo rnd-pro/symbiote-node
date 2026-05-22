@@ -70,6 +70,8 @@ describe('theme token files', () => {
     assert.equal(getThemeTokens('default-dark').component.panelBackground.$value, '#222222');
     assert.equal(getThemeTokens('default-dark').component.layoutGapBackground.$value, 'transparent');
     assert.equal(getThemeTokens('default-dark').component.layoutBorder.$value, 'transparent');
+    assert.equal(getThemeTokens('default-dark').provider.rndPro.color.$value, 'var(--sn-cat-data)');
+    assert.equal(getThemeTokens('default-dark').provider.official.color.$value, 'var(--sn-node-selected)');
     assert.equal(getThemeTokens('default-dark').control.hue.$value, '218');
     assert.equal(getThemeTokens('default-dark').control.density.$value, '1');
     assert.equal(
@@ -212,6 +214,7 @@ describe('theme token files', () => {
       'recipe must classify every runtime CSS token'
     );
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-theme-hue' && item.kind === 'source-control'));
+    assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-provider-rnd-pro-color' && item.group === 'provider-accent'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-layout-gap-bg' && item.group === 'layout'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-tree-row-height' && item.group === 'navigation-row'));
     assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-effect-focus-ring' && item.kind === 'motion-effects'));

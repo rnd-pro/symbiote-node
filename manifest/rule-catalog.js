@@ -152,6 +152,15 @@ export let RULES = [
     check: 'interaction_effects_derive_from_state_tokens',
     tags: ['symbiote', 'themes', 'motion', 'effects', 'interaction'],
   },
+  {
+    id: 'SYM-018',
+    name: 'no-legacy-ui-shell-classes',
+    description: 'Reusable and provider-owned UI must not introduce legacy .ui-* shared shell classes; use provider custom elements, host selectors, or component-namespaced classes.',
+    severity: 'error',
+    filePattern: ['**/*.tpl.js', '**/*.css.js', '**/*.js'],
+    check: 'no_legacy_ui_shell_classes',
+    tags: ['symbiote', 'styles', 'theming', 'components'],
+  },
 ];
 
 export let RULESETS = [

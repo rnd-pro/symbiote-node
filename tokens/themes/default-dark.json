@@ -79,6 +79,17 @@
     "treeRowSelectedBackground": { "$type": "color", "$value": "var(--sn-accent-bg-subtle)" },
     "treeRowSelectedBorder": { "$type": "color", "$value": "transparent" },
     "listItemActiveBackground": { "$type": "color", "$value": "var(--sn-accent-bg-subtle)" },
+    "listDetailBackground": { "$type": "color", "$value": "var(--sn-panel-bg)" },
+    "listDetailBorder": { "$type": "color", "$value": "var(--sn-node-border)" },
+    "listDetailRadius": { "$type": "dimension", "$value": "var(--sn-card-radius)" },
+    "listDetailSidebarWidth": { "$type": "dimension", "$value": "minmax(220px, 30%)" },
+    "listDetailSidebarBackground": { "$type": "color", "$value": "var(--sn-node-bg)" },
+    "listDetailMainBackground": { "$type": "color", "$value": "transparent" },
+    "listDetailHeaderBackground": { "$type": "color", "$value": "transparent" },
+    "listDetailHeaderPadding": { "$type": "dimension", "$value": "10px 12px" },
+    "listDetailMainPadding": { "$type": "dimension", "$value": "12px" },
+    "listDetailTitleSize": { "$type": "dimension", "$value": "12px" },
+    "listDetailTitleColor": { "$type": "color", "$value": "var(--sn-text)" },
     "composerBackground": { "$type": "color", "$value": "var(--sn-node-bg)" },
     "composerActionBackground": { "$type": "color", "$value": "var(--sn-node-hover)" },
     "tabsBackground": { "$type": "color", "$value": "transparent" },
@@ -87,6 +98,28 @@
     "sourceHeaderBackground": { "$type": "color", "$value": "var(--sn-node-header-bg)" },
     "sourceEditorBackground": { "$type": "color", "$value": "var(--sn-bg)" },
     "loadingBackground": { "$type": "color", "$value": "var(--sn-bg)" }
+  },
+  "provider": {
+    "rndPro": {
+      "color": { "$type": "color", "$value": "var(--sn-cat-data)" },
+      "background": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-provider-rnd-pro-color) 20%, transparent)" }
+    },
+    "official": {
+      "color": { "$type": "color", "$value": "var(--sn-node-selected)" },
+      "background": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-provider-official-color) 20%, transparent)" }
+    },
+    "google": {
+      "color": { "$type": "color", "$value": "var(--sn-success-color)" },
+      "background": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-provider-google-color) 20%, transparent)" }
+    },
+    "community": {
+      "color": { "$type": "color", "$value": "var(--sn-warning-color)" },
+      "background": { "$type": "color", "$value": "color-mix(in srgb, var(--sn-provider-community-color) 20%, transparent)" }
+    },
+    "default": {
+      "color": { "$type": "color", "$value": "var(--sn-text-dim)" },
+      "background": { "$type": "color", "$value": "var(--sn-node-hover)" }
+    }
   },
   "radius": {
     "node": { "$type": "dimension", "$value": "8px" },

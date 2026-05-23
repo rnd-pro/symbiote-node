@@ -29,6 +29,7 @@ export {
   NEON_GLOW,
   DEFAULT_DARK,
   DEFAULT_THEME,
+  DEFAULT_PROVIDER_THEME,
 } from './themes/Theme.js';
 
 export {
@@ -38,6 +39,7 @@ export {
   GREY_PALETTE,
   DEFAULT_DARK_PALETTE,
   DEFAULT_PALETTE,
+  DEFAULT_PROVIDER_PALETTE,
 } from './themes/Palette.js';
 
 export { MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN } from './themes/Skin.js';

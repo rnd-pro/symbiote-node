@@ -51,12 +51,14 @@ const ROOT_EXPORTS = [
   ['NEON_GLOW', 'object'],
   ['DEFAULT_DARK', 'object'],
   ['DEFAULT_THEME', 'object'],
+  ['DEFAULT_PROVIDER_THEME', 'object'],
   ['DARK_PALETTE', 'object'],
   ['LIGHT_PALETTE', 'object'],
   ['SYNTHWAVE_PALETTE', 'object'],
   ['GREY_PALETTE', 'object'],
   ['DEFAULT_DARK_PALETTE', 'object'],
   ['DEFAULT_PALETTE', 'object'],
+  ['DEFAULT_PROVIDER_PALETTE', 'object'],
   ['MODERN_SKIN', 'object'],
   ['COMPACT_SKIN', 'object'],
   ['ROUNDED_SKIN', 'object'],
@@ -418,7 +420,9 @@ describe('symbiote-node UI exports', () => {
 
   it('uses default dark as the default theme and palette', () => {
     assert.equal(ui.DEFAULT_THEME, ui.DEFAULT_DARK);
+    assert.equal(ui.DEFAULT_PROVIDER_THEME, ui.DEFAULT_DARK);
     assert.equal(ui.DEFAULT_PALETTE, ui.DEFAULT_DARK_PALETTE);
+    assert.equal(ui.DEFAULT_PROVIDER_PALETTE, ui.DEFAULT_DARK_PALETTE);
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-theme-hue'], '218');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-hue-accent'], 'var(--sn-theme-hue)');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-panel-bg'], 'hsl(0 0% var(--sn-lit-surface))');

@@ -51,6 +51,12 @@ const UI_NAMED_EXPORTS = new Set([
   'GraphFrame',
 ]);
 
+const COMPONENT_VISIBILITY = {
+  public: 'public',
+  internal: 'internal',
+  experimental: 'experimental',
+};
+
 export let COMPONENTS = [
   {
     tagName: 'graph-node',
@@ -2032,9 +2038,11 @@ export let COMPONENTS = [
   },
 ].map((component) => {
   let exportName = UI_NAMED_EXPORTS.has(component.className) ? component.className : null;
-  let internal = !exportName;
+  let visibility = component.visibility || (exportName ? COMPONENT_VISIBILITY.public : COMPONENT_VISIBILITY.internal);
+  let internal = visibility === COMPONENT_VISIBILITY.internal;
   return {
     ...component,
+    visibility,
     internal,
     specifier: COMPONENT_UI_SPECIFIER,
     exportName,
@@ -2043,9 +2051,10 @@ export let COMPONENTS = [
 });
 
 export function listComponents(filter = {}) {
-  let { includeInternal = false, ...componentFilter } = filter;
+  let { includeInternal = false, includeExperimental = false, ...componentFilter } = filter;
   return COMPONENTS.filter((component) => {
     if (!includeInternal && component.internal) return false;
+    if (!includeExperimental && component.visibility === COMPONENT_VISIBILITY.experimental) return false;
     for (let [key, value] of Object.entries(componentFilter)) {
       if (component[key] !== value) return false;
     }

@@ -15,6 +15,8 @@ export let THEME_NAMES = [
 export let THEME_METADATA = {
   'default-dark': {
     role: 'neutral-default',
+    aliases: ['symbiote-default', 'default-provider', 'DEFAULT_PROVIDER_THEME'],
+    defaultExport: 'DEFAULT_PROVIDER_THEME',
     description: 'Cascadeable neutral provider default aligned with the current Agent Portal shell values.',
     origin: 'Agent Portal shell values generalized into provider-neutral Symbiote Node tokens.',
     cascade: 'Apply once at :root, an app shell, or a subtree boundary; components inherit --sn-* tokens through the CSS cascade.',

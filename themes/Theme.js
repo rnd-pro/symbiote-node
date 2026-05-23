@@ -21,6 +21,7 @@ export { GREY_NEUTRAL } from './grey.js';
 export { NEON_GLOW } from './neon.js';
 export { DEFAULT_DARK } from './default-dark.js';
 export { DEFAULT_DARK as DEFAULT_THEME } from './default-dark.js';
+export { DEFAULT_DARK as DEFAULT_PROVIDER_THEME } from './default-dark.js';
 
 /**
  * Mapping from layout global tokens to symbiote-node tokens.

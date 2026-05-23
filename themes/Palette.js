@@ -21,6 +21,7 @@ export { SYNTHWAVE_PALETTE } from './synthwave.js';
 export { GREY_PALETTE } from './grey.js';
 export { DEFAULT_DARK_PALETTE } from './default-dark.js';
 export { DEFAULT_DARK_PALETTE as DEFAULT_PALETTE } from './default-dark.js';
+export { DEFAULT_DARK_PALETTE as DEFAULT_PROVIDER_PALETTE } from './default-dark.js';
 
 /**
  * Apply palette to element

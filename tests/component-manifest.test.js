@@ -211,6 +211,7 @@ describe('component registry', () => {
       assert.equal(getComponentExportName(tag), null, `${tag} must not be a named export`);
       assert.equal(getComponent(tag).importKind, 'side-effect', `${tag} must be side-effect metadata`);
       assert.equal(getComponent(tag).internal, true, `${tag} must be internal metadata`);
+      assert.equal(getComponent(tag).visibility, 'internal', `${tag} must expose internal visibility`);
     }
   });
 
@@ -220,6 +221,18 @@ describe('component registry', () => {
       assert.equal(publicTags.includes(tag), false, `${tag} must not be listed by default`);
     }
     assert.equal(getComponentTags({ includeInternal: true }).includes('project-tab-item'), true);
+  });
+
+  it('classifies every component with machine-readable visibility', () => {
+    let allowed = new Set(['public', 'internal', 'experimental']);
+    for (let component of COMPONENTS) {
+      assert.ok(allowed.has(component.visibility), `${component.tagName} must have valid visibility`);
+      if (component.visibility === 'public') {
+        assert.equal(component.internal, false, `${component.tagName} public components are not internal`);
+        assert.equal(component.importKind, 'named', `${component.tagName} public components use named imports`);
+        assert.ok(getComponentExportName(component.tagName), `${component.tagName} public components expose export names`);
+      }
+    }
   });
 
   it('advertises public package specifiers instead of private implementation imports', () => {

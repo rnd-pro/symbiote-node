@@ -202,6 +202,76 @@ describe('project-package-v1 contract', () => {
     assert.equal(project.layouts.main.root.children[0].componentRegistry, 'portal/runtime');
   });
 
+  it('normalizes an Agent Portal config as a generated project package', () => {
+    const project = normalizeProjectPackage({
+      version: 'project-package-v1',
+      id: 'agent-portal-config',
+      entry: { graph: 'workspace', layout: 'portal', theme: 'default' },
+      packs: [
+        { id: 'symbiote-node/ui', kind: 'provider' },
+        { id: 'agent-portal/runtime', kind: 'application-adapter' },
+      ],
+      graphs: {
+        workspace: {
+          version: 'graph-model-v1',
+          nodes: [
+            {
+              id: 'panel:chat',
+              kind: 'ui.panel',
+              design: { component: 'chat-transcript', themeScope: 'panel.chat' },
+              params: { source: 'agent.chat' },
+            },
+            {
+              id: 'panel:graph',
+              kind: 'ui.panel',
+              design: { component: 'canvas-graph', themeScope: 'panel.graph' },
+              params: { source: 'project.graph' },
+            },
+          ],
+          edges: [
+            {
+              source: { nodeId: 'panel:chat', port: 'selection' },
+              target: { nodeId: 'panel:graph', port: 'focus' },
+              kind: 'ui.binding',
+            },
+          ],
+        },
+      },
+      layouts: {
+        portal: {
+          version: 'runtime-ui-v1',
+          componentRegistries: [
+            { id: 'symbiote-node/ui', provider: 'symbiote-node' },
+            { id: 'agent-portal/runtime', provider: 'agent-portal' },
+          ],
+          root: {
+            id: 'root',
+            component: 'panel-layout',
+            componentRegistry: 'symbiote-node/ui',
+            children: [
+              { id: 'chat', component: 'chat-transcript', componentRegistry: 'symbiote-node/ui' },
+              { id: 'graph', component: 'pg-project-graph', componentRegistry: 'agent-portal/runtime' },
+            ],
+          },
+        },
+      },
+      themes: {
+        default: {
+          extends: 'symbiote-default',
+          modifiers: { hue: 218, density: 0.95, backgroundLightness: '10%' },
+        },
+      },
+      agents: {
+        allowedTransactions: ['graph.addNode', 'layout.addPanel', 'theme.setModifier'],
+      },
+    });
+
+    assert.equal(project.packs[0].id, 'symbiote-node/ui');
+    assert.equal(project.graphs.workspace.edges[0].kind, 'ui.binding');
+    assert.equal(project.layouts.portal.root.children[1].componentRegistry, 'agent-portal/runtime');
+    assert.equal(project.themes.default.modifiers.hue, 218);
+  });
+
   it('rejects absolute local paths in public project configs', () => {
     assert.throws(
       () => normalizeProjectPackage({

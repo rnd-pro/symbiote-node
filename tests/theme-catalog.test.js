@@ -66,6 +66,8 @@ describe('theme token files', () => {
   it('catalog functions expose theme metadata and flatten tokens', () => {
     assert.equal(listThemes().length, THEME_NAMES.length);
     assert.equal(getTheme('default-dark').path, 'tokens/themes/default-dark.json');
+    assert.equal(getTheme('default-dark').defaultExport, 'DEFAULT_PROVIDER_THEME');
+    assert.ok(getTheme('default-dark').aliases.includes('symbiote-default'));
     assert.equal(getThemeTokens('default-dark').color.accent.$value, 'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent))');
     assert.equal(getThemeTokens('default-dark').component.panelBackground.$value, 'hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-surface))');
     assert.equal(getThemeTokens('default-dark').component.layoutGapBackground.$value, 'transparent');
@@ -235,6 +237,7 @@ describe('theme token files', () => {
     assert.equal(recipe.name, 'default-dark');
     assert.equal(recipe.tokenFile, 'tokens/themes/default-dark.json');
     assert.equal(recipe.theme.path, 'tokens/themes/default-dark.json');
+    assert.equal(recipe.theme.defaultExport, 'DEFAULT_PROVIDER_THEME');
     assert.equal(recipe.tokens.color.accent.$value, 'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent))');
     assert.equal(recipe.tokens.control.hue.$value, '218');
     assert.equal(recipe.flatTokens['geometry.treeRowHeight'].$value, '22px');

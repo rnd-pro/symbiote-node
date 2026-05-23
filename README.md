@@ -284,6 +284,30 @@ Agent-readable theme construction data is published through `symbiote-node/manif
 
 Theme modifiers are project data, not product code. For the default provider theme, supported controls are `hue`, `chroma`, `backgroundLightness`, `surfaceLightness`, `textLightness`, `density`, `radius`, `motion`, and `elevation`; custom theme packs can define their own modifier vocabulary.
 
+### Runtime UI Registry
+
+Host applications and agents should resolve browser UI modules through the `symbiote-node/ui` runtime registry. The registry is backed by the public component catalog and already imported UI classes; consumers do not need component deep imports or manual `customElements` glue.
+
+```javascript
+import {
+  defineModule,
+  getModule,
+  listModules,
+  registerModule,
+} from 'symbiote-node/ui';
+
+const publicModules = listModules();
+const ChatTranscript = getModule('chat-transcript');
+
+defineModule('chat-transcript'); // idempotent when the element already exists
+
+class HostPanel extends HTMLElement {}
+registerModule('host-panel', HostPanel);
+defineModule('host-panel');
+```
+
+`listModules()` returns public modules by default. Internal components are hidden unless a host explicitly passes `{ includeInternal: true }`, so agents can distinguish reusable provider primitives from implementation-only child elements.
+
 ### Layout System (BSP)
 
 Binary Space Partitioning layout engine for IDE-style panel workspaces. Panels resize by dragging dividers, sections split horizontally or vertically. Sidebar navigation with section switching and panel routing.

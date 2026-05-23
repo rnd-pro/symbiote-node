@@ -58,7 +58,7 @@ describe('CanvasGraph geometry helpers', () => {
     assert.deepEqual(getNodeColor({ color: '#3af' }), [51, 170, 255]);
     assert.deepEqual(getNodeColor({ type: 'config' }, typeColors), [255, 200, 120]);
     assert.deepEqual(getNodeColor({ type: 'unknown' }, typeColors), [120, 180, 255]);
-    assert.equal(getNodeColor({ type: 'unknown' }), null);
+    assert.deepEqual(getNodeColor({ type: 'unknown' }), [120, 180, 255]);
   });
 
   it('returns depth-zero focus transform around the focus point', () => {

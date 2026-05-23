@@ -165,6 +165,68 @@ describe('With DOM shim', () => {
     }
   });
 
+  it('UI registry lists public modules without internal components by default', async () => {
+    let { listModules } = await import('../ui/index.js');
+    let modules = listModules();
+    let tags = modules.map((module) => module.tagName);
+
+    assert.ok(tags.includes('node-canvas'));
+    assert.ok(tags.includes('chat-transcript'));
+    assert.equal(tags.includes('project-tab-item'), false);
+    assert.equal(modules.find((module) => module.tagName === 'node-canvas').specifier, 'symbiote-node/ui');
+  });
+
+  it('UI registry resolves imported modules by tag and export name', async () => {
+    let { NodeCanvas, getModule, listModules } = await import('../ui/index.js');
+
+    assert.equal(getModule('node-canvas'), NodeCanvas);
+    assert.equal(getModule('NodeCanvas'), NodeCanvas);
+
+    let nodeCanvas = listModules().find((module) => module.tagName === 'node-canvas');
+    assert.equal(nodeCanvas.exportName, 'NodeCanvas');
+    assert.equal(nodeCanvas.visibility, 'public');
+    assert.equal(nodeCanvas.registered, true);
+    assert.equal(nodeCanvas.defined, true);
+  });
+
+  it('defineModule is idempotent for already-defined public custom elements', async () => {
+    let { NodeCanvas, defineModule } = await import('../ui/index.js');
+
+    assert.equal(defineModule('node-canvas'), customElements.get('node-canvas'));
+    assert.equal(defineModule('NodeCanvas'), NodeCanvas);
+  });
+
+  it('defineModule protects internal modules unless explicitly included', async () => {
+    let { defineModule, listModules } = await import('../ui/index.js');
+
+    assert.throws(
+      () => defineModule('project-tab-item'),
+      /internal/
+    );
+    assert.equal(
+      defineModule('project-tab-item', { includeInternal: true }),
+      customElements.get('project-tab-item')
+    );
+    assert.ok(listModules({ includeInternal: true }).some((module) => {
+      return module.tagName === 'project-tab-item' && module.internal;
+    }));
+  });
+
+  it('registerModule adds host-provided modules without deep imports', async () => {
+    let { defineModule, getModule, listModules, registerModule } = await import('../ui/index.js');
+    class TestPanel extends HTMLElement {}
+
+    let descriptor = registerModule('test-panel', TestPanel);
+
+    assert.equal(descriptor.tagName, 'test-panel');
+    assert.equal(descriptor.specifier, 'symbiote-node/ui');
+    assert.equal(getModule('test-panel'), TestPanel);
+    assert.equal(defineModule('test-panel'), TestPanel);
+    assert.ok(listModules().some((module) => {
+      return module.tagName === 'test-panel' && module.registered;
+    }));
+  });
+
   it('NodeCanvas can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../canvas/NodeCanvas/NodeCanvas.js'),

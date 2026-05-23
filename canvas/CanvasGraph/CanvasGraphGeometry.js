@@ -1,5 +1,6 @@
 export const DOT_RADIUS = 6;
 export const HIT_RADIUS = 14;
+export const DEFAULT_NODE_COLOR = [120, 180, 255];
 
 export function parseHexColor(value) {
   if (typeof value !== 'string') return null;
@@ -12,7 +13,7 @@ export function parseHexColor(value) {
 }
 
 export function getNodeColor(node, typeColors = {}) {
-  return parseHexColor(node?.color) || typeColors[node?.type] || typeColors.data || null;
+  return parseHexColor(node?.color) || typeColors[node?.type] || typeColors.data || DEFAULT_NODE_COLOR;
 }
 
 export function getGroupOrbitMetrics(node, conns, opts = {}) {

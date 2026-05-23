@@ -8,6 +8,8 @@
 export * from '../core/index.js';
 export * from '../graph/index.js';
 
+import { getComponent, listComponents } from '../manifest/component-registry.js';
+
 export { Drag } from '../interactions/Drag.js';
 export { Zoom } from '../interactions/Zoom.js';
 export { Selector } from '../interactions/Selector.js';
@@ -202,11 +204,178 @@ export {
 } from '../chat/message-model.js';
 export { collectQuickOpenFilesFromSkeleton, fuzzyScore, searchQuickOpenItems } from '../navigation/quick-open-utils.js';
 
+const runtimeModules = new Map();
+const runtimeModuleAliases = new Map();
+
 const hasDOMGlobals =
   typeof window !== 'undefined' &&
   typeof document !== 'undefined' &&
   typeof HTMLElement !== 'undefined' &&
   typeof customElements !== 'undefined';
+
+function normalizeModuleName(name) {
+  return String(name || '').trim();
+}
+
+function canUseCustomElements() {
+  return typeof customElements !== 'undefined' && typeof customElements.get === 'function';
+}
+
+function findCatalogComponent(name) {
+  let normalized = normalizeModuleName(name);
+  if (!normalized) return null;
+  let byTag = getComponent(normalized);
+  if (byTag) return byTag;
+  return listComponents({ includeInternal: true, includeExperimental: true }).find((component) => {
+    return component.exportName === normalized || component.className === normalized;
+  }) || null;
+}
+
+function resolveModuleRecord(name) {
+  let normalized = normalizeModuleName(name);
+  if (!normalized) return null;
+  let tagName = runtimeModuleAliases.get(normalized) || normalized;
+  return runtimeModules.get(tagName) || null;
+}
+
+function toModuleDescriptor(record, component = null) {
+  let tagName = record?.tagName || component?.tagName;
+  let ComponentClass = record?.ComponentClass;
+  let defined = Boolean(tagName && canUseCustomElements() && customElements.get(tagName));
+  return {
+    name: tagName,
+    tagName,
+    exportName: record?.exportName ?? component?.exportName ?? null,
+    className: record?.className ?? component?.className ?? ComponentClass?.name ?? null,
+    category: record?.category ?? component?.category ?? null,
+    visibility: record?.visibility ?? component?.visibility ?? 'public',
+    internal: Boolean(record?.internal ?? component?.internal),
+    experimental: (record?.visibility ?? component?.visibility) === 'experimental',
+    specifier: record?.specifier ?? component?.specifier ?? 'symbiote-node/ui',
+    module: record?.module ?? component?.module ?? null,
+    defined,
+    registered: Boolean(record?.ComponentClass),
+  };
+}
+
+function registerModuleAlias(alias, tagName) {
+  if (alias) runtimeModuleAliases.set(alias, tagName);
+}
+
+export function registerModule(name, ComponentClass, options = {}) {
+  let normalized = normalizeModuleName(name);
+  if (!normalized) {
+    throw new TypeError('registerModule(name, ComponentClass) requires a module name.');
+  }
+  if (typeof ComponentClass !== 'function') {
+    throw new TypeError(`registerModule("${normalized}") requires a component class.`);
+  }
+
+  let component = findCatalogComponent(normalized);
+  let tagName = normalizeModuleName(options.tagName || component?.tagName || normalized);
+  let exportName = options.exportName ?? component?.exportName ?? ComponentClass.name ?? null;
+  let visibility = options.visibility ?? component?.visibility ?? 'public';
+  let record = {
+    tagName,
+    exportName,
+    className: options.className ?? component?.className ?? ComponentClass.name ?? null,
+    category: options.category ?? component?.category ?? null,
+    visibility,
+    internal: Boolean(options.internal ?? component?.internal ?? visibility === 'internal'),
+    specifier: options.specifier ?? component?.specifier ?? 'symbiote-node/ui',
+    module: options.module ?? component?.module ?? null,
+    ComponentClass,
+  };
+
+  runtimeModules.set(tagName, record);
+  registerModuleAlias(normalized, tagName);
+  registerModuleAlias(tagName, tagName);
+  registerModuleAlias(exportName, tagName);
+  registerModuleAlias(record.className, tagName);
+  return toModuleDescriptor(record, component);
+}
+
+export function getModule(name) {
+  let record = resolveModuleRecord(name);
+  if (record?.ComponentClass) return record.ComponentClass;
+
+  let component = findCatalogComponent(name);
+  if (component?.tagName && canUseCustomElements()) {
+    return customElements.get(component.tagName);
+  }
+  return undefined;
+}
+
+export function listModules(options = {}) {
+  let { includeInternal = false, includeExperimental = false } = options;
+  let descriptors = [];
+  let seen = new Set();
+
+  for (let component of listComponents({ includeInternal: true, includeExperimental: true })) {
+    if (!includeInternal && component.internal) continue;
+    if (!includeExperimental && component.visibility === 'experimental') continue;
+    let record = runtimeModules.get(component.tagName);
+    descriptors.push(toModuleDescriptor(record, component));
+    seen.add(component.tagName);
+  }
+
+  for (let record of runtimeModules.values()) {
+    if (seen.has(record.tagName)) continue;
+    if (!includeInternal && record.internal) continue;
+    if (!includeExperimental && record.visibility === 'experimental') continue;
+    descriptors.push(toModuleDescriptor(record));
+    seen.add(record.tagName);
+  }
+
+  return descriptors;
+}
+
+export function defineModule(name, options = {}) {
+  if (!canUseCustomElements()) return undefined;
+
+  let component = findCatalogComponent(name);
+  let record = resolveModuleRecord(name);
+  let visibility = options.visibility ?? record?.visibility ?? component?.visibility ?? 'public';
+  let internal = Boolean(record?.internal ?? component?.internal ?? visibility === 'internal');
+  let experimental = visibility === 'experimental';
+  let tagName = normalizeModuleName(options.tagName || record?.tagName || component?.tagName || name);
+
+  if (internal && !options.includeInternal) {
+    throw new Error(`UI module "${tagName}" is internal. Pass includeInternal: true to define it.`);
+  }
+  if (experimental && !options.includeExperimental) {
+    throw new Error(`UI module "${tagName}" is experimental. Pass includeExperimental: true to define it.`);
+  }
+
+  let existing = customElements.get(tagName);
+  if (existing) return existing;
+
+  let ComponentClass = record?.ComponentClass || getModule(name);
+  if (!ComponentClass) {
+    throw new Error(`UI module "${tagName}" is not registered.`);
+  }
+
+  customElements.define(tagName, ComponentClass, options.defineOptions);
+  return customElements.get(tagName) || ComponentClass;
+}
+
+function registerCatalogModules(exportsByName) {
+  for (let component of listComponents({ includeInternal: true, includeExperimental: true })) {
+    if (!component.exportName) continue;
+    let ComponentClass = exportsByName[component.exportName];
+    if (!ComponentClass) continue;
+    registerModule(component.tagName, ComponentClass, {
+      tagName: component.tagName,
+      exportName: component.exportName,
+      className: component.className,
+      category: component.category,
+      visibility: component.visibility,
+      internal: component.internal,
+      specifier: component.specifier,
+      module: component.module,
+    });
+  }
+}
 
 if (hasDOMGlobals) {
   const [
@@ -367,6 +536,56 @@ if (hasDOMGlobals) {
   ({ SurfaceCard } = surfaceCard);
   ({ OutputListPreview } = outputListPreview);
   ({ OutputGraphPreview } = outputGraphPreview);
+
+  registerCatalogModules({
+    NodeCanvas,
+    CanvasGraph,
+    GraphExplorerShell,
+    ContextMenu,
+    GraphNode,
+    GraphFrame,
+    NodeSocket,
+    QuickToolbar,
+    InspectorPanel,
+    Minimap,
+    NodeSearch,
+    Layout,
+    LayoutNode,
+    LayoutSidebar,
+    ProjectTabs,
+    CodeBlock,
+    SourceViewer,
+    SourceEditor,
+    LoadingOverlay,
+    StatusBadge,
+    StatusBanner,
+    EmptyState,
+    MetricItem,
+    DataTable,
+    EventFeed,
+    QuickOpen,
+    PaletteBrowser,
+    GraphTabs,
+    Breadcrumb,
+    CellBg,
+    ChatMessageItem,
+    ChatTranscript,
+    ChatComposer,
+    ChatList,
+    ChatListItem,
+    ChatSidebarShell,
+    ChatSidebarItem,
+    ChatSidebarSubItem,
+    ListItem,
+    ListDetailShell,
+    TreeView,
+    TreePanel,
+    ActionButton,
+    FormField,
+    SurfaceCard,
+    OutputListPreview,
+    OutputGraphPreview,
+  });
 }
 
 export {

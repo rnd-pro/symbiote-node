@@ -13,12 +13,12 @@ export default /*css*/ `
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--sn-output-preview-gap, 8px);
+  gap: var(--sn-output-preview-gap);
   min-width: 0;
-  padding: var(--sn-output-preview-padding, 10px);
-  border: 1px solid var(--sn-output-preview-border, var(--sn-border));
-  border-radius: var(--sn-output-preview-radius, 6px);
-  background: var(--sn-output-preview-bg, var(--sn-surface));
+  padding: var(--sn-output-preview-padding);
+  border: 1px solid var(--sn-output-preview-border);
+  border-radius: var(--sn-output-preview-radius);
+  background: var(--sn-output-preview-bg);
 }
 
 .output-list-preview-head,
@@ -66,9 +66,9 @@ export default /*css*/ `
   gap: 3px 10px;
   min-height: 38px;
   padding: 8px 10px;
-  border: 1px solid var(--sn-output-preview-item-border, var(--sn-border));
-  border-radius: var(--sn-output-preview-item-radius, 5px);
-  background: var(--sn-output-preview-item-bg, var(--sn-node-bg));
+  border: 1px solid var(--sn-output-preview-item-border);
+  border-radius: var(--sn-output-preview-item-radius);
+  background: var(--sn-output-preview-item-bg);
 }
 
 .output-list-preview-label,

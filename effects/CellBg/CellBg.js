@@ -11,8 +11,6 @@ import css from './CellBg.css.js';
  * Min Radius: 2px
  * Max Radius: 4px
  * Fade Rate: 4%
- * BG Color: #1a1a1a
- * Dot Color: #ffffff
  */
 
 const RULE_B = [3];
@@ -22,9 +20,6 @@ const STEP_MS = 75;
 const MIN_RADIUS = 2;
 const MAX_RADIUS = 5;
 const FADE_RATE = 0.04;
-const BG_COLOR = '#1a1a1a';
-const DOT_COLOR = [80, 80, 80];
-const BASE_ALPHA = 0.06;
 
 const PALETTE_SIZE = 32;
 const now = () => globalThis.performance?.now?.() ?? Date.now();
@@ -34,6 +29,25 @@ const requestFrame = (callback) => {
   }
   return setTimeout(() => callback(now()), 16);
 };
+
+function parseCssRgb(source, value) {
+  let doc = source?.ownerDocument || globalThis.document;
+  if (!doc || !value) return null;
+  let probe = doc.createElement('span');
+  probe.style.color = value;
+  doc.documentElement.append(probe);
+  let normalized = globalThis.getComputedStyle(probe).color;
+  probe.remove();
+  let match = normalized.match(/rgba?\(([^)]+)\)/);
+  if (!match) return null;
+  let channels = match[1].split(',').slice(0, 3).map((part) => Number.parseFloat(part));
+  return channels.every(Number.isFinite) ? channels : null;
+}
+
+function readCssToken(source, token) {
+  let computed = globalThis.getComputedStyle?.(source);
+  return computed?.getPropertyValue(token).trim() || '';
+}
 
 export class CellBg extends Symbiote {
   init$ = {
@@ -131,18 +145,22 @@ export class CellBg extends Symbiote {
   }
 
   _buildPalette() {
-    let bg = BG_COLOR;
-    let br = parseInt(bg.slice(1, 3), 16) || 0;
-    let bgG = parseInt(bg.slice(3, 5), 16) || 0;
-    let bb = parseInt(bg.slice(5, 7), 16) || 0;
+    let bg = readCssToken(this, '--sn-cell-bg') || readCssToken(this, '--sn-bg');
+    let dot = readCssToken(this, '--sn-cell-dot') || readCssToken(this, '--sn-text-dim');
+    let bgRgb = parseCssRgb(this, bg) || [0, 0, 0];
+    let dotRgb = parseCssRgb(this, dot) || bgRgb;
+    let baseAlpha = Number.parseFloat(readCssToken(this, '--sn-cell-base-alpha')) || 0;
+    let alphaSpan = Number.parseFloat(readCssToken(this, '--sn-cell-alpha-span')) || 0;
+
+    this._bgFill = bg || 'transparent';
 
     this.palette = [];
     for (let i = 0; i < PALETTE_SIZE; i++) {
       let t = i / (PALETTE_SIZE - 1);
-      let alpha = BASE_ALPHA + t * 0.18;
-      let r = Math.round(br * (1 - alpha) + DOT_COLOR[0] * alpha);
-      let g = Math.round(bgG * (1 - alpha) + DOT_COLOR[1] * alpha);
-      let b = Math.round(bb * (1 - alpha) + DOT_COLOR[2] * alpha);
+      let alpha = baseAlpha + t * alphaSpan;
+      let r = Math.round(bgRgb[0] * (1 - alpha) + dotRgb[0] * alpha);
+      let g = Math.round(bgRgb[1] * (1 - alpha) + dotRgb[1] * alpha);
+      let b = Math.round(bgRgb[2] * (1 - alpha) + dotRgb[2] * alpha);
       this.palette.push(`#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`);
     }
   }
@@ -161,8 +179,8 @@ export class CellBg extends Symbiote {
     this.canvas._w = w;
     this.canvas._h = h;
 
-    // Immediately fill with BG color to prevent CSS background flash
-    this.ctx.fillStyle = BG_COLOR;
+    this._buildPalette();
+    this.ctx.fillStyle = this._bgFill;
     this.ctx.fillRect(0, 0, w, h);
 
     let oldGrid = this.grid;
@@ -325,7 +343,7 @@ export class CellBg extends Symbiote {
     let h = this.canvas._h;
 
     this.ctx.clearRect(0, 0, w, h);
-    this.ctx.fillStyle = BG_COLOR;
+    this.ctx.fillStyle = this._bgFill;
     this.ctx.fillRect(0, 0, w, h);
 
     let maxIdx = PALETTE_SIZE - 1;

@@ -63,7 +63,7 @@ class ProjectTabItem extends Symbiote {
 }
 
 ProjectTabItem.template = html`
-  <span class="material-symbols-outlined" style="color: var(--tab-accent, var(--sn-node-selected, #4c8bf5));" ${{ textContent: 'icon' }}></span>
+  <span class="material-symbols-outlined" ${{ textContent: 'icon' }}></span>
   <span ${{ textContent: 'name' }}></span>
   <button class="tab-close" title="Close" ${{ onclick: 'onCloseClick', '@hidden': '!closeable' }}>×</button>
 `;

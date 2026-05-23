@@ -12,7 +12,7 @@ export let styles = css`
     transform: translateX(-50%);
     width: 360px;
     z-index: 200;
-    font-family: var(--sn-font, 'Inter', sans-serif);
+    font-family: var(--sn-font);
 
     &[hidden] {
       display: none;
@@ -23,15 +23,15 @@ export let styles = css`
       align-items: center;
       gap: 8px;
       padding: 8px 14px;
-      background: var(--sn-node-bg, #2a2a3e);
-      border: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.12));
+      background: var(--sn-node-bg);
+      border: 1px solid var(--sn-node-border);
       border-radius: 10px;
-      box-shadow: 0 8px 32px var(--sn-shadow-color, rgba(0, 0, 0, 0.4));
+      box-shadow: 0 8px 32px var(--sn-shadow-color);
     }
 
     & .search-icon {
       font-size: 18px;
-      color: var(--sn-text-dim, #888);
+      color: var(--sn-text-dim);
     }
 
     & .search-input {
@@ -39,29 +39,29 @@ export let styles = css`
       background: none;
       border: none;
       outline: none;
-      color: var(--sn-text, #d4d4d4);
+      color: var(--sn-text);
       font-size: 14px;
       font-family: inherit;
     }
 
     & .search-input::placeholder {
-      color: var(--sn-text-dim, #666);
+      color: var(--sn-text-dim);
     }
 
     & .search-hint {
       font-size: 11px;
-      color: var(--sn-text-dim, #555);
+      color: var(--sn-text-dim);
       padding: 2px 6px;
-      border: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
+      border: 1px solid var(--sn-node-border);
       border-radius: 4px;
     }
 
     & .search-results {
       margin-top: 4px;
-      background: var(--sn-node-bg, #2a2a3e);
+      background: var(--sn-node-bg);
       border-radius: 8px;
-      border: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
-      box-shadow: 0 4px 16px var(--sn-shadow-color, rgba(0, 0, 0, 0.3));
+      border: 1px solid var(--sn-node-border);
+      box-shadow: 0 4px 16px var(--sn-shadow-color);
       overflow: hidden;
       max-height: 300px;
       overflow-y: auto;
@@ -78,7 +78,7 @@ export let styles = css`
     justify-content: space-between;
     padding: 8px 14px;
     cursor: pointer;
-    color: var(--sn-text, #d4d4d4);
+    color: var(--sn-text);
     font-size: 13px;
     transition: background 0.1s;
 
@@ -89,7 +89,7 @@ export let styles = css`
 
   .search-result-type {
     font-size: 11px;
-    color: var(--sn-text-dim, #888);
+    color: var(--sn-text-dim);
     padding: 1px 6px;
     border-radius: 4px;
     background: color-mix(in srgb, currentColor 5%, transparent);

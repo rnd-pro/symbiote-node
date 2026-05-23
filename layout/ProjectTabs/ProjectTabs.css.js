@@ -1,8 +1,8 @@
 export default /*css*/ `
 :host {
   display: block;
-  height: var(--sn-tabs-height, 38px);
-  background: var(--sn-tabs-bg, transparent);
+  height: var(--sn-tabs-height);
+  background: var(--sn-tabs-bg);
   flex-shrink: 0;
   user-select: none;
   position: relative;
@@ -15,7 +15,7 @@ export default /*css*/ `
   left: 0;
   right: 0;
   height: 1px;
-  background: var(--sn-tabs-border, var(--sn-node-border, rgba(255,255,255,0.08)));
+  background: var(--sn-tabs-border);
   z-index: 1;
 }
 
@@ -41,36 +41,37 @@ project-tab-item {
   align-items: center;
   gap: 6px;
   padding: 0 10px 0 12px;
-  height: var(--sn-tabs-item-height, 32px);
+  height: var(--sn-tabs-item-height);
   border: 1px solid transparent;
   border-bottom: none;
   background: transparent;
-  color: var(--sn-text-dim, #888);
+  color: var(--sn-text-dim);
   cursor: pointer;
   font-size: 12px;
   font-family: inherit;
   white-space: nowrap;
   transition: background 0.15s, color 0.15s;
   position: relative;
-  border-radius: var(--sn-tabs-radius, 8px 8px 0 0);
+  border-radius: var(--sn-tabs-radius);
   margin: 0 2px;
 }
 
 .tab .material-symbols-outlined,
 project-tab-item .material-symbols-outlined {
   font-size: 15px;
+  color: var(--tab-accent, var(--sn-tabs-accent));
 }
 
 .tab:hover,
 project-tab-item:hover {
-  background: var(--sn-tabs-hover-bg, rgba(255, 255, 255, 0.04));
-  color: var(--sn-text, #e0e0e0);
+  background: var(--sn-tabs-hover-bg);
+  color: var(--sn-text);
 }
 
 .tab[active],
 project-tab-item[active] {
-  background: var(--sn-tabs-active-bg, var(--sn-node-bg, #2a2a2a));
-  color: var(--sn-text, #e0e0e0);
+  background: var(--sn-tabs-active-bg);
+  color: var(--sn-text);
 }
 
 .tab[active]::before,
@@ -78,11 +79,11 @@ project-tab-item[active]::before {
   content: '';
   position: absolute;
   bottom: 0;
-  left: -12px;
-  width: 12px;
-  height: 12px;
+  left: calc(-1 * var(--sn-tabs-corner-size));
+  width: var(--sn-tabs-corner-size);
+  height: var(--sn-tabs-corner-size);
   pointer-events: none;
-  background: radial-gradient(circle at 0 0, transparent 11.5px, var(--sn-tabs-active-bg, var(--sn-node-bg, #2a2a2a)) 12px);
+  background: radial-gradient(circle at 0 0, transparent var(--sn-tabs-corner-cut), var(--sn-tabs-active-bg) var(--sn-tabs-corner-size));
 }
 
 .tab[active]::after,
@@ -90,11 +91,11 @@ project-tab-item[active]::after {
   content: '';
   position: absolute;
   bottom: 0;
-  right: -12px;
-  width: 12px;
-  height: 12px;
+  right: calc(-1 * var(--sn-tabs-corner-size));
+  width: var(--sn-tabs-corner-size);
+  height: var(--sn-tabs-corner-size);
   pointer-events: none;
-  background: radial-gradient(circle at 100% 0, transparent 11.5px, var(--sn-tabs-active-bg, var(--sn-node-bg, #2a2a2a)) 12px);
+  background: radial-gradient(circle at 100% 0, transparent var(--sn-tabs-corner-cut), var(--sn-tabs-active-bg) var(--sn-tabs-corner-size));
 }
 
 .tab:not([active]):not(:hover)::after,
@@ -105,7 +106,7 @@ project-tab-item:not([active]):not(:hover)::after {
   top: 25%;
   height: 50%;
   width: 1px;
-  background: var(--sn-tabs-divider, var(--sn-node-border, rgba(255,255,255,0.1)));
+  background: var(--sn-tabs-divider);
 }
 
 .tab:not([active]):not(:hover):has(+ .tab[active])::after,
@@ -131,7 +132,7 @@ project-tab-item:not([active]):not(:hover):last-child::after,
   border-radius: 50%;
   background: transparent;
   border: none;
-  color: var(--sn-text-dim, #888);
+  color: var(--sn-text-dim);
   cursor: pointer;
   font-size: 14px;
   padding: 0;
@@ -148,8 +149,8 @@ project-tab-item[active] .tab-close {
 }
 
 .tab-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--sn-text, #e0e0e0);
+  background: color-mix(in srgb, var(--sn-text) 20%, transparent);
+  color: var(--sn-text);
 }
 
 .tab-add {
@@ -161,7 +162,7 @@ project-tab-item[active] .tab-close {
   border-radius: 50%;
   border: none;
   background: transparent;
-  color: var(--sn-text-dim, #888);
+  color: var(--sn-text-dim);
   cursor: pointer;
   font-size: 18px;
   transition: background 0.15s, color 0.15s;
@@ -170,8 +171,8 @@ project-tab-item[active] .tab-close {
 }
 
 .tab-add:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--sn-text, #e0e0e0);
+  background: color-mix(in srgb, var(--sn-text) 10%, transparent);
+  color: var(--sn-text);
 }
 
 .tab-filler {

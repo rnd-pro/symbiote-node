@@ -20,13 +20,13 @@ export let styles = css`
       gap: 2px;
       padding: 4px;
       border-radius: 10px;
-      background: var(--sn-toolbar-bg, rgba(22, 33, 62, 0.92));
+      background: var(--sn-toolbar-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--sn-toolbar-border, rgba(255, 255, 255, 0.1));
+      border: 1px solid var(--sn-toolbar-border);
       box-shadow:
-        0 8px 32px var(--sn-shadow-color, rgba(0, 0, 0, 0.45)),
-        0 0 0 1px var(--sn-shadow-color, rgba(0, 0, 0, 0.1));
+        0 8px 32px var(--sn-shadow-color),
+        0 0 0 1px var(--sn-shadow-color);
       transform: translateX(-50%);
       animation: toolbar-in 0.2s ease-out;
     }
@@ -44,16 +44,16 @@ export let styles = css`
   }
 
   .tb-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--sn-toolbar-color, #c0c8d8);
-    cursor: pointer;
+    --sn-button-icon-size: 32px;
+    --sn-button-icon-font-size: 18px;
+    --sn-button-border: transparent;
+    --sn-button-radius: 6px;
+    --sn-button-bg: transparent;
+    --sn-button-hover-bg: var(--sn-toolbar-hover);
+    --sn-button-hover-border: transparent;
+    --sn-button-color: var(--sn-toolbar-color);
+    --sn-button-focus-ring: var(--sn-effect-focus-ring);
+    color: var(--sn-toolbar-color);
     transition:
       background 0.12s,
       color 0.12s,
@@ -64,8 +64,7 @@ export let styles = css`
     }
 
     &:hover {
-      background: var(--sn-toolbar-hover, rgba(74, 158, 255, 0.2));
-      color: var(--sn-toolbar-active, #e2e8f0);
+      color: var(--sn-toolbar-active);
       transform: scale(1.1);
     }
 
@@ -75,13 +74,13 @@ export let styles = css`
   }
 
   .tb-btn--danger:hover {
-    background: var(--sn-toolbar-danger, rgba(255, 107, 107, 0.25));
-    color: var(--sn-toolbar-danger-color, #ff6b6b);
+    --sn-button-hover-bg: var(--sn-toolbar-danger);
+    color: var(--sn-toolbar-danger-color);
   }
 
   .tb-btn--enter:hover {
-    background: color-mix(in srgb, var(--sn-cat-data, #a78bfa) 25%, transparent);
-    color: var(--sn-cat-data, #a78bfa);
+    --sn-button-hover-bg: color-mix(in srgb, var(--sn-cat-data) 25%, transparent);
+    color: var(--sn-cat-data);
   }
 
   .tb-icon {

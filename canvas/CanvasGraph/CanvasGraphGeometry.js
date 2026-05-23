@@ -1,18 +1,6 @@
 export const DOT_RADIUS = 6;
 export const HIT_RADIUS = 14;
 
-const TYPE_COLORS = {
-  action: [255, 150, 140],
-  output: [120, 210, 170],
-  data: [120, 180, 255],
-  config: [255, 200, 120],
-  external: [190, 150, 255],
-  style: [255, 180, 220],
-  docs: [200, 210, 215],
-  asset: [150, 230, 230],
-  group: [230, 180, 110],
-};
-
 export function parseHexColor(value) {
   if (typeof value !== 'string') return null;
   let hex = value.trim().replace(/^#/, '');
@@ -23,8 +11,8 @@ export function parseHexColor(value) {
   return parts.map((part) => parseInt(part, 16));
 }
 
-export function getNodeColor(node) {
-  return parseHexColor(node.color) || TYPE_COLORS[node.type] || TYPE_COLORS.data;
+export function getNodeColor(node, typeColors = {}) {
+  return parseHexColor(node?.color) || typeColors[node?.type] || typeColors.data || null;
 }
 
 export function getGroupOrbitMetrics(node, conns, opts = {}) {

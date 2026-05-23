@@ -74,6 +74,8 @@ const ROOT_EXPORTS = [
   ['getOrBuildGraph', 'function'],
   ['GRAPH_DIRECTORY_FRAME_COLORS', 'object'],
   ['GRAPH_PATH_STYLES', 'object'],
+  ['GRAPH_CLUSTER_COLOR_TOKENS', 'object'],
+  ['GRAPH_TYPE_COLOR_TOKENS', 'object'],
   ['addGraphDirectoryFrames', 'function'],
   ['getGraphPathStyleDisplay', 'function'],
   ['getNextGraphPathStyle', 'function'],
@@ -93,6 +95,9 @@ const ROOT_EXPORTS = [
   ['normalizeProjectTransaction', 'function'],
   ['applyProjectTransaction', 'function'],
   ['createProjectRuntime', 'function'],
+  ['getGraphClusterColorToken', 'function'],
+  ['isGraphColorReference', 'function'],
+  ['normalizeGraphColorReference', 'function'],
   ['CARBON', 'object'],
   ['CARBON_PALETTE', 'object'],
   ['PCB_DARK', 'object'],
@@ -170,6 +175,12 @@ const UI_EXPORTS = [
   ['ActionButton', 'function'],
   ['FormField', 'function'],
   ['SurfaceCard', 'function'],
+  ['StatusBadge', 'function'],
+  ['MetricItem', 'function'],
+  ['DataTable', 'function'],
+  ['EventFeed', 'function'],
+  ['StatusBanner', 'function'],
+  ['EmptyState', 'function'],
   ['OutputListPreview', 'function'],
   ['OutputGraphPreview', 'function'],
   ['sharedUiStyles', 'string'],
@@ -207,6 +218,8 @@ const UI_EXPORTS = [
   ['getOrBuildGraph', 'function'],
   ['GRAPH_DIRECTORY_FRAME_COLORS', 'object'],
   ['GRAPH_PATH_STYLES', 'object'],
+  ['GRAPH_CLUSTER_COLOR_TOKENS', 'object'],
+  ['GRAPH_TYPE_COLOR_TOKENS', 'object'],
   ['addGraphDirectoryFrames', 'function'],
   ['getGraphPathStyleDisplay', 'function'],
   ['getNextGraphPathStyle', 'function'],
@@ -215,6 +228,9 @@ const UI_EXPORTS = [
   ['resolveInitialGraphViewMode', 'function'],
   ['setGraphLayerVisible', 'function'],
   ['toggleGraphLayerButtonState', 'function'],
+  ['getGraphClusterColorToken', 'function'],
+  ['isGraphColorReference', 'function'],
+  ['normalizeGraphColorReference', 'function'],
 ];
 
 const ENGINE_EXPORTS = [
@@ -293,6 +309,11 @@ const GRAPH_EXPORTS = [
   ['normalizeProjectTransaction', 'function'],
   ['applyProjectTransaction', 'function'],
   ['createProjectRuntime', 'function'],
+  ['GRAPH_CLUSTER_COLOR_TOKENS', 'object'],
+  ['GRAPH_TYPE_COLOR_TOKENS', 'object'],
+  ['getGraphClusterColorToken', 'function'],
+  ['isGraphColorReference', 'function'],
+  ['normalizeGraphColorReference', 'function'],
 ];
 
 const LAYOUT_EXPORTS = [
@@ -406,7 +427,7 @@ describe('symbiote-node UI exports', () => {
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-tree-row-min-height'], 'calc(22px * var(--sn-theme-density))');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-composer-bg'], 'var(--sn-node-bg)');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-tabs-active-bg'], 'var(--sn-node-bg)');
-    assert.equal(ui.DEFAULT_THEME.tokens['--sn-bg-overlay'], 'rgba(0, 0, 0, 0.45)');
+    assert.equal(ui.DEFAULT_THEME.tokens['--sn-bg-overlay'], 'hsl(var(--sn-hue-base) var(--sn-sat-muted) 0% / 0.45)');
     assert.equal(ui.DEFAULT_THEME.tokens['--border-color'], 'var(--sn-node-border)');
   });
 });

@@ -6,7 +6,7 @@ export default `
   :host { position: fixed; inset: 0; z-index: 9999; pointer-events: none; }
   .qo-overlay {
     position: fixed; inset: 0; z-index: 9999;
-    background: var(--sn-bg-overlay, rgba(0,0,0,0.5));
+    background: var(--sn-bg-overlay);
     display: flex; justify-content: center; padding-top: 15vh;
     pointer-events: all;
     animation: qo-fadein 100ms ease;
@@ -16,10 +16,10 @@ export default `
   .qo-dialog {
     width: 520px;
     max-height: 420px;
-    background: var(--sn-panel-bg, hsl(228, 14%, 18%));
-    border: 1px solid var(--sn-node-border, hsl(228, 10%, 28%));
+    background: var(--sn-panel-bg);
+    border: 1px solid var(--sn-node-border);
     border-radius: 10px;
-    box-shadow: 0 20px 60px var(--sn-bg-overlay, rgba(0,0,0,0.5));
+    box-shadow: 0 20px 60px var(--sn-bg-overlay);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -29,14 +29,14 @@ export default `
     align-items: center;
     padding: 8px 12px;
     gap: 8px;
-    border-bottom: 1px solid var(--sn-node-border, hsl(228, 10%, 28%));
+    border-bottom: 1px solid var(--sn-node-border);
   }
   .qo-icon { color: var(--sn-text-dim); font-size: 20px; }
   .qo-input {
     flex: 1;
     background: transparent;
     border: none;
-    color: var(--sn-text, #e0e0e0);
+    color: var(--sn-text);
     font-size: 15px;
     font-family: inherit;
     outline: none;
@@ -47,7 +47,7 @@ export default `
     font-size: 10px;
     padding: 2px 6px;
     border-radius: 4px;
-    background: var(--sn-node-bg, hsl(228, 14%, 22%));
+    background: var(--sn-node-bg);
     border: 1px solid var(--sn-node-border);
     color: var(--sn-text-dim);
     font-family: monospace;
@@ -65,20 +65,20 @@ export default `
     cursor: pointer;
     transition: background 80ms ease;
   }
-  .qo-item:hover { background: var(--sn-node-hover, hsl(228, 14%, 22%)); }
+  .qo-item:hover { background: var(--sn-node-hover); }
   .qo-item.qo-selected {
-    background: hsla(210, 55%, 45%, 0.2);
+    background: var(--sn-accent-bg);
   }
   .qo-name {
     font-size: 13px;
-    color: var(--sn-text, #e0e0e0);
+    color: var(--sn-text);
     font-weight: 500;
   }
   .qo-path {
     font-size: 11px;
     color: var(--sn-text-dim);
     margin-left: auto;
-    font-family: 'SF Mono', monospace;
+    font-family: var(--sn-font-mono);
   }
   .qo-empty {
     padding: 20px;

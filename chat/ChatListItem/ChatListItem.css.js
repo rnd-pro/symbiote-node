@@ -32,7 +32,7 @@ export default /*css*/ `
 
 :host([nested]) .chat-list-item {
   margin-left: 16px;
-  border-left: 2px solid var(--sn-border-color, var(--sn-node-border));
+  border-left: 2px solid var(--sn-node-border);
   position: relative;
 }
 
@@ -43,7 +43,7 @@ export default /*css*/ `
   left: -2px;
   width: 10px;
   height: 2px;
-  background: var(--sn-border-color, var(--sn-node-border));
+  background: var(--sn-node-border);
 }
 
 .chat-project-badge {

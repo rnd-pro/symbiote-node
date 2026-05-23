@@ -12,12 +12,12 @@ export default /*css*/ `
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: var(--sn-list-item-gap, 10px);
-  min-height: var(--sn-list-item-min-height, 34px);
-  padding: var(--sn-list-item-padding, 7px 12px);
+  gap: var(--sn-list-item-gap);
+  min-height: var(--sn-list-item-min-height);
+  padding: var(--sn-list-item-padding);
   border: 1px solid transparent;
-  border-radius: var(--sn-list-item-radius, 6px);
-  background: var(--sn-list-item-bg, transparent);
+  border-radius: var(--sn-list-item-radius);
+  background: var(--sn-list-item-bg);
   color: inherit;
   cursor: pointer;
   user-select: none;
@@ -29,20 +29,20 @@ export default /*css*/ `
 }
 
 .sn-list-item:hover {
-  background: var(--sn-list-item-hover-bg, var(--sn-node-hover));
+  background: var(--sn-list-item-hover-bg);
 }
 
 .sn-list-item:focus-visible {
-  border-color: var(--sn-list-item-focus-border, var(--sn-node-selected));
+  border-color: var(--sn-list-item-focus-border);
 }
 
 :host([active]) .sn-list-item {
-  background: var(--sn-list-item-active-bg, var(--sn-node-bg));
-  border-color: var(--sn-list-item-active-border, var(--sn-node-selected));
+  background: var(--sn-list-item-active-bg);
+  border-color: var(--sn-list-item-active-border);
 }
 
 :host([disabled]) {
-  color: var(--sn-list-item-disabled-color, var(--sn-text-dim));
+  color: var(--sn-list-item-disabled-color);
 }
 
 :host([disabled]) .sn-list-item {
@@ -51,19 +51,19 @@ export default /*css*/ `
 }
 
 :host([disabled]) .sn-list-item:hover {
-  background: var(--sn-list-item-bg, transparent);
+  background: var(--sn-list-item-bg);
 }
 
 .sn-list-item-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 var(--sn-list-item-icon-size, 18px);
-  width: var(--sn-list-item-icon-size, 18px);
-  height: var(--sn-list-item-icon-size, 18px);
-  color: var(--sn-list-item-icon-color, var(--sn-text-dim));
-  font-family: var(--sn-icon-font, inherit);
-  font-size: var(--sn-list-item-icon-font-size, 16px);
+  flex: 0 0 var(--sn-list-item-icon-size);
+  width: var(--sn-list-item-icon-size);
+  height: var(--sn-list-item-icon-size);
+  color: var(--sn-list-item-icon-color);
+  font-family: var(--sn-icon-font);
+  font-size: var(--sn-list-item-icon-font-size);
   line-height: 1;
 }
 
@@ -84,22 +84,22 @@ export default /*css*/ `
 }
 
 .sn-list-item-label {
-  color: var(--sn-list-item-label-color, var(--sn-text));
-  font-size: var(--sn-list-item-label-size, 12px);
-  font-weight: var(--sn-list-item-label-weight, 500);
+  color: var(--sn-list-item-label-color);
+  font-size: var(--sn-list-item-label-size);
+  font-weight: var(--sn-list-item-label-weight);
 }
 
 .sn-list-item-description {
-  color: var(--sn-list-item-description-color, var(--sn-text-dim));
-  font-size: var(--sn-list-item-description-size, 11px);
+  color: var(--sn-list-item-description-color);
+  font-size: var(--sn-list-item-description-size);
   line-height: 1.25;
 }
 
 .sn-list-item-meta {
   flex: 0 1 auto;
-  max-width: var(--sn-list-item-meta-max-width, 38%);
-  color: var(--sn-list-item-meta-color, var(--sn-text-dim));
+  max-width: var(--sn-list-item-meta-max-width);
+  color: var(--sn-list-item-meta-color);
   font-family: var(--sn-font-mono, monospace);
-  font-size: var(--sn-list-item-meta-size, 10px);
+  font-size: var(--sn-list-item-meta-size);
 }
 `;

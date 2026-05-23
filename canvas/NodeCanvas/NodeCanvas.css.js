@@ -7,13 +7,13 @@ export let styles = css`
     height: 100%;
     overflow: hidden;
     position: relative;
-    background-color: var(--sn-bg, #1a1a2e);
+    background-color: var(--sn-bg);
     background-image: radial-gradient(
       circle,
-      var(--sn-grid-dot, rgba(255, 255, 255, 0.06)) 1px,
+      var(--sn-grid-dot) 1px,
       transparent 1px
     );
-    background-size: var(--sn-grid-size, 20px) var(--sn-grid-size, 20px);
+    background-size: var(--sn-grid-size) var(--sn-grid-size);
     cursor: grab;
     /* Prevent scrollbar oscillation: canvas manages its own viewport internally.
      - size: SVG overflow:visible children cannot influence parent sizing
@@ -69,6 +69,28 @@ export let styles = css`
       position: relative;
     }
 
+    & graph-node[data-svg-shape] {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+      overflow: visible;
+    }
+
+    & graph-node[data-svg-shape] > :not(.sn-node-shape-svg) {
+      position: relative;
+    }
+
+    & .sn-node-shape-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: visible;
+    }
+
     & .pseudo-svg {
       position: absolute;
       top: 0;
@@ -84,7 +106,7 @@ export let styles = css`
   /* Connection paths */
   .sn-conn-path {
     fill: none;
-    stroke: var(--sn-conn-color, #4a9eff);
+    stroke: var(--sn-conn-color);
     stroke-width: var(--sn-conn-width, 2);
     stroke-linecap: var(--sn-conn-linecap, round);
     stroke-linejoin: var(--sn-conn-linejoin, round);
@@ -101,7 +123,7 @@ export let styles = css`
     }
 
     &[data-selected] {
-      stroke: var(--sn-conn-selected, #ff6b6b);
+      stroke: var(--sn-conn-selected);
       stroke-width: 3;
       opacity: 1;
     }
@@ -117,10 +139,10 @@ export let styles = css`
   /* Connector endpoint dots — hidden by default, shown only for SVG nodes */
   .sn-conn-dot {
     display: none;
-    fill: var(--sn-conn-dot-fill, var(--sn-conn-color, #4a9eff));
-    stroke: var(--sn-conn-dot-stroke, var(--sn-node-bg, #fff));
-    stroke-width: var(--sn-conn-dot-stroke-width, 1.5);
-    r: var(--sn-conn-dot-r, 3);
+    fill: var(--sn-conn-dot-fill, var(--sn-conn-color));
+    stroke: var(--sn-conn-dot-stroke, var(--sn-node-bg));
+    stroke-width: var(--sn-conn-dot-stroke-width);
+    r: var(--sn-conn-dot-r);
     opacity: 0.9;
     pointer-events: none;
     /* PERF: removed filter:drop-shadow — 672 GPU layers killed Chrome renderer */
@@ -132,8 +154,8 @@ export let styles = css`
 
   /* Free dots for unconnected SVG ports */
   .sn-free-dot {
-    fill: var(--sn-conn-color, #4a9eff);
-    stroke: var(--sn-node-bg, #fff);
+    fill: var(--sn-conn-color);
+    stroke: var(--sn-node-bg);
     stroke-width: 1.5;
     opacity: 0.9;
     /* PERF: removed filter:drop-shadow — see .sn-conn-dot */
@@ -159,9 +181,38 @@ export let styles = css`
     }
   }
 
+  @keyframes sn-fire-pulse {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--sn-success-color) 70%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 20px 6px color-mix(in srgb, var(--sn-success-color) 50%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 0 transparent;
+    }
+  }
+
+  node-canvas graph-node[data-fire-state='pending'] {
+    opacity: 0.4;
+    transition: opacity 0.15s;
+  }
+
+  node-canvas graph-node[data-fire-state='active'] {
+    opacity: 1;
+    border-color: var(--sn-success-color);
+    animation: sn-fire-pulse 0.6s ease-out;
+    z-index: 50;
+  }
+
+  node-canvas graph-node[data-fire-state='complete'] {
+    border-color: var(--sn-success-border);
+    transition: border-color 2s ease-out;
+  }
+
   .pseudo-path {
     fill: none;
-    stroke: var(--sn-conn-color, #4a9eff);
+    stroke: var(--sn-conn-color);
     stroke-width: 2;
     opacity: 0.5;
     stroke-dasharray: 8 4;
@@ -186,13 +237,13 @@ export let styles = css`
   /* Plus indicator at connection drag endpoint */
   .plus-indicator {
     circle {
-      fill: var(--sn-node-bg, #16213e);
-      stroke: var(--sn-conn-color, #4a9eff);
+      fill: var(--sn-node-bg);
+      stroke: var(--sn-conn-color);
       stroke-width: 1.5;
       opacity: 0.9;
     }
     line {
-      stroke: var(--sn-conn-color, #4a9eff);
+      stroke: var(--sn-conn-color);
       stroke-width: 1.5;
       stroke-linecap: round;
     }
@@ -224,34 +275,34 @@ export let styles = css`
 
   /* Node lift effect when dragging */
   .sn-node-lifted {
-    box-shadow: 0 6px 12px var(--sn-shadow-color, rgba(0, 0, 0, 0.5));
-    border-color: var(--sn-node-active-border, rgba(74, 158, 255, 0.5)) !important;
+    box-shadow: 0 6px 12px var(--sn-shadow-color);
+    border-color: var(--sn-node-active-border) !important;
   }
 
   /* Connector dot: input vs output side */
   .sn-dot-output {
-    fill: var(--sn-dot-output, #e8915a);
+    fill: var(--sn-dot-output);
   }
   .sn-dot-input {
-    fill: var(--sn-dot-input, #5ac8e8);
+    fill: var(--sn-dot-input);
   }
 
   /* Connector dot: socket type overrides */
   .sn-dot-exec {
-    fill: var(--sn-dot-exec, #e8a15a);
+    fill: var(--sn-dot-exec);
     r: 6;
   }
   .sn-dot-data {
     /* uses side color by default */
   }
   .sn-dot-ctrl {
-    fill: var(--sn-dot-ctrl, #78d97a);
+    fill: var(--sn-dot-ctrl);
     r: 4;
   }
 
   /* Direction arrow on wire midpoint */
   .sn-conn-arrow {
-    fill: var(--sn-conn-color, #4a9eff);
+    fill: var(--sn-conn-color);
     opacity: 0.5;
     pointer-events: none;
   }
@@ -259,24 +310,24 @@ export let styles = css`
   /* Fire trace: sequential node execution highlighting */
   @keyframes sn-fire-pulse {
     0% {
-      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.6);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--sn-success-color) 60%, transparent);
     }
     50% {
-      box-shadow: 0 0 16px 4px rgba(76, 175, 80, 0.4);
+      box-shadow: 0 0 16px 4px color-mix(in srgb, var(--sn-success-color) 40%, transparent);
     }
     100% {
-      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--sn-success-color) 0%, transparent);
     }
   }
 
   graph-node[data-fire-state='active'] {
-    border-color: var(--sn-success-color, #4caf50) !important;
+    border-color: var(--sn-success-color) !important;
     animation: sn-fire-pulse 0.6s ease-out;
     z-index: 50;
   }
 
   graph-node[data-fire-state='done'] {
-    border-color: rgba(76, 175, 80, 0.4) !important;
+    border-color: color-mix(in srgb, var(--sn-success-color) 40%, transparent) !important;
     transition: border-color 2s ease-out;
   }
 

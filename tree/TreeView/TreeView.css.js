@@ -3,7 +3,7 @@ export default /*css*/ `
 sn-tree-view {
   display: block;
   color: var(--sn-text);
-  font-family: var(--sn-font-family, inherit);
+  font-family: var(--sn-font-family);
 }
 
 :host([hidden]),
@@ -21,17 +21,17 @@ sn-tree-view[hidden] {
 }
 
 .sn-tree-row {
-  --sn-tree-indent-width: var(--sn-tree-indent, 18px);
+  --sn-tree-indent-width: var(--sn-tree-indent);
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 18px 18px minmax(0, 1fr) auto auto;
+  grid-template-columns: var(--sn-tree-toggle-width) var(--sn-tree-icon-width) minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: var(--sn-tree-gap, 6px);
-  min-height: var(--sn-tree-row-min-height, var(--sn-tree-row-height, 28px));
-  padding-block: var(--sn-tree-row-padding-block, 3px);
+  gap: var(--sn-tree-gap);
+  min-height: var(--sn-tree-row-min-height, var(--sn-tree-row-height));
+  padding-block: var(--sn-tree-row-padding-block);
   padding-inline: calc(var(--sn-tree-depth, 0) * var(--sn-tree-indent-width)) 8px;
   border: 1px solid transparent;
-  border-radius: var(--sn-tree-row-radius, 6px);
+  border-radius: var(--sn-tree-row-radius);
   background: var(--sn-tree-row-bg, transparent);
   color: inherit;
   cursor: pointer;
@@ -61,12 +61,12 @@ sn-tree-view[hidden] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: var(--sn-tree-icon-width);
+  height: var(--sn-tree-icon-width);
   color: var(--sn-tree-icon-color, var(--sn-text-dim));
-  font-family: var(--sn-icon-font, 'Material Symbols Outlined');
+  font-family: var(--sn-icon-font);
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
-  font-size: var(--sn-tree-icon-size, 15px);
+  font-size: var(--sn-tree-icon-size);
   line-height: 1;
 }
 
@@ -85,17 +85,17 @@ sn-tree-view[hidden] {
   min-width: 0;
   overflow: hidden;
   color: var(--sn-tree-label-color, var(--sn-text));
-  font-size: var(--sn-tree-label-size, 12px);
-  font-weight: var(--sn-tree-label-weight, 500);
+  font-size: var(--sn-tree-label-size);
+  font-weight: var(--sn-tree-label-weight);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .sn-tree-kind {
   overflow: hidden;
-  max-width: var(--sn-tree-kind-max-width, 120px);
+  max-width: var(--sn-tree-kind-max-width);
   color: var(--sn-tree-kind-color, var(--sn-text-dim));
-  font-size: var(--sn-tree-kind-size, 10px);
+  font-size: var(--sn-tree-kind-size);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -108,13 +108,13 @@ sn-tree-view[hidden] {
 }
 
 .sn-tree-badge {
-  max-width: var(--sn-tree-badge-max-width, 88px);
+  max-width: var(--sn-tree-badge-max-width);
   overflow: hidden;
   padding: 1px 5px;
-  border-radius: var(--sn-tree-badge-radius, 999px);
+  border-radius: var(--sn-tree-badge-radius);
   background: var(--sn-tree-badge-bg, var(--sn-node-hover));
   color: var(--sn-tree-badge-color, var(--sn-text-dim));
-  font-size: var(--sn-tree-badge-size, 10px);
+  font-size: var(--sn-tree-badge-size);
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -9,11 +9,11 @@ export let styles = css`
     display: flex;
     align-items: stretch;
     height: 32px;
-    background: var(--sn-ctx-bg, #1e1e2e);
-    border-bottom: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
-    font-family: var(--sn-font, 'Inter', sans-serif);
+    background: var(--sn-ctx-bg);
+    border-bottom: 1px solid var(--sn-node-border);
+    font-family: var(--sn-font);
     font-size: 12px;
-    color: var(--sn-text-dim, #a0a0a0);
+    color: var(--sn-text-dim);
     overflow-x: auto;
     overflow-y: hidden;
     user-select: none;
@@ -31,7 +31,7 @@ export let styles = css`
     padding: 0 14px;
     cursor: pointer;
     white-space: nowrap;
-    border-right: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.06));
+    border-right: 1px solid var(--sn-node-border);
     transition:
       background 0.15s ease-out,
       color 0.15s ease-out;
@@ -39,12 +39,12 @@ export let styles = css`
 
     &:hover {
       background: color-mix(in srgb, currentColor 4%, transparent);
-      color: var(--sn-text, #cdd6f4);
+      color: var(--sn-text);
     }
 
     &[data-active] {
-      background: var(--sn-node-bg, #2d2d3d);
-      color: var(--sn-text, #cdd6f4);
+      background: var(--sn-node-bg);
+      color: var(--sn-text);
 
       &::after {
         content: '';
@@ -53,7 +53,7 @@ export let styles = css`
         left: 0;
         right: 0;
         height: 2px;
-        background: var(--sn-node-selected, #4a9eff);
+        background: var(--sn-node-selected);
       }
     }
 
@@ -84,14 +84,14 @@ export let styles = css`
     justify-content: center;
     width: 32px;
     cursor: pointer;
-    color: var(--sn-text-dim, #a0a0a0);
+    color: var(--sn-text-dim);
     transition:
       background 0.15s ease-out,
       color 0.15s ease-out;
 
     &:hover {
       background: color-mix(in srgb, currentColor 4%, transparent);
-      color: var(--sn-text, #cdd6f4);
+      color: var(--sn-text);
     }
 
     & .material-symbols-outlined {

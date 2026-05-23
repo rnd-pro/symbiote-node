@@ -8,10 +8,10 @@ export let sidebarStyles = css`
   layout-sidebar {
     display: flex;
     flex-direction: column;
-    width: 220px;
-    min-width: 220px;
-    background: var(--sn-bg, #1e1e1e);
-    border-right: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.06));
+    width: var(--sn-sidebar-width);
+    min-width: var(--sn-sidebar-width);
+    background: var(--sn-bg);
+    border-right: 1px solid var(--sn-node-border);
     overflow: hidden;
     transition:
       width 0.2s ease,
@@ -20,8 +20,8 @@ export let sidebarStyles = css`
     position: relative;
 
     &[collapsed] {
-      width: 48px;
-      min-width: 48px;
+      width: var(--sn-sidebar-collapsed-width);
+      min-width: var(--sn-sidebar-collapsed-width);
     }
   }
 
@@ -29,8 +29,8 @@ export let sidebarStyles = css`
   layout-sidebar .sb-resize-handle {
     position: absolute;
     top: 0;
-    right: -2px;
-    width: 5px;
+    right: calc(-1 * var(--sn-sidebar-resize-offset));
+    width: var(--sn-sidebar-resize-width);
     height: 100%;
     cursor: col-resize;
     z-index: 10;
@@ -38,7 +38,7 @@ export let sidebarStyles = css`
 
     &:hover,
     &.dragging {
-      background: var(--sn-node-selected, #4a9eff);
+      background: var(--sn-node-selected);
       opacity: 0.5;
     }
 
@@ -54,7 +54,7 @@ export let sidebarStyles = css`
     gap: 2px;
     padding: 2px 4px;
     min-height: 28px;
-    background: var(--bg-header, var(--sn-bg, #1e1e1e));
+    background: var(--sn-node-header-bg);
     border-bottom: none;
     flex-shrink: 0;
 
@@ -83,15 +83,15 @@ export let sidebarStyles = css`
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    color: var(--text-dim, var(--sn-text-dim, #888));
+    color: var(--sn-text-dim);
     font-size: 0.75rem;
     transition:
       background 0.1s,
       color 0.1s;
 
     &:hover {
-      background: var(--bg-hover, var(--sn-node-hover, rgba(255, 255, 255, 0.06)));
-      color: var(--text-main, var(--sn-text, #d4d4d4));
+      background: var(--sn-node-hover);
+      color: var(--sn-text);
     }
 
     & .material-symbols-outlined {
@@ -100,8 +100,8 @@ export let sidebarStyles = css`
 
     /* Active tune button in edit mode */
     layout-sidebar[edit-mode] &:first-child {
-      color: var(--sn-cat-server, #5cb8ff);
-      background: color-mix(in srgb, var(--sn-cat-server, #5cb8ff) 10%, transparent);
+      color: var(--sn-cat-server);
+      background: color-mix(in srgb, var(--sn-cat-server) 10%, transparent);
     }
   }
 
@@ -118,7 +118,7 @@ export let sidebarStyles = css`
     }
 
     &:hover {
-      color: var(--sn-accent-warn, #f59e0b);
+      color: var(--sn-accent-warn);
     }
   }
 
@@ -182,7 +182,7 @@ export let sidebarStyles = css`
     }
 
     &[data-dragover] {
-      border-top: 2px solid var(--sn-cat-server, #5cb8ff);
+      border-top: 2px solid var(--sn-cat-server);
     }
   }
 
@@ -192,7 +192,7 @@ export let sidebarStyles = css`
     align-items: center;
     padding: 0 2px;
     cursor: grab;
-    color: var(--text-dim, var(--sn-text-dim, #888));
+    color: var(--sn-text-dim);
 
     &:active {
       cursor: grabbing;
@@ -220,7 +220,7 @@ export let sidebarStyles = css`
     padding: 6px 14px;
     min-height: 28px;
     cursor: pointer;
-    color: var(--text-dim, var(--sn-text-dim, #888));
+    color: var(--sn-text-dim);
     transition:
       background 0.12s,
       color 0.12s;
@@ -232,8 +232,8 @@ export let sidebarStyles = css`
     }
 
     &:hover {
-      background: var(--bg-hover, var(--sn-node-hover, rgba(255, 255, 255, 0.06)));
-      color: var(--text-main, var(--sn-text, #d4d4d4));
+      background: var(--sn-node-hover);
+      color: var(--sn-text);
     }
   }
 
@@ -276,9 +276,9 @@ export let sidebarStyles = css`
 
   /* Active section */
   sidebar-section[data-active] > .sec-item {
-    color: var(--text-main, var(--sn-text, #d4d4d4));
-    background: var(--sn-node-bg, #222222);
-    border-left: 2px solid var(--sn-cat-server, #5cb8ff);
+    color: var(--sn-text);
+    background: var(--sn-node-bg);
+    border-left: 2px solid var(--sn-cat-server);
     padding-left: 12px;
 
     layout-sidebar[edit-mode] & {
@@ -296,15 +296,15 @@ export let sidebarStyles = css`
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    color: var(--text-dim, var(--sn-text-dim, #888));
+    color: var(--sn-text-dim);
     transition:
       color 0.15s,
       background 0.15s;
     flex-shrink: 0;
 
     &:hover {
-      background: var(--bg-hover, var(--sn-node-hover, rgba(255, 255, 255, 0.06)));
-      color: var(--text-main, var(--sn-text, #d4d4d4));
+      background: var(--sn-node-hover);
+      color: var(--sn-text);
     }
 
     & .material-symbols-outlined {
@@ -355,15 +355,15 @@ export let sidebarStyles = css`
     padding: 4px 14px 4px 38px;
     min-height: 24px;
     font-size: 12px;
-    color: var(--text-dim, var(--sn-text-dim, #888));
+    color: var(--sn-text-dim);
     cursor: default;
     transition:
       background 0.12s,
       color 0.12s;
 
     &:hover {
-      background: var(--bg-hover, var(--sn-node-hover, rgba(255, 255, 255, 0.04)));
-      color: var(--text-main, var(--sn-text, #d4d4d4));
+      background: var(--sn-node-hover);
+      color: var(--sn-text);
     }
 
     & .material-symbols-outlined {
@@ -383,7 +383,7 @@ export let sidebarStyles = css`
     border: none;
     border-radius: 3px;
     cursor: pointer;
-    color: var(--text-dim, var(--sn-text-dim, #888));
+    color: var(--sn-text-dim);
     opacity: 0;
     transition:
       opacity 0.12s,
@@ -395,8 +395,8 @@ export let sidebarStyles = css`
     }
 
     &:hover {
-      background: color-mix(in srgb, var(--sn-danger-color, #ef4444) 15%, transparent);
-      color: var(--sn-danger-color, #ff6b6b);
+      background: color-mix(in srgb, var(--sn-danger-color) 15%, transparent);
+      color: var(--sn-danger-color);
     }
   }
 

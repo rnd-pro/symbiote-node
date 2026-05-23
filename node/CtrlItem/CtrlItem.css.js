@@ -14,22 +14,22 @@ export let styles = css`
     & .sn-ctrl-label {
       font-size: 10px;
       text-transform: uppercase;
-      color: var(--sn-text-dim, #94a3b8);
+      color: var(--sn-text-dim);
       letter-spacing: 0.5px;
     }
 
     & .sn-ctrl-input {
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--sn-field-control-bg);
       border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
       border-radius: 4px;
       padding: 4px 8px;
-      color: var(--sn-text, #e2e8f0);
+      color: var(--sn-text);
       font-size: 12px;
       outline: none;
       font-family: inherit;
 
       &:focus {
-        border-color: var(--sn-node-accent, #4a9eff);
+        border-color: var(--sn-node-accent);
       }
 
       &[readonly] {

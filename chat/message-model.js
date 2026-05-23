@@ -7,7 +7,7 @@ export function buildSessionMetaHtml(text) {
   if (modeMatch) {
     let mode = modeMatch[1].trim();
     let iconName = mode === 'yolo' ? 'bolt' : mode === 'plan' ? 'lock' : 'settings';
-    chips.push(`<span class="meta-chip"><span class="material-symbols-outlined" style="font-size:12px">${iconName}</span> ${escapeHtml(mode)}</span>`);
+    chips.push(`<span class="meta-chip"><span class="material-symbols-outlined meta-chip-icon">${iconName}</span> ${escapeHtml(mode)}</span>`);
   }
   let exitMatch = text.match(/- Exit code:\s*(\d+)/i);
   if (exitMatch) {
@@ -35,7 +35,7 @@ export function buildWorkMetaHtml(meta) {
   let items = [];
   if (meta.mode) {
     let iconName = meta.mode === 'yolo' ? 'bolt' : 'settings';
-    items.push(`<span class="meta-chip"><span class="material-symbols-outlined" style="font-size:12px">${iconName}</span> ${escapeHtml(meta.mode)}</span>`);
+    items.push(`<span class="meta-chip"><span class="material-symbols-outlined meta-chip-icon">${iconName}</span> ${escapeHtml(meta.mode)}</span>`);
   }
   if (meta.exitCode != null) {
     let cls = meta.exitCode === 0 ? 'meta-ok' : 'meta-err';
@@ -66,7 +66,7 @@ export function buildWorkSummaryHtml(msg, copyText) {
   let copyBtn = copyText
     ? `<button class="work-copy-btn" type="button" title="Copy response" data-copy-text="${escapeHtml(copyText)}"><span class="material-symbols-outlined">content_copy</span></button>`
     : '';
-  return `<div class="work-summary-wrap"><details class="work-summary"><summary><span class="material-symbols-outlined" style="font-size:16px;color:var(--sn-success-color)">check_circle</span>Worked for ${escapeHtml(formatElapsed(msg?.elapsed || 0))}</summary>${bodyHtml}</details>${copyBtn}</div>`;
+  return `<div class="work-summary-wrap"><details class="work-summary"><summary><span class="material-symbols-outlined work-summary-icon">check_circle</span>Worked for ${escapeHtml(formatElapsed(msg?.elapsed || 0))}</summary>${bodyHtml}</details>${copyBtn}</div>`;
 }
 
 export function toChatMessageItem(msg, options = {}) {
@@ -83,7 +83,7 @@ export function toChatMessageItem(msg, options = {}) {
     elapsedText: formatElapsed(msg?.elapsed || 0),
     status: msg?.status || '',
     metaHtml: buildWorkMetaHtml(msg?.meta),
-    taskIds: msg?.taskIds || [],
+    cardItems: Array.isArray(msg?.cardItems) ? msg.cardItems : [],
     workSummaryHtml: '',
     copyText: '',
   };
@@ -126,8 +126,8 @@ export function buildChatMessageItems(messages = [], options = {}) {
     items.push(item);
 
     if (msg?.role === 'agent') lastAgentItem = item;
-    if (msg?.role === 'board' && item.isStreaming && msg.taskIds?.length) {
-      streamingBoards.push([...msg.taskIds]);
+    if (msg?.role === 'board' && item.isStreaming && item.cardItems?.length) {
+      streamingBoards.push(item.cardItems.map((card) => card.id).filter(Boolean));
     }
   }
 

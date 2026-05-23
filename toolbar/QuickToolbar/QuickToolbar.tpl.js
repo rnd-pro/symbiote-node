@@ -6,24 +6,24 @@ import { html } from '@symbiotejs/symbiote';
 
 export let template = html`
   <div class="toolbar" ${{ onclick: 'onBtnClick' }}>
-    <button class="tb-btn tb-btn--enter" data-action="enter" title="Enter Subgraph" hidden>
+    <sn-button class="tb-btn tb-btn--enter" variant="icon" data-action="enter" title="Enter Subgraph" hidden>
       <span class="material-symbols-outlined tb-icon">login</span>
-    </button>
-    <button class="tb-btn" data-action="explore" title="Explore connections">
+    </sn-button>
+    <sn-button class="tb-btn" variant="icon" data-action="explore" title="Explore connections">
       <span class="material-symbols-outlined tb-icon">hub</span>
-    </button>
-    <button class="tb-btn" data-action="view-code" title="View Code">
+    </sn-button>
+    <sn-button class="tb-btn" variant="icon" data-action="view-code" title="View Code">
       <span class="material-symbols-outlined tb-icon">code</span>
-    </button>
-    <button class="tb-btn" data-action="duplicate" title="Duplicate">
+    </sn-button>
+    <sn-button class="tb-btn" variant="icon" data-action="duplicate" title="Duplicate">
       <span class="material-symbols-outlined tb-icon">content_copy</span>
-    </button>
+    </sn-button>
 
-    <button class="tb-btn" data-action="mute" title="Mute">
+    <sn-button class="tb-btn" variant="icon" data-action="mute" title="Mute">
       <span class="material-symbols-outlined tb-icon">visibility_off</span>
-    </button>
-    <button class="tb-btn tb-btn--danger" data-action="delete" title="Delete">
+    </sn-button>
+    <sn-button class="tb-btn tb-btn--danger" variant="icon" data-action="delete" title="Delete">
       <span class="material-symbols-outlined tb-icon">delete</span>
-    </button>
+    </sn-button>
   </div>
 `;

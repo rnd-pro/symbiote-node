@@ -217,6 +217,8 @@ describe('discover command', () => {
         'sn-field',
         'sn-card',
         'sn-badge',
+        'sn-metric',
+        'sn-event-feed',
         'sn-banner',
         'sn-empty-state',
         'node-socket',
@@ -249,6 +251,8 @@ describe('discover command', () => {
       assert.ok(components.get('sn-field').contract.slots.some((slot) => slot.name === 'default'));
       assert.ok(components.get('sn-card').contract.slots.some((slot) => slot.name === 'default'));
       assert.ok(components.get('sn-badge').contract.slots.some((slot) => slot.name === 'default'));
+      assert.ok(components.get('sn-metric').contract.slots.some((slot) => slot.name === 'label'));
+      assert.ok(components.get('sn-event-feed').contract.methods.some((method) => method.name === 'setEvents'));
       assert.ok(components.get('sn-banner').contract.slots.some((slot) => slot.name === 'default'));
       assert.ok(components.get('sn-empty-state').contract.slots.some((slot) => slot.name === 'default'));
       assert.ok(components.get('canvas-graph').contract.methods.some((method) => method.name === 'setGraphModel'));
@@ -260,7 +264,7 @@ describe('discover command', () => {
       assert.ok(components.get('output-list-preview').contract.methods.some((method) => method.name === 'setItems'));
       assert.ok(components.get('output-graph-preview').contract.methods.some((method) => method.name === 'setGraph'));
       assert.ok(components.get('quick-open').contract.events.some((event) => event.name === 'quick-open-select'));
-      assert.ok(components.get('chat-message-item').contract.properties.some((property) => property.name === 'taskIds'));
+      assert.ok(components.get('chat-message-item').contract.properties.some((property) => property.name === 'cardItems'));
       assert.ok(components.get('chat-list').contract.events.some((event) => event.name === 'chat-list-select'));
       assert.ok(components.get('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
       assert.ok(components.get('node-socket').contract.attributes.some((attribute) => attribute.name === 'data-socket-shape'));
@@ -321,7 +325,7 @@ describe('discover command', () => {
       assert.ok(recipe, 'default-dark recipe must be discoverable');
       assert.equal(recipe.tokenFile, 'tokens/themes/default-dark.json');
       assert.equal(recipe.flatTokens['control.hue'].$value, '218');
-      assert.equal(recipe.flatTokens['color.accent'].$value, '#4c8bf5');
+      assert.equal(recipe.flatTokens['color.accent'].$value, 'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent))');
       assert.equal(recipe.cssTokens['--sn-layout-border'], 'transparent');
       assert.equal(recipe.cssTokens['--sn-theme-hue'], '218');
       assert.ok(recipe.cssTokenClassifications.some((item) => item.cssVar === '--sn-theme-hue' && item.kind === 'source-control'));

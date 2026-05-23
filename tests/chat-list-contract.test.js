@@ -22,6 +22,8 @@ describe('chat list components', () => {
     for (let className of ['chat-list-shell', 'chat-list-header', 'chat-list-content', 'chat-list-title']) {
       assert.equal(source.includes(className), true, `ChatList must define ${className}`);
     }
+    assert.equal(template.includes('<sn-button'), true, 'ChatList controls must compose sn-button');
+    assert.equal(template.includes('<button'), false, 'ChatList must not own raw button shells');
     assert.equal(template.includes("'item-tag': 'chat-list-item'"), true, 'ChatList must keep chat-list-item rendering');
   });
 

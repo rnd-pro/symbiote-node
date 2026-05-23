@@ -12,6 +12,7 @@ import {
   getRadialMenuHit,
   getRadialMenuLayout,
 } from './CanvasGraphGeometry.js';
+import { GRAPH_TYPE_COLOR_TOKENS } from '../../graph/theme-contract.js';
 import {
   getDepthGroupsFrame,
   getLayerAnimationFrame,
@@ -45,6 +46,52 @@ const DEFAULT_MENU_ITEMS = Object.freeze([
   { action: 'view-code', label: 'View Code', path: 'M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z' },
 ]);
 
+function toRgba(rgb, alpha = 1) {
+  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+}
+
+function parseCssRgb(value) {
+  let match = String(value || '').match(/rgba?\(([^)]+)\)/i);
+  if (!match) return null;
+  let parts = match[1].split(',').slice(0, 3).map((part) => Number.parseFloat(part));
+  return parts.every(Number.isFinite) ? parts.map((part) => Math.max(0, Math.min(255, Math.round(part)))) : null;
+}
+
+function resolveCanvasColor(value, fallback) {
+  if (!value || typeof document === 'undefined') return fallback;
+  let ctx = resolveCanvasColor.ctx || document.createElement('canvas').getContext('2d');
+  resolveCanvasColor.ctx = ctx;
+  ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+  ctx.fillStyle = value;
+  let normalized = ctx.fillStyle;
+  if (normalized.startsWith('#')) {
+    let hex = normalized.slice(1);
+    if (hex.length === 3) hex = hex.split('').map((part) => part + part).join('');
+    if (/^[0-9a-f]{6}$/i.test(hex)) {
+      return [
+        Number.parseInt(hex.slice(0, 2), 16),
+        Number.parseInt(hex.slice(2, 4), 16),
+        Number.parseInt(hex.slice(4, 6), 16),
+      ];
+    }
+  }
+  return parseCssRgb(normalized) || fallback;
+}
+
+function resolveCssVars(source, value, seen = new Set()) {
+  return String(value || '').replace(/var\(\s*(--[\w-]+)\s*\)/g, (_, token) => {
+    if (seen.has(token)) return '';
+    seen.add(token);
+    let nextValue = getComputedStyle(source).getPropertyValue(token).trim();
+    return resolveCssVars(source, nextValue, seen);
+  });
+}
+
+function readThemeRgb(source, token, fallback) {
+  let value = resolveCssVars(source, getComputedStyle(source).getPropertyValue(token).trim());
+  return resolveCanvasColor(value, fallback);
+}
+
 export class CanvasGraph extends Symbiote {
   init$ = {
     // These defaults will be updated from external controller if needed
@@ -71,7 +118,14 @@ export class CanvasGraph extends Symbiote {
   _bgR = 15;
   _bgG = 23;
   _bgB = 42;
-  _ghostColor = 'rgb(22,30,50)';
+  _bgRgb = [26, 26, 26];
+  _edgeRgb = [74, 158, 255];
+  _pulseRgb = [76, 139, 245];
+  _dangerRgb = [244, 67, 54];
+  _textRgb = [240, 240, 240];
+  _textDimRgb = [153, 153, 153];
+  _typeColorRgb = {};
+  _ghostColor = 'rgb(51,51,51)';
 
   initCallback() {
     this.eventNames = { ...DEFAULT_EVENT_NAMES, ...this.eventNames };
@@ -190,27 +244,7 @@ export class CanvasGraph extends Symbiote {
       });
     }
 
-    setTimeout(() => {
-       let rawBg = getComputedStyle(document.body).getPropertyValue('--sn-bg').trim();
-       if (!rawBg) rawBg = getComputedStyle(document.body).backgroundColor;
-
-       // Robust way to parse ANY color in browser
-       const tempCtx = document.createElement('canvas').getContext('2d');
-       tempCtx.fillStyle = '#1a1a1a'; // fallback
-       tempCtx.fillStyle = rawBg;
-       this._bgR = 26; this._bgG = 26; this._bgB = 26; // Default
-
-       if (tempCtx.fillStyle.startsWith('#')) {
-         const hex = tempCtx.fillStyle;
-         this._bgR = parseInt(hex.length === 4 ? hex[1]+hex[1] : hex.slice(1,3), 16);
-         this._bgG = parseInt(hex.length === 4 ? hex[2]+hex[2] : hex.slice(3,5), 16);
-         this._bgB = parseInt(hex.length === 4 ? hex[3]+hex[3] : hex.slice(5,7), 16);
-       }
-
-       // If the background is extremely dark, we need a larger boost to be visible
-       const boost = 25;
-       this._ghostColor = `rgb(${Math.min(255, this._bgR + boost)}, ${Math.min(255, this._bgG + boost)}, ${Math.min(255, this._bgB + boost)})`;
-    }, 100);
+    setTimeout(() => this.syncCanvasTheme(), 100);
   }
 
   disconnectedCallback() {
@@ -717,6 +751,22 @@ export class CanvasGraph extends Symbiote {
     return `rgb(${rr},${gg},${bbb})`;
   }
 
+  syncCanvasTheme() {
+    this._bgRgb = readThemeRgb(this, '--sn-bg', this._bgRgb);
+    this._edgeRgb = readThemeRgb(this, '--sn-conn-color', this._edgeRgb);
+    this._pulseRgb = readThemeRgb(this, '--sn-node-selected', this._pulseRgb);
+    this._dangerRgb = readThemeRgb(this, '--sn-danger-color', this._dangerRgb);
+    this._textRgb = readThemeRgb(this, '--sn-text', this._textRgb);
+    this._textDimRgb = readThemeRgb(this, '--sn-text-dim', this._textDimRgb);
+    for (let [type, token] of Object.entries(GRAPH_TYPE_COLOR_TOKENS)) {
+      this._typeColorRgb[type] = readThemeRgb(this, token, this._typeColorRgb[type] || this._edgeRgb);
+    }
+
+    [this._bgR, this._bgG, this._bgB] = this._bgRgb;
+    let boost = 25;
+    this._ghostColor = `rgb(${Math.min(255, this._bgR + boost)},${Math.min(255, this._bgG + boost)},${Math.min(255, this._bgB + boost)})`;
+  }
+
   draw() {
     if (!this.canvas) return;
     const dpr = window.devicePixelRatio || 1;
@@ -873,7 +923,7 @@ export class CanvasGraph extends Symbiote {
         return { x: (screenX - tCurrent.E) / tCurrent.A, y: (screenY - tCurrent.F) / tCurrent.A };
       };
 
-      currentCtx.strokeStyle = 'rgba(74, 158, 255, 0.25)';
+      currentCtx.strokeStyle = toRgba(this._edgeRgb, 0.25);
       currentCtx.lineWidth = 1.5;
 
       // Edges
@@ -936,14 +986,14 @@ export class CanvasGraph extends Symbiote {
         } else if (this.dragNode || this.activeNode) {
           const fromOpacity = this.layerAnim[fromDepth].opacity;
           const toOpacity = this.layerAnim[toDepth].opacity;
-          const fromTC = getNodeColor(nodeFrom || {});
-          const toTC = getNodeColor(nodeTo || {});
+          const fromTC = getNodeColor(nodeFrom || {}, this._typeColorRgb);
+          const toTC = getNodeColor(nodeTo || {}, this._typeColorRgb);
           const grad = currentCtx.createLinearGradient(from.x, from.y, to.x, to.y);
           grad.addColorStop(0, this.blendBg(fromTC[0], fromTC[1], fromTC[2], fromOpacity * 0.7));
           grad.addColorStop(1, this.blendBg(toTC[0], toTC[1], toTC[2], toOpacity * 0.7));
           fillStyle = grad;
         } else {
-          const fromTC = getNodeColor(nodeFrom || {});
+          const fromTC = getNodeColor(nodeFrom || {}, this._typeColorRgb);
           fillStyle = this.blendBg(fromTC[0], fromTC[1], fromTC[2], 0.35);
         }
 
@@ -969,7 +1019,7 @@ export class CanvasGraph extends Symbiote {
         const pos = this.getSmooth(node.id);
         if (!pos) continue;
         const isActive = this.activeNode && this.activeNode.id === node.id;
-        const tc = getNodeColor(node);
+        const tc = getNodeColor(node, this._typeColorRgb);
         const conns = this.adjMap.get(node.id)?.size || 0;
 
         const targetScale = isActive ? 1.5 : 1;
@@ -991,7 +1041,7 @@ export class CanvasGraph extends Symbiote {
             const ringW = r * 0.12;
             currentCtx.beginPath();
             currentCtx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-            currentCtx.fillStyle = `rgba(${this._bgR}, ${this._bgG}, ${this._bgB}, ${layerOpacity})`;
+            currentCtx.fillStyle = toRgba(this._bgRgb, layerOpacity);
             currentCtx.fill();
 
             currentCtx.beginPath();
@@ -1081,10 +1131,10 @@ export class CanvasGraph extends Symbiote {
           const opacity = 1 - pulsePhase;
           mainCtx.beginPath();
           mainCtx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-          mainCtx.fillStyle = `rgba(76, 139, 245, ${opacity * 0.4})`;
+          mainCtx.fillStyle = toRgba(this._pulseRgb, opacity * 0.4);
           mainCtx.fill();
           mainCtx.lineWidth = 2;
-          mainCtx.strokeStyle = `rgba(76, 139, 245, ${opacity * 0.8})`;
+          mainCtx.strokeStyle = toRgba(this._pulseRgb, opacity * 0.8);
           mainCtx.stroke();
           this.needsDraw = true;
           return true;
@@ -1120,15 +1170,15 @@ export class CanvasGraph extends Symbiote {
           mainCtx.setTransform(dpr * this.zoom, 0, 0, dpr * this.zoom, dpr * this.panX, dpr * this.panY);
         }
 
-        const tc = getNodeColor(this.activeNode);
+        const tc = getNodeColor(this.activeNode, this._typeColorRgb);
         for (const entry of menuLayout.items) {
           const item = entry.item;
 
           mainCtx.beginPath();
           mainCtx.arc(entry.x, entry.y, ir, 0, Math.PI * 2);
           mainCtx.fillStyle = item.danger
-            ? `rgba(60, 20, 20, ${0.9 * easeOut})`
-            : `rgba(${tc[0]}, ${tc[1]}, ${tc[2]}, ${0.9 * easeOut})`;
+            ? toRgba(this._dangerRgb, 0.25 * easeOut)
+            : toRgba(tc, 0.9 * easeOut);
           mainCtx.fill();
 
           mainCtx.save();
@@ -1138,8 +1188,8 @@ export class CanvasGraph extends Symbiote {
             mainCtx.scale(iconScale, iconScale);
             const p = new Path2D(item.path);
             mainCtx.fillStyle = item.danger
-              ? `rgba(255, 107, 107, ${easeOut})`
-              : `rgba(${this._bgR}, ${this._bgG}, ${this._bgB}, ${easeOut})`;
+              ? toRgba(this._dangerRgb, easeOut)
+              : toRgba(this._bgRgb, easeOut);
             mainCtx.fill(p);
           }
           mainCtx.restore();
@@ -1312,7 +1362,7 @@ export class CanvasGraph extends Symbiote {
     // The offset from node center to the vertical midpoint of the panel
     ip.totalExtentY = (panelH + 16) / 2 - padY;
 
-    const tc = getNodeColor(this.activeNode || {});
+    const tc = getNodeColor(this.activeNode || {}, this._typeColorRgb);
     const cornerR = 6;
 
     ctx.save();
@@ -1322,7 +1372,7 @@ export class CanvasGraph extends Symbiote {
     ctx.filter = 'blur(16px)';
     ctx.beginPath();
     ctx.roundRect(panelX, panelY, panelW, panelH + 16, cornerR);
-    ctx.fillStyle = `rgba(${this._bgR}, ${this._bgG}, ${this._bgB}, ${0.85 * ip.opacity})`;
+    ctx.fillStyle = toRgba(this._bgRgb, 0.85 * ip.opacity);
     ctx.fill();
     ctx.filter = 'none';
 
@@ -1353,16 +1403,16 @@ export class CanvasGraph extends Symbiote {
         ctx.fillStyle = `rgba(${tc[0]}, ${tc[1]}, ${tc[2]}, ${ip.opacity})`;
       } else if (i === 1 && this.activeNode?.id !== this.activeNode?.label) {
         ctx.font = `400 ${smallFontSize}px 'SF Mono', 'JetBrains Mono', monospace`;
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.35 * ip.opacity})`;
+        ctx.fillStyle = toRgba(this._textDimRgb, 0.35 * ip.opacity);
       } else if (line.text.startsWith('  ')) {
         ctx.font = `400 ${smallFontSize}px 'SF Mono', 'JetBrains Mono', monospace`;
         ctx.fillStyle = `rgba(${tc[0]}, ${tc[1]}, ${tc[2]}, ${0.6 * ip.opacity})`;
       } else if (line.text.includes(':')) {
         ctx.font = `500 ${smallFontSize}px 'Inter', system-ui, sans-serif`;
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.5 * ip.opacity})`;
+        ctx.fillStyle = toRgba(this._textRgb, 0.5 * ip.opacity);
       } else {
         ctx.font = `500 ${smallFontSize}px 'Inter', system-ui, sans-serif`;
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * ip.opacity})`;
+        ctx.fillStyle = toRgba(this._textRgb, 0.6 * ip.opacity);
       }
 
       ctx.fillText(text, panelX + padX, textY);

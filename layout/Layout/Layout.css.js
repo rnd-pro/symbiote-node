@@ -7,7 +7,7 @@ export let styles = css`
     height: 100%;
     overflow: hidden;
     position: relative;
-    font-family: var(--font-main);
+    font-family: var(--sn-font);
 
     &[hidden] {
       display: none;
@@ -17,7 +17,7 @@ export let styles = css`
       display: flex;
       width: 100%;
       height: 100%;
-      background: var(--layout-gap-bg, transparent);
+      background: var(--sn-layout-gap-bg);
     }
 
     /* Fullscreen tab bar */
@@ -27,7 +27,7 @@ export let styles = css`
       left: 0;
       right: 0;
       height: 28px;
-      background: var(--bg-deeper, var(--sn-bg, #1a1a1a));
+      background: var(--sn-bg);
       display: flex;
       align-items: stretch;
       gap: 0;
@@ -52,8 +52,8 @@ export let styles = css`
       border: none;
       border-left: none;
       border-right: none;
-      background: var(--bg-deeper, var(--sn-bg, #1a1a1a));
-      color: var(--text-muted, var(--sn-text-dim, #666));
+      background: var(--sn-bg);
+      color: var(--sn-text-dim);
       cursor: pointer;
       font-size: 12px;
       font-family: inherit;
@@ -66,8 +66,8 @@ export let styles = css`
       }
 
       &:hover {
-        background: var(--bg-header, var(--sn-node-header-bg, #2d2d2d));
-        color: var(--text-main, var(--sn-text, #e0e0e0));
+        background: var(--sn-node-header-bg);
+        color: var(--sn-text);
       }
 
       &[active] {
@@ -75,17 +75,17 @@ export let styles = css`
         margin-bottom: -1px;
         position: relative;
         z-index: 1;
-        background: var(--bg-header, var(--sn-node-header-bg, #2d2d2d));
-        color: var(--text-main, var(--sn-text, #e0e0e0));
-        border-left: 1px solid var(--layout-border, var(--sn-node-border, #333));
-        border-right: 1px solid var(--layout-border, var(--sn-node-border, #333));
+        background: var(--sn-node-header-bg);
+        color: var(--sn-text);
+        border-left: 1px solid var(--sn-layout-border);
+        border-right: 1px solid var(--sn-layout-border);
       }
     }
 
     .tab-filler {
       flex: 1;
       height: 28px;
-      background: var(--bg-deeper, var(--sn-bg, #1a1a1a));
+      background: var(--sn-bg);
     }
   }
 `;

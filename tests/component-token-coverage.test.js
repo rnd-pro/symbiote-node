@@ -29,6 +29,41 @@ let COMPONENT_DIRS = [
 
 let LOCAL_OR_NATIVE_TOKEN_ALLOWLIST = new Map();
 
+let CRITICAL_THEME_CASCADE_FILES = [
+  'canvas/NodeCanvas/NodeCanvas.css.js',
+  'canvas/CanvasGraph/CanvasGraph.css.js',
+  'canvas/GraphExplorerShell/GraphExplorerShell.css.js',
+  'canvas/GraphTabs/GraphTabs.css.js',
+  'canvas/Minimap/Minimap.css.js',
+  'canvas/Breadcrumb/Breadcrumb.css.js',
+  'canvas/NodeSearch/NodeSearch.css.js',
+  'chat/ChatComposer/ChatComposer.css.js',
+  'chat/ChatSidebarItem/ChatSidebarItem.css.js',
+  'chat/ChatTranscript/ChatTranscript.css.js',
+  'chat/ChatMessageItem/ChatMessageItem.css.js',
+  'display/LoadingOverlay/LoadingOverlay.css.js',
+  'display/DataTable/DataTable.css.js',
+  'display/EventFeed/EventFeed.css.js',
+  'display/OutputGraphPreview/OutputGraphPreview.css.js',
+  'display/OutputListPreview/OutputListPreview.css.js',
+  'effects/CellBg/CellBg.css.js',
+  'layout/LayoutSidebar/LayoutSidebar.css.js',
+  'layout/LayoutNode/LayoutNode.css.js',
+  'layout/ActionZone/ActionZone.css.js',
+  'layout/PanelMenu/PanelMenu.css.js',
+  'layout/ProjectTabs/ProjectTabs.css.js',
+  'menu/ContextMenu/ContextMenu.css.js',
+  'navigation/QuickOpen/QuickOpen.css.js',
+  'node/GraphNode/GraphNode.css.js',
+  'node/GraphFrame/GraphFrame.css.js',
+  'node/PortItem/PortItem.css.js',
+  'node/CtrlItem/CtrlItem.css.js',
+  'node/NodeSocket/NodeSocket.css.js',
+  'palette/PaletteBrowser/PaletteBrowser.css.js',
+  'tree/TreeView/TreeView.css.js',
+  'toolbar/QuickToolbar/QuickToolbar.css.js',
+];
+
 function listCssFiles(dir) {
   let files = [];
   for (let entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -118,5 +153,107 @@ describe('component token coverage', () => {
 
     assert.deepEqual(unusedAllowlistTokens, [], 'Remove unused component token coverage allowlist entries.');
     assert.deepEqual(undocumentedAllowlistTokens, [], 'Document why each allowlisted token is not a public theme token.');
+  });
+
+  it('keeps critical public CSS components from declaring alternate literal fallback themes', () => {
+    let literalFallback = /var\(\s*--sn-[\w-]+\s*,\s*(?:#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|rgb\(|\d+(?:\.\d+)?px|'|")/;
+    let colorLiteral = /(?:#[0-9a-fA-F]{3,8}|rgba?\(|rgb\(|hsla?\(|hsl\()/;
+    let violations = [];
+
+    for (let relativeFile of CRITICAL_THEME_CASCADE_FILES) {
+      let source = fs.readFileSync(path.join(PKG_ROOT, relativeFile), 'utf-8');
+      if (literalFallback.test(source)) {
+        violations.push(`${relativeFile}: contains --sn literal fallback`);
+      }
+      if (colorLiteral.test(source)) {
+        violations.push(`${relativeFile}: contains raw color literal`);
+      }
+    }
+
+    assert.deepEqual(
+      violations,
+      [],
+      `Critical theme cascade CSS must get defaults from DEFAULT_DARK tokens:\n${violations.join('\n')}`,
+    );
+  });
+
+  it('keeps chat message markup off inline visual styles', () => {
+    let sources = [
+      'chat/message-model.js',
+      'chat/ChatMessageItem/ChatMessageItem.js',
+      'chat/ChatTranscript/ChatTranscript.js',
+    ].map((relativeFile) => [
+      relativeFile,
+      fs.readFileSync(path.join(PKG_ROOT, relativeFile), 'utf-8'),
+    ]);
+
+    let violations = sources
+      .filter(([, source]) => /style="font-size|style="color|\.style\.fontSize|setAttribute\('style'/.test(source))
+      .map(([relativeFile]) => relativeFile);
+
+    assert.deepEqual(violations, [], 'Chat message visuals must be controlled through CSS classes and theme tokens.');
+  });
+
+  it('keeps loading overlay progress off inline visual styles', () => {
+    let template = fs.readFileSync(path.join(PKG_ROOT, 'display/LoadingOverlay/LoadingOverlay.tpl.js'), 'utf-8');
+    let component = fs.readFileSync(path.join(PKG_ROOT, 'display/LoadingOverlay/LoadingOverlay.js'), 'utf-8');
+
+    assert.equal(template.includes('style='), false, 'LoadingOverlay template must not emit inline visual styles.');
+    assert.ok(component.includes('--sn-loading-progress'), 'LoadingOverlay must expose progress through a CSS custom property.');
+  });
+
+  it('keeps CellBg visual identity in public theme tokens', () => {
+    let component = fs.readFileSync(path.join(PKG_ROOT, 'effects/CellBg/CellBg.js'), 'utf-8');
+    let styles = fs.readFileSync(path.join(PKG_ROOT, 'effects/CellBg/CellBg.css.js'), 'utf-8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf-8');
+
+    for (let token of ['--sn-cell-bg', '--sn-cell-dot', '--sn-cell-base-alpha', '--sn-cell-alpha-span']) {
+      assert.ok(component.includes(token), `CellBg runtime must read ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_DARK must provide ${token}`);
+    }
+    for (let token of ['--sn-cell-glare', '--sn-cell-vignette-mid', '--sn-cell-vignette-edge', '--sn-cell-noise']) {
+      assert.ok(styles.includes(token), `CellBg CSS must use ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_DARK must provide ${token}`);
+    }
+
+    assert.equal(component.includes('BG_COLOR'), false, 'CellBg must not keep a local background color constant.');
+    assert.equal(component.includes('DOT_COLOR'), false, 'CellBg must not keep a local dot color constant.');
+    assert.equal(styles.includes('#1a1a1a'), false, 'CellBg CSS must not hardcode the Agent Portal background.');
+    assert.equal(styles.includes('rgba('), false, 'CellBg CSS must not hardcode overlay colors.');
+  });
+
+  it('keeps dialog helper visuals in public theme tokens', () => {
+    let source = fs.readFileSync(path.join(PKG_ROOT, 'ui/dialogs.js'), 'utf-8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf-8');
+
+    for (let token of [
+      '--sn-dialog-bg',
+      '--sn-dialog-color',
+      '--sn-dialog-border',
+      '--sn-dialog-radius',
+      '--sn-dialog-shadow',
+      '--sn-dialog-backdrop',
+      '--sn-dialog-body-padding',
+      '--sn-dialog-actions-gap',
+    ]) {
+      assert.ok(source.includes(token), `Dialog helpers must use ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_DARK must provide ${token}`);
+    }
+
+    assert.equal(/#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|hsl\(/.test(source), false, 'Dialog helpers must not hardcode colors.');
+    assert.equal(/var\(\s*--sn-[\w-]+\s*,/.test(source), false, 'Dialog helpers must not declare alternate fallback themes.');
+  });
+
+  it('keeps public component CSS off legacy host bridge theme aliases', () => {
+    let violations = collectComponentCssFiles()
+      .map((file) => [path.relative(PKG_ROOT, file), fs.readFileSync(file, 'utf-8')])
+      .filter(([, source]) => /var\(\s*--(?:bg|text|layout-highlight|font-main)\b/.test(source))
+      .map(([relativeFile]) => relativeFile);
+
+    assert.deepEqual(
+      violations,
+      [],
+      'Public component CSS must consume --sn-* provider tokens instead of legacy host bridge aliases.',
+    );
   });
 });

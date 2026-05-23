@@ -1,14 +1,13 @@
 export const GRAPH_PATH_STYLES = ['pcb', 'bezier', 'orthogonal', 'straight'];
 
 export const GRAPH_DIRECTORY_FRAME_COLORS = [
-  'rgba(200, 117, 51, 0.25)',
-  'rgba(212, 160, 74, 0.20)',
-  'rgba(100, 180, 120, 0.20)',
-  'rgba(80, 150, 200, 0.20)',
-  'rgba(160, 100, 200, 0.20)',
-  'rgba(200, 80, 80, 0.20)',
-  'rgba(120, 200, 200, 0.20)',
-  'rgba(200, 180, 80, 0.20)',
+  'var(--sn-graph-cluster-0)',
+  'var(--sn-graph-cluster-1)',
+  'var(--sn-graph-cluster-2)',
+  'var(--sn-graph-cluster-3)',
+  'var(--sn-graph-cluster-4)',
+  'var(--sn-graph-cluster-5)',
+  'var(--sn-graph-cluster-6)',
 ];
 
 export function resolveInitialGraphViewMode(urlParams) {

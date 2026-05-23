@@ -29,7 +29,7 @@ chat-sidebar-item[data-active] > .chat-item,
 chat-sidebar-sub-item[data-active] > .chat-item-child {
   color: var(--sn-text);
   background: var(--sn-node-hover);
-  border-left: 2px solid var(--sn-cat-server, #5cb8ff);
+  border-left: 2px solid var(--sn-cat-server);
   padding-left: 12px;
 }
 
@@ -50,6 +50,7 @@ chat-sidebar-sub-item[data-active] > .chat-item-child {
 }
 
 .chat-item-icon {
+  color: var(--sn-chat-item-icon-color);
   transition: opacity 0.12s;
 }
 
@@ -62,26 +63,33 @@ chat-sidebar-sub-item[data-active] > .chat-item-child {
   color: var(--sn-text);
 }
 
-.chat-status-container {
-  display: flex;
-  align-items: center;
-}
-
 .chat-status-icon {
   margin-left: 4px;
-  font-size: 12px !important;
+  font-size: var(--sn-chat-status-icon-size);
 }
 
-.chat-status-running {
+.chat-status-icon[hidden] {
+  display: none;
+}
+
+.chat-status-icon[data-status="running"] {
   color: var(--sn-node-selected);
 }
 
-.chat-status-done {
+.chat-status-icon[data-status="running"] {
+  animation: spin 1s linear infinite;
+}
+
+.chat-status-icon[data-status="done"] {
   color: var(--sn-success-color);
 }
 
-.chat-status-error {
+.chat-status-icon[data-status="error"] {
   color: var(--sn-danger-color);
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
 }
 
 .chat-item-adapter {
@@ -93,8 +101,8 @@ chat-sidebar-sub-item[data-active] > .chat-item-child {
 
 .chat-item-type {
   font-size: 9px;
-  color: var(--sn-cat-server, #5cb8ff);
-  background: color-mix(in srgb, var(--sn-cat-server, #5cb8ff) 10%, transparent);
+  color: var(--sn-cat-server);
+  background: color-mix(in srgb, var(--sn-cat-server) 10%, transparent);
   font-family: var(--sn-font-mono, monospace);
   margin-left: auto;
   padding: 2px 4px;
@@ -211,7 +219,7 @@ chat-sidebar-item[data-expanded] > .chat-sub-items {
 :host-context(.chat-nav[collapsed]) .chat-item-adapter,
 :host-context(.chat-nav[collapsed]) .chat-sub-items,
 :host-context(.chat-nav[collapsed]) .chat-expand-icon,
-:host-context(.chat-nav[collapsed]) .chat-status-container {
+:host-context(.chat-nav[collapsed]) .chat-status-icon {
   display: none;
 }
 
@@ -247,7 +255,7 @@ chat-sidebar-item[data-expanded] > .chat-sub-items {
   height: 100%;
   background: var(--sn-node-bg);
   border-radius: 0 4px 4px 0;
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--sn-chat-item-child-shadow);
   z-index: 30;
   transition: color 0.12s, opacity 0.12s;
 }

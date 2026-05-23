@@ -18,17 +18,17 @@ source-editor textarea {
   border: 0;
   outline: 0;
   resize: none;
-  padding: var(--sn-source-editor-padding, 14px 16px);
-  background: var(--sn-source-editor-bg, var(--sn-bg));
-  color: var(--sn-source-editor-color, var(--sn-text));
+  padding: var(--sn-source-editor-padding);
+  background: var(--sn-source-editor-bg);
+  color: var(--sn-source-editor-color);
   font-family: var(--sn-font-mono);
-  font-size: var(--sn-source-editor-font-size, 12px);
-  line-height: var(--sn-source-editor-line-height, 1.6);
-  tab-size: var(--sn-source-editor-tab-size, 2);
+  font-size: var(--sn-source-editor-font-size);
+  line-height: var(--sn-source-editor-line-height);
+  tab-size: var(--sn-source-editor-tab-size);
 }
 
 source-editor textarea::placeholder {
-  color: var(--sn-source-editor-placeholder-color, var(--sn-text-dim));
+  color: var(--sn-source-editor-placeholder-color);
 }
 
 source-editor textarea:disabled,

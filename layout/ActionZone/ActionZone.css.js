@@ -54,7 +54,7 @@ export let styles = css`
     .zone-icon {
       width: 100%;
       height: 100%;
-      color: var(--layout-highlight, #888);
+      color: var(--sn-node-selected);
       opacity: 0.6;
     }
 
@@ -76,7 +76,7 @@ export let styles = css`
     }
 
     &[dragging] .zone-icon {
-      color: var(--layout-highlight, #aaa);
+      color: var(--sn-text);
       opacity: 1;
     }
   }

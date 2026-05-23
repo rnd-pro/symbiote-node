@@ -25,10 +25,10 @@ export let styles = css`
       position: absolute;
       pointer-events: all;
       min-width: 160px;
-      background: var(--sn-ctx-bg, #1e1e3a);
-      border: 1px solid var(--sn-ctx-border, #3a3a6a);
+      background: var(--sn-ctx-bg);
+      border: 1px solid var(--sn-ctx-border);
       border-radius: 8px;
-      box-shadow: 0 8px 24px var(--sn-shadow-color, rgba(0, 0, 0, 0.5));
+      box-shadow: 0 8px 24px var(--sn-shadow-color);
       padding: 4px;
       overflow: hidden;
     }
@@ -42,15 +42,15 @@ export let styles = css`
     padding: 8px 12px;
     border: none;
     background: transparent;
-    color: var(--sn-ctx-color, #e0e0e0);
-    font-family: var(--sn-font, 'Inter', sans-serif);
+    color: var(--sn-ctx-color);
+    font-family: var(--sn-font);
     font-size: 13px;
     cursor: pointer;
     border-radius: 4px;
     transition: background 0.1s;
 
     &:hover {
-      background: var(--sn-ctx-hover, rgba(74, 158, 255, 0.15));
+      background: var(--sn-ctx-hover);
     }
   }
 

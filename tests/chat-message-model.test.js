@@ -34,7 +34,7 @@ describe('chat message model', () => {
       { role: 'user', text: 'Do it' },
       { role: 'agent', text: 'Done' },
       { role: 'thinking', done: true, elapsed: 15, meta: { exitCode: 0 } },
-      { role: 'board', streaming: true, taskIds: ['task-123456789'] },
+      { role: 'board', streaming: true, cardItems: [{ id: 'task-123456789', title: 'Worker' }] },
     ], { hasActiveStream: true });
 
     assert.equal(items.length, 3);
@@ -42,6 +42,7 @@ describe('chat message model', () => {
     assert.match(items[1].workSummaryHtml, /Worked for 15s/);
     assert.match(items[1].workSummaryHtml, /data-copy-text="Done"/);
     assert.deepEqual(streamingBoards, [['task-123456789']]);
+    assert.deepEqual(items[2].cardItems, [{ id: 'task-123456789', title: 'Worker' }]);
     assert.equal(items[2].isStreaming, true);
   });
 

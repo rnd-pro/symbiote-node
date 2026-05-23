@@ -14,6 +14,10 @@ import { Selector } from '../interactions/Selector.js';
 import { animateOut } from '@symbiotejs/symbiote';
 import { getShape } from '../shapes/index.js';
 
+function readCssToken(source, token) {
+  return getComputedStyle(source).getPropertyValue(token).trim();
+}
+
 export class NodeViewManager {
   /** @type {Map<string, HTMLElement>} */
   #nodeViews;
@@ -238,37 +242,24 @@ export class NodeViewManager {
     requestAnimationFrame(() => {
       if (shape && shape.pathData) {
         let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.classList.add('sn-node-shape-svg');
         svg.setAttribute('viewBox', shape.viewBox);
         svg.setAttribute('preserveAspectRatio', 'none');
-        svg.style.cssText =
-          'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible;';
         let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', shape.pathData);
         path.setAttribute(
           'fill',
-          `var(--sn-shape-${shape.name}-fill, var(--sn-shape-fill, var(--sn-node-bg, #16213e)))`
+          `var(--sn-shape-${shape.name}-fill, var(--sn-shape-fill, var(--sn-node-bg)))`
         );
         path.setAttribute(
           'stroke',
-          `var(--sn-shape-${shape.name}-stroke, var(--sn-shape-stroke, var(--sn-node-border, #2a2a4a)))`
+          `var(--sn-shape-${shape.name}-stroke, var(--sn-shape-stroke, var(--sn-node-border)))`
         );
         path.setAttribute('stroke-width', 'var(--sn-shape-stroke-width, 0.4)');
         path.setAttribute('stroke-linejoin', 'round');
         svg.appendChild(path);
         el.prepend(svg);
         el.setAttribute('data-svg-shape', shape.name);
-
-
-        el.style.background = 'transparent';
-        el.style.border = 'none';
-        el.style.boxShadow = 'none';
-        el.style.borderRadius = '0';
-        el.style.overflow = 'visible';
-
-
-        for (const child of el.children) {
-          if (child !== svg) child.style.position = 'relative';
-        }
 
 
         let iconEl = el.querySelector('.sn-node-icon');
@@ -285,7 +276,7 @@ export class NodeViewManager {
 
         let size = { width: el.offsetWidth || 180, height: el.offsetHeight || 60 };
         let radius = shape.getBorderRadius(size);
-        if (radius && radius !== 'var(--sn-node-radius, 10px)') {
+        if (radius && radius !== 'var(--sn-node-radius)') {
           el.style.borderRadius = radius;
         }
       }
@@ -466,6 +457,17 @@ export class NodeViewManager {
       let w = canvas.width;
       let h = canvas.height;
       ctx.clearRect(0, 0, w, h);
+      let previewColors = {
+        connection: readCssToken(el, '--sn-subgraph-preview-connection'),
+        completedConnection: readCssToken(el, '--sn-subgraph-preview-completed-connection'),
+        processingFill: readCssToken(el, '--sn-subgraph-preview-processing-fill'),
+        processingStroke: readCssToken(el, '--sn-subgraph-preview-processing-stroke'),
+        processingGlow: readCssToken(el, '--sn-subgraph-preview-processing-glow'),
+        completedFill: readCssToken(el, '--sn-subgraph-preview-completed-fill'),
+        completedStroke: readCssToken(el, '--sn-subgraph-preview-completed-stroke'),
+        idleFill: readCssToken(el, '--sn-subgraph-preview-idle-fill'),
+        idleStroke: readCssToken(el, '--sn-subgraph-preview-idle-stroke'),
+      };
 
       let innerEditor = node.innerEditor;
       if (!innerEditor) return;
@@ -525,10 +527,10 @@ export class NodeViewManager {
 
           let srcState = states[conn.from];
           if (srcState === 'completed') {
-            ctx.strokeStyle = 'rgba(92, 216, 122, 0.5)';
+            ctx.strokeStyle = previewColors.completedConnection;
             ctx.lineWidth = 2;
           } else {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.strokeStyle = previewColors.connection;
             ctx.lineWidth = 1;
           }
 
@@ -562,26 +564,26 @@ export class NodeViewManager {
         ctx.closePath();
 
         if (state === 'processing') {
-          ctx.fillStyle = 'rgba(74, 158, 255, 0.25)';
+          ctx.fillStyle = previewColors.processingFill;
           ctx.fill();
-          ctx.strokeStyle = 'rgba(74, 158, 255, 0.8)';
+          ctx.strokeStyle = previewColors.processingStroke;
           ctx.lineWidth = 1.5;
           ctx.stroke();
 
-          ctx.shadowColor = 'rgba(74, 158, 255, 0.6)';
+          ctx.shadowColor = previewColors.processingGlow;
           ctx.shadowBlur = 8;
           ctx.stroke();
           ctx.shadowBlur = 0;
         } else if (state === 'completed') {
-          ctx.fillStyle = 'rgba(92, 216, 122, 0.2)';
+          ctx.fillStyle = previewColors.completedFill;
           ctx.fill();
-          ctx.strokeStyle = 'rgba(92, 216, 122, 0.7)';
+          ctx.strokeStyle = previewColors.completedStroke;
           ctx.lineWidth = 1;
           ctx.stroke();
         } else {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+          ctx.fillStyle = previewColors.idleFill;
           ctx.fill();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.strokeStyle = previewColors.idleStroke;
           ctx.lineWidth = 0.5;
           ctx.stroke();
         }

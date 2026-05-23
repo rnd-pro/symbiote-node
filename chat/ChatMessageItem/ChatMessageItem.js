@@ -28,7 +28,7 @@ export class ChatMessageItem extends Symbiote {
     metaHtml: '',
     workSummaryHtml: '',
     copyText: '',
-    taskIds: [],
+    cardItems: [],
     messageClass: 'message',
     bodyHtml: '',
   };
@@ -48,7 +48,7 @@ export class ChatMessageItem extends Symbiote {
     this.sub('metaHtml', () => this._renderBody());
     this.sub('workSummaryHtml', () => this._renderBody());
     this.sub('copyText', () => this._renderBody());
-    this.sub('taskIds', () => this._renderBody());
+    this.sub('cardItems', () => this._renderBody());
   }
 
   _renderBody() {
@@ -71,7 +71,7 @@ export class ChatMessageItem extends Symbiote {
     let spinClass = this.$.isStreaming ? 'spin-icon' : '';
     let openAttr = this.$.isLatestTool ? ' open' : '';
     let htmlStr = `<details class="tool-card"${openAttr}>
-      <summary class="tool-header"><span class="material-symbols-outlined ${spinClass}" style="font-size:14px">${icon}</span> ${escapeHtml(this.$.name || 'tool')}</summary>`;
+      <summary class="tool-header"><span class="material-symbols-outlined tool-icon ${spinClass}">${icon}</span> ${escapeHtml(this.$.name || 'tool')}</summary>`;
 
     if (this.$.input) {
       htmlStr += `<div class="tool-section"><div class="tool-label">Input</div><pre class="tool-code">${escapeHtml(stringifyBlock(this.$.input))}</pre></div>`;
@@ -87,21 +87,24 @@ export class ChatMessageItem extends Symbiote {
   }
 
   _renderBoard() {
-    let tasksHtml = (this.$.taskIds || []).map((taskId) => {
-      let statusIcon = this.$.isStreaming ? 'pending' : 'schedule';
-      let spinClass = this.$.isStreaming ? 'spin-icon' : '';
-      let statusText = this.$.isStreaming ? 'Running...' : 'Queued';
-      let shortId = String(taskId).substring(0, 8);
-      return `<div class="delegation-card" data-task-id="${escapeHtml(taskId)}" data-status="${this.$.isStreaming ? 'running' : 'idle'}">
-        <div class="delegation-card-header">
-          <span class="material-symbols-outlined ${spinClass}">${statusIcon}</span><span class="card-title">${escapeHtml(shortId)}...</span>
+    let cardsHtml = (this.$.cardItems || []).map((card) => {
+      let id = String(card?.id || '');
+      let title = card?.title || (id ? `${id.substring(0, 8)}...` : 'Item');
+      let status = card?.status || (this.$.isStreaming ? 'running' : 'idle');
+      let statusIcon = card?.icon || (status === 'running' ? 'pending' : 'schedule');
+      let spinClass = status === 'running' ? 'spin-icon' : '';
+      let statusText = card?.statusText || (status === 'running' ? 'Running...' : 'Queued');
+      let linkedAttr = card?.linkId ? ` data-link-id="${escapeHtml(card.linkId)}"` : '';
+      return `<div class="status-card" data-card-id="${escapeHtml(id)}"${linkedAttr} data-status="${escapeHtml(status)}">
+        <div class="status-card-header">
+          <span class="material-symbols-outlined ${spinClass}">${escapeHtml(statusIcon)}</span><span class="card-title">${escapeHtml(title)}</span>
         </div>
-        <div class="delegation-card-status">${statusText}</div>
-        <div class="delegation-card-events"></div>
+        <div class="status-card-status">${escapeHtml(statusText)}</div>
+        <div class="status-card-events"></div>
       </div>`;
     }).join('');
 
-    return `<div class="delegation-board">${tasksHtml}</div>`;
+    return `<div class="status-board">${cardsHtml}</div>`;
   }
 
   _renderThinking() {
@@ -110,10 +113,10 @@ export class ChatMessageItem extends Symbiote {
     let details = `<details class="${className}"${openAttr}>`;
 
     if (this.$.done) {
-      details += `<summary><span class="material-symbols-outlined" style="font-size:16px;color:var(--sn-success-color)">check_circle</span>Worked for ${escapeHtml(this.$.elapsedText)}</summary>`;
+      details += `<summary><span class="material-symbols-outlined work-summary-icon">check_circle</span>Worked for ${escapeHtml(this.$.elapsedText)}</summary>`;
     } else {
       let statusHtml = this.$.status ? `<span class="thinking-status">${escapeHtml(this.$.status)}</span>` : '';
-      details += `<summary><span class="material-symbols-outlined spin-icon" style="font-size:16px">pending</span>Thinking for ${escapeHtml(this.$.elapsedText)}${statusHtml}</summary>`;
+      details += `<summary><span class="material-symbols-outlined thinking-icon spin-icon">pending</span>Thinking for ${escapeHtml(this.$.elapsedText)}${statusHtml}</summary>`;
     }
 
     if (this.$.done && this.$.metaHtml) {

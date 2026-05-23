@@ -392,6 +392,6 @@ describe('TreeView behavior', () => {
 
     assert.match(css, /sn-tree-view \{/);
     assert.match(css, /sn-tree-view\[hidden\]/);
-    assert.match(css, /Material Symbols Outlined/);
+    assert.match(css, /var\(--sn-icon-font\)/);
   });
 });

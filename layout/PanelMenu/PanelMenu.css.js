@@ -8,10 +8,10 @@ export let styles = css`
 
     .menu-container {
       pointer-events: auto;
-      background: var(--bg-popup, #2a2a2a);
-      border: 1px solid var(--border-popup, #444);
+      background: var(--sn-ctx-bg);
+      border: 1px solid var(--sn-ctx-border);
       border-radius: 6px;
-      box-shadow: 0 4px 12px var(--sn-shadow-color, rgba(0, 0, 0, 0.4));
+      box-shadow: 0 4px 12px var(--sn-shadow-color);
       min-width: 160px;
       padding: 4px 0;
     }
@@ -22,16 +22,16 @@ export let styles = css`
       gap: 8px;
       padding: 8px 12px;
       cursor: pointer;
-      color: var(--text-main, #e0e0e0);
+      color: var(--sn-text);
       font-size: 0.85rem;
       transition: background 0.1s;
 
       &:hover {
-        background: var(--bg-hover, #3a3a3a);
+        background: var(--sn-node-hover);
       }
 
       &[active] {
-        color: var(--accent, #4a9eff);
+        color: var(--sn-node-selected);
       }
 
       .material-symbols-outlined {

@@ -15,6 +15,10 @@ export class LoadingOverlay extends Symbiote {
     this.sub('isHidden', (value) => {
       this.toggleAttribute('hidden-state', Boolean(value));
     });
+    this.sub('pct', (value) => {
+      let pct = Number.isFinite(Number(value)) ? Math.max(0, Math.min(100, Number(value))) : 0;
+      this.style.setProperty('--sn-loading-progress', `${pct}%`);
+    });
   }
 
   show() {

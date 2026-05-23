@@ -9,6 +9,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import '../../control/Button/Button.js';
 import { template } from './QuickToolbar.tpl.js';
 import { styles } from './QuickToolbar.css.js';
 

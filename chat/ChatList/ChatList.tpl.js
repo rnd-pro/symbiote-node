@@ -11,9 +11,9 @@ export default html`
     </sn-button>
   </div>
   <div class="chat-list-filter-bar">
-    <button class="chat-list-filter-btn" active data-filter="all" ${{ onclick: 'onFilterClick' }}>All</button>
-    <button class="chat-list-filter-btn" data-filter="project" ${{ onclick: 'onFilterClick' }}>By Project</button>
-    <button class="chat-list-filter-btn" data-filter="active" ${{ onclick: 'onFilterClick' }}>Active</button>
+    <sn-button class="chat-list-filter-btn" active data-filter="all" ${{ onclick: 'onFilterClick' }}>All</sn-button>
+    <sn-button class="chat-list-filter-btn" data-filter="project" ${{ onclick: 'onFilterClick' }}>By Project</sn-button>
+    <sn-button class="chat-list-filter-btn" data-filter="active" ${{ onclick: 'onFilterClick' }}>Active</sn-button>
   </div>
   <div class="chat-list-content chat-list-items" ref="items" ${{ itemize: 'chatItems', 'item-tag': 'chat-list-item' }}></div>
 </div>

@@ -6,7 +6,7 @@ sn-tree-panel {
   height: 100%;
   overflow: hidden;
   font-family: var(--sn-font);
-  font-size: var(--sn-tree-panel-font-size, 12px);
+  font-size: var(--sn-tree-panel-font-size);
 }
 
 :host([hidden]),
@@ -17,38 +17,38 @@ sn-tree-panel[hidden] {
 .sn-tree-panel-title {
   display: flex;
   align-items: center;
-  gap: var(--sn-tree-panel-title-gap, 5px);
-  padding: var(--sn-tree-panel-title-padding, 6px 8px);
+  gap: var(--sn-tree-panel-title-gap);
+  padding: var(--sn-tree-panel-title-padding);
   border-bottom: 1px solid var(--sn-node-border);
   color: var(--sn-text-dim);
-  font-size: var(--sn-tree-panel-title-size, 11px);
-  font-weight: var(--sn-tree-panel-title-weight, 700);
+  font-size: var(--sn-tree-panel-title-size);
+  font-weight: var(--sn-tree-panel-title-weight);
   text-transform: uppercase;
 }
 
 .sn-tree-panel-title-icon,
 .sn-tree-panel-toolbar-icon {
-  font-size: var(--sn-tree-panel-icon-size, 14px);
+  font-size: var(--sn-tree-panel-icon-size);
 }
 
 .sn-tree-panel-toolbar {
   display: flex;
-  gap: var(--sn-tree-panel-toolbar-gap, 6px);
-  padding: var(--sn-tree-panel-toolbar-padding, 6px 8px);
+  gap: var(--sn-tree-panel-toolbar-gap);
+  padding: var(--sn-tree-panel-toolbar-padding);
   border-bottom: 1px solid var(--sn-node-border);
 }
 
 .sn-tree-panel-filter {
   flex: 1;
   min-width: 0;
-  padding: var(--sn-tree-panel-input-padding, 4px 8px);
+  padding: var(--sn-tree-panel-input-padding);
   border: 1px solid var(--sn-node-border);
-  border-radius: var(--sn-tree-panel-input-radius, 4px);
+  border-radius: var(--sn-tree-panel-input-radius);
   outline: none;
   background: var(--sn-bg);
   color: var(--sn-text);
   font-family: inherit;
-  font-size: var(--sn-tree-panel-input-size, 11px);
+  font-size: var(--sn-tree-panel-input-size);
 }
 
 .sn-tree-panel-filter:focus {
@@ -56,32 +56,30 @@ sn-tree-panel[hidden] {
 }
 
 .sn-tree-panel-collapse {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--sn-tree-panel-collapse-padding, 0 6px);
-  border: 1px solid var(--sn-node-border);
-  border-radius: var(--sn-tree-panel-input-radius, 4px);
-  background: var(--sn-bg);
+  --sn-button-icon-size: auto;
+  --sn-button-icon-font-size: var(--sn-tree-panel-icon-size);
+  --sn-button-padding: var(--sn-tree-panel-collapse-padding);
+  --sn-button-border: var(--sn-node-border);
+  --sn-button-radius: var(--sn-tree-panel-input-radius);
+  --sn-button-bg: var(--sn-bg);
+  --sn-button-hover-bg: var(--sn-node-hover);
+  --sn-button-hover-border: var(--sn-node-border);
+  --sn-button-color: var(--sn-text);
+  --sn-button-focus-ring: var(--sn-effect-focus-ring);
   color: var(--sn-text);
-  cursor: pointer;
   transition: background 100ms ease;
-}
-
-.sn-tree-panel-collapse:hover {
-  background: var(--sn-node-hover);
 }
 
 .sn-tree-panel-content {
   flex: 1;
   overflow-y: auto;
-  padding: var(--sn-tree-panel-content-padding, 4px);
+  padding: var(--sn-tree-panel-content-padding);
 }
 
 .sn-tree-panel-placeholder {
-  padding: var(--sn-tree-panel-placeholder-padding, 8px);
+  padding: var(--sn-tree-panel-placeholder-padding);
   color: var(--sn-text-dim);
-  font-size: var(--sn-tree-panel-placeholder-size, 12px);
+  font-size: var(--sn-tree-panel-placeholder-size);
 }
 
 .sn-tree-panel-placeholder[hidden] {

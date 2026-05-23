@@ -59,7 +59,7 @@ export default `
 .chat-nav-resize-handle:hover,
 .chat-nav-resize-handle.dragging,
 .chat-nav[resizing] .chat-nav-resize-handle {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--sn-layout-resizer-hover-bg);
 }
 
 .chat-nav-header {
@@ -68,7 +68,7 @@ export default `
   gap: 2px;
   padding: 2px 4px;
   min-height: 28px;
-  background: var(--bg-header, var(--sn-node-bg));
+  background: var(--sn-node-bg);
   border-bottom: none;
   flex-shrink: 0;
 }

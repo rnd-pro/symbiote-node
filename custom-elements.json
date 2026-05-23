@@ -2954,11 +2954,11 @@
             },
             {
               "kind": "field",
-              "name": "taskIds",
+              "name": "cardItems",
               "type": {
                 "text": "array"
               },
-              "description": "Delegation task ids rendered as board cards."
+              "description": "Status card descriptors rendered inside board messages."
             }
           ],
           "cssProperties": [
@@ -3031,7 +3031,7 @@
           "customElement": true,
           "name": "ChatTranscript",
           "tagName": "chat-transcript",
-          "description": "Generic chat transcript shell with message rendering, scroll controls, live status, and delegation card events.",
+          "description": "Generic chat transcript shell with message rendering, scroll controls, live status, and status card events.",
           "members": [
             {
               "kind": "field",
@@ -3075,11 +3075,19 @@
             },
             {
               "kind": "method",
-              "name": "updateDelegationTask",
+              "name": "findStatusBoard",
               "type": {
                 "text": "function"
               },
-              "description": "Updates a delegation card by task id."
+              "description": "Finds a rendered status board by card ids."
+            },
+            {
+              "kind": "method",
+              "name": "updateStatusCard",
+              "type": {
+                "text": "function"
+              },
+              "description": "Updates a status card by host-owned id."
             }
           ],
           "events": [
@@ -3095,8 +3103,8 @@
               "description": "Emits after scroll-to-bottom is requested."
             },
             {
-              "name": "delegation-card-open",
-              "description": "Requests opening a linked delegated chat or task card."
+              "name": "status-card-open",
+              "description": "Requests opening a linked status card target."
             },
             {
               "name": "message-copy",
@@ -3695,11 +3703,35 @@
             },
             {
               "kind": "field",
-              "name": "statusHtml",
+              "name": "agentColor",
               "type": {
                 "text": "string"
               },
-              "description": "Trusted host status markup."
+              "description": "Optional row icon accent color."
+            },
+            {
+              "kind": "field",
+              "name": "statusKind",
+              "type": {
+                "text": "string"
+              },
+              "description": "Status visual kind: running, done, or error."
+            },
+            {
+              "kind": "field",
+              "name": "statusIcon",
+              "type": {
+                "text": "string"
+              },
+              "description": "Material Symbols status icon name."
+            },
+            {
+              "kind": "field",
+              "name": "statusTitle",
+              "type": {
+                "text": "string"
+              },
+              "description": "Accessible status tooltip text."
             },
             {
               "kind": "field",
@@ -3822,11 +3854,35 @@
             },
             {
               "kind": "field",
-              "name": "statusHtml",
+              "name": "agentColor",
               "type": {
                 "text": "string"
               },
-              "description": "Trusted host status markup."
+              "description": "Optional row icon accent color."
+            },
+            {
+              "kind": "field",
+              "name": "statusKind",
+              "type": {
+                "text": "string"
+              },
+              "description": "Status visual kind: running, done, or error."
+            },
+            {
+              "kind": "field",
+              "name": "statusIcon",
+              "type": {
+                "text": "string"
+              },
+              "description": "Material Symbols status icon name."
+            },
+            {
+              "kind": "field",
+              "name": "statusTitle",
+              "type": {
+                "text": "string"
+              },
+              "description": "Accessible status tooltip text."
             },
             {
               "kind": "field",
@@ -5115,6 +5171,401 @@
           "name": "sn-badge",
           "declaration": {
             "name": "StatusBadge"
+          }
+        }
+      ]
+    },
+    {
+      "path": "display/Metric/Metric.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "MetricItem",
+          "tagName": "sn-metric",
+          "description": "Generic themeable label/value metric row for dashboard stats, health summaries, and settings metadata.",
+          "attributes": [
+            {
+              "name": "variant",
+              "description": "Metric variant: default or stacked.",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "status",
+              "description": "Value status: default, success, warning, or error.",
+              "type": {
+                "text": "string"
+              }
+            }
+          ],
+          "members": [],
+          "events": [],
+          "slots": [
+            {
+              "name": "label",
+              "description": "Metric label content."
+            },
+            {
+              "name": "value",
+              "description": "Metric value content."
+            },
+            {
+              "name": "default",
+              "description": "Fallback metric value content."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-metric-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-label-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-label-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-value-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-value-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-value-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-value-font",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-success-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-warning-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-metric-error-color",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-metric",
+          "declaration": {
+            "name": "MetricItem"
+          }
+        }
+      ]
+    },
+    {
+      "path": "display/DataTable/DataTable.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "DataTable",
+          "tagName": "sn-data-table",
+          "description": "Generic themeable data table for provider-neutral tabular records.",
+          "members": [
+            {
+              "kind": "field",
+              "name": "emptyText",
+              "type": {
+                "text": "string"
+              },
+              "description": "Empty state text."
+            },
+            {
+              "kind": "field",
+              "name": "isEmpty",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether the table has no rendered rows or columns."
+            },
+            {
+              "kind": "method",
+              "name": "setColumns",
+              "type": {
+                "text": "function"
+              },
+              "description": "Sets column descriptors with keys, labels, and alignment."
+            },
+            {
+              "kind": "method",
+              "name": "setRows",
+              "type": {
+                "text": "function"
+              },
+              "description": "Sets row records or cell descriptor maps."
+            },
+            {
+              "kind": "method",
+              "name": "setData",
+              "type": {
+                "text": "function"
+              },
+              "description": "Sets columns, rows, and optional empty text in one call."
+            },
+            {
+              "kind": "method",
+              "name": "getData",
+              "type": {
+                "text": "function"
+              },
+              "description": "Returns the current column and row descriptors."
+            }
+          ],
+          "events": [],
+          "cssProperties": [
+            {
+              "name": "--sn-data-table-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-header-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-header-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-header-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-header-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-header-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-header-transform",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-row-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-cell-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-cell-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-cell-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-min-width",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-marker-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-marker-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-empty-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-data-table-empty-color",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-data-table",
+          "declaration": {
+            "name": "DataTable"
+          }
+        }
+      ]
+    },
+    {
+      "path": "display/EventFeed/EventFeed.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "EventFeed",
+          "tagName": "sn-event-feed",
+          "description": "Generic themeable event feed for provider-neutral runtime and tool events.",
+          "members": [
+            {
+              "kind": "field",
+              "name": "eventsList",
+              "type": {
+                "text": "array"
+              },
+              "description": "Rendered event item descriptors."
+            },
+            {
+              "kind": "field",
+              "name": "eventCount",
+              "type": {
+                "text": "string"
+              },
+              "description": "Rendered event count."
+            },
+            {
+              "kind": "field",
+              "name": "emptyText",
+              "type": {
+                "text": "string"
+              },
+              "description": "Empty state text."
+            },
+            {
+              "kind": "method",
+              "name": "setEvents",
+              "type": {
+                "text": "function"
+              },
+              "description": "Sets structured events with optional max item count."
+            },
+            {
+              "kind": "method",
+              "name": "addEvent",
+              "type": {
+                "text": "function"
+              },
+              "description": "Prepends one structured event."
+            },
+            {
+              "kind": "method",
+              "name": "clearEvents",
+              "type": {
+                "text": "function"
+              },
+              "description": "Clears all events."
+            },
+            {
+              "kind": "method",
+              "name": "getEvents",
+              "type": {
+                "text": "function"
+              },
+              "description": "Returns current structured events."
+            }
+          ],
+          "events": [],
+          "cssProperties": [
+            {
+              "name": "--sn-bg-overlay",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-card-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-cat-data",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-cat-server",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-danger-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-font",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-font-mono",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-list-item-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-header-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-success-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-text",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-text-dim",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-event-feed",
+          "declaration": {
+            "name": "EventFeed"
           }
         }
       ]

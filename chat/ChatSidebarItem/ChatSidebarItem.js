@@ -12,8 +12,10 @@ export class ChatSidebarItem extends Symbiote {
     cleanName: '',
     adapter: '',
     icon: 'chat',
-    iconStyle: '',
-    statusHtml: '',
+    agentColor: '',
+    statusKind: '',
+    statusIcon: '',
+    statusTitle: '',
     hasChildren: false,
     isExpanded: false,
     isActive: false,
@@ -56,6 +58,11 @@ export class ChatSidebarItem extends Symbiote {
       this.toggleAttribute('data-has-sub', value);
       if (!value) this.$.isExpanded = false;
     });
+    this.sub('agentColor', (value) => this._syncAgentColor(value));
+    this.sub('statusKind', () => this._syncStatus());
+    this.sub('statusIcon', () => this._syncStatus());
+    this._syncAgentColor(this.$.agentColor);
+    this._syncStatus();
 
     this.sub('subChats', (chats) => {
       let has = chats && chats.length > 0;
@@ -72,18 +79,39 @@ export class ChatSidebarItem extends Symbiote {
       this.$.isExpanded = true;
     }
   }
+
+  _syncAgentColor(value) {
+    if (value) {
+      this.style.setProperty('--sn-chat-item-icon-color', value);
+    } else {
+      this.style.removeProperty('--sn-chat-item-icon-color');
+    }
+  }
+
+  _syncStatus() {
+    let hasStatus = Boolean(this.$.statusKind && this.$.statusIcon);
+    this.toggleAttribute('data-has-status', hasStatus);
+    if (this.ref.statusIcon) {
+      this.ref.statusIcon.hidden = !hasStatus;
+      if (hasStatus) {
+        this.ref.statusIcon.setAttribute('data-status', this.$.statusKind);
+      } else {
+        this.ref.statusIcon.removeAttribute('data-status');
+      }
+    }
+  }
 }
 
 ChatSidebarItem.template = html`
 <div class="chat-item" ${{ onclick: 'onItemClick' }}>
   <span class="chat-item-icon-slot">
-    <span class="material-symbols-outlined chat-icon chat-item-icon" ${{ textContent: 'icon', style: 'iconStyle' }}></span>
+    <span class="material-symbols-outlined chat-icon chat-item-icon" ${{ textContent: 'icon' }}></span>
     <button class="chat-item-delete" title="Delete" aria-label="Delete chat" ${{ onclick: 'onDelete' }}>
       <span class="material-symbols-outlined">delete</span>
     </button>
   </span>
   <span class="chat-item-label" ${{ textContent: 'cleanName' }}></span>
-  <span class="chat-status-container" ${{ innerHTML: 'statusHtml' }}></span>
+  <span class="material-symbols-outlined chat-status-icon" ref="statusIcon" ${{ textContent: 'statusIcon', title: 'statusTitle' }}></span>
   <span class="chat-item-adapter" ${{ textContent: 'adapter' }}></span>
   <span class="material-symbols-outlined chat-expand-icon" role="button" tabindex="0" title="Toggle child chats" aria-label="Toggle child chats" ${{ onclick: 'onExpandToggle' }}>chevron_right</span>
 </div>
@@ -97,8 +125,10 @@ export class ChatSidebarSubItem extends Symbiote {
     cleanName: '',
     adapter: '',
     icon: 'subdirectory_arrow_right',
-    iconStyle: '',
-    statusHtml: '',
+    agentColor: '',
+    statusKind: '',
+    statusIcon: '',
+    statusTitle: '',
     agentType: '',
     isActive: false,
 
@@ -118,20 +148,46 @@ export class ChatSidebarSubItem extends Symbiote {
     this.sub('isActive', (value) => {
       this.toggleAttribute('data-active', value);
     });
+    this.sub('agentColor', (value) => this._syncAgentColor(value));
+    this.sub('statusKind', () => this._syncStatus());
+    this.sub('statusIcon', () => this._syncStatus());
+    this._syncAgentColor(this.$.agentColor);
+    this._syncStatus();
+  }
+
+  _syncAgentColor(value) {
+    if (value) {
+      this.style.setProperty('--sn-chat-item-icon-color', value);
+    } else {
+      this.style.removeProperty('--sn-chat-item-icon-color');
+    }
+  }
+
+  _syncStatus() {
+    let hasStatus = Boolean(this.$.statusKind && this.$.statusIcon);
+    this.toggleAttribute('data-has-status', hasStatus);
+    if (this.ref.statusIcon) {
+      this.ref.statusIcon.hidden = !hasStatus;
+      if (hasStatus) {
+        this.ref.statusIcon.setAttribute('data-status', this.$.statusKind);
+      } else {
+        this.ref.statusIcon.removeAttribute('data-status');
+      }
+    }
   }
 }
 
 ChatSidebarSubItem.template = html`
 <div class="chat-item-child" ${{ onclick: 'onItemClick' }}>
   <span class="chat-item-icon-slot">
-    <span class="material-symbols-outlined chat-icon chat-item-icon" ${{ textContent: 'icon', style: 'iconStyle' }}></span>
+    <span class="material-symbols-outlined chat-icon chat-item-icon" ${{ textContent: 'icon' }}></span>
     <button class="chat-item-delete" title="Delete" aria-label="Delete chat" ${{ onclick: 'onDelete' }}>
       <span class="material-symbols-outlined">delete</span>
     </button>
   </span>
   <span class="chat-item-label" ${{ textContent: 'cleanName' }}></span>
   <span class="chat-item-type" ${{ textContent: 'agentType' }}></span>
-  <span class="chat-status-container" ${{ innerHTML: 'statusHtml' }}></span>
+  <span class="material-symbols-outlined chat-status-icon" ref="statusIcon" ${{ textContent: 'statusIcon', title: 'statusTitle' }}></span>
 </div>
 `;
 

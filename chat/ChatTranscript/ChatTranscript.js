@@ -65,54 +65,48 @@ export class ChatTranscript extends Symbiote {
     btn.classList.toggle('visible', state.hasOverflow && !state.isAtBottom);
   }
 
-  findDelegationBoard(taskIds = []) {
+  findStatusBoard(cardIds = []) {
     let container = this.getScrollContainer();
-    if (!container || !taskIds?.length) return null;
-    let firstCard = container.querySelector(`[data-task-id="${this._cssEscape(taskIds[0])}"]`);
-    return firstCard?.closest('.delegation-board') || null;
+    if (!container || !cardIds?.length) return null;
+    let firstCard = container.querySelector(`[data-card-id="${this._cssEscape(cardIds[0])}"]`);
+    return firstCard?.closest('.status-board') || null;
   }
 
-  updateDelegationTask(taskId, task = {}, options = {}) {
+  updateStatusCard(cardId, cardData = {}, options = {}) {
     let root = options.board || this.getScrollContainer();
-    if (!root || !taskId) return null;
-    let card = root.querySelector(`[data-task-id="${this._cssEscape(taskId)}"]`);
+    if (!root || !cardId) return null;
+    let card = root.querySelector(`[data-card-id="${this._cssEscape(cardId)}"]`);
     if (!card) return null;
 
-    let status = task.status || 'running';
+    let status = cardData.status || 'running';
     let isDone = status === 'done' || status === 'error' || status === 'cancelled' || status === 'lost';
     card.dataset.status = isDone ? status : 'running';
 
-    let iconEl = card.querySelector('.delegation-card-header .material-symbols-outlined');
+    let iconEl = card.querySelector('.status-card-header .material-symbols-outlined');
     if (iconEl) {
       iconEl.className = `material-symbols-outlined ${isDone ? '' : 'spin-icon'}`.trim();
       iconEl.textContent = isDone ? (status === 'done' ? 'check_circle' : 'error') : 'pending';
-      if (status === 'done') {
-        iconEl.setAttribute('style', 'color:var(--sn-success-color)');
-      } else if (status === 'error') {
-        iconEl.setAttribute('style', 'color:var(--sn-danger-color)');
-      } else {
-        iconEl.removeAttribute('style');
-      }
+      iconEl.dataset.status = isDone ? status : 'running';
     }
 
-    let statusEl = card.querySelector('.delegation-card-status');
+    let statusEl = card.querySelector('.status-card-status');
     if (statusEl) {
       if (isDone) {
         statusEl.textContent = status === 'done' ? 'Completed' : status === 'error' ? 'Failed' : 'Cancelled';
       } else {
-        let elapsed = this._formatElapsed(task.startedAt || task.updatedAt);
+        let elapsed = this._formatElapsed(cardData.startedAt || cardData.updatedAt);
         statusEl.textContent = `Running${elapsed ? ' - ' + elapsed : ''}`;
       }
     }
 
-    if (task.chatId && !card.dataset.chatId) {
-      card.dataset.chatId = task.chatId;
-      card.classList.add('delegation-card-linked');
+    if (cardData.linkId && !card.dataset.linkId) {
+      card.dataset.linkId = cardData.linkId;
+      card.classList.add('status-card-linked');
     }
 
     let titleEl = card.querySelector('.card-title');
-    if (titleEl && task.chatName) {
-      titleEl.textContent = task.chatName;
+    if (titleEl && cardData.title) {
+      titleEl.textContent = cardData.title;
     }
 
     return card;
@@ -144,7 +138,6 @@ export class ChatTranscript extends Symbiote {
     indicator.className = 'live-status-indicator';
     let iconEl = document.createElement('span');
     iconEl.className = `material-symbols-outlined ${spinClass}`.trim();
-    iconEl.style.fontSize = '14px';
     iconEl.textContent = icon;
     let textEl = document.createElement('span');
     textEl.textContent = text;
@@ -162,11 +155,11 @@ export class ChatTranscript extends Symbiote {
       return;
     }
 
-    let card = event.target.closest('.delegation-card');
+    let card = event.target.closest('.status-card');
     if (card) {
-      emit(this, 'delegation-card-open', {
-        chatId: card.dataset.chatId || '',
-        taskId: card.dataset.taskId || '',
+      emit(this, 'status-card-open', {
+        id: card.dataset.cardId || '',
+        linkId: card.dataset.linkId || '',
         card,
       });
     }

@@ -14,3 +14,10 @@ export {
   normalizeProjectTransaction,
 } from './project-transaction.js';
 export { createProjectRuntime } from './project-runtime.js';
+export {
+  GRAPH_CLUSTER_COLOR_TOKENS,
+  GRAPH_TYPE_COLOR_TOKENS,
+  getGraphClusterColorToken,
+  isGraphColorReference,
+  normalizeGraphColorReference,
+} from './theme-contract.js';

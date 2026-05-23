@@ -1,5 +1,51 @@
 import { getShape } from '../shapes/index.js';
 
+function resolveThemeSource(canvasLayer) {
+  return canvasLayer?.parentElement || canvasLayer?.getRootNode?.()?.host || canvasLayer || document.documentElement;
+}
+
+function resolveThemeValue(source, token, fallbackToken) {
+  let computed = getComputedStyle(source);
+  let value = computed.getPropertyValue(token).trim();
+  if (value) return value;
+  if (!fallbackToken) return '';
+  return computed.getPropertyValue(fallbackToken).trim();
+}
+
+function resolveCssVars(source, value, seen = new Set()) {
+  if (!value || !value.includes('var(')) return value || '';
+  return value.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^)]+))?\)/g, (_match, token, fallback = '') => {
+    if (seen.has(token)) return fallback.trim();
+    seen.add(token);
+    let nextValue = getComputedStyle(source).getPropertyValue(token).trim() || fallback.trim();
+    return resolveCssVars(source, nextValue, seen);
+  });
+}
+
+function parseCssRgb(value, source = document.documentElement) {
+  if (!value) return null;
+  let probe = document.createElement('span');
+  probe.style.color = resolveCssVars(source, value);
+  document.documentElement.append(probe);
+  let normalized = getComputedStyle(probe).color;
+  probe.remove();
+  let match = normalized.match(/rgba?\(([^)]+)\)/);
+  if (!match) return null;
+  let [r, g, b] = match[1]
+    .split(',')
+    .slice(0, 3)
+    .map((part) => Number.parseFloat(part));
+  return [r, g, b].every(Number.isFinite) ? [r, g, b] : null;
+}
+
+function mixRgb(a, b, weight) {
+  return a.map((channel, index) => Math.round(channel * weight + b[index] * (1 - weight)));
+}
+
+function toRgba(rgb, alpha = 1) {
+  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+}
+
 /**
  * Parallel support for connection rendering via HTML5 Canvas API.
  * This is used to test performance against the DOM-bound SVG renderer.
@@ -29,10 +75,12 @@ export class CanvasConnectionRenderer {
 
 
   #colorParams = {
-    normal: '#4a9eff',
-    selected: '#ff6b6b',
+    normal: '',
+    selected: '',
+    outline: '',
+    bg: '',
+    text: '',
     width: 2,
-    flowingColor: '#4a9eff',
   };
 
   /**
@@ -85,13 +133,19 @@ export class CanvasConnectionRenderer {
   }
 
   #updateStyles() {
-    let computed = getComputedStyle(document.body);
-    this.#colorParams.normal = computed.getPropertyValue('--sn-conn-color').trim() || '#4a9eff';
-    this.#colorParams.selected =
-      computed.getPropertyValue('--sn-conn-selected').trim() || '#ff6b6b';
-    this.#colorParams.outline = computed.getPropertyValue('--sn-port-outline').trim() || '#16213e';
-    this.#colorParams.bg = computed.getPropertyValue('--sn-bg').trim() || '#1a1a2e';
+    let source = resolveThemeSource(this.#canvasLayer);
+    let computed = getComputedStyle(source);
+    this.#colorParams.normal = resolveThemeValue(source, '--sn-conn-color', '--sn-node-selected');
+    this.#colorParams.selected = resolveThemeValue(source, '--sn-conn-selected', '--sn-danger-color');
+    this.#colorParams.outline = resolveThemeValue(source, '--sn-port-outline', '--sn-node-bg');
+    this.#colorParams.bg = resolveThemeValue(source, '--sn-bg');
+    this.#colorParams.text = resolveThemeValue(source, '--sn-text');
     this.#colorParams.width = parseFloat(computed.getPropertyValue('--sn-conn-width')) || 2;
+  }
+
+  #resolveColor(value) {
+    let source = resolveThemeSource(this.#canvasLayer);
+    return resolveCssVars(source, value);
   }
 
   /** @param {'bezier'|'orthogonal'|'straight'|'pcb'} style */
@@ -342,8 +396,8 @@ export class CanvasConnectionRenderer {
 
       let fromNode = this.#editor?.getNode(connection.from);
       let toNode = this.#editor?.getNode(connection.to);
-      let fromColor = fromNode?.outputs?.[connection.out]?.socket?.color;
-      let toColor = toNode?.inputs?.[connection.in]?.socket?.color;
+      let fromColor = this.#resolveColor(fromNode?.outputs?.[connection.out]?.socket?.color);
+      let toColor = this.#resolveColor(toNode?.inputs?.[connection.in]?.socket?.color);
 
 
       let baseWidth = this.#colorParams.width;
@@ -388,7 +442,12 @@ export class CanvasConnectionRenderer {
       if (isDimmed) {
 
         let baseColor = fromColor || this.#colorParams.normal;
-        finalColor = `color-mix(in srgb, ${baseColor} 15%, ${this.#colorParams.bg})`;
+        let source = resolveThemeSource(this.#canvasLayer);
+        let baseRgb = parseCssRgb(baseColor, source);
+        let bgRgb = parseCssRgb(this.#colorParams.bg, source);
+        if (baseRgb && bgRgb) {
+          finalColor = toRgba(mixRgb(baseRgb, bgRgb, 0.15));
+        }
       }
 
       ctx.strokeStyle = finalColor;
@@ -516,7 +575,7 @@ export class CanvasConnectionRenderer {
 
 
       if (showLabels && node.label) {
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = this.#colorParams.text;
         ctx.globalAlpha = 1;
         ctx.font = `${labelFontSize}px sans-serif`;
         ctx.textAlign = 'center';

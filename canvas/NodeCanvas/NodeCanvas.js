@@ -680,7 +680,6 @@ export class NodeCanvas extends Symbiote {
   /**
    * Highlight nodes sequentially based on execution trace.
    * Each node pulses green in order, then fades.
-   * Uses inline styles to guarantee visibility regardless of CSS cache.
    *
    * @param {Array<{nodeId: string}>} trace - Execution trace from Fire/Run
    * @param {number} [stepDelay=300] - Delay between node highlights (ms)
@@ -689,35 +688,15 @@ export class NodeCanvas extends Symbiote {
     if (!trace || !trace.length) return;
 
 
-    if (!document.getElementById('sn-fire-keyframes')) {
-      let style = document.createElement('style');
-      style.id = 'sn-fire-keyframes';
-      style.textContent = `
-        @keyframes sn-fire-pulse {
-          0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
-          50% { box-shadow: 0 0 20px 6px rgba(76, 175, 80, 0.5); }
-          100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-
     for (const [, el] of this._nodeViews) {
       el.removeAttribute('data-fire-state');
-      el.style.opacity = '';
-      el.style.borderColor = '';
-      el.style.animation = '';
-      el.style.zIndex = '';
-      el.style.transition = '';
     }
 
 
     for (const step of trace) {
       let el = this._nodeViews.get(step.nodeId);
       if (el) {
-        el.style.opacity = '0.4';
-        el.style.transition = 'opacity 0.15s';
+        el.setAttribute('data-fire-state', 'pending');
       }
     }
 
@@ -728,16 +707,11 @@ export class NodeCanvas extends Symbiote {
         if (!el) return;
 
 
-        el.style.opacity = '1';
-        el.style.borderColor = '#4caf50';
-        el.style.animation = 'sn-fire-pulse 0.6s ease-out';
-        el.style.zIndex = '50';
+        el.setAttribute('data-fire-state', 'active');
 
 
         setTimeout(() => {
-          el.style.animation = '';
-          el.style.borderColor = 'rgba(76, 175, 80, 0.4)';
-          el.style.transition = 'border-color 2s ease-out';
+          el.setAttribute('data-fire-state', 'complete');
         }, 600);
       }, i * stepDelay);
     });
@@ -746,11 +720,7 @@ export class NodeCanvas extends Symbiote {
     let totalDuration = trace.length * stepDelay + 3500;
     setTimeout(() => {
       for (const [, el] of this._nodeViews) {
-        el.style.opacity = '';
-        el.style.borderColor = '';
-        el.style.animation = '';
-        el.style.zIndex = '';
-        el.style.transition = '';
+        el.removeAttribute('data-fire-state');
       }
     }, totalDuration);
   }

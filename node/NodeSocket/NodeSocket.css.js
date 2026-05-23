@@ -10,8 +10,8 @@ export let styles = css`
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--socket-color, var(--sn-node-accent, #4a9eff));
-    border: 2px solid var(--sn-node-bg, #16213e);
+    background: var(--socket-color, var(--sn-node-accent));
+    border: 2px solid var(--sn-node-bg);
     cursor: crosshair;
     flex-shrink: 0;
     transition:

@@ -41,7 +41,7 @@ export class NodeShape {
    * @returns {string}
    */
   getBorderRadius(_size) {
-    return 'var(--sn-node-radius, 10px)';
+    return 'var(--sn-node-radius)';
   }
 
   /**

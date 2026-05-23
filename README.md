@@ -109,10 +109,10 @@ document.querySelector('sn-list-detail-shell').hasDetail = true;
 
 ### Surface UI
 
-`SurfaceCard`, `ActionButton`, `FormField`, `StatusBadge`, `StatusBanner`, and `EmptyState` are generic browser-only composition primitives from `symbiote-node/ui`. They own the standard card background, border, radius, spacing, action control variants, form label/control geometry, compact status label variants, inline status feedback, empty placeholder layout, keyboard activation, and interactive hover/focus states. Host applications keep content, native input data, validation, status mapping, and command policy product-specific.
+`SurfaceCard`, `ActionButton`, `FormField`, `StatusBadge`, `MetricItem`, `StatusBanner`, and `EmptyState` are generic browser-only composition primitives from `symbiote-node/ui`. They own the standard card background, border, radius, spacing, action control variants, form label/control geometry, compact status label variants, label/value metric rows, inline status feedback, empty placeholder layout, keyboard activation, and interactive hover/focus states. Host applications keep content, native input data, validation, status mapping, and command policy product-specific.
 
 ```javascript
-import { ActionButton, EmptyState, FormField, StatusBadge, StatusBanner, SurfaceCard } from 'symbiote-node/ui';
+import { ActionButton, EmptyState, FormField, MetricItem, StatusBadge, StatusBanner, SurfaceCard } from 'symbiote-node/ui';
 
 document.body.innerHTML = `
   <sn-card interactive>
@@ -123,6 +123,7 @@ document.body.innerHTML = `
     </sn-field>
     <p>3 active instances</p>
     <sn-badge variant="success">Connected</sn-badge>
+    <sn-metric><span slot="label">Latency</span><span slot="value">42ms</span></sn-metric>
     <sn-banner variant="info">Runtime status updated</sn-banner>
     <sn-empty-state>No archived instances</sn-empty-state>
     <sn-button slot="footer" variant="primary">Refresh</sn-button>
@@ -262,7 +263,7 @@ Separate **Palette** (colors), **Skin** (geometry), and **Theme** (combined) lay
 
 | Theme | Description |
 |-------|-------------|
-| `DEFAULT_DARK` | Default dark design system |
+| `DEFAULT_DARK` | Cascadeable neutral default aligned with the current Agent Portal shell |
 | `GREY_NEUTRAL` | Balanced grey UI |
 | `DARK_DEFAULT` | Professional dark interface |
 | `LIGHT_CLEAN` | Light mode |
@@ -278,7 +279,7 @@ applyTheme(appShellElement, DEFAULT_THEME);     // Full provider theme
 applyPalette(canvasElement, SYNTHWAVE_PALETTE); // Colors only
 ```
 
-Agent-readable theme construction data is published through `symbiote-node/manifest` and `node engine/cli.js discover`. The default provider theme is described as composable rule blocks: source accents, color cascade, geometry cascade, typography cascade, motion/effects, semantic aliases, and component aliases. Each block exposes inputs, outputs, parameters, and derivations so agents can compose new themes from root accents and density rules instead of writing one-off component overrides.
+Agent-readable theme construction data is published through `symbiote-node/manifest` and `node engine/cli.js discover`. The default provider theme is a cascadeable neutral default aligned with the current Agent Portal shell, but exposed as provider-neutral `--sn-*` tokens rather than product CSS. It is described as composable rule blocks: source accents, color cascade, geometry cascade, typography cascade, motion/effects, semantic aliases, and component aliases. Each block exposes inputs, outputs, parameters, and derivations so agents can compose new themes from root accents and density rules instead of writing one-off component overrides. Runtime component tokens for graph nodes, tree rows, project tabs, sidebars, chat composer controls, status chips, message events, shadows, and interaction states are part of `DEFAULT_THEME`; public components consume those tokens through the CSS cascade instead of shipping local fallback themes.
 
 Theme modifiers are project data, not product code. For the default provider theme, supported controls are `hue`, `chroma`, `backgroundLightness`, `surfaceLightness`, `textLightness`, `density`, `radius`, `motion`, and `elevation`; custom theme packs can define their own modifier vocabulary.
 
@@ -415,7 +416,7 @@ Use `--json` with `run`, `validate`, `list`, and `inspect` when integrating with
 - `schemas/` — graph JSON schemas
 - `node engine/cli.js discover` — one JSON payload for component, theme, rule, token, schema, and export discovery
 
-Theme recipes are available through `getThemeRecipe(name)` from `symbiote-node/manifest` and through `discover.manifest.themeRecipes`. A recipe combines the theme file, DTCG token tree, flattened token paths, runtime CSS custom properties, parametric controls, element groups, and rule blocks so agents can build or modify themes from explicit source accents, cascade formulas, semantic aliases, and component aliases. The default provider theme exposes native CSS controls such as `--sn-theme-hue`, `--sn-theme-chroma`, `--sn-theme-density`, and `--sn-theme-radius-scale`; host apps can override those at `:root` or any subtree boundary without per-component style patches.
+Theme recipes are available through `getThemeRecipe(name)` from `symbiote-node/manifest` and through `discover.manifest.themeRecipes`. A recipe combines theme metadata, the theme file, DTCG token tree, flattened token paths, runtime CSS custom properties, parametric controls, element groups, and rule blocks so agents can build or modify themes from explicit source accents, cascade formulas, semantic aliases, and component aliases. The default provider theme exposes native CSS controls such as `--sn-theme-hue`, `--sn-theme-chroma`, `--sn-theme-density`, `--sn-theme-radius-scale`, `--sn-theme-motion-scale`, and `--sn-theme-elevation-scale`; host apps can override those at `:root` or any subtree boundary without per-component style patches. HSL/alpha-HSL and `color-mix()` aliases, geometry tokens, and control tokens are part of the manifest recipe and DTCG token file. Themeable library CSS should reference `--sn-*` tokens directly and rely on `DEFAULT_THEME` for defaults; raw component colors or geometry belong in `themes/default-dark.js`, `tokens/themes/default-dark.json`, and the theme catalog.
 
 ## Engine Handlers
 

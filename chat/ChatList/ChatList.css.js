@@ -75,14 +75,17 @@ export default /*css*/ `
 }
 
 .chat-list-filter-btn {
-  background: transparent;
-  border: 1px solid transparent;
+  --sn-button-bg: transparent;
+  --sn-button-border: transparent;
+  --sn-button-color: var(--sn-text-dim);
+  --sn-button-hover-bg: transparent;
+  --sn-button-hover-border: transparent;
+  --sn-button-padding: 3px 8px;
+  --sn-button-radius: 4px;
+  --sn-button-min-height: 24px;
+  --sn-button-font-size: 11px;
+  --sn-button-font-weight: 500;
   color: var(--sn-text-dim);
-  padding: 3px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 11px;
-  font-family: inherit;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
 
@@ -91,8 +94,8 @@ export default /*css*/ `
 }
 
 .chat-list-filter-btn[active] {
-  background: var(--sn-node-bg);
-  border-color: var(--sn-node-border);
+  --sn-button-bg: var(--sn-node-bg);
+  --sn-button-border: var(--sn-node-border);
   color: var(--sn-text);
 }
 `;

@@ -1,4 +1,5 @@
 import Symbiote, { html } from '@symbiotejs/symbiote';
+import '../../control/Button/Button.js';
 import css from './ChatComposer.css.js';
 
 function emit(el, type, detail = {}) {
@@ -154,6 +155,7 @@ export class ChatComposer extends Symbiote {
   _syncDisabledState() {
     let input = this.getInputElement();
     if (input) input.disabled = Boolean(this.$.disabled);
+    if (this.ref.btnSend) this.ref.btnSend.disabled = Boolean(this.$.disabled);
   }
 }
 
@@ -163,16 +165,18 @@ ChatComposer.template = html`
     <div class="context-chip" title="{{title}}">
       <span class="material-symbols-outlined icon-sm">{{icon}}</span>
       <span class="context-path">{{name}}</span>
-      <button class="context-remove" ${{ '@data-key': 'key', onclick: '^onRemoveContext' }}>x</button>
+      <sn-button class="context-remove" variant="icon" ${{ '@data-key': 'key', onclick: '^onRemoveContext' }}>
+        <span class="material-symbols-outlined">close</span>
+      </sn-button>
     </div>
   </div>
   <div class="composer-body">
     <textarea ref="chatInput" rows="1"
       ${{ value: 'value', disabled: 'disabled', placeholder: 'placeholder',
           oninput: 'onInput', onkeydown: 'onKeyDown' }}></textarea>
-    <button class="btn-send" ref="btnSend" ${{ onclick: 'onSend' }}>
+    <sn-button class="btn-send" ref="btnSend" variant="icon" ${{ onclick: 'onSend' }}>
       <span class="material-symbols-outlined" ref="sendIcon">arrow_upward</span>
-    </button>
+    </sn-button>
   </div>
   <div class="composer-footer" ref="footer" ${{ innerHTML: 'footerHtml', onchange: 'onParamChange' }}></div>
   <div class="autocomplete-popup" ref="autocompletePopup"></div>

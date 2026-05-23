@@ -14,8 +14,12 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const NO_DOM_ERROR = /customElements|HTMLElement|document/;
+const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 let hadCustomElements;
 let hadHTMLElement;
@@ -154,6 +158,8 @@ describe('With DOM shim', () => {
       'port-item',
       'ctrl-item',
       'sidebar-section',
+      'sn-data-table',
+      'sn-event-feed',
     ]) {
       assert.ok(customElements.get(tag), `${tag} must be registered by the UI entrypoint`);
     }
@@ -272,6 +278,10 @@ describe('With DOM shim', () => {
       'ChatComposer must import without throwing'
     );
     assert.ok(customElements.get('chat-composer'));
+    assert.ok(customElements.get('sn-button'));
+    let source = fs.readFileSync(path.join(PKG_ROOT, 'chat/ChatComposer/ChatComposer.js'), 'utf8');
+    assert.ok(source.includes('<sn-button'), 'ChatComposer actions must compose sn-button');
+    assert.equal(source.includes('<button'), false, 'ChatComposer must not own raw button shells');
   });
 
   it('ChatList can be imported with DOM shim', async () => {
@@ -305,6 +315,10 @@ describe('With DOM shim', () => {
       'TreePanel must import without throwing'
     );
     assert.ok(customElements.get('sn-tree-panel'));
+    assert.ok(customElements.get('sn-button'));
+    let template = fs.readFileSync(path.join(PKG_ROOT, 'tree/TreePanel/TreePanel.tpl.js'), 'utf8');
+    assert.ok(template.includes('<sn-button'), 'TreePanel collapse action must compose sn-button');
+    assert.equal(template.includes('<button'), false, 'TreePanel must not own raw button shells');
   });
 
   it('SurfaceCard can be imported with DOM shim', async () => {
@@ -340,6 +354,18 @@ describe('With DOM shim', () => {
     assert.equal(button.getAttribute('aria-disabled'), 'true');
   });
 
+  it('QuickToolbar composes provider action buttons', async () => {
+    await assert.doesNotReject(
+      import('../toolbar/QuickToolbar/QuickToolbar.js'),
+      'QuickToolbar must import without throwing'
+    );
+    assert.ok(customElements.get('quick-toolbar'));
+    assert.ok(customElements.get('sn-button'));
+    let template = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.tpl.js'), 'utf8');
+    assert.ok(template.includes('<sn-button'), 'QuickToolbar must compose sn-button controls');
+    assert.equal(template.includes('<button'), false, 'QuickToolbar must not own raw button shells');
+  });
+
   it('FormField can be imported with DOM shim', async () => {
     await assert.doesNotReject(
       import('../control/Field/Field.js'),
@@ -354,6 +380,14 @@ describe('With DOM shim', () => {
       'StatusBadge must import without throwing'
     );
     assert.ok(customElements.get('sn-badge'));
+  });
+
+  it('MetricItem can be imported with DOM shim', async () => {
+    await assert.doesNotReject(
+      import('../display/Metric/Metric.js'),
+      'MetricItem must import without throwing'
+    );
+    assert.ok(customElements.get('sn-metric'));
   });
 
   it('StatusBanner can be imported with DOM shim', async () => {

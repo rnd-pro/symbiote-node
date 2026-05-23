@@ -74,19 +74,14 @@ export class Minimap extends Symbiote {
 
 
     let cs = getComputedStyle(this);
-    let bgColor =
-      cs.getPropertyValue('--sn-minimap-bg').trim() ||
-      cs.getPropertyValue('--sn-bg').trim() ||
-      'rgba(20, 20, 35, 0.85)';
-    let nodeColor = cs.getPropertyValue('--sn-minimap-node').trim() || 'rgba(80, 130, 200, 0.6)';
+    let bgColor = cs.getPropertyValue('--sn-minimap-bg').trim();
+    let nodeColor = cs.getPropertyValue('--sn-minimap-node').trim();
     let nodeStroke =
       cs.getPropertyValue('--sn-minimap-node-stroke').trim() ||
-      cs.getPropertyValue('--sn-node-border').trim() ||
-      'rgba(120, 170, 255, 0.3)';
-    let vpStroke =
-      cs.getPropertyValue('--sn-minimap-viewport').trim() || 'rgba(255, 255, 255, 0.6)';
-    let vpFill =
-      cs.getPropertyValue('--sn-minimap-viewport-fill').trim() || 'rgba(255, 255, 255, 0.04)';
+      cs.getPropertyValue('--sn-node-border').trim();
+    let bypassedNodeColor = cs.getPropertyValue('--sn-minimap-bypassed-node').trim();
+    let vpStroke = cs.getPropertyValue('--sn-minimap-viewport').trim();
+    let vpFill = cs.getPropertyValue('--sn-minimap-viewport-fill').trim();
 
 
     ctx.clearRect(0, 0, w, h);
@@ -141,7 +136,7 @@ export class Minimap extends Symbiote {
       let nw = (n.width || 200) * scale;
       let nh = (n.height || 80) * scale;
 
-      ctx.fillStyle = n.bypassed ? 'rgba(100, 100, 100, 0.5)' : nodeColor;
+      ctx.fillStyle = n.bypassed ? bypassedNodeColor : nodeColor;
       ctx.fillRect(x, y, nw, nh);
       ctx.strokeStyle = nodeStroke;
       ctx.lineWidth = 0.5;

@@ -4,16 +4,16 @@ export default `
   flex: 1;
   min-height: 0;
   position: relative;
-  background: var(--sn-chat-bg, transparent);
+  background: var(--sn-chat-bg);
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: var(--sn-chat-transcript-padding, 24px 20px 12px);
+  padding: var(--sn-chat-transcript-padding);
   display: flex;
   flex-direction: column;
-  gap: var(--sn-chat-gap, 8px);
+  gap: var(--sn-chat-gap);
   position: relative;
   z-index: 1;
 }
@@ -25,14 +25,14 @@ chat-message-item {
 .scroll-bottom-btn {
   position: absolute;
   left: 50%;
-  bottom: var(--sn-chat-scroll-bottom, var(--chat-transcript-scroll-bottom, 92px));
+  bottom: var(--sn-chat-scroll-bottom);
   z-index: 30;
   width: 32px;
   height: 32px;
   border: none;
   border-radius: 50%;
-  background: var(--sn-node-bg, #222222);
-  color: var(--sn-text-dim, #a0a0a0);
+  background: var(--sn-node-bg);
+  color: var(--sn-text-dim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,7 +40,7 @@ chat-message-item {
   opacity: 0;
   pointer-events: none;
   transform: translateX(-50%) translateY(4px);
-  box-shadow: var(--sn-shadow-lg, 0 6px 18px rgba(0, 0, 0, 0.28));
+  box-shadow: var(--sn-shadow-lg);
   transition: opacity 0.15s ease, transform 0.15s ease, background 0.12s ease, color 0.12s ease;
 }
 
@@ -51,8 +51,8 @@ chat-message-item {
 }
 
 .scroll-bottom-btn:hover {
-  background: var(--sn-node-hover, #444444);
-  color: var(--sn-text, #f0f0f0);
+  background: var(--sn-node-hover);
+  color: var(--sn-text);
 }
 
 .scroll-bottom-btn .material-symbols-outlined {
@@ -70,7 +70,16 @@ chat-message-item {
 }
 
 .live-status-indicator .material-symbols-outlined {
-  color: var(--sn-cat-server, hsl(215, 60%, 55%));
+  font-size: var(--sn-chat-live-icon-size);
+  color: var(--sn-cat-server);
+}
+
+.status-card-header .material-symbols-outlined[data-status="done"] {
+  color: var(--sn-success-color);
+}
+
+.status-card-header .material-symbols-outlined[data-status="error"] {
+  color: var(--sn-danger-color);
 }
 
 @keyframes status-fade-in {

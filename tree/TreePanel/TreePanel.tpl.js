@@ -7,9 +7,9 @@ export default html`
 </div>
 <div class="sn-tree-panel-toolbar">
   <input class="sn-tree-panel-filter" ref="filter" type="search" ${{ oninput: 'onFilterInput' }}>
-  <button class="sn-tree-panel-collapse" ref="collapseButton" type="button" ${{ onclick: 'onCollapseAll' }}>
+  <sn-button class="sn-tree-panel-collapse" ref="collapseButton" variant="icon" ${{ onclick: 'onCollapseAll' }}>
     <span class="material-symbols-outlined sn-tree-panel-toolbar-icon">unfold_less</span>
-  </button>
+  </sn-button>
 </div>
 <div class="sn-tree-panel-content">
   <div class="sn-tree-panel-placeholder" ref="placeholder" ${{ textContent: 'placeholder' }}></div>

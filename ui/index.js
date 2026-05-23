@@ -134,6 +134,9 @@ export let LoadingOverlay;
 export let StatusBadge;
 export let StatusBanner;
 export let EmptyState;
+export let MetricItem;
+export let DataTable;
+export let EventFeed;
 export let getSourceLanguage;
 export let isDirectoryLikePath;
 export let buildDirectoryInfo;
@@ -227,6 +230,9 @@ if (hasDOMGlobals) {
     statusBadge,
     statusBanner,
     emptyState,
+    metricItem,
+    dataTable,
+    eventFeed,
     quickOpen,
     layoutRouter,
     routerSync,
@@ -273,6 +279,9 @@ if (hasDOMGlobals) {
     import('../display/Badge/Badge.js'),
     import('../display/Banner/Banner.js'),
     import('../display/EmptyState/EmptyState.js'),
+    import('../display/Metric/Metric.js'),
+    import('../display/DataTable/DataTable.js'),
+    import('../display/EventFeed/EventFeed.js'),
     import('../navigation/QuickOpen/QuickOpen.js'),
     import('../layout/LayoutRouter/LayoutRouter.js'),
     import('../layout/LayoutRouter/routerSync.js'),
@@ -320,6 +329,9 @@ if (hasDOMGlobals) {
   ({ StatusBadge } = statusBadge);
   ({ StatusBanner } = statusBanner);
   ({ EmptyState } = emptyState);
+  ({ MetricItem } = metricItem);
+  ({ DataTable } = dataTable);
+  ({ EventFeed } = eventFeed);
   ({ QuickOpen } = quickOpen);
   ({
     navigate,

@@ -1,5 +1,6 @@
 import Symbiote from '@symbiotejs/symbiote';
 import '../TreeView/TreeView.js';
+import '../../control/Button/Button.js';
 import template from './TreePanel.tpl.js';
 import css from './TreePanel.css.js';
 

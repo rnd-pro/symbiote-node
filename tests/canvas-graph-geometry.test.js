@@ -1,5 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   DOT_RADIUS,
@@ -20,6 +23,8 @@ import {
   resolveIdleFrame,
   resolveViewportAnimation,
 } from '../canvas/CanvasGraph/CanvasGraphDrawState.js';
+
+let PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 describe('CanvasGraph geometry helpers', () => {
   it('keeps plain node radius scaled by connection hub weight', () => {
@@ -44,9 +49,16 @@ describe('CanvasGraph geometry helpers', () => {
     assert.equal(Number(metrics.orbitR.toFixed(3)), 1.559);
   });
 
-  it('prefers custom hex colors over type palette colors', () => {
+  it('prefers custom hex colors over provider type palette colors', () => {
+    let typeColors = {
+      config: [255, 200, 120],
+      data: [120, 180, 255],
+    };
+
     assert.deepEqual(getNodeColor({ color: '#3af' }), [51, 170, 255]);
-    assert.deepEqual(getNodeColor({ type: 'config' }), [255, 200, 120]);
+    assert.deepEqual(getNodeColor({ type: 'config' }, typeColors), [255, 200, 120]);
+    assert.deepEqual(getNodeColor({ type: 'unknown' }, typeColors), [120, 180, 255]);
+    assert.equal(getNodeColor({ type: 'unknown' }), null);
   });
 
   it('returns depth-zero focus transform around the focus point', () => {
@@ -127,6 +139,119 @@ describe('CanvasGraph geometry helpers', () => {
     assert.equal(Number(layout.items[0].y.toFixed(3)), -7.5);
     assert.equal(layout.items[1].item.action, 'delete');
     assert.equal(Number(layout.items[1].y.toFixed(3)), 27.5);
+  });
+});
+
+describe('CanvasGraph theme contract', () => {
+  it('derives canvas accent colors from CSS theme tokens', () => {
+    let source = fs.readFileSync(path.join(PKG_ROOT, 'canvas/CanvasGraph/CanvasGraph.js'), 'utf8');
+
+    for (let token of ['--sn-bg', '--sn-conn-color', '--sn-node-selected', '--sn-danger-color', '--sn-text', '--sn-text-dim']) {
+      assert.ok(source.includes(token), `CanvasGraph must read ${token}`);
+    }
+    assert.ok(source.includes('GRAPH_TYPE_COLOR_TOKENS'), 'CanvasGraph must use the provider graph type token contract');
+    let graphThemeContract = fs.readFileSync(path.join(PKG_ROOT, 'graph/theme-contract.js'), 'utf8');
+    for (let token of ['--sn-graph-type-data', '--sn-graph-type-action']) {
+      assert.ok(graphThemeContract.includes(token), `graph theme contract must publish ${token}`);
+    }
+
+    for (let literal of [
+      'rgba(74, 158, 255',
+      'rgba(76, 139, 245',
+      'rgba(60, 20, 20',
+      'rgba(255, 107, 107',
+      'rgba(255, 255, 255',
+      '#1a1a1a',
+      'TYPE_COLORS',
+    ]) {
+      assert.equal(source.includes(literal), false, `CanvasGraph must not hardcode ${literal}`);
+    }
+  });
+
+  it('keeps canvas connection rendering scoped to provider theme tokens', () => {
+    let source = fs.readFileSync(
+      path.join(PKG_ROOT, 'canvas/CanvasConnectionRenderer.js'),
+      'utf8',
+    );
+
+    for (let token of ['--sn-bg', '--sn-conn-color', '--sn-conn-selected', '--sn-port-outline', '--sn-node-selected', '--sn-danger-color', '--sn-text']) {
+      assert.ok(source.includes(token), `CanvasConnectionRenderer must read ${token}`);
+    }
+
+    for (let forbidden of [
+      'getComputedStyle(document.body)',
+      '#4a9eff',
+      '#ff6b6b',
+      '#16213e',
+      '#1a1a2e',
+      '#fff',
+      'color-mix(in srgb, ${baseColor}',
+    ]) {
+      assert.equal(source.includes(forbidden), false, `CanvasConnectionRenderer must not use ${forbidden}`);
+    }
+
+    assert.ok(source.includes('resolveCssVars'), 'CanvasConnectionRenderer must resolve provider CSS variables before canvas drawing');
+  });
+
+  it('keeps minimap canvas colors in the default theme contract', () => {
+    let minimap = fs.readFileSync(path.join(PKG_ROOT, 'canvas/Minimap/Minimap.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+
+    for (let token of ['--sn-minimap-bg', '--sn-minimap-node', '--sn-minimap-node-stroke', '--sn-minimap-bypassed-node', '--sn-minimap-viewport', '--sn-minimap-viewport-fill']) {
+      assert.ok(minimap.includes(token), `Minimap must read ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_DARK must define ${token}`);
+    }
+
+    for (let forbidden of [
+      'rgba(20, 20, 35',
+      'rgba(80, 130, 200',
+      'rgba(120, 170, 255',
+      'rgba(255, 255, 255',
+      'rgba(100, 100, 100',
+    ]) {
+      assert.equal(minimap.includes(forbidden), false, `Minimap must not hardcode ${forbidden}`);
+    }
+  });
+
+  it('keeps node canvas trace and subgraph preview visuals theme-driven', () => {
+    let nodeCanvas = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.js'), 'utf8');
+    let nodeViewManager = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeViewManager.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+
+    for (let forbidden of [
+      'sn-fire-keyframes',
+      'style.borderColor',
+      '#4caf50',
+      'rgba(76, 175, 80',
+    ]) {
+      assert.equal(nodeCanvas.includes(forbidden), false, `NodeCanvas trace visuals must not use ${forbidden}`);
+    }
+
+    for (let token of [
+      '--sn-subgraph-preview-connection',
+      '--sn-subgraph-preview-completed-connection',
+      '--sn-subgraph-preview-processing-fill',
+      '--sn-subgraph-preview-processing-stroke',
+      '--sn-subgraph-preview-processing-glow',
+      '--sn-subgraph-preview-completed-fill',
+      '--sn-subgraph-preview-completed-stroke',
+      '--sn-subgraph-preview-idle-fill',
+      '--sn-subgraph-preview-idle-stroke',
+    ]) {
+      assert.ok(nodeViewManager.includes(token), `NodeViewManager must read ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_DARK must define ${token}`);
+    }
+
+    for (let forbidden of [
+      'style.cssText',
+      '#16213e',
+      '#2a2a4a',
+      'rgba(92, 216, 122',
+      'rgba(74, 158, 255',
+      'rgba(255, 255, 255',
+    ]) {
+      assert.equal(nodeViewManager.includes(forbidden), false, `NodeViewManager visuals must not use ${forbidden}`);
+    }
   });
 });
 

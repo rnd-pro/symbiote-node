@@ -75,7 +75,7 @@ export class RectShape extends NodeShape {
   }
 
   getBorderRadius() {
-    return 'var(--sn-node-radius, 10px)';
+    return 'var(--sn-node-radius)';
   }
 
   getMinSize() {

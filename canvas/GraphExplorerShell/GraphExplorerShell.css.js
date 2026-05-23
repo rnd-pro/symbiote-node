@@ -4,7 +4,7 @@ graph-explorer-shell {
   height: 100%;
   position: relative;
   overflow: hidden;
-  background: var(--sn-bg, #1a1a1a);
+  background: var(--sn-bg);
   contain: strict;
 }
 
@@ -26,7 +26,7 @@ graph-explorer-shell > .graph-explorer-canvas-layer {
 graph-explorer-shell > [slot="overlay"] {
   position: absolute;
   inset: 0;
-  z-index: var(--sn-graph-explorer-overlay-z, 100);
+  z-index: var(--sn-graph-explorer-overlay-z);
 }
 
 graph-explorer-shell node-canvas[hidden],
@@ -36,13 +36,13 @@ graph-explorer-shell canvas-graph[hidden] {
 
 graph-explorer-shell .graph-explorer-toolbar {
   position: absolute;
-  top: var(--sn-graph-explorer-toolbar-top, 8px);
-  right: var(--sn-graph-explorer-toolbar-right, 8px);
+  top: var(--sn-graph-explorer-toolbar-top);
+  right: var(--sn-graph-explorer-toolbar-right);
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--sn-graph-explorer-toolbar-gap, 6px);
-  z-index: var(--sn-graph-explorer-toolbar-z, 200);
+  gap: var(--sn-graph-explorer-toolbar-gap);
+  z-index: var(--sn-graph-explorer-toolbar-z);
   max-width: calc(100% - 16px);
 }
 
@@ -53,12 +53,12 @@ graph-explorer-shell .graph-explorer-btn {
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--sn-node-border);
   border-radius: 3px;
-  background: var(--sn-node-bg, #222222);
-  color: var(--sn-text, #e0e0e0);
+  background: var(--sn-node-bg);
+  color: var(--sn-text);
   cursor: pointer;
-  font-family: var(--sn-font, 'SF Mono', monospace);
+  font-family: var(--sn-font);
   font-size: 10px;
   white-space: nowrap;
   transition: background 150ms, border-color 150ms;
@@ -66,17 +66,17 @@ graph-explorer-shell .graph-explorer-btn {
 
 graph-explorer-shell .graph-explorer-btn:focus-visible,
 graph-explorer-shell .graph-explorer-icon-btn:focus-visible {
-  outline: 2px solid var(--sn-node-selected, #4c8bf5);
+  outline: 2px solid var(--sn-node-selected);
   outline-offset: 2px;
 }
 
 graph-explorer-shell .graph-explorer-btn:hover {
-  background: var(--sn-node-hover, #2d2d2d);
+  background: var(--sn-node-hover);
 }
 
 graph-explorer-shell .graph-explorer-btn[data-active] {
-  border-color: var(--sn-node-selected, #4c8bf5);
-  background: var(--sn-accent-bg-subtle, rgba(76, 139, 245, 0.1));
+  border-color: var(--sn-node-selected);
+  background: var(--sn-accent-bg-subtle);
 }
 
 graph-explorer-shell .graph-explorer-btn .material-symbols-outlined {
@@ -87,7 +87,7 @@ graph-explorer-shell .graph-explorer-toolbar-sep {
   width: 1px;
   align-self: stretch;
   margin: 0 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--sn-node-border);
 }
 
 graph-explorer-shell .graph-explorer-layer-btn {
@@ -107,24 +107,24 @@ graph-explorer-shell .graph-explorer-layer-btn[data-hidden] {
 
 graph-explorer-shell .graph-explorer-stats {
   position: absolute;
-  bottom: var(--sn-graph-explorer-stats-bottom, 8px);
-  left: var(--sn-graph-explorer-stats-left, 8px);
+  bottom: var(--sn-graph-explorer-stats-bottom);
+  left: var(--sn-graph-explorer-stats-left);
   display: flex;
   gap: 12px;
-  z-index: var(--sn-graph-explorer-stats-z, 10);
+  z-index: var(--sn-graph-explorer-stats-z);
   max-height: 280px;
   overflow-y: auto;
   padding: 4px 10px;
-  border: 1px solid var(--sn-border-subtle, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--sn-node-border);
   border-radius: 3px;
-  background: var(--sn-bg-overlay, rgba(26, 26, 26, 0.9));
-  color: var(--sn-text-dim, #888888);
-  font-family: var(--sn-font, 'SF Mono', monospace);
+  background: var(--sn-bg-overlay);
+  color: var(--sn-text-dim);
+  font-family: var(--sn-font);
   font-size: 10px;
 }
 
 graph-explorer-shell .graph-explorer-stat-val {
-  color: var(--sn-text, #e0e0e0);
+  color: var(--sn-text);
   font-weight: 600;
 }
 `;

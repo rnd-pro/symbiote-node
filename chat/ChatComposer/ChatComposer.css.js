@@ -1,9 +1,9 @@
 export default `
 :host {
-  --chat-composer-bg: var(--sn-composer-bg, var(--sn-node-bg, #222222));
-  --chat-composer-action-bg: var(--sn-composer-action-bg, var(--sn-node-hover, #444444));
+  --chat-composer-bg: var(--sn-composer-bg);
+  --chat-composer-action-bg: var(--sn-composer-action-bg);
   display: block;
-  padding: var(--sn-composer-padding, 12px 20px 16px);
+  padding: var(--sn-composer-padding);
   position: relative;
   z-index: 2;
 }
@@ -11,10 +11,10 @@ export default `
 .composer-body {
   display: flex;
   align-items: flex-end;
-  gap: var(--sn-composer-control-gap, 8px);
+  gap: var(--sn-composer-control-gap);
   background: var(--chat-composer-bg);
-  border-radius: var(--sn-composer-radius, 20px);
-  padding: var(--sn-composer-body-padding, 8px 8px 8px 16px);
+  border-radius: var(--sn-composer-radius);
+  padding: var(--sn-composer-body-padding);
   transition: background 0.15s;
 }
 
@@ -33,7 +33,7 @@ export default `
   font-size: 13px;
   line-height: 1.4;
   resize: none;
-  min-height: var(--sn-composer-input-min-height, 20px);
+  min-height: var(--sn-composer-input-min-height);
   max-height: 200px;
   overflow-y: auto;
 }
@@ -43,51 +43,47 @@ export default `
 }
 
 .btn-send {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border-radius: 50%;
-  border: none;
-  background: var(--chat-composer-action-bg);
-  color: var(--sn-text-dim, #a0a0a0);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: var(--sn-shadow-sm, 0 1px 4px rgba(0, 0, 0, 0.22));
+  --sn-button-icon-size: var(--sn-composer-send-size);
+  --sn-button-icon-font-size: var(--sn-composer-send-icon-size);
+  --sn-button-border: transparent;
+  --sn-button-radius: 50%;
+  --sn-button-bg: var(--chat-composer-action-bg);
+  --sn-button-hover-bg: color-mix(in srgb, var(--chat-composer-action-bg) 78%, var(--sn-text) 12%);
+  --sn-button-hover-border: transparent;
+  --sn-button-color: var(--sn-text-dim);
+  --sn-button-disabled-opacity: 0.3;
+  --sn-button-focus-ring: 2px solid color-mix(in srgb, var(--sn-text-dim) 50%, transparent);
+  color: var(--sn-text-dim);
+  box-shadow: var(--sn-shadow-sm);
   transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 
 .btn-send .material-symbols-outlined {
-  font-size: 18px;
+  font-size: var(--sn-composer-send-icon-size);
 }
 
 .btn-send:hover {
-  background: color-mix(in srgb, var(--chat-composer-action-bg) 78%, var(--sn-text, #ffffff) 12%);
-  color: var(--sn-text, #f0f0f0);
-  box-shadow: var(--sn-shadow-md, 0 2px 8px rgba(0, 0, 0, 0.28));
+  color: var(--sn-text);
+  box-shadow: var(--sn-shadow-md);
   transform: scale(1.05);
 }
 
 .btn-send:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--sn-text-dim, #a0a0a0) 50%, transparent);
   outline-offset: 2px;
 }
 
-.btn-send:disabled {
-  opacity: 0.3;
-  cursor: default;
+.btn-send[disabled] {
   transform: none;
 }
 
 .btn-send.btn-stop {
-  background: var(--sn-danger-color);
-  color: var(--sn-text, #ffffff);
+  --sn-button-bg: var(--sn-danger-color);
+  --sn-button-hover-bg: var(--sn-danger-color);
+  color: var(--sn-text);
 }
 
 .btn-send.btn-stop:hover {
-  background: var(--sn-danger-color);
-  color: var(--sn-text, #ffffff);
+  color: var(--sn-text);
 }
 
 .btn-send.btn-stop .material-symbols-outlined {
@@ -151,14 +147,10 @@ export default `
   font-weight: 500;
   outline: none;
   cursor: pointer;
-  appearance: none;
+  appearance: auto;
   field-sizing: content;
   width: fit-content;
-  padding: 0 12px 0 0;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%228%22%20height%3D%228%22%20viewBox%3D%220%200%208%208%22%3E%3Cpath%20fill%3D%22%23888%22%20d%3D%22M2%203L4%206L6%203H2Z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right center;
-  background-size: 8px;
+  padding: 0;
   min-width: 0;
   max-width: 160px;
   text-overflow: ellipsis;
@@ -184,18 +176,18 @@ export default `
 
 .composer-param-collapsed .composer-footer-select,
 .composer-param-collapsed .composer-footer-label {
-  width: 10px;
-  max-width: 10px;
-  padding-right: 10px;
+  width: var(--sn-composer-collapsed-control-width);
+  max-width: var(--sn-composer-collapsed-control-width);
+  padding-right: var(--sn-composer-collapsed-control-padding);
   color: transparent !important;
 }
 
 @container composer-footer (width <= 560px) {
   .composer-priority-1 .composer-footer-select,
   .composer-priority-1 .composer-footer-label {
-    width: 10px;
-    max-width: 10px;
-    padding-right: 10px;
+    width: var(--sn-composer-collapsed-control-width);
+    max-width: var(--sn-composer-collapsed-control-width);
+    padding-right: var(--sn-composer-collapsed-control-padding);
     color: transparent !important;
   }
 }
@@ -203,9 +195,9 @@ export default `
 @container composer-footer (width <= 500px) {
   .composer-priority-2 .composer-footer-select,
   .composer-priority-2 .composer-footer-label {
-    width: 10px;
-    max-width: 10px;
-    padding-right: 10px;
+    width: var(--sn-composer-collapsed-control-width);
+    max-width: var(--sn-composer-collapsed-control-width);
+    padding-right: var(--sn-composer-collapsed-control-padding);
     color: transparent !important;
   }
 }
@@ -213,9 +205,9 @@ export default `
 @container composer-footer (width <= 440px) {
   .composer-priority-3 .composer-footer-select,
   .composer-priority-3 .composer-footer-label {
-    width: 10px;
-    max-width: 10px;
-    padding-right: 10px;
+    width: var(--sn-composer-collapsed-control-width);
+    max-width: var(--sn-composer-collapsed-control-width);
+    padding-right: var(--sn-composer-collapsed-control-padding);
     color: transparent !important;
   }
 }
@@ -223,9 +215,9 @@ export default `
 @container composer-footer (width <= 380px) {
   .composer-priority-4 .composer-footer-select,
   .composer-priority-4 .composer-footer-label {
-    width: 10px;
-    max-width: 10px;
-    padding-right: 10px;
+    width: var(--sn-composer-collapsed-control-width);
+    max-width: var(--sn-composer-collapsed-control-width);
+    padding-right: var(--sn-composer-collapsed-control-padding);
     color: transparent !important;
   }
 }
@@ -233,9 +225,9 @@ export default `
 @container composer-footer (width <= 320px) {
   .composer-priority-5 .composer-footer-select,
   .composer-priority-5 .composer-footer-label {
-    width: 10px;
-    max-width: 10px;
-    padding-right: 10px;
+    width: var(--sn-composer-collapsed-control-width);
+    max-width: var(--sn-composer-collapsed-control-width);
+    padding-right: var(--sn-composer-collapsed-control-padding);
     color: transparent !important;
   }
 }
@@ -271,12 +263,16 @@ export default `
 }
 
 .context-remove {
-  background: transparent;
-  border: none;
+  --sn-button-icon-size: 16px;
+  --sn-button-icon-font-size: 13px;
+  --sn-button-border: transparent;
+  --sn-button-radius: 4px;
+  --sn-button-bg: transparent;
+  --sn-button-hover-bg: transparent;
+  --sn-button-hover-border: transparent;
+  --sn-button-color: var(--sn-text-dim);
+  --sn-button-focus-ring: var(--sn-effect-focus-ring);
   color: var(--sn-text-dim);
-  cursor: pointer;
-  padding: 0 2px;
-  font-size: 14px;
   line-height: 1;
 }
 
@@ -298,12 +294,12 @@ export default `
   right: 20px;
   max-height: 240px;
   overflow-y: auto;
-  background: color-mix(in srgb, var(--sn-node-bg, #222222) 95%, transparent);
-  border: 1px solid color-mix(in srgb, var(--sn-node-hover, #444444) 45%, transparent);
+  background: color-mix(in srgb, var(--sn-node-bg) 95%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sn-node-hover) 45%, transparent);
   border-radius: 16px;
   padding: 4px;
   margin-bottom: 6px;
-  box-shadow: var(--sn-shadow-xl, 0 -8px 28px rgba(0, 0, 0, 0.32));
+  box-shadow: var(--sn-shadow-xl);
   z-index: 10;
   backdrop-filter: blur(8px);
 }

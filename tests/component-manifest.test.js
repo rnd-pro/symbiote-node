@@ -52,6 +52,7 @@ let sideEffectTags = [
   'search-result-item',
   'sidebar-section',
   'sidebar-sub-item',
+  'sn-event-feed-item',
   'tab-item',
   'template-preview',
 ];
@@ -185,6 +186,12 @@ describe('component registry', () => {
     assert.equal(getComponentModule('sn-card'), 'surface/Card/Card.js');
     assert.equal(getComponent('sn-badge').category, 'display');
     assert.equal(getComponentModule('sn-badge'), 'display/Badge/Badge.js');
+    assert.equal(getComponent('sn-metric').category, 'display');
+    assert.equal(getComponentModule('sn-metric'), 'display/Metric/Metric.js');
+    assert.equal(getComponent('sn-data-table').category, 'display');
+    assert.equal(getComponentModule('sn-data-table'), 'display/DataTable/DataTable.js');
+    assert.equal(getComponent('sn-event-feed').category, 'display');
+    assert.equal(getComponentModule('sn-event-feed'), 'display/EventFeed/EventFeed.js');
     assert.equal(getComponent('sn-banner').category, 'display');
     assert.equal(getComponentModule('sn-banner'), 'display/Banner/Banner.js');
     assert.equal(getComponent('sn-empty-state').category, 'display');
@@ -256,6 +263,8 @@ describe('component registry', () => {
       'sn-field',
       'sn-card',
       'sn-badge',
+      'sn-metric',
+      'sn-event-feed',
       'sn-banner',
       'sn-empty-state',
       'node-socket',
@@ -291,6 +300,8 @@ describe('component registry', () => {
     assert.ok(getComponent('sn-field').contract.slots.some((slot) => slot.name === 'default'));
     assert.ok(getComponent('sn-card').contract.slots.some((slot) => slot.name === 'default'));
     assert.ok(getComponent('sn-badge').contract.slots.some((slot) => slot.name === 'default'));
+    assert.ok(getComponent('sn-metric').contract.slots.some((slot) => slot.name === 'label'));
+    assert.ok(getComponent('sn-metric').contract.slots.some((slot) => slot.name === 'value'));
     assert.ok(getComponent('sn-banner').contract.slots.some((slot) => slot.name === 'default'));
     assert.ok(getComponent('sn-empty-state').contract.slots.some((slot) => slot.name === 'default'));
     assert.ok(getComponent('chat-composer').contract.methods.some((method) => method.name === 'setValue'));
@@ -306,7 +317,7 @@ describe('component registry', () => {
     assert.ok(getComponent('output-list-preview').contract.methods.some((method) => method.name === 'setItems'));
     assert.ok(getComponent('output-graph-preview').contract.methods.some((method) => method.name === 'setGraph'));
     assert.ok(getComponent('quick-open').contract.events.some((event) => event.name === 'quick-open-select'));
-    assert.ok(getComponent('chat-message-item').contract.properties.some((property) => property.name === 'taskIds'));
+    assert.ok(getComponent('chat-message-item').contract.properties.some((property) => property.name === 'cardItems'));
     assert.ok(getComponent('chat-list').contract.events.some((event) => event.name === 'chat-list-select'));
     assert.ok(getComponent('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
     assert.ok(getComponent('chat-sidebar-item').contract.properties.some((property) => property.name === 'subChats'));

@@ -122,6 +122,23 @@ export {
   renderClusterPanel,
   renderGraphStats,
 } from '../canvas/graph-explorer.js';
+export {
+  HTML_IN_CANVAS_APIS,
+  HTML_IN_CANVAS_RENDERER,
+  HTML_IN_CANVAS_RENDERER_NAME,
+  captureHtmlElementImage,
+  closeHtmlElementImage,
+  copyHtmlElementToWebGPUTexture,
+  createHtmlInCanvasAdapter,
+  drawHtmlElement2d,
+  getHtmlInCanvasChangedElements,
+  getHtmlElementCanvasTransform,
+  getHtmlInCanvasSupport,
+  requestHtmlInCanvasPaint,
+  setupHtmlInCanvas,
+  uploadHtmlElementToWebGLTexture,
+} from '../canvas/html-in-canvas.js';
+export * from '../xr/index.js';
 
 export { CARBON, CARBON_PALETTE } from '../themes/carbon.js';
 export { PCB_DARK } from '../themes/pcb.js';

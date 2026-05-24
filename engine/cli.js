@@ -49,6 +49,8 @@ import {
   UI_SCHEMA_VERSIONS,
   getUiSchema,
 } from '../manifest/index.js';
+import { HTML_IN_CANVAS_RENDERER } from '../canvas/html-in-canvas.js';
+import { WEBXR_RENDERER } from '../xr/index.js';
 
 let __dirname = dirname(fileURLToPath(import.meta.url));
 let PKG_PATH = resolve(__dirname, '../package.json');
@@ -84,6 +86,11 @@ const EXPORT_ENTRYPOINTS = [
     specifier: 'symbiote-node/layout',
     kind: 'ssr-safe',
     description: 'Layout tree, section registry, and router helpers without browser components.',
+  },
+  {
+    specifier: 'symbiote-node/xr',
+    kind: 'ssr-safe',
+    description: 'WebXR capability, spatial layout projection, and XR pointer helpers without renderer lock-in.',
   },
   {
     specifier: 'symbiote-node/ui',
@@ -635,6 +642,10 @@ async function cmdDiscover(options = {}) {
       description: s.description || null,
     })),
     manifest: {
+      renderers: [
+        HTML_IN_CANVAS_RENDERER,
+        WEBXR_RENDERER,
+      ],
       components: listComponents().map((c) => ({
         tagName: c.tagName,
         className: c.className,

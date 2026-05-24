@@ -54,7 +54,7 @@ describe('Package configuration', () => {
   });
 
   it('bin entry points at an executable Node CLI', () => {
-    assert.deepEqual(pkgJson.bin, { 'symbiote-node': './engine/cli.js' });
+    assert.deepEqual(pkgJson.bin, { 'symbiote-node': 'engine/cli.js' });
     let binPath = path.join(PKG_ROOT, pkgJson.bin['symbiote-node']);
     assert.ok(fs.existsSync(binPath), 'bin target must exist');
     let firstLine = fs.readFileSync(binPath, 'utf-8').split('\n')[0];
@@ -226,6 +226,7 @@ describe('Symlink escape guard', () => {
       './ui/*',
       './canvas/*',
       './layout/*',
+      './xr/*',
       './interactions/*',
       './node/*',
       './toolbar/*',

@@ -18,15 +18,22 @@ describe('package exports resolution', () => {
     let graph = await import('symbiote-node/graph');
     let manifest = await import('symbiote-node/manifest');
     let layout = await import('symbiote-node/layout');
+    let xr = await import('symbiote-node/xr');
     let markdownFormatter = await import('symbiote-node/display/markdown-formatter');
 
     assert.equal(typeof root.NodeEditor, 'function');
     assert.equal(typeof root.createForceLayoutPayload, 'function');
+    assert.equal(typeof root.createHtmlInCanvasAdapter, 'function');
+    assert.equal(typeof root.createWebXRAdapter, 'function');
     assert.equal(root.applyTheme, undefined, 'DOM theme helpers must live in symbiote-node/ui');
     assert.equal(root.applyPalette, undefined, 'DOM palette helpers must live in symbiote-node/ui');
     assert.equal(root.applySkin, undefined, 'DOM skin helpers must live in symbiote-node/ui');
     assert.equal(root.ForceLayout, undefined, 'Worker-backed layout must live in symbiote-node/ui');
     assert.equal(typeof ui.ForceLayout, 'function');
+    assert.equal(typeof ui.createHtmlInCanvasAdapter, 'function');
+    assert.equal(ui.HTML_IN_CANVAS_RENDERER.status, 'experimental');
+    assert.equal(typeof ui.createWebXRAdapter, 'function');
+    assert.equal(ui.WEBXR_RENDERER.status, 'experimental');
     assert.ok('GraphExplorerShell' in ui, 'UI entrypoint must expose GraphExplorerShell binding');
     assert.equal(typeof ui.computeInitialGraphPositions, 'function');
     assert.ok('Layout' in ui, 'UI entrypoint must expose Layout binding');
@@ -62,6 +69,8 @@ describe('package exports resolution', () => {
     assert.equal(typeof layout.setupPanelRouting, 'function');
     assert.equal(typeof layout.navigate, 'function');
     assert.ok(!('Layout' in layout), 'Layout entrypoint must stay SSR-safe; use symbiote-node/ui for components');
+    assert.equal(typeof xr.projectLayoutToXR, 'function');
+    assert.equal(typeof xr.hitTestXRPanels, 'function');
     assert.equal(typeof markdownFormatter.formatMarkdown, 'function');
     assert.equal(typeof markdownFormatter.escapeHtml, 'function');
   });

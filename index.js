@@ -68,6 +68,23 @@ export {
   getNextGraphPathStyle,
   resolveInitialGraphViewMode,
 } from './canvas/graph-explorer.js';
+export {
+  HTML_IN_CANVAS_APIS,
+  HTML_IN_CANVAS_RENDERER,
+  HTML_IN_CANVAS_RENDERER_NAME,
+  captureHtmlElementImage,
+  closeHtmlElementImage,
+  copyHtmlElementToWebGPUTexture,
+  createHtmlInCanvasAdapter,
+  drawHtmlElement2d,
+  getHtmlInCanvasChangedElements,
+  getHtmlElementCanvasTransform,
+  getHtmlInCanvasSupport,
+  requestHtmlInCanvasPaint,
+  setupHtmlInCanvas,
+  uploadHtmlElementToWebGLTexture,
+} from './canvas/html-in-canvas.js';
+export * from './xr/index.js';
 export { buildFileGraph, buildStructuredGraph } from './canvas/project-graph-builder.js';
 export { buildGraphModelFromSkeleton, buildCanvasGraphModelFromSkeleton } from './canvas/project-graph-model.js';
 export { collectQuickOpenFilesFromSkeleton, fuzzyScore, searchQuickOpenItems } from './navigation/quick-open-utils.js';

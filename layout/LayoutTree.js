@@ -236,6 +236,10 @@ export function collectPanels(root, options = {}) {
 
   function walk(node) {
     if (!node) return
+    if (Array.isArray(node)) {
+      node.forEach(walk)
+      return
+    }
     if (isPanelNode(node)) {
       if (includeGlobal || !node.global) panels.push(node)
       return
@@ -245,6 +249,11 @@ export function collectPanels(root, options = {}) {
   }
 
   walk(root)
+  if (includeGlobal && root && typeof root === 'object' && !Array.isArray(root)) {
+    walk(root.global)
+    walk(root.globals)
+    walk(root.globalPanels)
+  }
   return panels
 }
 
@@ -362,4 +371,3 @@ export function matchesSection(root, config = {}) {
   }
   return true
 }
-

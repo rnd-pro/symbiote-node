@@ -21,6 +21,8 @@ A **visual node graph editor** and **execution engine** built on [Symbiote.js](h
 - [Surface UI](#surface-ui)
 - [Tree UI](#tree-ui)
 - [Chat UI](#chat-ui)
+- [Experimental HTML-in-Canvas Renderer](#experimental-html-in-canvas-renderer)
+- [Experimental WebXR Provider](#experimental-webxr-provider)
 - [Shared UI Styles](#shared-ui-styles)
 - [Execution Engine](#execution-engine)
 - [Node Shapes](#node-shapes)
@@ -286,6 +288,55 @@ list.setItems(chatItems);
 list.addEventListener('chat-list-select', (event) => openChat(event.detail.id));
 ```
 
+### Experimental HTML-in-Canvas Renderer
+
+`symbiote-node/ui` exposes an experimental HTML-in-Canvas adapter for packaged Chromium hosts and origin-trial browsers. It feature-detects `drawElementImage`, `captureElementImage`, `texElementImage2D`, `copyElementImageToTexture`, `requestPaint`, OffscreenCanvas support, paint changed-elements data, and the `layoutsubtree` canvas setup before rendering, and keeps `dom-overlay` as the fallback path when the browser does not support the API.
+
+```javascript
+import {
+  createHtmlInCanvasAdapter,
+  setupHtmlInCanvas,
+} from 'symbiote-node/ui';
+
+let adapter = createHtmlInCanvasAdapter();
+if (adapter.canRender('canvas2d')) {
+  setupHtmlInCanvas(canvas);
+  canvas.addEventListener('paint', () => {
+    adapter.draw2d(ctx, element, { x: 0, y: 0 });
+  });
+}
+```
+
+Hosts should keep this renderer behind capability checks. The default browser path remains regular Web Components and DOM overlays until the platform API is stable across target runtimes.
+
+### Experimental WebXR Provider
+
+`symbiote-node/xr` exposes Node-safe WebXR provider helpers for host applications that want to place project layouts in immersive browser sessions. The provider does not depend on Three.js, Babylon, PlayCanvas, or Agent Portal; it owns capability detection, session wrappers, spatial panel projection, and pointer normalization.
+
+```javascript
+import {
+  createWebXRAdapter,
+  projectLayoutToXR,
+  hitTestXRPanels,
+  createXRPointerEvent,
+} from 'symbiote-node/xr';
+
+let xr = createWebXRAdapter();
+let supported = await xr.isSupported('immersive-vr');
+let spatialLayout = projectLayoutToXR(layoutTree);
+
+if (supported) {
+  await xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'hand-tracking'] });
+}
+
+let hit = hitTestXRPanels(controllerRay, spatialLayout.panels);
+let event = createXRPointerEvent(hit, { source: 'xr-controller', primary: true }, 'click');
+```
+
+Host apps remain responsible for renderer choice. A Quest-style browser host can render projected panels as WebGL planes, DOM overlays, or future HTML-in-Canvas textures while keeping the same layout and pointer contracts.
+
+Open `demo/spatial-layout.html` to inspect the non-immersive fallback preview. It uses the same `projectLayoutToXR()` and pointer hit-test contracts that a headset renderer would consume.
+
 ### Shared UI Styles
 
 `sharedUiStyles` is the reusable class recipe layer for browser components that need standard panel shells, buttons, cards, forms, lists, badges, banners, and empty states. The module is a plain string export from `symbiote-node/ui`, backed by `--sn-*` design tokens, and is safe to import without DOM globals.
@@ -515,7 +566,8 @@ npx -y serve -l 3000 .
     "@symbiotejs/symbiote": "https://esm.sh/@symbiotejs/symbiote@3.2.1",
     "symbiote-node": "./index.js",
     "symbiote-node/ui": "./ui/index.js",
-    "symbiote-node/layout": "./layout/index.js"
+    "symbiote-node/layout": "./layout/index.js",
+    "symbiote-node/xr": "./xr/index.js"
   }
 }
 </script>
@@ -545,6 +597,7 @@ Use `--json` with `run`, `validate`, `list`, and `inspect` when integrating with
 - `custom-elements.json` — Web Component catalog
 - `manifest/` — components, themes, rules, and graph schema accessors
 - `symbiote-node/graph` — Node-safe `graph-model-v1` normalizers for shared project/workflow/UI graph data
+- `symbiote-node/xr` — WebXR capability, spatial layout projection, and XR pointer contracts
 - `schemas/project-package-v1.json` — portable project config contract for graph/layout/theme/packs assembly
 - `schemas/project-transaction-v1.json` — safe mutation contract for agent-built UI and workflow changes
 - `symbiote-node/ui` — browser Web Components, router helpers, chat primitives, and shared UI styles

@@ -162,6 +162,32 @@ describe('discover command', () => {
   });
 
   describe('manifest', () => {
+    it('exposes experimental renderer capabilities', () => {
+      assert.ok(Array.isArray(data.manifest.renderers));
+      let renderer = data.manifest.renderers.find((item) => item.name === 'html-in-canvas');
+
+      assert.ok(renderer, 'html-in-canvas renderer must be discoverable');
+      assert.equal(renderer.status, 'experimental');
+      assert.equal(renderer.specifier, 'symbiote-node/ui');
+      assert.equal(renderer.fallback, 'dom-overlay');
+      assert.ok(renderer.modes.includes('offscreen2d'));
+      assert.ok(renderer.capabilities.includes('interactive-canvas-ui'));
+      assert.ok(renderer.capabilities.includes('offscreen-worker-snapshots'));
+      assert.equal(renderer.apis.canvas2dDraw, 'drawElementImage');
+      assert.equal(renderer.apis.elementCapture, 'captureElementImage');
+      assert.equal(renderer.requiredCanvasAttribute, 'layoutsubtree');
+
+      let webxr = data.manifest.renderers.find((item) => item.name === 'webxr');
+      assert.ok(webxr, 'webxr renderer must be discoverable');
+      assert.equal(webxr.status, 'experimental');
+      assert.equal(webxr.specifier, 'symbiote-node/xr');
+      assert.equal(webxr.fallback, 'dom-canvas');
+      assert.ok(webxr.modes.includes('immersive-vr'));
+      assert.ok(webxr.modes.includes('immersive-ar'));
+      assert.ok(webxr.capabilities.includes('xr-layout-projection'));
+      assert.ok(webxr.capabilities.includes('xr-pointer-normalization'));
+    });
+
     it('exposes components', () => {
       assert.ok(data.manifest.components.length >= 13);
       for (let c of data.manifest.components) {

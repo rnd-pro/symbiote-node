@@ -26,6 +26,30 @@ test('collectPanels supports canonical layout node shapes', () => {
   );
 });
 
+test('collectPanels includes root-level global panel collections when requested', () => {
+  let tree = {
+    ...LayoutTree.createSplit(
+      'horizontal',
+      LayoutTree.createPanel('graph'),
+      LayoutTree.createPanel('runtime'),
+      0.62
+    ),
+    global: [
+      Object.assign(LayoutTree.createPanel('inspector'), { global: true }),
+      Object.assign(LayoutTree.createPanel('status'), { global: true }),
+    ],
+  };
+
+  assert.deepEqual(
+    LayoutTree.collectPanelTypes(tree),
+    ['graph', 'runtime', 'inspector', 'status']
+  );
+  assert.deepEqual(
+    LayoutTree.collectPanelTypes(tree, { includeGlobal: false }),
+    ['graph', 'runtime']
+  );
+});
+
 test('collectPanels ignores non-canonical layout shapes', () => {
   let tree = LayoutTree.createSplit(
     'horizontal',

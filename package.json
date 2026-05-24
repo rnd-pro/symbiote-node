@@ -33,6 +33,10 @@
       "import": "./layout/index.js",
       "default": "./layout/index.js"
     },
+    "./xr": {
+      "import": "./xr/index.js",
+      "default": "./xr/index.js"
+    },
     "./tokens/*": "./tokens/*",
     "./rules/*": "./rules/*",
     "./schemas/*": "./schemas/*",
@@ -70,6 +74,7 @@
     "node/",
     "interactions/",
     "layout/",
+    "xr/",
     "navigation/",
     "display/",
     "effects/",
@@ -95,6 +100,7 @@
     "canvas/**/*.js",
     "node/**/*.js",
     "layout/**/*.js",
+    "xr/**/*.js",
     "display/**/*.js",
     "effects/**/*.js",
     "control/**/*.js",

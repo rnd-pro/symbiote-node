@@ -49,6 +49,7 @@ const UI_NAMED_EXPORTS = new Set([
   'StatusBanner',
   'EmptyState',
   'GraphFrame',
+  'StatusRibbon',
 ]);
 
 const COMPONENT_VISIBILITY = {
@@ -707,6 +708,36 @@ export let COMPONENTS = [
         '--sn-node-bg',
         '--sn-node-border',
         '--sn-node-hover',
+      ],
+    },
+  },
+  {
+    tagName: 'sn-status-ribbon',
+    className: 'StatusRibbon',
+    module: 'display/StatusRibbon/StatusRibbon.js',
+    category: 'display',
+    description: 'Floating notification ribbon that auto-fades and displays active status.',
+    contract: {
+      status: 'draft',
+      schemaVersion: 'component-descriptor-v1',
+      dataSchema: 'schemas/runtime-ui-v1.json',
+      capabilities: ['status', 'ribbon', 'auto-fade', 'themeable'],
+      attributes: [
+        { name: 'status-event', type: 'string', description: 'Event name for status changes.' },
+        { name: 'state-event', type: 'string', description: 'Event name for state changes.' },
+        { name: 'fade-timeout', type: 'number', description: 'Auto-fade duration in milliseconds.' },
+      ],
+      properties: [
+        { name: 'eventTarget', type: 'object', description: 'Target object to listen for events on.' },
+      ],
+      events: [],
+      themeAliases: [
+        '--sn-bg-overlay',
+        '--sn-shadow-lg',
+        '--sn-accent-glow',
+        '--sn-font-ui',
+        '--sn-text',
+        '--sn-text-dim',
       ],
     },
   },

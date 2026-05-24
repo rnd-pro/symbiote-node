@@ -62,6 +62,7 @@ export { History } from '../plugins/History.js';
 
 export { FlowSimulator } from '../canvas/FlowSimulator.js';
 export * as LayoutTree from '../layout/LayoutTree.js';
+export { matchesSection } from '../layout/LayoutTree.js';
 export {
   SECTION_SCOPES,
   SectionRegistry,
@@ -79,6 +80,12 @@ export {
   hasSection,
   clearSections,
 } from '../layout/LayoutRouter/SectionRegistry.js';
+export {
+  updateHashParam,
+  getGraphSearchString,
+  getGraphUrlParams,
+  parseGraphHash,
+} from '../layout/LayoutRouter/LayoutRouter.js';
 export { computeAutoLayout, computeTreeLayout } from '../canvas/AutoLayout.js';
 export { SubgraphManager } from '../canvas/SubgraphManager.js';
 export { SubgraphRouter } from '../canvas/SubgraphRouter.js';
@@ -109,6 +116,10 @@ export {
   resolveInitialGraphViewMode,
   setGraphLayerVisible,
   toggleGraphLayerButtonState,
+  resolveGraphNodeClick,
+  resolveToolbarAction,
+  renderClusterPanel,
+  renderGraphStats,
 } from '../canvas/graph-explorer.js';
 
 export { CARBON, CARBON_PALETTE } from '../themes/carbon.js';
@@ -177,6 +188,7 @@ export let FormField;
 export let SurfaceCard;
 export let OutputListPreview;
 export let OutputGraphPreview;
+export let StatusRibbon;
 export let stringifyBlock;
 export let truncateResult;
 export { sharedUiStyles } from './shared-styles.js';
@@ -427,6 +439,7 @@ if (hasDOMGlobals) {
     surfaceCard,
     outputListPreview,
     outputGraphPreview,
+    statusRibbon,
   ] = await Promise.all([
     import('../canvas/NodeCanvas/NodeCanvas.js'),
     import('../canvas/CanvasGraph/CanvasGraph.js'),
@@ -476,6 +489,7 @@ if (hasDOMGlobals) {
     import('../surface/Card/Card.js'),
     import('../display/OutputListPreview/OutputListPreview.js'),
     import('../display/OutputGraphPreview/OutputGraphPreview.js'),
+    import('../display/StatusRibbon/StatusRibbon.js'),
   ]);
 
   ({ NodeCanvas } = nodeCanvas);
@@ -536,6 +550,7 @@ if (hasDOMGlobals) {
   ({ SurfaceCard } = surfaceCard);
   ({ OutputListPreview } = outputListPreview);
   ({ OutputGraphPreview } = outputGraphPreview);
+  ({ StatusRibbon } = statusRibbon);
 
   registerCatalogModules({
     NodeCanvas,
@@ -585,6 +600,7 @@ if (hasDOMGlobals) {
     SurfaceCard,
     OutputListPreview,
     OutputGraphPreview,
+    StatusRibbon,
   });
 }
 

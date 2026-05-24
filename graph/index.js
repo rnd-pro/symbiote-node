@@ -20,4 +20,15 @@ export {
   getGraphClusterColorToken,
   isGraphColorReference,
   normalizeGraphColorReference,
-} from './theme-contract.js';
+} from './theme-contract.js'
+export { dirOf, baseName, resolveImport, collectSkeletonFiles } from './skeleton-utils.js'
+export {
+  EMPTY_PROJECT_GRAPH_METADATA,
+  normalizeProjectGraphMetadata,
+  pathMatchesPattern,
+  findClusterForPath,
+  buildSemanticGroups,
+  parseHexColor,
+} from './project-graph-metadata.js'
+export { resolveSymbolFile, findConnectionPath } from './graph-algorithms.js'
+export { extractProjectTransactionsFromMessages } from './transaction-parser.js'

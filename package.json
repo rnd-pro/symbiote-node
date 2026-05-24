@@ -40,9 +40,13 @@
     "./display/output-preview": "./display/output-preview.js",
     "./display/highlight": "./display/highlight.js",
     "./display/markdown-formatter": "./display/markdown-formatter.js",
+    "./display/format-utils": "./display/format-utils.js",
+    "./display/icons": "./display/icons.js",
+    "./display/event-feed-adapter": "./display/event-feed-adapter.js",
     "./themes/*": "./themes/*",
     "./shapes/*": "./shapes/*",
     "./plugins/*": "./plugins/*",
+    "./chat/chat-context.js": "./chat/chat-context.js",
     "./package.json": "./package.json",
     "./ui": {
       "import": "./ui/index.js",

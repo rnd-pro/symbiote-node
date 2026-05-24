@@ -1903,6 +1903,87 @@
       ]
     },
     {
+      "path": "display/StatusRibbon/StatusRibbon.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "StatusRibbon",
+          "tagName": "sn-status-ribbon",
+          "description": "Floating notification ribbon that auto-fades and displays active status.",
+          "members": [
+            {
+              "kind": "field",
+              "name": "eventTarget",
+              "type": {
+                "text": "object"
+              },
+              "description": "Target object to listen for events on."
+            }
+          ],
+          "attributes": [
+            {
+              "name": "status-event",
+              "description": "Event name for status changes.",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "state-event",
+              "description": "Event name for state changes.",
+              "type": {
+                "text": "string"
+              }
+            },
+            {
+              "name": "fade-timeout",
+              "description": "Auto-fade duration in milliseconds.",
+              "type": {
+                "text": "number"
+              }
+            }
+          ],
+          "events": [],
+          "cssProperties": [
+            {
+              "name": "--sn-bg-overlay",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-shadow-lg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-accent-glow",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-font-ui",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-text",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-text-dim",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "sn-status-ribbon",
+          "declaration": {
+            "name": "StatusRibbon"
+          }
+        }
+      ]
+    },
+    {
       "path": "effects/CellBg/CellBg.js",
       "declarations": [
         {

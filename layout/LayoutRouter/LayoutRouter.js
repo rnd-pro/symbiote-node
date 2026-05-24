@@ -225,3 +225,50 @@ if (typeof location !== 'undefined' && typeof window !== 'undefined') {
   syncFromHash();
   window.addEventListener('hashchange', syncFromHash);
 }
+
+/**
+ * Generic search parameters builder
+ */
+export function getGraphSearchString(locationObj = typeof window !== 'undefined' ? window.location : {}) {
+  if (!locationObj || !locationObj.hash) return ''
+  const params = new URLSearchParams(locationObj.search || '')
+  const hashQuery = locationObj.hash.includes('?') ? locationObj.hash.split('?')[1] : ''
+  const hashParams = new URLSearchParams(hashQuery)
+  for (let [key, value] of hashParams) {
+    params.set(key, value)
+  }
+  return params.toString()
+}
+
+export function getGraphUrlParams(locationObj = typeof window !== 'undefined' ? window.location : {}) {
+  return new URLSearchParams(getGraphSearchString(locationObj))
+}
+
+export function parseGraphHash(hash = typeof window !== 'undefined' ? window.location.hash : '') {
+  if (!hash) return { path: '', params: new URLSearchParams() }
+  const [hashBase, queryStr] = hash.replace('#', '').split('?')
+  const hashParams = hashBase.split('/')
+  if (hashParams[0] === 'graph') hashParams.shift()
+  return {
+    path: hashParams.join('/'),
+    params: new URLSearchParams(queryStr || ''),
+  }
+}
+
+export function updateHashParam(key, value, locationObj = typeof window !== 'undefined' ? window.location : {}, historyObj = typeof history !== 'undefined' ? history : {}) {
+  if (!locationObj || !locationObj.hash) return
+  const [basePath, queryStr] = locationObj.hash.split('?')
+  const params = new URLSearchParams(queryStr || '')
+  if (value === null || value === undefined) {
+    params.delete(key)
+  } else {
+    params.set(key, value)
+  }
+  const newQuery = params.toString()
+  const newHash = newQuery ? `${basePath}?${newQuery}` : basePath
+  if (locationObj.hash === newHash) return
+  if (historyObj && typeof historyObj.replaceState === 'function') {
+    historyObj.replaceState(null, '', newHash)
+  }
+}
+

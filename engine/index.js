@@ -46,3 +46,6 @@ export { loadHandlers, watchHandlers } from './HandlerLoader.js';
 
 
 export * as AgentUI from './AgentUICommands.js';
+
+export { FocusController } from './FocusController.js';
+

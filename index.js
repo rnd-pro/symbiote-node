@@ -68,6 +68,8 @@ export {
   getNextGraphPathStyle,
   resolveInitialGraphViewMode,
 } from './canvas/graph-explorer.js';
+export { buildFileGraph, buildStructuredGraph } from './canvas/project-graph-builder.js';
+export { buildGraphModelFromSkeleton, buildCanvasGraphModelFromSkeleton } from './canvas/project-graph-model.js';
 export { collectQuickOpenFilesFromSkeleton, fuzzyScore, searchQuickOpenItems } from './navigation/quick-open-utils.js';
 export { normalizeOutputList, normalizePreviewGraph } from './display/output-preview.js';
 

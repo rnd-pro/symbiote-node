@@ -30,14 +30,14 @@
  * @typedef {PanelNode | SplitNode} LayoutNode
  */
 
-let idCounter = 0;
+let idCounter = 0
 
 /**
  * Generate unique node ID
  * @returns {string}
  */
 export function generateId() {
-  return `node_${++idCounter}_${Date.now().toString(36)}`;
+  return `node_${++idCounter}_${Date.now().toString(36)}`
 }
 
 /**
@@ -53,7 +53,7 @@ export function createPanel(panelType, panelState = {}) {
     panelType,
     panelState,
     collapsed: false,
-  };
+  }
 }
 
 /**
@@ -72,7 +72,7 @@ export function createSplit(direction, first, second, ratio = 0.5) {
     ratio,
     first,
     second,
-  };
+  }
 }
 
 /**
@@ -82,11 +82,11 @@ export function createSplit(direction, first, second, ratio = 0.5) {
  * @returns {LayoutNode | null}
  */
 export function findNode(root, id) {
-  if (root.id === id) return root;
+  if (root.id === id) return root
   if (root.type === 'split') {
-    return findNode(root.first, id) || findNode(root.second, id);
+    return findNode(root.first, id) || findNode(root.second, id)
   }
-  return null;
+  return null
 }
 
 /**
@@ -96,12 +96,12 @@ export function findNode(root, id) {
  * @returns {{ parent: SplitNode, which: 'first' | 'second' } | null}
  */
 export function findParent(root, id) {
-  if (root.type !== 'split') return null;
+  if (root.type !== 'split') return null
 
-  if (root.first.id === id) return { parent: root, which: 'first' };
-  if (root.second.id === id) return { parent: root, which: 'second' };
+  if (root.first.id === id) return { parent: root, which: 'first' }
+  if (root.second.id === id) return { parent: root, which: 'second' }
 
-  return findParent(root.first, id) || findParent(root.second, id);
+  return findParent(root.first, id) || findParent(root.second, id)
 }
 
 /**
@@ -114,26 +114,26 @@ export function findParent(root, id) {
  * @returns {LayoutNode} - New root node
  */
 export function splitPanel(root, panelId, direction, ratio = 0.5, newPanelType) {
-  let node = findNode(root, panelId);
+  let node = findNode(root, panelId)
   if (!node || node.type !== 'panel') {
-    return root;
+    return root
   }
 
-  let newPanel = createPanel(newPanelType || node.panelType);
-  let splitNode = createSplit(direction, node, newPanel, ratio);
+  let newPanel = createPanel(newPanelType || node.panelType)
+  let splitNode = createSplit(direction, node, newPanel, ratio)
 
 
   if (root.id === panelId) {
-    return splitNode;
+    return splitNode
   }
 
 
-  let parentInfo = findParent(root, panelId);
+  let parentInfo = findParent(root, panelId)
   if (parentInfo) {
-    parentInfo.parent[parentInfo.which] = splitNode;
+    parentInfo.parent[parentInfo.which] = splitNode
   }
 
-  return root;
+  return root
 }
 
 /**
@@ -143,23 +143,23 @@ export function splitPanel(root, panelId, direction, ratio = 0.5, newPanelType) 
  * @returns {LayoutNode} - New root node
  */
 export function joinPanels(root, panelToRemove) {
-  let parentInfo = findParent(root, panelToRemove);
+  let parentInfo = findParent(root, panelToRemove)
   if (!parentInfo) {
-    return root;
+    return root
   }
 
-  let { parent, which } = parentInfo;
-  let survivor = which === 'first' ? parent.second : parent.first;
+  let { parent, which } = parentInfo
+  let survivor = which === 'first' ? parent.second : parent.first
 
 
-  let grandparentInfo = findParent(root, parent.id);
+  let grandparentInfo = findParent(root, parent.id)
   if (!grandparentInfo) {
-    return survivor;
+    return survivor
   }
 
 
-  grandparentInfo.parent[grandparentInfo.which] = survivor;
-  return root;
+  grandparentInfo.parent[grandparentInfo.which] = survivor
+  return root
 }
 
 /**
@@ -170,13 +170,13 @@ export function joinPanels(root, panelToRemove) {
  * @returns {LayoutNode} - Same root (mutated)
  */
 export function resizeSplit(root, splitId, ratio) {
-  let node = findNode(root, splitId);
+  let node = findNode(root, splitId)
   if (!node || node.type !== 'split') {
-    return root;
+    return root
   }
 
-  node.ratio = Math.max(0.1, Math.min(0.9, ratio));
-  return root;
+  node.ratio = Math.max(0.1, Math.min(0.9, ratio))
+  return root
 }
 
 /**
@@ -185,7 +185,7 @@ export function resizeSplit(root, splitId, ratio) {
  * @returns {string}
  */
 export function serialize(root) {
-  return JSON.stringify(root);
+  return JSON.stringify(root)
 }
 
 /**
@@ -194,7 +194,7 @@ export function serialize(root) {
  * @returns {LayoutNode}
  */
 export function deserialize(json) {
-  return JSON.parse(json);
+  return JSON.parse(json)
 }
 
 /**
@@ -203,7 +203,7 @@ export function deserialize(json) {
  * @returns {LayoutNode}
  */
 export function clone(root) {
-  return deserialize(serialize(root));
+  return deserialize(serialize(root))
 }
 
 /**
@@ -212,15 +212,15 @@ export function clone(root) {
  * @returns {PanelNode[]}
  */
 export function getAllPanels(root) {
-  return collectPanels(root);
+  return collectPanels(root)
 }
 
 export function isPanelNode(node) {
-  return !!node && node.type === 'panel';
+  return !!node && node.type === 'panel'
 }
 
 export function isSplitNode(node) {
-  return !!node && node.type === 'split';
+  return !!node && node.type === 'split'
 }
 
 /**
@@ -231,21 +231,21 @@ export function isSplitNode(node) {
  * @returns {PanelNode[]}
  */
 export function collectPanels(root, options = {}) {
-  let { includeGlobal = true } = options;
-  let panels = [];
+  let { includeGlobal = true } = options
+  let panels = []
 
   function walk(node) {
-    if (!node) return;
+    if (!node) return
     if (isPanelNode(node)) {
-      if (includeGlobal || !node.global) panels.push(node);
-      return;
+      if (includeGlobal || !node.global) panels.push(node)
+      return
     }
-    if (node.first) walk(node.first);
-    if (node.second) walk(node.second);
+    if (node.first) walk(node.first)
+    if (node.second) walk(node.second)
   }
 
-  walk(root);
-  return panels;
+  walk(root)
+  return panels
 }
 
 /**
@@ -258,7 +258,7 @@ export function collectPanels(root, options = {}) {
 export function collectPanelTypes(root, options = {}) {
   return collectPanels(root, options)
     .map((panel) => panel.panelType)
-    .filter(Boolean);
+    .filter(Boolean)
 }
 
 /**
@@ -267,7 +267,7 @@ export function collectPanelTypes(root, options = {}) {
  * @returns {string | null}
  */
 export function getPrimaryPanelType(root) {
-  return collectPanels(root, { includeGlobal: false })[0]?.panelType || null;
+  return collectPanels(root, { includeGlobal: false })[0]?.panelType || null
 }
 
 /**
@@ -278,11 +278,11 @@ export function getPrimaryPanelType(root) {
  * @returns {boolean}
  */
 export function hasEveryPanelType(root, requiredPanelTypes, options = {}) {
-  let available = new Set(collectPanelTypes(root, options));
+  let available = new Set(collectPanelTypes(root, options))
   for (let panelType of requiredPanelTypes || []) {
-    if (!available.has(panelType)) return false;
+    if (!available.has(panelType)) return false
   }
-  return true;
+  return true
 }
 
 /**
@@ -293,11 +293,11 @@ export function hasEveryPanelType(root, requiredPanelTypes, options = {}) {
  * @returns {boolean}
  */
 export function hasAnyPanelType(root, panelTypes, options = {}) {
-  let available = new Set(collectPanelTypes(root, options));
+  let available = new Set(collectPanelTypes(root, options))
   for (let panelType of panelTypes || []) {
-    if (available.has(panelType)) return true;
+    if (available.has(panelType)) return true
   }
-  return false;
+  return false
 }
 
 /**
@@ -310,20 +310,20 @@ export function hasAnyPanelType(root, panelTypes, options = {}) {
  * @returns {{title: string, icon: string, panelId: string, isMaster: boolean, panelType: string}[]}
  */
 export function createSidebarSubPanels(root, panelDefinitions = {}, options = {}) {
-  let { includeGlobal = false, minPanels = 2 } = options;
-  let panels = collectPanels(root, { includeGlobal });
-  if (panels.length < minPanels) return [];
+  let { includeGlobal = false, minPanels = 2 } = options
+  let panels = collectPanels(root, { includeGlobal })
+  if (panels.length < minPanels) return []
   return panels.map((panel, index) => {
-    let panelType = panel.panelType || 'panel';
-    let config = panelDefinitions[panelType] || {};
+    let panelType = panel.panelType || 'panel'
+    let config = panelDefinitions[panelType] || {}
     return {
       title: config.title || panelType,
       icon: config.icon || 'dashboard',
       panelId: panel.id || `${panelType}-${index}`,
       isMaster: index === 0,
       panelType,
-    };
-  });
+    }
+  })
 }
 
 /**
@@ -334,8 +334,32 @@ export function createSidebarSubPanels(root, panelDefinitions = {}, options = {}
  * @returns {boolean} - True if node was found and updated
  */
 export function updateNode(root, nodeId, updates) {
-  let node = findNode(root, nodeId);
-  if (!node) return false;
-  Object.assign(node, updates);
-  return true;
+  let node = findNode(root, nodeId)
+  if (!node) return false
+  Object.assign(node, updates)
+  return true
 }
+
+/**
+ * Validate that a layout tree matches validation rules
+ * @param {LayoutNode} root
+ * @param {Object} config
+ * @param {Iterable<string>} [config.disallowedPanelTypes]
+ * @param {Iterable<string>} [config.requiredPanelTypes]
+ * @param {string} [config.expectedPrimary]
+ * @returns {boolean}
+ */
+export function matchesSection(root, config = {}) {
+  if (!root) return false
+  if (config.disallowedPanelTypes) {
+    if (hasAnyPanelType(root, config.disallowedPanelTypes)) return false
+  }
+  if (config.requiredPanelTypes) {
+    if (!hasEveryPanelType(root, config.requiredPanelTypes)) return false
+  }
+  if (config.expectedPrimary) {
+    return collectPanelTypes(root, { includeGlobal: false }).includes(config.expectedPrimary)
+  }
+  return true
+}
+

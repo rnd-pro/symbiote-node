@@ -162,3 +162,106 @@ export function toggleGraphLayerButtonState(button) {
   }
   return !isActive;
 }
+
+export function resolveGraphNodeClick({ nodeId, path, symbol, depth = 0, hash = '' }) {
+  if (symbol) {
+    return {
+      hashUpdates: [['symbol', symbol.name]],
+      fileEvent: symbol.file ? { path: symbol.file, source: 'canvas' } : null,
+    }
+  }
+
+  if (!path) return null
+
+  if (depth === 0) {
+    return {
+      hashUpdates: [['focus', path], ['in', null]],
+      fileEvent: { path, source: 'canvas' },
+    }
+  }
+
+  const drillBase = hash.split('?')[0]
+  const drillPath = drillBase.replace('#graph/', '')
+  const relativeName = path.startsWith(drillPath) ? path.slice(drillPath.length) : path
+
+  return {
+    hashUpdates: [['focus', relativeName], ['in', '1']],
+    fileEvent: { path, source: 'canvas' },
+  }
+}
+
+export function resolveToolbarAction({ action, nodeId, viewMode, path, symbol }) {
+  if (action === 'explore') {
+    return viewMode === 'flat'
+      ? { type: 'fly-to-node', nodeId }
+      : { type: 'explore-node', nodeId }
+  }
+
+  if (action === 'view-code') {
+    const file = viewMode === 'flat' ? nodeId : (symbol ? symbol.file : path)
+    return file ? { type: 'open-file', hash: `#explorer/${file}` } : null
+  }
+
+  if (action === 'enter' && viewMode === 'flat') {
+    return { type: 'drill-node', nodeId }
+  }
+
+  return null
+}
+
+export function renderClusterPanel({
+  panel,
+  toggle,
+  clusters = [],
+  viewMode,
+  isOpen,
+  doc = typeof document !== 'undefined' ? document : null,
+}) {
+  if (!panel || !doc) return
+  let hasFlatLegend = clusters.length > 0 && viewMode === 'flat'
+
+  if (toggle) {
+    toggle.hidden = !hasFlatLegend
+    toggle.toggleAttribute('data-active', hasFlatLegend && isOpen)
+    toggle.setAttribute(
+      'title',
+      isOpen ? 'Hide semantic color legend' : 'Show semantic color legend',
+    )
+  }
+
+  if (!hasFlatLegend || !isOpen) {
+    panel.hidden = true
+    panel.replaceChildren()
+    return
+  }
+
+  panel.hidden = false
+  panel.replaceChildren(...clusters.map((cluster) => {
+    let row = doc.createElement('div')
+    let swatch = doc.createElement('span')
+    let label = doc.createElement('span')
+    let pathCount = cluster.paths.length
+
+    row.className = 'pcb-cluster-row'
+    row.title = cluster.description || `${cluster.label}: ${pathCount} paths`
+    swatch.className = 'pcb-cluster-swatch'
+    swatch.style.background = cluster.color
+    label.className = 'pcb-cluster-label'
+    label.textContent = cluster.label
+    row.replaceChildren(swatch, label)
+    return row
+  }))
+}
+
+export function renderGraphStats(statsEl, items, doc = typeof document !== 'undefined' ? document : null) {
+  if (!statsEl || !doc) return
+  statsEl.replaceChildren(...items.map(([value, label]) => {
+    let item = doc.createElement('span')
+    let valueEl = doc.createElement('span')
+    valueEl.className = 'graph-explorer-stat-val'
+    valueEl.textContent = String(value)
+    item.append(valueEl, ` ${label}`)
+    return item
+  }))
+}
+

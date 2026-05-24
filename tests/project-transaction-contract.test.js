@@ -5,6 +5,7 @@ import {
   applyProjectTransaction,
   normalizeProjectPackage,
   normalizeProjectTransaction,
+  updateLayoutNode,
 } from '../graph/index.js';
 import { getProjectSchema, listProjectSchemaVersions } from '../manifest/project-schema-catalog.js';
 
@@ -185,6 +186,94 @@ describe('project-transaction-v1 contract', () => {
     assert.equal(next.layouts.main.root.children[1].id, 'inspector');
   });
 
+  it('updates runtime layout nodes without replacing the full root', () => {
+    const project = normalizeProjectPackage({
+      ...baseProject,
+      layouts: {
+        main: {
+          version: 'runtime-ui-v1',
+          root: {
+            id: 'root',
+            component: 'panel-layout',
+            children: [{
+              id: 'file-tree',
+              component: 'file-tree',
+              layout: { rect: { x: 0, y: 0, width: 0.2, height: 1 } },
+              props: { mode: 'tree' },
+            }],
+          },
+        },
+      },
+    });
+
+    const next = applyProjectTransaction(project, {
+      version: 'project-transaction-v1',
+      id: 'tx:update-layout-node',
+      operations: [{
+        type: 'layout.updateNode',
+        layout: 'main',
+        nodeId: 'file-tree',
+        patch: {
+          layout: { rect: { x: 0.12, y: 0, width: 0.28, height: 1 } },
+          props: { mode: 'spatial' },
+        },
+      }],
+    });
+
+    assert.equal(project.layouts.main.root.children[0].props.mode, 'tree');
+    assert.deepEqual(next.layouts.main.root.children[0].layout.rect, { x: 0.12, y: 0, width: 0.28, height: 1 });
+    assert.equal(next.layouts.main.root.children[0].props.mode, 'spatial');
+  });
+
+  it('updates classic LayoutTree nodes by id for XR geometry patches', () => {
+    const layout = {
+      root: {
+        id: 'split',
+        type: 'split',
+        direction: 'horizontal',
+        ratio: 0.25,
+        first: { id: 'left', type: 'panel', panelType: 'file-tree' },
+        second: { id: 'right', type: 'panel', panelType: 'dep-graph' },
+      },
+    };
+
+    updateLayoutNode(layout, 'left', {
+      layout: { rect: { x: 0.05, y: 0, width: 0.3, height: 1 } },
+      attrs: { selected: true },
+    });
+
+    assert.deepEqual(layout.root.first.layout.rect, { x: 0.05, y: 0, width: 0.3, height: 1 });
+    assert.equal(layout.root.first.attrs.selected, true);
+    assert.equal(layout.root.first.panelType, 'file-tree');
+  });
+
+  it('rejects unsafe layout node patch keys', () => {
+    const layout = {
+      root: {
+        id: 'root',
+        component: 'panel-layout',
+        children: [{ id: 'file-tree', component: 'file-tree' }],
+      },
+    };
+
+    assert.throws(
+      () => updateLayoutNode(layout, 'file-tree', { panelState: { selected: true } }),
+      /layout\.updateNode patch\.panelState is not allowed/
+    );
+    assert.throws(
+      () => updateLayoutNode(layout, 'file-tree', { panelType: 'blocked-change' }),
+      /layout\.updateNode patch\.panelType is not allowed/
+    );
+    assert.throws(
+      () => updateLayoutNode(layout, 'file-tree', { layout: { direction: 'vertical' } }),
+      /layout\.updateNode patch\.layout\.direction is not allowed/
+    );
+    assert.throws(
+      () => updateLayoutNode(layout, 'file-tree', { props: { constructor: { polluted: true } } }),
+      /layout\.updateNode patch key "constructor" is not allowed/
+    );
+  });
+
   it('rejects layout panel operations with missing parents or components', () => {
     const project = normalizeProjectPackage(baseProject);
 
@@ -233,6 +322,26 @@ describe('project-transaction-v1 contract', () => {
 
     assert.equal(next.layouts.main.root.children[0].component, 'pg-agent-chat');
     assert.equal(next.layouts.main.root.children[0].componentRegistry, 'portal/runtime');
+  });
+
+  it('rejects layout update operations with missing nodes', () => {
+    const project = normalizeProjectPackage(baseProject);
+
+    assert.throws(
+      () => applyProjectTransaction(project, {
+        version: 'project-transaction-v1',
+        id: 'tx:missing-node',
+        operations: [
+          {
+            type: 'layout.updateNode',
+            layout: 'main',
+            nodeId: 'missing',
+            patch: { layout: { rect: { x: 0, y: 0, width: 1, height: 1 } } },
+          },
+        ],
+      }),
+      /layout node "missing" is not defined/
+    );
   });
 
   it('rejects unknown operations and unsafe project data', () => {

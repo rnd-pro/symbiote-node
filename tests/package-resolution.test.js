@@ -61,6 +61,7 @@ describe('package exports resolution', () => {
     assert.equal(typeof graph.normalizeProjectPackage, 'function');
     assert.equal(typeof graph.normalizeProjectTransaction, 'function');
     assert.equal(typeof graph.applyProjectTransaction, 'function');
+    assert.equal(typeof graph.updateLayoutNode, 'function');
     assert.equal(typeof graph.createProjectRuntime, 'function');
     assert.equal(typeof root.normalizeGraphModel, 'function');
     assert.equal(typeof manifest.listComponents, 'function');
@@ -77,7 +78,12 @@ describe('package exports resolution', () => {
     assert.equal(typeof xr.createXRHtmlCanvasRenderer, 'function');
     assert.equal(typeof xr.createXRThemeSnapshot, 'function');
     assert.equal(typeof xr.hitTestXRPanels, 'function');
+    assert.equal(typeof xr.createXRPointerHit, 'function');
+    assert.equal(typeof xr.createXRPointerHitFromDomEvent, 'function');
     assert.equal(typeof xr.createXRPanelPointerTarget, 'function');
+    assert.equal(typeof xr.createXRPanelGestureState, 'function');
+    assert.equal(typeof xr.updateXRPanelGesture, 'function');
+    assert.equal(typeof xr.createXRLayoutTransactionFromGesture, 'function');
     assert.equal(typeof markdownFormatter.formatMarkdown, 'function');
     assert.equal(typeof markdownFormatter.escapeHtml, 'function');
   });

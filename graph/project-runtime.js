@@ -95,6 +95,15 @@ export function createProjectRuntime(rawProject, options = {}) {
       });
     },
 
+    updateLayoutNode(layout, nodeId, patch, options = {}) {
+      return this.applyTransaction({
+        version: 'project-transaction-v1',
+        id: options.id || nextTransactionId('tx:update-node'),
+        targetProject: project.id,
+        operations: [{ type: 'layout.updateNode', layout, nodeId, patch }],
+      });
+    },
+
     setThemeModifier(theme, name, value, id = nextTransactionId('tx:set-theme')) {
       return this.applyTransaction({
         version: 'project-transaction-v1',

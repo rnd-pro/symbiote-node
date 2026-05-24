@@ -191,6 +191,8 @@ describe('discover command', () => {
       assert.ok(webxr.capabilities.includes('xr-theme-bridge'));
       assert.ok(webxr.capabilities.includes('xr-panel-host'));
       assert.ok(webxr.capabilities.includes('xr-content-pointer-target'));
+      assert.ok(webxr.capabilities.includes('xr-panel-gesture'));
+      assert.ok(webxr.capabilities.includes('xr-layout-transaction'));
       assert.ok(webxr.capabilities.includes('xr-html-in-canvas-renderer'));
     });
 

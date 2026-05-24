@@ -124,6 +124,30 @@ export function createXRPanelPointerTarget(hit, options = {}) {
   };
 }
 
+export function createXRPointerHit(panel, point = {}, options = {}) {
+  if (!panel) return null;
+  let normalizedPoint = {
+    x: clamp(numberOr(point.x, 0), 0, 1),
+    y: clamp(numberOr(point.y, 0), 0, 1),
+  };
+  return {
+    panelId: panel.id,
+    point: normalizedPoint,
+    worldPoint: options.worldPoint || null,
+    distance: numberOr(options.distance, 0),
+    panel,
+  };
+}
+
+export function createXRPointerHitFromDomEvent(panel, element, event, options = {}) {
+  if (!panel || !element?.getBoundingClientRect || !event) return null;
+  let rect = element.getBoundingClientRect();
+  return createXRPointerHit(panel, {
+    x: (numberOr(event.clientX, rect.left) - rect.left) / Math.max(rect.width, 1),
+    y: (numberOr(event.clientY, rect.top) - rect.top) / Math.max(rect.height, 1),
+  }, options);
+}
+
 export function normalizeXRInputRay(inputSource, frame, referenceSpace) {
   let pose = frame?.getPose?.(inputSource?.targetRaySpace, referenceSpace);
   let transform = pose?.transform;

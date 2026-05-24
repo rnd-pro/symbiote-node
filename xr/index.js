@@ -6,3 +6,4 @@ export * from './theme-bridge.js';
 export * from './scene-controller.js';
 export * from './panel-host.js';
 export * from './html-canvas-renderer.js';
+export * from './gesture.js';

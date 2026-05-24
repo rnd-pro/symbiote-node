@@ -111,7 +111,7 @@ function collectLayoutRects(root) {
   function walk(node, rect) {
     if (!node) return;
     if (node.type === 'panel') {
-      rects.set(node, normalizeRect(rect));
+      rects.set(node, normalizeRect(node.layout?.rect || rect));
       return;
     }
     if (node.type !== 'split') return;

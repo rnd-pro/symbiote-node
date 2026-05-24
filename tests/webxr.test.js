@@ -18,8 +18,13 @@ import {
   applyXRThemeToPanel,
   XR_SPATIAL_SCENE_VERSION,
   hitTestXRPanels,
+  createXRPointerHit,
+  createXRPointerHitFromDomEvent,
   createXRPanelPointerTarget,
   createXRPointerEvent,
+  createXRPanelGestureState,
+  updateXRPanelGesture,
+  createXRLayoutTransactionFromGesture,
   syncWebXRCanvas,
 } from '../xr/index.js';
 
@@ -541,6 +546,63 @@ describe('WebXR provider adapter', () => {
     assert.equal(target.source, 'mouse-fallback');
   });
 
+  it('creates provider-owned pointer hits for DOM fallback adapters', () => {
+    let panel = { id: 'main', contentViewport: { width: 960, height: 540, scale: 0.1 } };
+    let hit = createXRPointerHit(panel, { x: 1.4, y: -0.2 });
+    let event = createXRPointerEvent(hit, { source: 'mouse-fallback' });
+
+    assert.equal(hit.panelId, 'main');
+    assert.deepEqual(hit.point, { x: 1, y: 0 });
+    assert.deepEqual(event.contentPoint, { x: 960, y: 0 });
+  });
+
+  it('normalizes DOM fallback pointer hits through provider helpers', () => {
+    let panel = { id: 'main' };
+    let element = {
+      getBoundingClientRect: () => ({ left: 10, top: 20, width: 200, height: 100 }),
+    };
+    let hit = createXRPointerHitFromDomEvent(panel, element, { clientX: 60, clientY: 95 });
+
+    assert.equal(hit.panelId, 'main');
+    assert.deepEqual(hit.point, { x: 0.25, y: 0.75 });
+  });
+
+  it('turns XR panel gestures into layout.updateNode transactions', () => {
+    let panel = createXRSpatialScene({
+      id: 'file-tree',
+      type: 'panel',
+      panelType: 'file-tree',
+      layout: { rect: { x: 0, y: 0, width: 0.25, height: 1 } },
+    }).panels[0];
+    let start = createXRPanelGestureState({
+      panel,
+      layoutId: 'graph',
+      mode: 'move',
+      pointerEvent: {
+        point: { x: 0.2, y: 0.3 },
+        contentPoint: { x: 192, y: 360 },
+      },
+    });
+    let next = updateXRPanelGesture(start, {
+      point: { x: 0.3, y: 0.25 },
+      contentPoint: { x: 288, y: 300 },
+      buttons: { primary: true },
+    });
+    let transaction = createXRLayoutTransactionFromGesture(next, {
+      id: 'tx:xr-test',
+      targetProject: 'project:test',
+    });
+
+    assert.equal(next.status, 'dragging');
+    assert.deepEqual(next.delta, { x: 0.1, y: -0.05 });
+    assert.deepEqual(next.relativeRect, { x: 0.1, y: 0, width: 0.25, height: 1 });
+    assert.equal(transaction.operations[0].type, 'layout.updateNode');
+    assert.equal(transaction.operations[0].layout, 'graph');
+    assert.equal(transaction.operations[0].nodeId, 'file-tree');
+    assert.deepEqual(transaction.operations[0].patch.layout.rect, next.relativeRect);
+    assert.equal(transaction.metadata.source, 'symbiote-node/xr');
+  });
+
   it('publishes explicit experimental renderer metadata', () => {
     assert.equal(WEBXR_RENDERER.status, 'experimental');
     assert.equal(WEBXR_RENDERER.specifier, 'symbiote-node/xr');
@@ -553,6 +615,8 @@ describe('WebXR provider adapter', () => {
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-panel-host'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-content-viewport'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-content-pointer-target'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-panel-gesture'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-layout-transaction'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-html-in-canvas-renderer'));
   });
 });

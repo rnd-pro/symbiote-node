@@ -38,6 +38,8 @@ export const WEBXR_RENDERER = Object.freeze({
     'xr-html-in-canvas-renderer',
     'xr-pointer-normalization',
     'xr-content-pointer-target',
+    'xr-panel-gesture',
+    'xr-layout-transaction',
     'dom-overlay-optional',
     'webgl-layer',
     'feature-detected-fallback',

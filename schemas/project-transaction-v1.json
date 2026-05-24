@@ -26,6 +26,7 @@
         { "$ref": "#/$defs/graphAddEdgeOperation" },
         { "$ref": "#/$defs/layoutAddPanelOperation" },
         { "$ref": "#/$defs/layoutSetRootOperation" },
+        { "$ref": "#/$defs/layoutUpdateNodeOperation" },
         { "$ref": "#/$defs/themeSetModifierOperation" }
       ]
     },
@@ -68,6 +69,34 @@
         "type": { "const": "layout.setRoot" },
         "layout": { "type": "string", "minLength": 1 },
         "root": { "$ref": "runtime-ui-v1.json#/$defs/node" }
+      }
+    },
+    "layoutUpdateNodeOperation": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type", "layout", "nodeId", "patch"],
+      "properties": {
+        "type": { "const": "layout.updateNode" },
+        "layout": { "type": "string", "minLength": 1 },
+        "nodeId": { "type": "string", "minLength": 1 },
+        "patch": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "layout": {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "rect": { "type": "object", "additionalProperties": true },
+                "weight": { "type": "number" }
+              }
+            },
+            "props": { "type": "object", "additionalProperties": true },
+            "attrs": { "type": "object", "additionalProperties": true }
+          }
+        }
       }
     },
     "themeSetModifierOperation": {

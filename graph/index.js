@@ -11,6 +11,7 @@ export {
 export { normalizeProjectPackage } from './project-package.js';
 export {
   applyProjectTransaction,
+  updateLayoutNode,
   normalizeProjectTransaction,
 } from './project-transaction.js';
 export { createProjectRuntime } from './project-runtime.js';

@@ -68,6 +68,13 @@ describe('XR panel host', () => {
     assert.equal(element.attrs.get('compact'), '');
     assert.equal(element.children[0].tagName, 'SN-LIST-ITEM');
     assert.equal(element.children[0].label, 'Nested');
+    assert.equal(element.style.width, '960px');
+    assert.equal(element.style.height, '645px');
+    assert.equal(element.style['--sn-xr-content-width'], '960px');
+    assert.equal(element.style['--sn-xr-content-height'], '645px');
+    assert.equal(element.style['--sn-xr-content-scale'] !== '1', true);
+    assert.equal(element.style['--sn-xr-panel-meter-width'], '1.22m');
+    assert.equal(container.style['--sn-xr-content-width'], '960px');
     assert.equal(host.getPanelElement('chat'), element);
     assert.equal(host.getState().mounted, 1);
     host.setScene({ panels: [] });

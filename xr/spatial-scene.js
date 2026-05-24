@@ -1,4 +1,7 @@
-import { projectLayoutToXR } from './layout-projection.js';
+import {
+  createXRPanelContentViewport,
+  projectLayoutToXR,
+} from './layout-projection.js';
 
 export const XR_SPATIAL_SCENE_VERSION = 'xr-spatial-scene-v1';
 
@@ -64,11 +67,18 @@ export function createXRSpatialScene(root, options = {}) {
     userSpace,
     preview,
     layout,
-    panels: layout.panels.map((panel) => ({
-      ...panel,
-      spatialRole: panel.anchor === 'front' ? 'primary-surface' : 'support-surface',
-      distanceFromUser: Math.abs(panel.position[2] || 0),
-    })),
+    panels: layout.panels.map((panel) => {
+      let previewPixels = {
+        width: panel.size[0] * preview.pixelsPerMeter,
+        height: panel.size[1] * preview.pixelsPerMeter,
+      };
+      return {
+        ...panel,
+        contentViewport: createXRPanelContentViewport(panel, { previewPixels }),
+        spatialRole: panel.anchor === 'front' ? 'primary-surface' : 'support-surface',
+        distanceFromUser: Math.abs(panel.position[2] || 0),
+      };
+    }),
     interaction: {
       pointerModel: 'ray-to-panel-normalized',
       eventSpace: 'panel-normalized-0-1',

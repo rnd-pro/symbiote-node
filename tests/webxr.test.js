@@ -9,6 +9,7 @@ import {
   getWebXRSupport,
   normalizeWebXRSessionOptions,
   projectLayoutToXR,
+  createXRPanelContentViewport,
   createXRSpatialPreview,
   createXRSpatialScene,
   createXRSceneController,
@@ -271,6 +272,8 @@ describe('WebXR provider adapter', () => {
     assert.equal(scene.userSpace.eyeHeight, 1.62);
     assert.equal(scene.preview.pixelsPerMeter, 120);
     assert.equal(scene.panels[0].spatialRole, 'primary-surface');
+    assert.equal(scene.panels[0].contentViewport.width, 960);
+    assert.equal(scene.panels[0].contentViewport.scale < 1, true);
     assert.equal(scene.interaction.pointerModel, 'ray-to-panel-normalized');
   });
 
@@ -295,6 +298,25 @@ describe('WebXR provider adapter', () => {
     assert.match(preview.transform, /rotateY\(-18deg\)/);
   });
 
+  it('derives content viewport separately from physical XR preview pixels', () => {
+    let viewport = createXRPanelContentViewport({
+      id: 'narrow',
+      component: 'file-tree',
+      size: [0.32, 0.82],
+    }, {
+      previewPixels: { width: 38, height: 97 },
+    });
+
+    assert.deepEqual(viewport, {
+      width: 960,
+      height: 1200,
+      aspectRatio: 0.390244,
+      scale: 0.039583,
+      density: 0.72,
+      source: 'preview-fit',
+    });
+  });
+
   it('summarizes XR panel geometry without product UI labels', () => {
     let scene = createXRSpatialScene({
       id: 'main',
@@ -316,6 +338,7 @@ describe('WebXR provider adapter', () => {
       'relativeRect',
       'meters',
       'previewPixels',
+      'contentViewport',
       'position',
       'rotation',
     ]);
@@ -329,6 +352,14 @@ describe('WebXR provider adapter', () => {
       width: 122,
       height: 82,
       depth: -180,
+    });
+    assert.deepEqual(summary.contentViewport, {
+      width: 960,
+      height: 645,
+      aspectRatio: 1.487805,
+      scale: 0.127083,
+      density: 0.762498,
+      source: 'preview-fit',
     });
     assert.deepEqual(summary.position, [0.5, 1.25, -1.8]);
     assert.deepEqual(summary.rotation, [0, -18, 0]);
@@ -493,6 +524,7 @@ describe('WebXR provider adapter', () => {
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-scene-controller'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-theme-bridge'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-panel-host'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-content-viewport'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-html-in-canvas-renderer'));
   });
 });

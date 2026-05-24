@@ -34,6 +34,13 @@ const DEFAULT_RELATIVE_SIZE = Object.freeze({
   maxHeight: 0.92,
 });
 
+const DEFAULT_CONTENT_VIEWPORT = Object.freeze({
+  minWidth: 960,
+  minHeight: 540,
+  maxWidth: 1600,
+  maxHeight: 1200,
+});
+
 function numberOr(value, fallback) {
   let number = Number(value);
   return Number.isFinite(number) ? number : fallback;
@@ -293,8 +300,75 @@ function previewSummary(preview) {
   };
 }
 
+function roundPixel(value) {
+  return Math.round(numberOr(value, 0));
+}
+
+function normalizeViewportOptions(options = {}) {
+  return {
+    minWidth: numberOr(options.minWidth, DEFAULT_CONTENT_VIEWPORT.minWidth),
+    minHeight: numberOr(options.minHeight, DEFAULT_CONTENT_VIEWPORT.minHeight),
+    maxWidth: numberOr(options.maxWidth, DEFAULT_CONTENT_VIEWPORT.maxWidth),
+    maxHeight: numberOr(options.maxHeight, DEFAULT_CONTENT_VIEWPORT.maxHeight),
+  };
+}
+
+function fitViewportToAspect(aspectRatio, options) {
+  let width = Math.max(options.minWidth, options.minHeight * aspectRatio);
+  let height = width / aspectRatio;
+  if (height < options.minHeight) {
+    height = options.minHeight;
+    width = height * aspectRatio;
+  }
+  if (width > options.maxWidth) {
+    width = options.maxWidth;
+    height = width / aspectRatio;
+  }
+  if (height > options.maxHeight) {
+    height = options.maxHeight;
+    width = height * aspectRatio;
+  }
+  if (width < options.minWidth) {
+    width = options.minWidth;
+  }
+  if (height < options.minHeight) {
+    height = options.minHeight;
+  }
+  return {
+    width: roundPixel(width),
+    height: roundPixel(height),
+  };
+}
+
+function scaleForPreview(viewport, preview) {
+  if (!preview) return 1;
+  let widthScale = numberOr(preview.width, 0) / viewport.width;
+  let heightScale = numberOr(preview.height, 0) / viewport.height;
+  let scale = Math.min(widthScale, heightScale);
+  return roundMetric(scale > 0 ? scale : 1);
+}
+
+export function createXRPanelContentViewport(panel = {}, options = {}) {
+  let size = asVector(panel.size, [1, 0.5625]);
+  let aspectRatio = roundMetric(clamp(size[0] / Math.max(size[1], 0.000001), 0.35, 2.4));
+  let viewport = fitViewportToAspect(aspectRatio, normalizeViewportOptions(options));
+  let preview = options.previewPixels || options.preview || null;
+  let scale = scaleForPreview(viewport, preview);
+  return {
+    width: viewport.width,
+    height: viewport.height,
+    aspectRatio,
+    scale,
+    density: roundMetric(clamp(scale * 6, 0.72, 1)),
+    source: preview ? 'preview-fit' : 'panel-aspect',
+  };
+}
+
 export function createXRPanelGeometrySummary(panel = {}, preview = null) {
   let size = asVector(panel.size, [0, 0]);
+  let contentViewport = panel.contentViewport || createXRPanelContentViewport(panel, {
+    previewPixels: previewSummary(preview),
+  });
   return {
     panelId: String(panel.id || ''),
     component: panel.component || panel.panelType || 'panel',
@@ -306,6 +380,7 @@ export function createXRPanelGeometrySummary(panel = {}, preview = null) {
       height: roundMetric(size[1]),
     },
     previewPixels: previewSummary(preview),
+    contentViewport,
     position: asVector(panel.position, [0, 0, 0]).map(roundMetric),
     rotation: asVector(panel.rotation, [0, 0, 0]).map(roundMetric),
   };

@@ -1,3 +1,5 @@
+import { createXRPanelContentViewport } from './layout-projection.js';
+
 function defaultComponentResolver(name) {
   return name;
 }
@@ -36,6 +38,27 @@ function applyThemeScope(element, node = {}, panel = {}) {
     element.dataset.themeScope = scope;
     element.setAttribute('data-theme-scope', scope);
   }
+}
+
+function setStyleProperty(element, name, value) {
+  if (!element?.style) return;
+  if (typeof element.style.setProperty === 'function') {
+    element.style.setProperty(name, value);
+    return;
+  }
+  element.style[name] = value;
+}
+
+function applyPanelViewport(element, panel) {
+  let viewport = panel.contentViewport || createXRPanelContentViewport(panel);
+  setStyleProperty(element, '--sn-xr-content-width', `${viewport.width}px`);
+  setStyleProperty(element, '--sn-xr-content-height', `${viewport.height}px`);
+  setStyleProperty(element, '--sn-xr-content-scale', String(viewport.scale));
+  setStyleProperty(element, '--sn-xr-panel-meter-width', `${panel.size?.[0] || 0}m`);
+  setStyleProperty(element, '--sn-xr-panel-meter-height', `${panel.size?.[1] || 0}m`);
+  setStyleProperty(element, 'width', `${viewport.width}px`);
+  setStyleProperty(element, 'height', `${viewport.height}px`);
+  return viewport;
 }
 
 function appendChildren(host, node, context) {
@@ -139,8 +162,10 @@ export function createXRPanelHost(options = {}) {
     let element = createComponentElement(node, context, panel);
     element.dataset.xrPanelId = panel.id;
     element.classList.add('sn-xr-panel-live-root');
+    let contentViewport = applyPanelViewport(element, panel);
+    applyPanelViewport(container, { ...panel, contentViewport });
     container.replaceChildren(element);
-    panels.set(panel.id, { panel, container, element });
+    panels.set(panel.id, { panel, container, element, contentViewport });
     return element;
   }
 

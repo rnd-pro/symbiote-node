@@ -70,6 +70,7 @@ describe('package exports resolution', () => {
     assert.equal(typeof layout.navigate, 'function');
     assert.ok(!('Layout' in layout), 'Layout entrypoint must stay SSR-safe; use symbiote-node/ui for components');
     assert.equal(typeof xr.projectLayoutToXR, 'function');
+    assert.equal(typeof xr.createXRPanelContentViewport, 'function');
     assert.equal(typeof xr.createXRSpatialScene, 'function');
     assert.equal(typeof xr.createXRSceneController, 'function');
     assert.equal(typeof xr.createXRPanelHost, 'function');

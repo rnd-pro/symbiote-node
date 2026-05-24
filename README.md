@@ -10,6 +10,51 @@ A **visual node graph editor** and **execution engine** built on [Symbiote.js](h
 > [!TIP]
 > **Node-safe core, browser Web Components, and agent-readable metadata.** Clone, serve, and start building node graphs in under a minute.
 
+---
+
+## Table of Contents
+
+- [Graph Editor](#graph-editor)
+- [Universal Graph Model](#universal-graph-model)
+- [Source Display and Editing](#source-display-and-editing)
+- [List UI](#list-ui)
+- [Surface UI](#surface-ui)
+- [Tree UI](#tree-ui)
+- [Chat UI](#chat-ui)
+- [Shared UI Styles](#shared-ui-styles)
+- [Execution Engine](#execution-engine)
+- [Node Shapes](#node-shapes)
+- [Theme System](#theme-system)
+- [Runtime UI Registry](#runtime-ui-registry)
+- [Layout System (BSP)](#layout-system-bsp)
+- [Plugins & Interactions](#plugins--interactions)
+- [Compatibility Matrix](#compatibility-matrix)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [As ES Module (CDN)](#as-es-module-cdn)
+- [CLI (Engine)](#cli-engine)
+- [Agent Provider Contract](#agent-provider-contract)
+- [Engine Handlers](#engine-handlers)
+- [Project Structure](#project-structure)
+- [Tests](#tests)
+- [Related Projects](#related-projects)
+- [License](#license)
+
+---
+
+## Compatibility Matrix
+
+`symbiote-node` is designed to be highly compatible across modern browser environments and server-side runtime setups.
+
+| Environment | Supported Version / Status | Notes |
+|-------------|----------------------------|-------|
+| **Node.js** | `>= 18.0.0` | Required for topological engine execution and CLI tool |
+| **Browsers** | Modern evergreen browsers (Chrome, Safari, Firefox, Edge) | Native custom elements, CSS custom properties, and SVG rendering |
+| **SSR / Server Rendering** | Full isomorphic safety (Next.js, Nuxt, SvelteKit, etc.) | Core classes run on server; UI components are inert until browser hydration |
+| **Symbiote.js** | `>= 3.0.0` | Peer dependency for reactive custom elements |
+
+---
+
 ### Graph Editor
 
 The editor constructs visual node graphs from a data model. Nodes have typed input/output ports with compatibility validation, color-coded category headers, inline controls, and drag & drop with snap-to-grid. Connections render as SVG Bézier curves with gradient coloring.
@@ -32,6 +77,48 @@ editor.addNode(node2);
 
 const canvas = document.querySelector('node-canvas');
 canvas.setEditor(editor);
+```
+
+### Core Architecture Relationship
+
+```mermaid
+classDiagram
+    direction TB
+    class NodeCanvas {
+        +setEditor(editor: NodeEditor)
+    }
+    class NodeEditor {
+        +nodes: Map~string, Node~
+        +addNode(node: Node)
+        +connect(fromNode, fromPort, toNode, toPort)
+    }
+    class Node {
+        +id: String
+        +title: String
+        +inputs: Map~string, Input~
+        +outputs: Map~string, Output~
+        +addInput(key, input: Input)
+        +addOutput(key, output: Output)
+    }
+    class Socket {
+        +name: String
+        +color: String
+    }
+    class Input {
+        +socket: Socket
+        +label: String
+    }
+    class Output {
+        +socket: Socket
+        +label: String
+    }
+
+    NodeCanvas ..> NodeEditor : visualizes & controls
+    NodeEditor "1" *-- "*" Node : contains
+    Node "1" *-- "*" Input : possesses
+    Node "1" *-- "*" Output : possesses
+    Input "*" --> "1" Socket : typed by
+    Output "*" --> "1" Socket : typed by
 ```
 
 The root `symbiote-node` entrypoint is Node-safe and does not register browser custom elements. Browser UI modules live in `symbiote-node/ui`; in SSR or pure Node imports, browser-only exports are present but resolve to `undefined` until DOM globals are available.
@@ -384,6 +471,25 @@ const params = parseQuery('project=workspace-1&tab=team');
 - **Portals** — named reroutes for cross-graph connections
 - **InspectorPanel** — property inspector sidebar
 - **QuickToolbar** — floating action toolbar above selected node
+
+## Installation
+
+Install `symbiote-node` via your preferred package manager. Note that `@symbiotejs/symbiote` is required as a peer dependency.
+
+### Using npm
+```bash
+npm install symbiote-node @symbiotejs/symbiote
+```
+
+### Using yarn
+```bash
+yarn add symbiote-node @symbiotejs/symbiote
+```
+
+### Using pnpm
+```bash
+pnpm add symbiote-node @symbiotejs/symbiote
+```
 
 ## Quick Start
 

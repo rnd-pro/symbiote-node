@@ -193,6 +193,8 @@ describe('discover command', () => {
       assert.ok(webxr.capabilities.includes('xr-content-pointer-target'));
       assert.ok(webxr.capabilities.includes('xr-panel-gesture'));
       assert.ok(webxr.capabilities.includes('xr-layout-transaction'));
+      assert.ok(webxr.capabilities.includes('xr-emulated-test-runtime'));
+      assert.ok(webxr.capabilities.includes('iwer-emulation-runtime'));
       assert.ok(webxr.capabilities.includes('xr-html-in-canvas-renderer'));
     });
 

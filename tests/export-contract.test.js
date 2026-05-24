@@ -118,6 +118,10 @@ const ROOT_EXPORTS = [
   ['createXRPanelGestureState', 'function'],
   ['updateXRPanelGesture', 'function'],
   ['createXRLayoutTransactionFromGesture', 'function'],
+  ['WEBXR_EMULATION_RUNTIME', 'object'],
+  ['createWebXREmulationAdapter', 'function'],
+  ['getWebXREmulationSupport', 'function'],
+  ['installWebXREmulationRuntime', 'function'],
   ['collectQuickOpenFilesFromSkeleton', 'function'],
   ['fuzzyScore', 'function'],
   ['searchQuickOpenItems', 'function'],
@@ -315,6 +319,10 @@ const UI_EXPORTS = [
   ['createXRPanelGestureState', 'function'],
   ['updateXRPanelGesture', 'function'],
   ['createXRLayoutTransactionFromGesture', 'function'],
+  ['WEBXR_EMULATION_RUNTIME', 'object'],
+  ['createWebXREmulationAdapter', 'function'],
+  ['getWebXREmulationSupport', 'function'],
+  ['installWebXREmulationRuntime', 'function'],
 ];
 
 const ENGINE_EXPORTS = [

@@ -25,6 +25,10 @@ import {
   createXRPanelGestureState,
   updateXRPanelGesture,
   createXRLayoutTransactionFromGesture,
+  WEBXR_EMULATION_RUNTIME,
+  createWebXREmulationAdapter,
+  getWebXREmulationSupport,
+  installWebXREmulationRuntime,
   syncWebXRCanvas,
 } from '../xr/index.js';
 
@@ -603,6 +607,120 @@ describe('WebXR provider adapter', () => {
     assert.equal(transaction.metadata.source, 'symbiote-node/xr');
   });
 
+  it('describes optional IWER emulation support without requiring the package', () => {
+    let support = getWebXREmulationSupport({});
+
+    assert.equal(support.name, 'iwer');
+    assert.equal(support.status, 'optional-dev-runtime');
+    assert.equal(support.nativeWebXRAvailable, false);
+    assert.equal(support.moduleAvailable, false);
+    assert.equal(support.canInstall, false);
+    assert.equal(support.profile, 'metaQuest3');
+    assert.ok(support.capabilities.includes('webxr-runtime-emulation'));
+    assert.ok(support.capabilities.includes('action-capture-playback'));
+  });
+
+  it('keeps native WebXR ahead of optional emulation by default', async () => {
+    let target = {
+      navigator: {
+        xr: {
+          async isSessionSupported(mode) {
+            return mode === 'immersive-vr';
+          },
+        },
+      },
+    };
+
+    let result = await installWebXREmulationRuntime({
+      globalThis: target,
+      module: {
+        XRDevice: class {
+          installRuntime() {
+            throw new Error('native WebXR should not be replaced by default');
+          }
+        },
+        metaQuest3: {},
+      },
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.runtime, 'native');
+    assert.equal(result.installed, false);
+    assert.equal(result.reason, 'native-webxr-available');
+    assert.equal(result.support.modes.immersiveVr, true);
+  });
+
+  it('installs an injected IWER-compatible module as an emulated WebXR runtime', async () => {
+    let target = { navigator: {} };
+    let installedTarget = null;
+    let module = {
+      metaQuest3: { profile: 'quest-3' },
+      XRDevice: class {
+        constructor(profile) {
+          this.profile = profile;
+          this.controllers = { left: {}, right: {} };
+          this.hands = { left: {}, right: {} };
+        }
+
+        installRuntime(targetGlobal) {
+          installedTarget = targetGlobal;
+          targetGlobal.navigator.xr = {
+            async isSessionSupported(mode) {
+              return mode === 'immersive-vr' || mode === 'inline';
+            },
+          };
+        }
+      },
+    };
+
+    let result = await installWebXREmulationRuntime({
+      globalThis: target,
+      module,
+      profile: 'metaQuest3',
+      configureDevice(device) {
+        device.configured = true;
+      },
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.runtime, 'iwer');
+    assert.equal(result.installed, true);
+    assert.equal(result.profileName, 'metaQuest3');
+    assert.equal(result.device.profile.profile, 'quest-3');
+    assert.equal(result.device.configured, true);
+    assert.equal(installedTarget, target);
+    assert.equal(result.support.supported, true);
+    assert.equal(result.support.modes.immersiveVr, true);
+    assert.equal(result.support.modes.immersiveAr, false);
+  });
+
+  it('wraps IWER emulation install state in a reusable adapter', async () => {
+    let target = { navigator: {} };
+    let adapter = createWebXREmulationAdapter({
+      globalThis: target,
+      loadModule: async () => ({
+        metaQuest3: {},
+        XRDevice: class {
+          installRuntime(targetGlobal) {
+            targetGlobal.navigator.xr = {
+              async isSessionSupported() {
+                return true;
+              },
+            };
+          }
+        },
+      }),
+    });
+
+    assert.equal(adapter.getSupport().canInstall, true);
+    let result = await adapter.install();
+
+    assert.equal(result.ok, true);
+    assert.equal(adapter.getState().installed, true);
+    assert.equal(adapter.getState().runtime, 'iwer');
+    assert.equal(adapter.getDevice(), result.device);
+  });
+
   it('publishes explicit experimental renderer metadata', () => {
     assert.equal(WEBXR_RENDERER.status, 'experimental');
     assert.equal(WEBXR_RENDERER.specifier, 'symbiote-node/xr');
@@ -617,6 +735,9 @@ describe('WebXR provider adapter', () => {
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-content-pointer-target'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-panel-gesture'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-layout-transaction'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-emulated-test-runtime'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('iwer-emulation-runtime'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-html-in-canvas-renderer'));
+    assert.equal(WEBXR_EMULATION_RUNTIME.status, 'optional-dev-runtime');
   });
 });

@@ -322,6 +322,7 @@ import {
   createXRSceneController,
   createXRSpatialScene,
   createXRThemeSnapshot,
+  createWebXREmulationAdapter,
   hitTestXRPanels,
   createXRPointerEvent,
 } from 'symbiote-node/xr';
@@ -359,6 +360,24 @@ host.dispatchPointerEvent(event);
 Host apps remain responsible for renderer choice. A Quest-style browser host can render projected live DOM panels as WebGL/WebGPU textures through the HTML-in-Canvas adapter, or fall back to DOM overlays while keeping the same layout, session lifecycle, theme snapshot, and pointer contracts. XR material aliases such as `--sn-xr-panel-bg` and `--sn-xr-pointer-color` derive from the default provider theme instead of defining a separate XR palette.
 
 XR panel size is derived from relative layout data before projection. `LayoutTree` split ratios and runtime UI `layout.weight` / `layout.rect` values normalize into panel `relativeRect` data, then into meter-based `size`. An explicit `xr.size` still wins when a host or agent needs a deliberate override. `createXRPanelContentViewport(panel, options)` keeps live DOM panels at usable internal pixel dimensions before texture or fallback scaling. `createXRPanelPointerTarget(hit, options)` maps normalized XR hits into content viewport pixel coordinates, and `XRPanelHost.dispatchPointerEvent(event)` relays those coordinates to the mounted live component. `createXRPanelGestureState()`, `updateXRPanelGesture()`, and `createXRLayoutTransactionFromGesture()` turn XR pointer gestures into `layout.updateNode` transactions for hosts that want editable spatial geometry without reimplementing provider math. `createXRPanelGeometrySummary(panel, preview)` returns data-only diagnostics for hosts that need to show the source size, normalized rectangle, meter size, preview pixels, content viewport, position, and rotation without reimplementing projection logic.
+
+Automated XR development can install an optional IWER-compatible runtime without making `iwer` a required dependency:
+
+```javascript
+import { XRDevice, metaQuest3 } from 'iwer';
+import { createWebXREmulationAdapter } from 'symbiote-node/xr';
+
+let emulation = createWebXREmulationAdapter({
+  module: { XRDevice, metaQuest3 },
+});
+let result = await emulation.install();
+
+if (result.installed) {
+  await controller.start('immersive-vr');
+}
+```
+
+The emulation adapter prefers native `navigator.xr` by default. Pass `preferNative: false` only in explicit test or development harnesses that need deterministic Quest-style WebXR emulation. Production hosts should keep native WebXR, HTML-in-Canvas, and DOM fallback capability checks separate.
 
 Open `demo/spatial-layout.html` to inspect the non-immersive fallback preview. It uses the same human-space scene and pointer hit-test contracts that a headset renderer would consume.
 

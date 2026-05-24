@@ -84,6 +84,10 @@ describe('package exports resolution', () => {
     assert.equal(typeof xr.createXRPanelGestureState, 'function');
     assert.equal(typeof xr.updateXRPanelGesture, 'function');
     assert.equal(typeof xr.createXRLayoutTransactionFromGesture, 'function');
+    assert.equal(typeof xr.WEBXR_EMULATION_RUNTIME, 'object');
+    assert.equal(typeof xr.createWebXREmulationAdapter, 'function');
+    assert.equal(typeof xr.getWebXREmulationSupport, 'function');
+    assert.equal(typeof xr.installWebXREmulationRuntime, 'function');
     assert.equal(typeof markdownFormatter.formatMarkdown, 'function');
     assert.equal(typeof markdownFormatter.escapeHtml, 'function');
   });

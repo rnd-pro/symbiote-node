@@ -40,6 +40,8 @@ export const WEBXR_RENDERER = Object.freeze({
     'xr-content-pointer-target',
     'xr-panel-gesture',
     'xr-layout-transaction',
+    'xr-emulated-test-runtime',
+    'iwer-emulation-runtime',
     'dom-overlay-optional',
     'webgl-layer',
     'feature-detected-fallback',

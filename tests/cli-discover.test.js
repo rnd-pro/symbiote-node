@@ -187,6 +187,8 @@ describe('discover command', () => {
       assert.ok(webxr.capabilities.includes('xr-layout-projection'));
       assert.ok(webxr.capabilities.includes('xr-spatial-scene'));
       assert.ok(webxr.capabilities.includes('xr-pointer-normalization'));
+      assert.ok(webxr.capabilities.includes('xr-scene-controller'));
+      assert.ok(webxr.capabilities.includes('xr-theme-bridge'));
     });
 
     it('exposes components', () => {

@@ -11,6 +11,9 @@ import {
   projectLayoutToXR,
   createXRSpatialPreview,
   createXRSpatialScene,
+  createXRSceneController,
+  createXRThemeSnapshot,
+  applyXRThemeToPanel,
   XR_SPATIAL_SCENE_VERSION,
   hitTestXRPanels,
   createXRPointerEvent,
@@ -223,6 +226,136 @@ describe('WebXR provider adapter', () => {
     assert.match(preview.transform, /rotateY\(-18deg\)/);
   });
 
+  it('builds XR theme snapshots from provider CSS custom properties', () => {
+    let previousGetComputedStyle = globalThis.getComputedStyle;
+    let root = { dataset: { themeScope: 'section.spatial' } };
+    globalThis.getComputedStyle = () => ({
+      getPropertyValue(name) {
+        let tokens = {
+          '--sn-xr-panel-bg': 'var(--sn-panel-bg)',
+          '--sn-xr-panel-border': 'var(--sn-node-border)',
+          '--sn-xr-panel-radius': 'var(--sn-node-radius)',
+          '--sn-xr-panel-shadow': 'var(--sn-node-shadow)',
+          '--sn-xr-pointer-color': 'var(--sn-node-selected)',
+          '--sn-text': 'hsl(0 0% 94%)',
+          '--sn-text-dim': 'hsl(0 0% 64%)',
+          '--sn-duration-fast': '120ms',
+          '--sn-ease-standard': 'ease',
+          '--sn-layout-resizer-size': '6px',
+        };
+        return tokens[name] || '';
+      },
+    });
+
+    try {
+      let snapshot = createXRThemeSnapshot(root);
+
+      assert.equal(snapshot.themeScope, 'section.spatial');
+      assert.equal(snapshot.material.background, 'var(--sn-panel-bg)');
+      assert.equal(snapshot.material.border, 'var(--sn-node-border)');
+      assert.equal(snapshot.material.radius, 'var(--sn-node-radius)');
+      assert.equal(snapshot.material.pointer, 'var(--sn-node-selected)');
+      assert.equal(snapshot.material.motion.duration, '120ms');
+    } finally {
+      if (previousGetComputedStyle) {
+        globalThis.getComputedStyle = previousGetComputedStyle;
+      } else {
+        delete globalThis.getComputedStyle;
+      }
+    }
+  });
+
+  it('applies provider material snapshots to XR panels without owning a separate XR theme', () => {
+    let themed = applyXRThemeToPanel(
+      { id: 'chat', material: { background: 'custom-bg' } },
+      {
+        themeScope: 'default-provider',
+        material: {
+          background: 'provider-bg',
+          border: 'provider-border',
+          radius: 'provider-radius',
+          shadow: 'provider-shadow',
+          pointer: 'provider-pointer',
+        },
+      },
+    );
+
+    assert.equal(themed.themeScope, 'default-provider');
+    assert.equal(themed.material.background, 'custom-bg');
+    assert.equal(themed.material.border, 'provider-border');
+  });
+
+  it('keeps the XR scene controller renderer-neutral and fallback-safe', async () => {
+    let controller = createXRSceneController({ globalThis: {} });
+    let sceneState = controller.setScene(createXRSpatialScene({
+      id: 'main',
+      type: 'panel',
+      panelType: 'graph',
+    }));
+
+    assert.equal(sceneState.scene.panels[0].material.background, 'var(--sn-panel-bg)');
+
+    let result = await controller.start('immersive-vr');
+
+    assert.equal(result.ok, false);
+    assert.equal(result.state.status, 'fallback');
+    assert.equal(result.state.renderMode, 'dom-fallback');
+  });
+
+  it('runs WebXR sessions through the scene controller lifecycle', async () => {
+    let callbacks = [];
+    let ended = false;
+    let session = {
+      inputSources: [{ handedness: 'right' }],
+      requestAnimationFrame(callback) {
+        callbacks.push(callback);
+        return callbacks.length;
+      },
+      cancelAnimationFrame() {},
+      async requestReferenceSpace(type) {
+        assert.equal(type, 'local-floor');
+        return { type };
+      },
+      async end() {
+        ended = true;
+      },
+    };
+    let target = {
+      navigator: {
+        xr: {
+          async isSessionSupported() {
+            return true;
+          },
+          async requestSession(mode) {
+            assert.equal(mode, 'immersive-vr');
+            return session;
+          },
+        },
+      },
+    };
+    let frames = 0;
+    let controller = createXRSceneController({
+      globalThis: target,
+      onFrame() {
+        frames++;
+      },
+    });
+
+    let start = await controller.start('immersive-vr');
+    assert.equal(start.ok, true);
+    assert.equal(start.state.status, 'running');
+    assert.equal(start.state.renderMode, 'webxr-session');
+
+    callbacks[0](42, {});
+    assert.equal(controller.getState().frameCount, 1);
+    assert.equal(frames, 1);
+
+    let stopped = await controller.stop();
+    assert.equal(stopped.ok, true);
+    assert.equal(stopped.state.status, 'stopped');
+    assert.equal(ended, true);
+  });
+
   it('normalizes XR ray hits into pointer-like panel events', () => {
     let panels = projectLayoutToXR({
       id: 'main',
@@ -249,5 +382,7 @@ describe('WebXR provider adapter', () => {
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-layout-projection'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-spatial-scene'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-pointer-normalization'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-scene-controller'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-theme-bridge'));
   });
 });

@@ -76,6 +76,11 @@ describe('theme token files', () => {
       getThemeTokens('default-dark').component.layoutPreviewJoinBackground.$value,
       'color-mix(in srgb, var(--sn-danger-color) 30%, transparent)'
     );
+    assert.equal(getThemeTokens('default-dark').component.xrPanelBackground.$value, 'var(--sn-panel-bg)');
+    assert.equal(getThemeTokens('default-dark').component.xrPanelBorder.$value, 'var(--sn-node-border)');
+    assert.equal(getThemeTokens('default-dark').component.xrPanelRadius.$value, 'var(--sn-node-radius)');
+    assert.equal(getThemeTokens('default-dark').component.xrPanelShadow.$value, 'var(--sn-node-shadow)');
+    assert.equal(getThemeTokens('default-dark').component.xrPointerColor.$value, 'var(--sn-node-selected)');
     assert.equal(getThemeTokens('default-dark').provider.rndPro.color.$value, 'var(--sn-cat-data)');
     assert.equal(getThemeTokens('default-dark').provider.official.color.$value, 'var(--sn-node-selected)');
     assert.equal(getThemeTokens('default-dark').control.hue.$value, '218');
@@ -178,7 +183,7 @@ describe('theme token files', () => {
 
     let groups = listThemeElementGroups();
     let groupNames = groups.map((group) => group.name);
-    for (let name of ['panel', 'control', 'row', 'input', 'code-surface', 'status', 'graph', 'layout-preview', 'tab']) {
+    for (let name of ['panel', 'control', 'row', 'input', 'code-surface', 'status', 'graph', 'layout-preview', 'xr', 'tab']) {
       assert.ok(groupNames.includes(name), `${name} group must be published`);
     }
 

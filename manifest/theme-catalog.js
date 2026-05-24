@@ -60,6 +60,7 @@ const CSS_TOKEN_CLASSIFIERS = [
   { kind: 'semantic-alias', group: 'status', pattern: /^--sn-(success|warning|danger|status|cat|subgraph|accent-warn|message-event)-/ },
   { kind: 'semantic-alias', group: 'provider-accent', pattern: /^--sn-provider-/ },
   { kind: 'component-alias', group: 'layout', pattern: /^--sn-layout-/ },
+  { kind: 'component-alias', group: 'xr', pattern: /^--sn-xr-/ },
   { kind: 'component-alias', group: 'surface', pattern: /^--sn-(card|dialog|output-preview)-/ },
   { kind: 'component-alias', group: 'data-table', pattern: /^--sn-data-table-/ },
   { kind: 'component-alias', group: 'control', pattern: /^--sn-(button|field)-/ },
@@ -169,6 +170,12 @@ export let THEME_ELEMENT_GROUPS = [
     name: 'layout-preview',
     description: 'Drag preview overlays and split indicators used by reusable layout composition.',
     tokens: ['--sn-layout-preview-join-bg', '--sn-layout-preview-join-border', '--sn-layout-preview-line', '--sn-layout-preview-line-shadow'],
+    usedBy: ['panel-layout'],
+  },
+  {
+    name: 'xr',
+    description: 'Spatial panel material aliases derived from the default provider theme.',
+    tokens: ['--sn-xr-panel-bg', '--sn-xr-panel-border', '--sn-xr-panel-radius', '--sn-xr-panel-shadow', '--sn-xr-pointer-color'],
     usedBy: ['panel-layout'],
   },
   {
@@ -449,6 +456,11 @@ export let THEME_RULE_BLOCKS = [
       '--sn-layout-preview-join-border',
       '--sn-layout-preview-line',
       '--sn-layout-preview-line-shadow',
+      '--sn-xr-panel-bg',
+      '--sn-xr-panel-border',
+      '--sn-xr-panel-radius',
+      '--sn-xr-panel-shadow',
+      '--sn-xr-pointer-color',
     ],
     appliesTo: ['panel-layout', 'sn-card', 'sn-button', 'sn-field', 'sn-badge', 'sn-metric', 'sn-data-table', 'sn-banner', 'sn-empty-state', 'sn-tree-view', 'sn-tree-panel', 'chat-composer', 'chat-transcript', 'project-tabs', 'source-viewer', 'source-editor', 'sn-list-item', 'sn-list-detail-shell', 'sn-loading-overlay'],
     formula: 'Component aliases bridge design tokens to component CSS without product-level style patches.',
@@ -491,6 +503,11 @@ export let THEME_RULE_BLOCKS = [
       { output: '--sn-subgraph-border-hover', inputs: ['component.subgraphBorderHover'], expression: 'color-mix(in srgb, var(--sn-subgraph-accent) 50%, transparent)', description: 'Subgraph action hover borders follow the data accent branch.' },
       { output: '--sn-layout-preview-join-bg', inputs: ['component.layoutPreviewJoinBackground'], expression: 'color-mix(in srgb, var(--sn-danger-color) 30%, transparent)', description: 'Layout join previews use a provider-owned danger overlay token.' },
       { output: '--sn-layout-preview-line', inputs: ['--sn-node-selected'], expression: 'var(--sn-node-selected)', description: 'Layout split preview lines follow the shared selected/accent color.' },
+      { output: '--sn-xr-panel-bg', inputs: ['--sn-panel-bg'], expression: 'var(--sn-panel-bg)', description: 'XR panel materials inherit provider panel surfaces.' },
+      { output: '--sn-xr-panel-border', inputs: ['--sn-node-border'], expression: 'var(--sn-node-border)', description: 'XR panel edges follow the shared provider border.' },
+      { output: '--sn-xr-panel-radius', inputs: ['--sn-node-radius'], expression: 'var(--sn-node-radius)', description: 'XR panel geometry follows the provider radius cascade.' },
+      { output: '--sn-xr-panel-shadow', inputs: ['--sn-node-shadow'], expression: 'var(--sn-node-shadow)', description: 'XR panel elevation follows the provider shadow cascade.' },
+      { output: '--sn-xr-pointer-color', inputs: ['--sn-node-selected'], expression: 'var(--sn-node-selected)', description: 'XR pointer feedback follows the shared selected/accent color.' },
       { output: '--sn-composer-bg', inputs: ['--sn-node-bg'], expression: 'var(--sn-node-bg)', description: 'Chat composer inherits the normal node surface.' },
       { output: '--sn-tabs-active-bg', inputs: ['--sn-node-bg'], expression: 'var(--sn-node-bg)', description: 'Active project tabs align with node surfaces.' },
       { output: '--sn-tabs-accent', inputs: ['--sn-node-selected'], expression: 'var(--sn-node-selected)', description: 'Project tab icons inherit the shared selected/accent color unless the host supplies a semantic tab accent.' },
@@ -671,6 +688,26 @@ export let THEME_TOKENS = {
       "layoutPreviewLineShadow": {
         "$type": "shadow",
         "$value": "0 0 8px var(--sn-layout-preview-line)"
+      },
+      "xrPanelBackground": {
+        "$type": "color",
+        "$value": "var(--sn-panel-bg)"
+      },
+      "xrPanelBorder": {
+        "$type": "color",
+        "$value": "var(--sn-node-border)"
+      },
+      "xrPanelRadius": {
+        "$type": "dimension",
+        "$value": "var(--sn-node-radius)"
+      },
+      "xrPanelShadow": {
+        "$type": "shadow",
+        "$value": "var(--sn-node-shadow)"
+      },
+      "xrPointerColor": {
+        "$type": "color",
+        "$value": "var(--sn-node-selected)"
       },
       "nodeHover": {
         "$type": "color",

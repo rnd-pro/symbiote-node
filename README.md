@@ -315,28 +315,30 @@ Hosts should keep this renderer behind capability checks. The default browser pa
 
 ```javascript
 import {
-  createWebXRAdapter,
+  createXRSceneController,
   createXRSpatialScene,
+  createXRThemeSnapshot,
   hitTestXRPanels,
   createXRPointerEvent,
 } from 'symbiote-node/xr';
 
-let xr = createWebXRAdapter();
-let supported = await xr.isSupported('immersive-vr');
 let scene = createXRSpatialScene(layoutTree, {
   themeScope: 'section.graph',
   userSpace: { eyeHeight: 1.62, comfortRadius: 2 },
 });
+let themeSnapshot = createXRThemeSnapshot(document.documentElement, {
+  themeScope: scene.themeScope,
+});
+let controller = createXRSceneController();
 
-if (supported) {
-  await xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'hand-tracking'] });
-}
+controller.setScene(scene, { themeSnapshot });
+await controller.start('immersive-vr', { optionalFeatures: ['local-floor', 'hand-tracking'] });
 
 let hit = hitTestXRPanels(controllerRay, scene.panels);
 let event = createXRPointerEvent(hit, { source: 'xr-controller', primary: true }, 'click');
 ```
 
-Host apps remain responsible for renderer choice. A Quest-style browser host can render projected panels as WebGL planes, DOM overlays, or future HTML-in-Canvas textures while keeping the same layout and pointer contracts.
+Host apps remain responsible for renderer choice. A Quest-style browser host can render projected panels as WebGL planes, DOM overlays, or future HTML-in-Canvas textures while keeping the same layout, session lifecycle, theme snapshot, and pointer contracts. XR material aliases such as `--sn-xr-panel-bg` and `--sn-xr-pointer-color` derive from the default provider theme instead of defining a separate XR palette.
 
 Open `demo/spatial-layout.html` to inspect the non-immersive fallback preview. It uses the same human-space scene and pointer hit-test contracts that a headset renderer would consume.
 

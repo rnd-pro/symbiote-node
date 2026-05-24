@@ -31,6 +31,8 @@ export const WEBXR_RENDERER = Object.freeze({
     'inline-xr',
     'xr-layout-projection',
     'xr-spatial-scene',
+    'xr-scene-controller',
+    'xr-theme-bridge',
     'xr-pointer-normalization',
     'dom-overlay-optional',
     'webgl-layer',

@@ -165,6 +165,26 @@
       "$type": "shadow",
       "$value": "0 0 8px var(--sn-layout-preview-line)"
     },
+    "xrPanelBackground": {
+      "$type": "color",
+      "$value": "var(--sn-panel-bg)"
+    },
+    "xrPanelBorder": {
+      "$type": "color",
+      "$value": "var(--sn-node-border)"
+    },
+    "xrPanelRadius": {
+      "$type": "dimension",
+      "$value": "var(--sn-node-radius)"
+    },
+    "xrPanelShadow": {
+      "$type": "shadow",
+      "$value": "var(--sn-node-shadow)"
+    },
+    "xrPointerColor": {
+      "$type": "color",
+      "$value": "var(--sn-node-selected)"
+    },
     "nodeHover": {
       "$type": "color",
       "$value": "hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-hover))"

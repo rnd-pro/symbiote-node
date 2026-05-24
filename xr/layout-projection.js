@@ -46,6 +46,31 @@ function inferPreset(panel, index, total) {
   return 'upperRight';
 }
 
+function isRuntimeUiNode(node) {
+  return !!node && typeof node === 'object' && typeof node.component === 'string';
+}
+
+function collectRuntimePanels(root) {
+  let panels = [];
+
+  function walk(node) {
+    if (!node) return;
+    if (Array.isArray(node)) {
+      node.forEach(walk);
+      return;
+    }
+    if (!isRuntimeUiNode(node)) return;
+    if (node.component === 'panel-layout' && Array.isArray(node.children) && node.children.length) {
+      node.children.forEach(walk);
+      return;
+    }
+    panels.push(node);
+  }
+
+  walk(root);
+  return panels;
+}
+
 export function normalizeXRPanel(panel = {}, options = {}) {
   let presetName = panel.xr?.preset ||
     (XR_LAYOUT_PRESETS[panel.xr?.anchor] ? panel.xr.anchor : inferPreset(panel, options.index || 0, options.total || 1));
@@ -56,6 +81,7 @@ export function normalizeXRPanel(panel = {}, options = {}) {
     id: String(panel.id || `xr-panel-${options.index || 0}`),
     panelType: panel.panelType || panel.component || 'panel',
     component: panel.component || panel.panelState?.component || panel.panelType || 'panel',
+    layoutNode: panel,
     anchor: xr.anchor || presetName,
     position: asVector(xr.position, preset.position),
     rotation: asVector(xr.rotation, preset.rotation),
@@ -71,6 +97,9 @@ export function projectLayoutToXR(root, options = {}) {
   let panels = Array.isArray(root?.panels)
     ? root.panels
     : collectPanels(root, { includeGlobal: options.includeGlobal !== false });
+  if (!panels.length && isRuntimeUiNode(root)) {
+    panels = collectRuntimePanels(root);
+  }
   let projectedPanels = panels
     .map((panel, index) => normalizeXRPanel(panel, { ...options, index, total: panels.length }))
     .sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id));

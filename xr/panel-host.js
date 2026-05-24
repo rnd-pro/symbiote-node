@@ -1,0 +1,166 @@
+function defaultComponentResolver(name) {
+  return name;
+}
+
+function defaultPropsResolver(node = {}, panel = {}) {
+  return {
+    ...(panel.state || {}),
+    ...(node.props || {}),
+  };
+}
+
+function toKebabName(value) {
+  return String(value || '').trim();
+}
+
+function applyAttributes(element, attrs = {}) {
+  for (let [name, value] of Object.entries(attrs || {})) {
+    if (value === false || value == null) continue;
+    if (value === true) {
+      element.setAttribute(name, '');
+    } else {
+      element.setAttribute(name, String(value));
+    }
+  }
+}
+
+function applyProps(element, props = {}) {
+  for (let [name, value] of Object.entries(props || {})) {
+    element[name] = value;
+  }
+}
+
+function applyThemeScope(element, node = {}, panel = {}) {
+  let scope = node.theme?.name || node.themeScope || panel.themeScope;
+  if (scope) {
+    element.dataset.themeScope = scope;
+    element.setAttribute('data-theme-scope', scope);
+  }
+}
+
+function appendChildren(host, node, context) {
+  for (let child of node.children || []) {
+    host.append(createComponentElement(child, context));
+  }
+}
+
+function fallbackElement(documentRef, panel, reason) {
+  let element = documentRef.createElement('section');
+  element.className = 'sn-xr-panel-fallback';
+  element.dataset.reason = reason;
+  element.textContent = `XR panel fallback: ${reason}`;
+  element.setAttribute('role', 'note');
+  return element;
+}
+
+function resolveComponentTarget(node, panel, context) {
+  let requested = node.component || panel.component || panel.panelType;
+  let resolved = context.componentResolver(requested, node, panel);
+  if (typeof resolved === 'string') {
+    return { tagName: toKebabName(resolved), ComponentClass: null };
+  }
+  if (typeof resolved === 'function') {
+    return { tagName: toKebabName(resolved.tagName || node.component || panel.component), ComponentClass: resolved };
+  }
+  if (resolved && typeof resolved === 'object') {
+    return {
+      tagName: toKebabName(resolved.tagName || resolved.name || node.component || panel.component),
+      ComponentClass: typeof resolved.ComponentClass === 'function' ? resolved.ComponentClass : null,
+    };
+  }
+  return { tagName: '', ComponentClass: null };
+}
+
+function createComponentElement(node, context, panel = node) {
+  let documentRef = context.document;
+  let target = resolveComponentTarget(node, panel, context);
+  if (!target.tagName) {
+    return fallbackElement(documentRef, panel, 'component-unresolved');
+  }
+  if (
+    target.ComponentClass &&
+    typeof context.customElements?.define === 'function' &&
+    !context.customElements.get(target.tagName)
+  ) {
+    context.customElements.define(target.tagName, target.ComponentClass);
+  }
+
+  let element = documentRef.createElement(target.tagName);
+  applyProps(element, context.propsResolver(node, panel));
+  applyAttributes(element, node.attrs);
+  applyThemeScope(element, node, panel);
+  if (Array.isArray(node.children) && node.children.length) {
+    appendChildren(element, node, context);
+  }
+  return element;
+}
+
+function createContext(options = {}) {
+  let documentRef = options.document || globalThis.document;
+  if (!documentRef?.createElement) {
+    throw new Error('createXRPanelHost requires a document with createElement().');
+  }
+  return {
+    document: documentRef,
+    customElements: options.customElements || documentRef.defaultView?.customElements || globalThis.customElements,
+    componentResolver: options.componentResolver || defaultComponentResolver,
+    propsResolver: options.propsResolver || defaultPropsResolver,
+  };
+}
+
+export function createXRPanelHost(options = {}) {
+  let context = createContext(options);
+  let panels = new Map();
+  let scene = null;
+  let themeSnapshot = options.themeSnapshot || null;
+
+  function getState() {
+    return {
+      scene,
+      themeSnapshot,
+      mounted: panels.size,
+      panelIds: [...panels.keys()],
+    };
+  }
+
+  function setScene(nextScene, sceneOptions = {}) {
+    scene = nextScene || null;
+    themeSnapshot = sceneOptions.themeSnapshot || themeSnapshot || null;
+    panels.clear();
+    return getState();
+  }
+
+  function mountPanel(panel, container) {
+    if (!panel || !container?.replaceChildren) {
+      throw new Error('mountPanel(panel, container) requires a panel and a DOM container.');
+    }
+
+    let node = panel.layoutNode || panel;
+    let element = createComponentElement(node, context, panel);
+    element.dataset.xrPanelId = panel.id;
+    element.classList.add('sn-xr-panel-live-root');
+    container.replaceChildren(element);
+    panels.set(panel.id, { panel, container, element });
+    return element;
+  }
+
+  function unmountPanel(panelId) {
+    let record = panels.get(panelId);
+    if (!record) return false;
+    record.container.replaceChildren();
+    panels.delete(panelId);
+    return true;
+  }
+
+  function getPanelElement(panelId) {
+    return panels.get(panelId)?.element || null;
+  }
+
+  return {
+    setScene,
+    mountPanel,
+    unmountPanel,
+    getPanelElement,
+    getState,
+  };
+}

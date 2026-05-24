@@ -384,5 +384,7 @@ describe('WebXR provider adapter', () => {
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-pointer-normalization'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-scene-controller'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-theme-bridge'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-panel-host'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-html-in-canvas-renderer'));
   });
 });

@@ -72,6 +72,8 @@ describe('package exports resolution', () => {
     assert.equal(typeof xr.projectLayoutToXR, 'function');
     assert.equal(typeof xr.createXRSpatialScene, 'function');
     assert.equal(typeof xr.createXRSceneController, 'function');
+    assert.equal(typeof xr.createXRPanelHost, 'function');
+    assert.equal(typeof xr.createXRHtmlCanvasRenderer, 'function');
     assert.equal(typeof xr.createXRThemeSnapshot, 'function');
     assert.equal(typeof xr.hitTestXRPanels, 'function');
     assert.equal(typeof markdownFormatter.formatMarkdown, 'function');

@@ -189,6 +189,8 @@ describe('discover command', () => {
       assert.ok(webxr.capabilities.includes('xr-pointer-normalization'));
       assert.ok(webxr.capabilities.includes('xr-scene-controller'));
       assert.ok(webxr.capabilities.includes('xr-theme-bridge'));
+      assert.ok(webxr.capabilities.includes('xr-panel-host'));
+      assert.ok(webxr.capabilities.includes('xr-html-in-canvas-renderer'));
     });
 
     it('exposes components', () => {

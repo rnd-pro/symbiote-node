@@ -315,6 +315,8 @@ Hosts should keep this renderer behind capability checks. The default browser pa
 
 ```javascript
 import {
+  createXRHtmlCanvasRenderer,
+  createXRPanelHost,
   createXRSceneController,
   createXRSpatialScene,
   createXRThemeSnapshot,
@@ -330,15 +332,25 @@ let themeSnapshot = createXRThemeSnapshot(document.documentElement, {
   themeScope: scene.themeScope,
 });
 let controller = createXRSceneController();
+let host = createXRPanelHost({
+  componentResolver: (name) => name,
+});
+let renderer = createXRHtmlCanvasRenderer();
 
 controller.setScene(scene, { themeSnapshot });
+host.setScene(scene, { themeSnapshot });
 await controller.start('immersive-vr', { optionalFeatures: ['local-floor', 'hand-tracking'] });
+
+for (let panel of scene.panels) {
+  let element = host.mountPanel(panel, document.createElement('div'));
+  renderer.preparePanel(element, panel);
+}
 
 let hit = hitTestXRPanels(controllerRay, scene.panels);
 let event = createXRPointerEvent(hit, { source: 'xr-controller', primary: true }, 'click');
 ```
 
-Host apps remain responsible for renderer choice. A Quest-style browser host can render projected panels as WebGL planes, DOM overlays, or future HTML-in-Canvas textures while keeping the same layout, session lifecycle, theme snapshot, and pointer contracts. XR material aliases such as `--sn-xr-panel-bg` and `--sn-xr-pointer-color` derive from the default provider theme instead of defining a separate XR palette.
+Host apps remain responsible for renderer choice. A Quest-style browser host can render projected live DOM panels as WebGL/WebGPU textures through the HTML-in-Canvas adapter, or fall back to DOM overlays while keeping the same layout, session lifecycle, theme snapshot, and pointer contracts. XR material aliases such as `--sn-xr-panel-bg` and `--sn-xr-pointer-color` derive from the default provider theme instead of defining a separate XR palette.
 
 Open `demo/spatial-layout.html` to inspect the non-immersive fallback preview. It uses the same human-space scene and pointer hit-test contracts that a headset renderer would consume.
 

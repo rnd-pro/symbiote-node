@@ -11,7 +11,7 @@ export let sidebarStyles = css`
     width: var(--sn-sidebar-width);
     min-width: var(--sn-sidebar-width);
     background: var(--sn-bg);
-    border-right: 1px solid var(--sn-node-border);
+    border-right: 1px solid var(--sn-layout-border);
     overflow: hidden;
     transition:
       width 0.2s ease,
@@ -38,8 +38,7 @@ export let sidebarStyles = css`
 
     &:hover,
     &.dragging {
-      background: var(--sn-node-selected);
-      opacity: 0.5;
+      background: var(--sn-layout-resizer-hover-bg);
     }
 
     layout-sidebar[collapsed] & {

@@ -38,4 +38,46 @@ describe('chat list components', () => {
     assert.equal(js.includes("toggleAttribute('active'"), true, 'ChatListItem must reflect active state to the host');
     assert.equal(js.includes("toggleAttribute('nested'"), true, 'ChatListItem must reflect nesting state to the host');
   });
+
+  it('keeps portal chat composition styled for Light DOM hosts', () => {
+    let composerCss = read('chat/ChatComposer/ChatComposer.css.js');
+    let sidebarCss = read('chat/ChatSidebarItem/ChatSidebarItem.css.js');
+
+    assert.ok(
+      composerCss.includes('chat-composer {'),
+      'ChatComposer must publish a Light DOM host selector for its main input block'
+    );
+    assert.ok(
+      composerCss.includes('chat-composer.drag-over .composer-body'),
+      'ChatComposer drag-over styling must work without Shadow DOM :host'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item-delete'),
+      'ChatSidebarItem compact delete affordance must work in Light DOM collapsed nav'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-delete'),
+      'ChatSidebarSubItem compact delete affordance must use the same full flyout hit area'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item::after'),
+      'ChatSidebarItem compact delete hover bridge must extend into the chat area'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child::after'),
+      'ChatSidebarSubItem compact delete hover bridge must extend into the chat area'
+    );
+    assert.ok(
+      sidebarCss.includes('pointer-events: auto;'),
+      'ChatSidebarItem compact delete hover bridge must participate in pointer hit-testing'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-item:has(.chat-item-delete:hover) .chat-item-delete'),
+      'ChatSidebarItem delete affordance must stay visible while the delete button is hovered'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item:has(.chat-item-delete:hover) .chat-item-delete'),
+      'ChatSidebarItem compact delete affordance must not disappear when pointer moves onto the flyout button'
+    );
+  });
 });

@@ -1,5 +1,6 @@
 export default `
-:host {
+:host,
+chat-composer {
   --chat-composer-bg: var(--sn-composer-bg);
   --chat-composer-action-bg: var(--sn-composer-action-bg);
   display: block;
@@ -280,7 +281,8 @@ export default `
   color: var(--sn-danger-color);
 }
 
-:host(.drag-over) .composer-body {
+:host(.drag-over) .composer-body,
+chat-composer.drag-over .composer-body {
   background: var(--chat-composer-action-bg);
   outline: 1px dashed var(--sn-node-border);
   outline-offset: -1px;

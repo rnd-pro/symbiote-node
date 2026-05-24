@@ -1,6 +1,6 @@
 {
   "name": "symbiote-node",
-  "version": "0.3.0-alpha.2",
+  "version": "0.3.0-alpha.3",
   "type": "module",
   "description": "Visual Node Graph Editor + Execution Engine — extensible, themeable graph editor and runtime built on Symbiote.js",
   "main": "index.js",
@@ -87,11 +87,11 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
-	  "sideEffects": [
-	    "**/*.css.js",
-	    "**/*.tpl.js",
-	    "core/base-path.js",
-	    "ui/index.js",
+  "sideEffects": [
+    "**/*.css.js",
+    "**/*.tpl.js",
+    "core/base-path.js",
+    "ui/index.js",
     "canvas/**/*.js",
     "node/**/*.js",
     "layout/**/*.js",
@@ -109,7 +109,7 @@
     "menu/**/*.js"
   ],
   "bin": {
-    "symbiote-node": "./engine/cli.js"
+    "symbiote-node": "engine/cli.js"
   },
   "publishConfig": {
     "access": "public"

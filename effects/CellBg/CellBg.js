@@ -30,17 +30,40 @@ const requestFrame = (callback) => {
   return setTimeout(() => callback(now()), 16);
 };
 
-function parseCssRgb(source, value) {
+function normalizeCssColor(source, value) {
   let doc = source?.ownerDocument || globalThis.document;
   if (!doc || !value) return null;
   let probe = doc.createElement('span');
   probe.style.color = value;
-  doc.documentElement.append(probe);
-  let normalized = globalThis.getComputedStyle(probe).color;
+  let target = typeof source?.append === 'function' ? source : doc.documentElement;
+  target.append(probe);
+  let normalized = globalThis.getComputedStyle(probe).color.trim();
   probe.remove();
-  let match = normalized.match(/rgba?\(([^)]+)\)/);
-  if (!match) return null;
-  let channels = match[1].split(',').slice(0, 3).map((part) => Number.parseFloat(part));
+  return normalized || null;
+}
+
+function parseCssRgb(source, value) {
+  let normalized = normalizeCssColor(source, value);
+  if (!normalized) return null;
+
+  let rgbMatch = normalized.match(/rgba?\(([^)]+)\)/);
+  if (rgbMatch) {
+    let channels = rgbMatch[1]
+      .replaceAll(',', ' ')
+      .split(/[ /\t]+/)
+      .filter(Boolean)
+      .slice(0, 3)
+      .map((part) => (part.endsWith('%') ? Number.parseFloat(part) * 2.55 : Number.parseFloat(part)));
+    return channels.every(Number.isFinite) ? channels : null;
+  }
+
+  let srgbMatch = normalized.match(/color\(\s*srgb\s+([^)]+)\)/);
+  if (!srgbMatch) return null;
+  let channels = srgbMatch[1]
+    .split(/[ /\t]+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((part) => (part.endsWith('%') ? Number.parseFloat(part) * 2.55 : Number.parseFloat(part) * 255));
   return channels.every(Number.isFinite) ? channels : null;
 }
 
@@ -99,6 +122,7 @@ export class CellBg extends Symbiote {
       this.ro?.observe(this);
       this.resize();
       this._seedRandom();
+      this.pulse(10000);
     }, 0);
 
     this.sub('active', (val) => {
@@ -152,7 +176,7 @@ export class CellBg extends Symbiote {
     let baseAlpha = Number.parseFloat(readCssToken(this, '--sn-cell-base-alpha')) || 0;
     let alphaSpan = Number.parseFloat(readCssToken(this, '--sn-cell-alpha-span')) || 0;
 
-    this._bgFill = bg || 'transparent';
+    this._bgFill = normalizeCssColor(this, bg) || 'transparent';
 
     this.palette = [];
     for (let i = 0; i < PALETTE_SIZE; i++) {

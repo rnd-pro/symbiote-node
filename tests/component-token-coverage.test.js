@@ -220,6 +220,29 @@ describe('component token coverage', () => {
     assert.equal(component.includes('DOT_COLOR'), false, 'CellBg must not keep a local dot color constant.');
     assert.equal(styles.includes('#1a1a1a'), false, 'CellBg CSS must not hardcode the Agent Portal background.');
     assert.equal(styles.includes('rgba('), false, 'CellBg CSS must not hardcode overlay colors.');
+    assert.ok(component.includes('color\\(\\s*srgb'), 'CellBg must parse modern computed color(srgb ...) values.');
+    assert.ok(component.includes('normalizeCssColor(this, bg)'), 'CellBg canvas fill must use resolved CSS color tokens.');
+    assert.ok(component.includes('this.pulse(10000)'), 'CellBg must start with a timed visual pulse after mount.');
+    assert.equal(component.includes('autoplay'), false, 'CellBg must not use permanent autoplay for the chat background.');
+  });
+
+  it('keeps layout structural gaps and panel borders on transparent layout tokens', () => {
+    let layout = fs.readFileSync(path.join(PKG_ROOT, 'layout/Layout/Layout.css.js'), 'utf-8');
+    let layoutNode = fs.readFileSync(path.join(PKG_ROOT, 'layout/LayoutNode/LayoutNode.css.js'), 'utf-8');
+    let layoutSidebar = fs.readFileSync(path.join(PKG_ROOT, 'layout/LayoutSidebar/LayoutSidebar.css.js'), 'utf-8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf-8');
+
+    assert.ok(layout.includes('background: var(--sn-layout-gap-bg)'), 'Layout root must expose transparent gap background.');
+    assert.ok(layoutNode.includes('background: var(--sn-layout-gap-bg)'), 'Split resizer must inherit transparent gap background.');
+    assert.ok(layoutNode.includes('background: var(--sn-layout-resizer-hover-bg)'), 'Split resizer hover must use the shared layout highlight token.');
+    assert.ok(layoutNode.includes('border: 1px solid var(--sn-layout-border)'), 'Panel layout borders must use layout border tokens.');
+    assert.ok(layoutNode.includes('border-bottom: 1px solid var(--sn-layout-border)'), 'Panel header separators must use layout border tokens.');
+    assert.ok(layoutSidebar.includes('border-right: 1px solid var(--sn-layout-border)'), 'Sidebar-to-layout separator must use layout border tokens.');
+    assert.ok(layoutSidebar.includes('background: var(--sn-layout-resizer-hover-bg)'), 'Sidebar resize highlight must match split resizer highlight.');
+    assert.equal(layoutNode.includes('background: var(--sn-node-selected)'), false, 'Layout split resizers must not use accent blue for structural highlights.');
+    assert.equal(layoutSidebar.includes('background: var(--sn-node-selected)'), false, 'Sidebar resize handle must not use accent blue for structural highlights.');
+    assert.ok(theme.includes("'--sn-layout-gap-bg': 'transparent'"), 'Default provider theme must keep layout gaps transparent.');
+    assert.ok(theme.includes("'--sn-layout-border': 'transparent'"), 'Default provider theme must keep layout borders transparent.');
   });
 
   it('keeps dialog helper visuals in public theme tokens', () => {

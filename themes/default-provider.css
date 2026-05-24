@@ -49,7 +49,7 @@
   --sn-grid-dot: hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.06);
   --sn-grid-size: 20px;
   --sn-cell-bg: var(--sn-bg);
-  --sn-cell-dot: color-mix(in srgb, var(--sn-text-dim) 55%, var(--sn-bg));
+  --sn-cell-dot: hsl(var(--sn-hue-base) var(--sn-sat-muted) 31%);
   --sn-cell-base-alpha: 0.06;
   --sn-cell-alpha-span: 0.18;
   --sn-cell-glare: hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.02);

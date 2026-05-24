@@ -13,7 +13,7 @@ export let styles = css`
     &[node-type='panel'] {
       flex-direction: column;
       background: var(--sn-node-bg);
-      border: 1px solid var(--sn-node-border);
+      border: 1px solid var(--sn-layout-border);
     }
 
     .panel-view {
@@ -30,7 +30,7 @@ export let styles = css`
       gap: 2px;
       padding: 2px 4px;
       background: var(--sn-node-header-bg);
-      border-bottom: 1px solid var(--sn-node-border);
+      border-bottom: 1px solid var(--sn-layout-border);
       flex-shrink: 0;
       min-height: 28px;
     }
@@ -275,11 +275,11 @@ export let styles = css`
     }
 
     .split-resizer:hover {
-      background: var(--sn-node-selected);
+      background: var(--sn-layout-resizer-hover-bg);
     }
 
     &[resizing] .split-resizer {
-      background: var(--sn-node-selected);
+      background: var(--sn-layout-resizer-hover-bg);
     }
 
     &[resizing] {

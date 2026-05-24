@@ -1,8 +1,9 @@
 import {
+  createXRSpatialPreview,
+  createXRSpatialScene,
   createXRPointerEvent,
   getWebXRSupport,
   hitTestXRPanels,
-  projectLayoutToXR,
 } from '../xr/index.js';
 
 const layoutTree = {
@@ -60,35 +61,37 @@ const hue = document.getElementById('hue');
 const scale = document.getElementById('scale');
 const depth = document.getElementById('depth');
 
-let spatialLayout = projectLayoutToXR(layoutTree, { themeScope: 'default-provider' });
+let spatialScene = createXRSpatialScene(layoutTree, {
+  themeScope: 'default-provider',
+  userSpace: { eyeHeight: 1.62, comfortRadius: 2 },
+  preview: { pixelsPerMeter: Number(scale.value) },
+});
 let activeHit = null;
 let support = await getWebXRSupport(globalThis);
 
-function metersToPixels(value) {
-  return value * Number(scale.value);
+function updateScene() {
+  spatialScene = createXRSpatialScene(layoutTree, {
+    themeScope: 'default-provider',
+    userSpace: { eyeHeight: 1.62, comfortRadius: 2 },
+    preview: { pixelsPerMeter: Number(scale.value) },
+  });
 }
 
 function positionPanel(element, panel) {
-  let x = metersToPixels(panel.position[0]);
-  let y = metersToPixels(1.32 - panel.position[1]);
-  let z = metersToPixels(panel.position[2]) * Number(depth.value) / 120;
-  let width = metersToPixels(panel.size[0]);
-  let height = metersToPixels(panel.size[1]);
+  let preview = createXRSpatialPreview(panel, spatialScene, {
+    pixelsPerMeter: Number(scale.value),
+    depthScale: Number(depth.value) / 120,
+  });
 
-  element.style.width = `${width}px`;
-  element.style.height = `${height}px`;
-  element.style.opacity = String(panel.opacity);
-  element.style.transform = [
-    `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px)`,
-    `rotateX(${panel.rotation[0]}deg)`,
-    `rotateY(${panel.rotation[1]}deg)`,
-    `rotateZ(${panel.rotation[2]}deg)`,
-  ].join(' ');
+  element.style.width = `${preview.width}px`;
+  element.style.height = `${preview.height}px`;
+  element.style.opacity = String(preview.opacity);
+  element.style.transform = preview.transform;
 }
 
 function renderPanels() {
   space.replaceChildren();
-  for (let panel of spatialLayout.panels) {
+  for (let panel of spatialScene.panels) {
     let node = document.createElement('article');
     node.className = 'panel';
     node.dataset.panelId = panel.id;
@@ -118,8 +121,9 @@ function renderStatus() {
     : 'none';
   status.innerHTML = `
     <div>XR capability: ${xrMode}</div>
-    <div>Panels: ${spatialLayout.panels.length}</div>
-    <div>Theme scope: ${spatialLayout.themeScope}</div>
+    <div>Panels: ${spatialScene.panels.length}</div>
+    <div>Space: ${spatialScene.coordinateSystem}</div>
+    <div>Theme scope: ${spatialScene.themeScope}</div>
     <div>Pointer hit: ${pointer}</div>
   `;
 }
@@ -140,7 +144,7 @@ function rayFromPointer(event) {
 
 function updatePointer(event) {
   let ray = rayFromPointer(event);
-  activeHit = hitTestXRPanels(ray, spatialLayout.panels);
+  activeHit = hitTestXRPanels(ray, spatialScene.panels);
   createXRPointerEvent(activeHit, { source: 'mouse-fallback', primary: event.buttons === 1, ray }, 'pointermove');
   renderPanels();
 }
@@ -148,6 +152,7 @@ function updatePointer(event) {
 for (let input of [hue, scale, depth]) {
   input.addEventListener('input', () => {
     updateTheme();
+    updateScene();
     renderPanels();
   });
 }

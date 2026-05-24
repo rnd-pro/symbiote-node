@@ -30,6 +30,7 @@ export const WEBXR_RENDERER = Object.freeze({
     'immersive-ar',
     'inline-xr',
     'xr-layout-projection',
+    'xr-spatial-scene',
     'xr-pointer-normalization',
     'dom-overlay-optional',
     'webgl-layer',

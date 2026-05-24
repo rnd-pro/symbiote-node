@@ -316,26 +316,29 @@ Hosts should keep this renderer behind capability checks. The default browser pa
 ```javascript
 import {
   createWebXRAdapter,
-  projectLayoutToXR,
+  createXRSpatialScene,
   hitTestXRPanels,
   createXRPointerEvent,
 } from 'symbiote-node/xr';
 
 let xr = createWebXRAdapter();
 let supported = await xr.isSupported('immersive-vr');
-let spatialLayout = projectLayoutToXR(layoutTree);
+let scene = createXRSpatialScene(layoutTree, {
+  themeScope: 'section.graph',
+  userSpace: { eyeHeight: 1.62, comfortRadius: 2 },
+});
 
 if (supported) {
   await xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'hand-tracking'] });
 }
 
-let hit = hitTestXRPanels(controllerRay, spatialLayout.panels);
+let hit = hitTestXRPanels(controllerRay, scene.panels);
 let event = createXRPointerEvent(hit, { source: 'xr-controller', primary: true }, 'click');
 ```
 
 Host apps remain responsible for renderer choice. A Quest-style browser host can render projected panels as WebGL planes, DOM overlays, or future HTML-in-Canvas textures while keeping the same layout and pointer contracts.
 
-Open `demo/spatial-layout.html` to inspect the non-immersive fallback preview. It uses the same `projectLayoutToXR()` and pointer hit-test contracts that a headset renderer would consume.
+Open `demo/spatial-layout.html` to inspect the non-immersive fallback preview. It uses the same human-space scene and pointer hit-test contracts that a headset renderer would consume.
 
 ### Shared UI Styles
 

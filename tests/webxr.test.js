@@ -9,6 +9,9 @@ import {
   getWebXRSupport,
   normalizeWebXRSessionOptions,
   projectLayoutToXR,
+  createXRSpatialPreview,
+  createXRSpatialScene,
+  XR_SPATIAL_SCENE_VERSION,
   hitTestXRPanels,
   createXRPointerEvent,
   syncWebXRCanvas,
@@ -177,6 +180,49 @@ describe('WebXR provider adapter', () => {
     assert.equal(projected.panels[2].anchor, 'upperRight');
   });
 
+  it('builds a human-space scene from layout data', () => {
+    let scene = createXRSpatialScene({
+      id: 'main',
+      type: 'panel',
+      panelType: 'graph',
+      xr: { position: [0, 1.35, -1.8], size: [0.9, 0.62] },
+    }, {
+      themeScope: 'section.graph',
+      userSpace: { eyeHeight: 1.62, comfortRadius: 2 },
+      preview: { pixelsPerMeter: 120 },
+    });
+
+    assert.equal(scene.version, XR_SPATIAL_SCENE_VERSION);
+    assert.equal(scene.unit, 'meter');
+    assert.equal(scene.coordinateSystem, 'webxr-local-floor');
+    assert.equal(scene.themeScope, 'section.graph');
+    assert.equal(scene.userSpace.eyeHeight, 1.62);
+    assert.equal(scene.preview.pixelsPerMeter, 120);
+    assert.equal(scene.panels[0].spatialRole, 'primary-surface');
+    assert.equal(scene.interaction.pointerModel, 'ray-to-panel-normalized');
+  });
+
+  it('creates deterministic DOM preview transforms for spatial panels', () => {
+    let scene = createXRSpatialScene({
+      id: 'main',
+      type: 'panel',
+      panelType: 'graph',
+      xr: { position: [0.5, 1.25, -1.8], rotation: [0, -18, 0], size: [1, 0.5] },
+    }, {
+      userSpace: { eyeHeight: 1.6 },
+      preview: { pixelsPerMeter: 100 },
+    });
+    let preview = createXRSpatialPreview(scene.panels[0], scene);
+
+    assert.equal(preview.panelId, 'main');
+    assert.equal(preview.left, 50);
+    assert.ok(Math.abs(preview.top - 35) < 0.000001);
+    assert.equal(preview.depth, -180);
+    assert.equal(preview.width, 100);
+    assert.equal(preview.height, 50);
+    assert.match(preview.transform, /rotateY\(-18deg\)/);
+  });
+
   it('normalizes XR ray hits into pointer-like panel events', () => {
     let panels = projectLayoutToXR({
       id: 'main',
@@ -201,6 +247,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(WEBXR_RENDERER.specifier, 'symbiote-node/xr');
     assert.ok(WEBXR_RENDERER.modes.includes('immersive-vr'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-layout-projection'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-spatial-scene'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-pointer-normalization'));
   });
 });

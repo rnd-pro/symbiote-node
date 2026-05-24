@@ -185,6 +185,7 @@ describe('discover command', () => {
       assert.ok(webxr.modes.includes('immersive-vr'));
       assert.ok(webxr.modes.includes('immersive-ar'));
       assert.ok(webxr.capabilities.includes('xr-layout-projection'));
+      assert.ok(webxr.capabilities.includes('xr-spatial-scene'));
       assert.ok(webxr.capabilities.includes('xr-pointer-normalization'));
     });
 

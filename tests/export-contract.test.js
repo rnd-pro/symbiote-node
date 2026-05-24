@@ -114,6 +114,7 @@ const UI_EXPORTS = [
   ['GraphExplorerShell', 'function'],
   ['GraphNode', 'function'],
   ['NodeSocket', 'function'],
+  ['FocusController', 'function'],
   ['Drag', 'function'],
   ['Zoom', 'function'],
   ['Selector', 'function'],

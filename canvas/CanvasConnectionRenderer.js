@@ -194,11 +194,6 @@ export class CanvasConnectionRenderer {
     }
   }
 
-  setPathStyle(style) {
-    this.#pathStyle = style;
-    this.redraw();
-  }
-
   highlightDotsForNodes(_compatibleNodeIds) {}
   clearDotHighlights() {}
   renderFreeDots(_nodeId) {}

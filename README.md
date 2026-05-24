@@ -367,6 +367,12 @@ applyTheme(appShellElement, DEFAULT_PROVIDER_THEME); // Full provider theme
 applyPalette(canvasElement, SYNTHWAVE_PALETTE); // Colors only
 ```
 
+For first paint before JavaScript applies a runtime theme, host shells can load the static provider defaults:
+
+```html
+<link rel="stylesheet" href="/packages/symbiote-node/themes/default-provider.css">
+```
+
 Agent-readable theme construction data is published through `symbiote-node/manifest` and `node engine/cli.js discover`. The default provider theme is a cascadeable neutral default aligned with the current Agent Portal shell, but exposed as provider-neutral `--sn-*` tokens rather than product CSS. It is described as composable rule blocks: source accents, color cascade, geometry cascade, typography cascade, motion/effects, semantic aliases, and component aliases. Each block exposes inputs, outputs, parameters, and derivations so agents can compose new themes from root accents and density rules instead of writing one-off component overrides. Runtime component tokens for graph nodes, tree rows, project tabs, sidebars, chat composer controls, status chips, message events, shadows, and interaction states are part of `DEFAULT_PROVIDER_THEME`; public components consume those tokens through the CSS cascade instead of shipping local fallback themes.
 
 Theme modifiers are project data, not product code. For the default provider theme, supported controls are `hue`, `chroma`, `backgroundLightness`, `surfaceLightness`, `textLightness`, `density`, `radius`, `motion`, and `elevation`; custom theme packs can define their own modifier vocabulary.

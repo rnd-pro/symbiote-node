@@ -6,7 +6,7 @@ const sharedUiStyles = `
   background: var(--sn-panel-bg);
   color: var(--sn-text);
   overflow: hidden;
-  font-family: var(--sn-font, 'Inter', -apple-system, sans-serif);
+  font-family: var(--sn-font);
   font-size: 13px;
 }
 

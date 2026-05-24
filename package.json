@@ -87,10 +87,11 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
-  "sideEffects": [
-    "**/*.css.js",
-    "**/*.tpl.js",
-    "ui/index.js",
+	  "sideEffects": [
+	    "**/*.css.js",
+	    "**/*.tpl.js",
+	    "core/base-path.js",
+	    "ui/index.js",
     "canvas/**/*.js",
     "node/**/*.js",
     "layout/**/*.js",

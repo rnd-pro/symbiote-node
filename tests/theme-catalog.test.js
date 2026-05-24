@@ -289,6 +289,19 @@ describe('theme token files', () => {
     assert.equal(getThemeRecipe('missing'), undefined);
   });
 
+  it('keeps static default provider CSS aligned with runtime theme tokens', () => {
+    let css = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-provider.css'), 'utf-8');
+    let cssTokens = new Map();
+    for (let match of css.matchAll(/^\s*(--[\w-]+):\s*([^;]+);/gm)) {
+      cssTokens.set(match[1], match[2].trim());
+    }
+
+    assert.equal(cssTokens.size, Object.keys(DEFAULT_DARK.tokens).length);
+    for (let [token, value] of Object.entries(DEFAULT_DARK.tokens)) {
+      assert.equal(cssTokens.get(token), value, `themes/default-provider.css must publish ${token}`);
+    }
+  });
+
   it('keeps template preview status styling token-driven', () => {
     let css = fs.readFileSync(path.join(PKG_ROOT, 'inspector/TemplatePreview/TemplatePreview.css.js'), 'utf-8');
     for (let literal of ['#4caf50', '#81c784', '#f44336', '#ef9a9a', 'rgba(76, 175, 80', 'rgba(244, 67, 54']) {

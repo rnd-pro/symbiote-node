@@ -57,6 +57,7 @@ export {
 export { applySkin, MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN } from '../themes/Skin.js';
 
 export { GraphHistory } from '../engine/History.js';
+export { FocusController } from '../engine/FocusController.js';
 export { Readonly } from '../plugins/Readonly.js';
 export { History } from '../plugins/History.js';
 
@@ -274,6 +275,15 @@ function registerModuleAlias(alias, tagName) {
   if (alias) runtimeModuleAliases.set(alias, tagName);
 }
 
+function moduleVisible(record, options = {}) {
+  let visibility = record?.visibility ?? 'public';
+  let internal = Boolean(record?.internal ?? visibility === 'internal');
+  let experimental = Boolean(record?.experimental ?? visibility === 'experimental');
+  if (internal && !options.includeInternal) return false;
+  if (experimental && !options.includeExperimental) return false;
+  return true;
+}
+
 export function registerModule(name, ComponentClass, options = {}) {
   let normalized = normalizeModuleName(name);
   if (!normalized) {
@@ -307,11 +317,14 @@ export function registerModule(name, ComponentClass, options = {}) {
   return toModuleDescriptor(record, component);
 }
 
-export function getModule(name) {
+export function getModule(name, options = {}) {
   let record = resolveModuleRecord(name);
-  if (record?.ComponentClass) return record.ComponentClass;
+  if (record?.ComponentClass) {
+    return moduleVisible(record, options) ? record.ComponentClass : undefined;
+  }
 
   let component = findCatalogComponent(name);
+  if (!moduleVisible(component, options)) return undefined;
   if (component?.tagName && canUseCustomElements()) {
     return customElements.get(component.tagName);
   }
@@ -362,7 +375,7 @@ export function defineModule(name, options = {}) {
   let existing = customElements.get(tagName);
   if (existing) return existing;
 
-  let ComponentClass = record?.ComponentClass || getModule(name);
+  let ComponentClass = record?.ComponentClass || getModule(name, options);
   if (!ComponentClass) {
     throw new Error(`UI module "${tagName}" is not registered.`);
   }

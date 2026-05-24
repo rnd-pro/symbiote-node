@@ -181,6 +181,8 @@ describe('With DOM shim', () => {
 
     assert.equal(getModule('node-canvas'), NodeCanvas);
     assert.equal(getModule('NodeCanvas'), NodeCanvas);
+    assert.equal(getModule('project-tab-item'), undefined);
+    assert.equal(getModule('project-tab-item', { includeInternal: true }), customElements.get('project-tab-item'));
 
     let nodeCanvas = listModules().find((module) => module.tagName === 'node-canvas');
     assert.equal(nodeCanvas.exportName, 'NodeCanvas');

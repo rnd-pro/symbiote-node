@@ -105,8 +105,11 @@ describe('runtime UI schema catalog', () => {
     assert.ok(getUiSchema('component-descriptor-v1').$defs.componentContract);
     assert.ok(getUiSchema('runtime-ui-v1').$defs.node);
     assert.ok(getUiSchema('runtime-ui-v1').$defs.componentRegistry);
+    assert.ok(getUiSchema('runtime-ui-v1').$defs.layout);
+    assert.ok(getUiSchema('runtime-ui-v1').$defs.relativeRect);
     assert.ok(getUiSchema('runtime-ui-v1').properties.componentRegistries);
     assert.ok(getUiSchema('runtime-ui-v1').$defs.node.properties.componentRegistry);
+    assert.ok(getUiSchema('runtime-ui-v1').$defs.node.properties.layout);
     assert.ok(getUiSchema('theme-rule-block-v1').properties.kind.enum.includes('geometry-cascade'));
     assert.ok(getUiSchema('theme-rule-block-v1').properties.parameters);
     assert.ok(getUiSchema('theme-rule-block-v1').properties.derivations);

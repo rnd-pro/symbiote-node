@@ -183,6 +183,74 @@ describe('WebXR provider adapter', () => {
     assert.equal(projected.panels[2].anchor, 'upperRight');
   });
 
+  it('derives XR panel sizes from relative layout ratios', () => {
+    let layout = {
+      id: 'root',
+      type: 'split',
+      direction: 'horizontal',
+      ratio: 0.25,
+      first: { id: 'files', type: 'panel', panelType: 'file-tree' },
+      second: {
+        id: 'main',
+        type: 'split',
+        direction: 'vertical',
+        ratio: 0.75,
+        first: { id: 'graph', type: 'panel', panelType: 'dep-graph' },
+        second: { id: 'logs', type: 'panel', panelType: 'graph-flows' },
+      },
+    };
+
+    let projected = projectLayoutToXR(layout, {
+      relativeSize: { width: 1.2, height: 0.8, minWidth: 0.24, minHeight: 0.18, maxWidth: 1.4, maxHeight: 1 },
+    });
+    let files = projected.panels.find((panel) => panel.id === 'files');
+    let graph = projected.panels.find((panel) => panel.id === 'graph');
+    let logs = projected.panels.find((panel) => panel.id === 'logs');
+
+    assert.equal(files.sizeSource, 'relative-layout');
+    assert.deepEqual(files.relativeRect, { x: 0, y: 0, width: 0.25, height: 1 });
+    assert.deepEqual(files.size, [0.3, 0.8]);
+    assert.deepEqual(graph.relativeRect, { x: 0.25, y: 0, width: 0.75, height: 0.75 });
+    assert.deepEqual(graph.size, [0.9, 0.6]);
+    assert.deepEqual(logs.relativeRect, { x: 0.25, y: 0.75, width: 0.75, height: 0.25 });
+    assert.deepEqual(logs.size, [0.9, 0.2]);
+  });
+
+  it('derives runtime UI XR panel sizes from layout weights', () => {
+    let projected = projectLayoutToXR({
+      id: 'root',
+      component: 'panel-layout',
+      layout: { direction: 'horizontal' },
+      children: [
+        { id: 'left', component: 'sn-tree-panel', layout: { weight: 1 } },
+        { id: 'main', component: 'canvas-graph', layout: { weight: 3, area: 'main' } },
+      ],
+    }, {
+      relativeSize: { width: 1.2, height: 0.8, minWidth: 0.24, minHeight: 0.18, maxWidth: 1.4, maxHeight: 1 },
+    });
+
+    assert.deepEqual(projected.panels.map((panel) => panel.id), ['left', 'main']);
+    assert.deepEqual(projected.panels[0].relativeRect, { x: 0, y: 0, width: 0.25, height: 1 });
+    assert.deepEqual(projected.panels[0].size, [0.3, 0.8]);
+    assert.deepEqual(projected.panels[1].relativeRect, { x: 0.25, y: 0, width: 0.75, height: 1 });
+    assert.deepEqual(projected.panels[1].size, [0.9, 0.8]);
+  });
+
+  it('keeps explicit XR sizes above derived relative layout sizes', () => {
+    let projected = projectLayoutToXR({
+      id: 'root',
+      type: 'split',
+      direction: 'horizontal',
+      ratio: 0.25,
+      first: { id: 'files', type: 'panel', panelType: 'file-tree', xr: { size: [0.5, 0.4] } },
+      second: { id: 'graph', type: 'panel', panelType: 'dep-graph' },
+    });
+
+    assert.equal(projected.panels[0].sizeSource, 'explicit');
+    assert.deepEqual(projected.panels[0].size, [0.5, 0.4]);
+    assert.deepEqual(projected.panels[0].relativeRect, { x: 0, y: 0, width: 0.25, height: 1 });
+  });
+
   it('builds a human-space scene from layout data', () => {
     let scene = createXRSpatialScene({
       id: 'main',

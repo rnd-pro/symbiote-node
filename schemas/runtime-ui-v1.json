@@ -45,6 +45,7 @@
         "componentRegistry": { "type": "string", "minLength": 1 },
         "props": { "type": "object", "additionalProperties": true },
         "attrs": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean"] } },
+        "layout": { "$ref": "#/$defs/layout" },
         "bindings": { "type": "object", "additionalProperties": { "type": "string" } },
         "events": { "type": "object", "additionalProperties": { "type": "string" } },
         "theme": { "$ref": "#/$defs/themeRef" },
@@ -52,6 +53,27 @@
           "type": "array",
           "items": { "$ref": "#/$defs/node" }
         }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": { "enum": ["horizontal", "vertical"] },
+        "weight": { "type": "number", "minimum": 0 },
+        "rect": { "$ref": "#/$defs/relativeRect" },
+        "area": { "type": "string", "minLength": 1 }
+      }
+    },
+    "relativeRect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "width": { "type": "number", "minimum": 0, "maximum": 1 },
+        "height": { "type": "number", "minimum": 0, "maximum": 1 }
       }
     }
   }

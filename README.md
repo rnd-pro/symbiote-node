@@ -316,6 +316,7 @@ Hosts should keep this renderer behind capability checks. The default browser pa
 ```javascript
 import {
   createXRHtmlCanvasRenderer,
+  createXRHtmlCanvasDiagnostics,
   createXRPanelHost,
   createXRPanelContentViewport,
   createXRPanelGeometrySummary,
@@ -339,6 +340,7 @@ let host = createXRPanelHost({
   componentResolver: (name) => name,
 });
 let renderer = createXRHtmlCanvasRenderer();
+let diagnostics = createXRHtmlCanvasDiagnostics(renderer.getSupport());
 
 controller.setScene(scene, { themeSnapshot });
 host.setScene(scene, { themeSnapshot });
@@ -349,7 +351,7 @@ for (let panel of scene.panels) {
   renderer.preparePanel(element, panel);
   let viewport = createXRPanelContentViewport(panel);
   let summary = createXRPanelGeometrySummary(panel);
-  console.log(summary.sizeSource, summary.relativeRect, summary.meters, viewport);
+  console.log(diagnostics.mode, summary.sizeSource, summary.relativeRect, summary.meters, viewport);
 }
 
 let hit = hitTestXRPanels(controllerRay, scene.panels);
@@ -358,6 +360,8 @@ host.dispatchPointerEvent(event);
 ```
 
 Host apps remain responsible for renderer choice. A Quest-style browser host can render projected live DOM panels as WebGL/WebGPU textures through the HTML-in-Canvas adapter, or fall back to DOM overlays while keeping the same layout, session lifecycle, theme snapshot, and pointer contracts. XR material aliases such as `--sn-xr-panel-bg` and `--sn-xr-pointer-color` derive from the default provider theme instead of defining a separate XR palette.
+
+`createXRHtmlCanvasDiagnostics(renderer.getSupport())` returns data-only support details for `layoutsubtree`, `drawElementImage`, paint requests, WebGL texture upload, and WebGPU texture copy. The diagnostic separates `blockingMissing` from optional texture capabilities, so a host can use an available HTML-in-Canvas mode without treating missing WebGL/WebGPU paths as a failure. If the browser does not expose a usable render target, the recommendation is `enable-CanvasDrawElement`; packaged hosts can set the Chromium feature flag at the shell boundary while web hosts keep the DOM fallback path.
 
 XR panel size is derived from relative layout data before projection. `LayoutTree` split ratios and runtime UI `layout.weight` / `layout.rect` values normalize into panel `relativeRect` data, then into meter-based `size`. An explicit `xr.size` still wins when a host or agent needs a deliberate override. `createXRPanelContentViewport(panel, options)` keeps live DOM panels at usable internal pixel dimensions before texture or fallback scaling. `createXRPanelPointerTarget(hit, options)` maps normalized XR hits into content viewport pixel coordinates, and `XRPanelHost.dispatchPointerEvent(event)` relays those coordinates to the mounted live component. `createXRPanelGestureState()`, `updateXRPanelGesture()`, and `createXRLayoutTransactionFromGesture()` turn XR pointer gestures into `layout.updateNode` transactions for hosts that want editable spatial geometry without reimplementing provider math. `createXRPanelGeometrySummary(panel, preview)` returns data-only diagnostics for hosts that need to show the source size, normalized rectangle, meter size, preview pixels, content viewport, position, and rotation without reimplementing projection logic.
 

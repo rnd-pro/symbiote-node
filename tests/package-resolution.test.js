@@ -77,6 +77,7 @@ describe('package exports resolution', () => {
     assert.equal(typeof xr.createXRHtmlCanvasRenderer, 'function');
     assert.equal(typeof xr.createXRThemeSnapshot, 'function');
     assert.equal(typeof xr.hitTestXRPanels, 'function');
+    assert.equal(typeof xr.createXRPanelPointerTarget, 'function');
     assert.equal(typeof markdownFormatter.formatMarkdown, 'function');
     assert.equal(typeof markdownFormatter.escapeHtml, 'function');
   });

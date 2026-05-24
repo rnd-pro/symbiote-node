@@ -18,6 +18,7 @@ import {
   applyXRThemeToPanel,
   XR_SPATIAL_SCENE_VERSION,
   hitTestXRPanels,
+  createXRPanelPointerTarget,
   createXRPointerEvent,
   syncWebXRCanvas,
 } from '../xr/index.js';
@@ -512,6 +513,32 @@ describe('WebXR provider adapter', () => {
     assert.equal(event.buttons.primary, true);
     assert.equal(event.point.x, 0.5);
     assert.equal(event.point.y, 0.5);
+    assert.equal(event.contentPoint.x, 480);
+    assert.equal(event.contentPoint.y, 480);
+  });
+
+  it('maps normalized panel hits to content viewport pixel coordinates', () => {
+    let panel = createXRSpatialScene({
+      id: 'narrow',
+      component: 'file-tree',
+      xr: { size: [0.32, 0.82], position: [0, 1, -1] },
+    }, {
+      preview: { pixelsPerMeter: 118 },
+    }).panels[0];
+    let target = createXRPanelPointerTarget({
+      panelId: 'narrow',
+      point: { x: 0.25, y: 0.75 },
+      panel,
+    }, {
+      source: 'mouse-fallback',
+    });
+
+    assert.equal(target.panelId, 'narrow');
+    assert.deepEqual(target.point, { x: 0.25, y: 0.75 });
+    assert.equal(target.contentViewport.width, 960);
+    assert.equal(target.contentViewport.height, 1200);
+    assert.deepEqual(target.contentPoint, { x: 240, y: 900 });
+    assert.equal(target.source, 'mouse-fallback');
   });
 
   it('publishes explicit experimental renderer metadata', () => {
@@ -525,6 +552,7 @@ describe('WebXR provider adapter', () => {
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-theme-bridge'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-panel-host'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-content-viewport'));
+    assert.ok(WEBXR_RENDERER.capabilities.includes('xr-content-pointer-target'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-html-in-canvas-renderer'));
   });
 });

@@ -1,3 +1,5 @@
+import { createXRPanelContentViewport } from './layout-projection.js';
+
 function dot(a, b) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
@@ -18,6 +20,19 @@ function normalize(v) {
   let length = Math.hypot(v[0], v[1], v[2]);
   if (!length) return [0, 0, -1];
   return [v[0] / length, v[1] / length, v[2] / length];
+}
+
+function numberOr(value, fallback) {
+  let number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function roundMetric(value) {
+  return Math.round(value * 1_000_000) / 1_000_000;
 }
 
 function degToRad(value) {
@@ -70,11 +85,14 @@ export function hitTestXRPanels(ray, panels = []) {
 
 export function createXRPointerEvent(hit, input = {}, type = 'pointermove') {
   if (!hit) return null;
+  let target = createXRPanelPointerTarget(hit, input);
   return {
     type,
     source: input.source || 'xr-controller',
     targetId: hit.panelId,
     point: hit.point,
+    contentPoint: target.contentPoint,
+    contentViewport: target.contentViewport,
     worldPoint: hit.worldPoint,
     distance: hit.distance,
     buttons: {
@@ -82,6 +100,27 @@ export function createXRPointerEvent(hit, input = {}, type = 'pointermove') {
       secondary: Boolean(input.secondary),
     },
     ray: input.ray || null,
+  };
+}
+
+export function createXRPanelPointerTarget(hit, options = {}) {
+  if (!hit) return null;
+  let panel = options.panel || hit.panel || {};
+  let point = {
+    x: clamp(numberOr(hit.point?.x, 0), 0, 1),
+    y: clamp(numberOr(hit.point?.y, 0), 0, 1),
+  };
+  let contentViewport = options.contentViewport || panel.contentViewport || createXRPanelContentViewport(panel);
+  return {
+    panelId: String(hit.panelId || panel.id || ''),
+    targetId: String(hit.panelId || panel.id || ''),
+    point,
+    contentPoint: {
+      x: roundMetric(point.x * contentViewport.width),
+      y: roundMetric(point.y * contentViewport.height),
+    },
+    contentViewport,
+    source: options.source || 'xr-controller',
   };
 }
 

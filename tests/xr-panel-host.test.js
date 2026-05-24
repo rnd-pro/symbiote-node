@@ -12,6 +12,7 @@ function createElement(tagName) {
     children: [],
     dataset: {},
     style: {},
+    events: [],
     className: '',
     classList: {
       values: [],
@@ -25,6 +26,10 @@ function createElement(tagName) {
     },
     append(...nodes) {
       this.children.push(...nodes);
+    },
+    dispatchEvent(event) {
+      this.events.push(event);
+      return true;
     },
     replaceChildren(...nodes) {
       this.children = [...nodes];
@@ -80,6 +85,49 @@ describe('XR panel host', () => {
     host.setScene({ panels: [] });
     assert.equal(host.getState().mounted, 0);
     assert.equal(host.getPanelElement('chat'), null);
+  });
+
+  it('relays normalized XR pointer hits to mounted content viewport coordinates', () => {
+    let scene = createXRSpatialScene({
+      id: 'chat',
+      component: 'chat-transcript',
+      xr: { size: [0.32, 0.82] },
+    }, {
+      preview: { pixelsPerMeter: 118 },
+    });
+    let host = createXRPanelHost({
+      document: createDocument(),
+      globalThis: {
+        CustomEvent: class CustomEvent {
+          constructor(type, init = {}) {
+            this.type = type;
+            this.detail = init.detail;
+            this.bubbles = init.bubbles;
+            this.composed = init.composed;
+          }
+        },
+      },
+    });
+    let container = createElement('div');
+
+    host.mountPanel(scene.panels[0], container);
+    let result = host.dispatchPointerEvent({
+      type: 'pointermove',
+      source: 'xr-controller',
+      targetId: 'chat',
+      point: { x: 0.25, y: 0.5 },
+      buttons: { primary: true },
+    });
+
+    let element = host.getPanelElement('chat');
+    assert.equal(result.ok, true);
+    assert.equal(result.target.contentViewport.width, 960);
+    assert.equal(result.target.contentPoint.x, 240);
+    assert.equal(result.target.contentPoint.y, 600);
+    assert.deepEqual(result.dispatched, ['xr-panel-pointer']);
+    assert.equal(element.events[0].type, 'xr-panel-pointer');
+    assert.equal(element.events[0].detail.contentPoint.x, 240);
+    assert.equal(element.events[0].detail.contentViewport.height, 1200);
   });
 
   it('uses host component and props resolvers without product coupling', () => {

@@ -1,4 +1,5 @@
 import { createXRPanelContentViewport } from './layout-projection.js';
+import { createXRPanelPointerTarget } from './pointer.js';
 
 function defaultComponentResolver(name) {
   return name;
@@ -125,10 +126,39 @@ function createContext(options = {}) {
   }
   return {
     document: documentRef,
+    globalThis: options.globalThis || documentRef.defaultView || globalThis,
     customElements: options.customElements || documentRef.defaultView?.customElements || globalThis.customElements,
     componentResolver: options.componentResolver || defaultComponentResolver,
     propsResolver: options.propsResolver || defaultPropsResolver,
   };
+}
+
+function createHostEvent(context, type, detail) {
+  let EventCtor = context.globalThis?.CustomEvent;
+  if (typeof EventCtor === 'function') {
+    return new EventCtor(type, { bubbles: true, composed: true, detail });
+  }
+  return {
+    type,
+    bubbles: true,
+    composed: true,
+    detail,
+  };
+}
+
+function createPointerDomEvent(context, pointerEvent, target) {
+  let EventCtor = context.globalThis?.PointerEvent;
+  if (typeof EventCtor !== 'function') return null;
+  return new EventCtor(pointerEvent.type || 'pointermove', {
+    bubbles: true,
+    composed: true,
+    clientX: target.contentPoint.x,
+    clientY: target.contentPoint.y,
+    buttons: pointerEvent.buttons?.primary ? 1 : 0,
+    button: pointerEvent.buttons?.primary ? 0 : -1,
+    pointerType: pointerEvent.source === 'mouse-fallback' ? 'mouse' : 'xr',
+    isPrimary: true,
+  });
 }
 
 export function createXRPanelHost(options = {}) {
@@ -181,11 +211,48 @@ export function createXRPanelHost(options = {}) {
     return panels.get(panelId)?.element || null;
   }
 
+  function dispatchPointerEvent(pointerEvent, options = {}) {
+    if (!pointerEvent) return { ok: false, reason: 'missing-pointer-event' };
+    let panelId = pointerEvent.targetId || pointerEvent.panelId;
+    let record = panels.get(panelId);
+    if (!record?.element?.dispatchEvent) {
+      return { ok: false, reason: 'panel-not-mounted', panelId };
+    }
+    let target = createXRPanelPointerTarget({
+      panelId,
+      point: pointerEvent.point,
+      panel: record.panel,
+    }, {
+      ...options,
+      contentViewport: record.contentViewport,
+      source: pointerEvent.source,
+    });
+    let detail = {
+      ...pointerEvent,
+      targetId: panelId,
+      contentPoint: target.contentPoint,
+      contentViewport: target.contentViewport,
+    };
+    let domEvent = createPointerDomEvent(context, detail, target);
+    if (domEvent) {
+      domEvent.xrPanelPointer = detail;
+      record.element.dispatchEvent(domEvent);
+    }
+    record.element.dispatchEvent(createHostEvent(context, 'xr-panel-pointer', detail));
+    return {
+      ok: true,
+      panelId,
+      target,
+      dispatched: domEvent ? [detail.type, 'xr-panel-pointer'] : ['xr-panel-pointer'],
+    };
+  }
+
   return {
     setScene,
     mountPanel,
     unmountPanel,
     getPanelElement,
+    dispatchPointerEvent,
     getState,
   };
 }

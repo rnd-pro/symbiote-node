@@ -111,6 +111,7 @@ const ROOT_EXPORTS = [
   ['getXRThemeTokenMap', 'function'],
   ['XR_SPATIAL_SCENE_VERSION', 'string'],
   ['hitTestXRPanels', 'function'],
+  ['createXRPanelPointerTarget', 'function'],
   ['createXRPointerEvent', 'function'],
   ['collectQuickOpenFilesFromSkeleton', 'function'],
   ['fuzzyScore', 'function'],
@@ -301,6 +302,7 @@ const UI_EXPORTS = [
   ['getXRThemeTokenMap', 'function'],
   ['XR_SPATIAL_SCENE_VERSION', 'string'],
   ['hitTestXRPanels', 'function'],
+  ['createXRPanelPointerTarget', 'function'],
   ['createXRPointerEvent', 'function'],
 ];
 

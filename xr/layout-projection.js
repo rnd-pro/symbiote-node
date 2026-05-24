@@ -271,3 +271,42 @@ export function createXRPanelPose(panel, frame = null, referenceSpace = null) {
     referenceSpace,
   };
 }
+
+function rectSummary(rect) {
+  if (!rect) return null;
+  return {
+    x: roundMetric(numberOr(rect.x, 0)),
+    y: roundMetric(numberOr(rect.y, 0)),
+    width: roundMetric(numberOr(rect.width, 0)),
+    height: roundMetric(numberOr(rect.height, 0)),
+  };
+}
+
+function previewSummary(preview) {
+  if (!preview) return null;
+  return {
+    left: roundMetric(numberOr(preview.left, 0)),
+    top: roundMetric(numberOr(preview.top, 0)),
+    width: roundMetric(numberOr(preview.width, 0)),
+    height: roundMetric(numberOr(preview.height, 0)),
+    depth: roundMetric(numberOr(preview.depth, 0)),
+  };
+}
+
+export function createXRPanelGeometrySummary(panel = {}, preview = null) {
+  let size = asVector(panel.size, [0, 0]);
+  return {
+    panelId: String(panel.id || ''),
+    component: panel.component || panel.panelType || 'panel',
+    anchor: panel.anchor || '',
+    sizeSource: panel.sizeSource || 'preset',
+    relativeRect: rectSummary(panel.relativeRect),
+    meters: {
+      width: roundMetric(size[0]),
+      height: roundMetric(size[1]),
+    },
+    previewPixels: previewSummary(preview),
+    position: asVector(panel.position, [0, 0, 0]).map(roundMetric),
+    rotation: asVector(panel.rotation, [0, 0, 0]).map(roundMetric),
+  };
+}

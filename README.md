@@ -317,6 +317,7 @@ Hosts should keep this renderer behind capability checks. The default browser pa
 import {
   createXRHtmlCanvasRenderer,
   createXRPanelHost,
+  createXRPanelGeometrySummary,
   createXRSceneController,
   createXRSpatialScene,
   createXRThemeSnapshot,
@@ -344,6 +345,8 @@ await controller.start('immersive-vr', { optionalFeatures: ['local-floor', 'hand
 for (let panel of scene.panels) {
   let element = host.mountPanel(panel, document.createElement('div'));
   renderer.preparePanel(element, panel);
+  let summary = createXRPanelGeometrySummary(panel);
+  console.log(summary.sizeSource, summary.relativeRect, summary.meters);
 }
 
 let hit = hitTestXRPanels(controllerRay, scene.panels);
@@ -352,7 +355,7 @@ let event = createXRPointerEvent(hit, { source: 'xr-controller', primary: true }
 
 Host apps remain responsible for renderer choice. A Quest-style browser host can render projected live DOM panels as WebGL/WebGPU textures through the HTML-in-Canvas adapter, or fall back to DOM overlays while keeping the same layout, session lifecycle, theme snapshot, and pointer contracts. XR material aliases such as `--sn-xr-panel-bg` and `--sn-xr-pointer-color` derive from the default provider theme instead of defining a separate XR palette.
 
-XR panel size is derived from relative layout data before projection. `LayoutTree` split ratios and runtime UI `layout.weight` / `layout.rect` values normalize into panel `relativeRect` data, then into meter-based `size`. An explicit `xr.size` still wins when a host or agent needs a deliberate override.
+XR panel size is derived from relative layout data before projection. `LayoutTree` split ratios and runtime UI `layout.weight` / `layout.rect` values normalize into panel `relativeRect` data, then into meter-based `size`. An explicit `xr.size` still wins when a host or agent needs a deliberate override. `createXRPanelGeometrySummary(panel, preview)` returns data-only diagnostics for hosts that need to show the source size, normalized rectangle, meter size, preview pixels, position, and rotation without reimplementing projection logic.
 
 Open `demo/spatial-layout.html` to inspect the non-immersive fallback preview. It uses the same human-space scene and pointer hit-test contracts that a headset renderer would consume.
 

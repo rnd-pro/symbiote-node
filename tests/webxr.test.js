@@ -13,6 +13,7 @@ import {
   createXRSpatialScene,
   createXRSceneController,
   createXRThemeSnapshot,
+  createXRPanelGeometrySummary,
   applyXRThemeToPanel,
   XR_SPATIAL_SCENE_VERSION,
   hitTestXRPanels,
@@ -292,6 +293,45 @@ describe('WebXR provider adapter', () => {
     assert.equal(preview.width, 100);
     assert.equal(preview.height, 50);
     assert.match(preview.transform, /rotateY\(-18deg\)/);
+  });
+
+  it('summarizes XR panel geometry without product UI labels', () => {
+    let scene = createXRSpatialScene({
+      id: 'main',
+      type: 'panel',
+      panelType: 'graph',
+      xr: { position: [0.5, 1.25, -1.8], rotation: [0, -18, 0] },
+    }, {
+      userSpace: { eyeHeight: 1.6 },
+      preview: { pixelsPerMeter: 100 },
+    });
+    let preview = createXRSpatialPreview(scene.panels[0], scene);
+    let summary = createXRPanelGeometrySummary(scene.panels[0], preview);
+
+    assert.deepEqual(Object.keys(summary), [
+      'panelId',
+      'component',
+      'anchor',
+      'sizeSource',
+      'relativeRect',
+      'meters',
+      'previewPixels',
+      'position',
+      'rotation',
+    ]);
+    assert.equal(summary.panelId, 'main');
+    assert.equal(summary.component, 'graph');
+    assert.equal(summary.sizeSource, 'relative-layout');
+    assert.deepEqual(summary.meters, { width: 1.22, height: 0.82 });
+    assert.deepEqual(summary.previewPixels, {
+      left: 50,
+      top: 35,
+      width: 122,
+      height: 82,
+      depth: -180,
+    });
+    assert.deepEqual(summary.position, [0.5, 1.25, -1.8]);
+    assert.deepEqual(summary.rotation, [0, -18, 0]);
   });
 
   it('builds XR theme snapshots from provider CSS custom properties', () => {

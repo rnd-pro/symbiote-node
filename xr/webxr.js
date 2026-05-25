@@ -68,6 +68,7 @@ async function sessionSupported(xr, mode) {
 
 export async function getWebXRSupport(target = globalThis) {
   let xr = getXR(target);
+  let secureContext = target?.isSecureContext !== false;
   let modes = {
     inline: await sessionSupported(xr, WEBXR_MODES.inline),
     immersiveVr: await sessionSupported(xr, WEBXR_MODES.immersiveVr),
@@ -81,6 +82,7 @@ export async function getWebXRSupport(target = globalThis) {
     fallback: WEBXR_RENDERER.fallback,
     modes,
     apis: {
+      secureContext,
       navigatorXrAvailable: Boolean(xr),
       isSessionSupportedAvailable: hasFn(xr, 'isSessionSupported'),
       requestSessionAvailable: hasFn(xr, 'requestSession'),
@@ -90,6 +92,55 @@ export async function getWebXRSupport(target = globalThis) {
       XRInputSourceAvailable: typeof target?.XRInputSource === 'function',
     },
     features: WEBXR_RENDERER.features,
+  };
+}
+
+export function createWebXRLaunchRecommendation(support = {}, options = {}) {
+  let preferredMode = options.preferredMode || null;
+  let allowInline = options.allowInline === true;
+  let modes = support.modes || {};
+  let supportsMode = (mode) => {
+    if (modes[mode]) return true;
+    if (mode === WEBXR_MODES.immersiveAr) return Boolean(modes.immersiveAr);
+    if (mode === WEBXR_MODES.immersiveVr) return Boolean(modes.immersiveVr);
+    if (mode === WEBXR_MODES.inline) return Boolean(modes.inline);
+    return false;
+  };
+  let mode = null;
+  if (preferredMode && supportsMode(preferredMode)) {
+    mode = preferredMode;
+  } else if (supportsMode(WEBXR_MODES.immersiveAr)) {
+    mode = WEBXR_MODES.immersiveAr;
+  } else if (supportsMode(WEBXR_MODES.immersiveVr)) {
+    mode = WEBXR_MODES.immersiveVr;
+  } else if (allowInline && supportsMode(WEBXR_MODES.inline)) {
+    mode = WEBXR_MODES.inline;
+  }
+
+  let secureContext = support.apis?.secureContext !== false;
+  let navigatorXrAvailable = Boolean(support.apis?.navigatorXrAvailable);
+  let requestSessionAvailable = Boolean(support.apis?.requestSessionAvailable);
+  let canLaunch = Boolean(mode && secureContext && navigatorXrAvailable && requestSessionAvailable);
+  let reason = 'ready';
+  if (!secureContext) {
+    reason = 'insecure-context';
+  } else if (!navigatorXrAvailable) {
+    reason = 'navigator-xr-unavailable';
+  } else if (!requestSessionAvailable) {
+    reason = 'request-session-unavailable';
+  } else if (!mode) {
+    reason = 'no-immersive-mode';
+  }
+
+  return {
+    version: 'webxr-launch-recommendation-v1',
+    canLaunch,
+    mode,
+    reason,
+    secureContext,
+    navigatorXrAvailable,
+    requestSessionAvailable,
+    modes: { ...modes },
   };
 }
 

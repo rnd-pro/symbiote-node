@@ -108,6 +108,11 @@ const EXPORT_ENTRYPOINTS = [
     description: 'Markdown formatting helpers shared by chat and host applications.',
   },
   {
+    specifier: 'symbiote-node/display/network-approval-page',
+    kind: 'node-safe',
+    description: 'Autonomous provider-themed network approval page renderer for pre-app browser authorization.',
+  },
+  {
     specifier: 'symbiote-node/custom-elements.json',
     kind: 'metadata',
     description: 'Custom Elements manifest for editor/docs/design-system tooling.',

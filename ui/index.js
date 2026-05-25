@@ -212,6 +212,7 @@ export let truncateResult;
 export { sharedUiStyles } from './shared-styles.js';
 export { escapeHtml } from '../display/markdown-formatter.js';
 export { normalizeOutputList, normalizePreviewGraph } from '../display/output-preview.js';
+export { createNetworkApprovalPageStyles, renderNetworkApprovalPage } from '../display/network-approval-page.js';
 export { uiAlert, uiConfirm, uiPrompt } from './dialogs.js';
 export {
   bindListItemSelect,

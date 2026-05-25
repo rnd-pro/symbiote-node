@@ -5,6 +5,7 @@ import {
   WEBXR_RENDERER,
   createWebXRAdapter,
   createWebXRLayer,
+  createWebXRLaunchRecommendation,
   createWebXRRenderLoop,
   getWebXRSupport,
   normalizeWebXRSessionOptions,
@@ -47,6 +48,7 @@ describe('WebXR provider adapter', () => {
 
   it('detects supported WebXR session modes without throwing', async () => {
     let target = {
+      isSecureContext: true,
       navigator: {
         xr: {
           async isSessionSupported(mode) {
@@ -65,7 +67,44 @@ describe('WebXR provider adapter', () => {
     assert.equal(support.modes.inline, true);
     assert.equal(support.modes.immersiveVr, true);
     assert.equal(support.modes.immersiveAr, false);
+    assert.equal(support.apis.secureContext, true);
     assert.equal(support.apis.XRWebGLLayerAvailable, true);
+  });
+
+  it('creates browser launch recommendations from WebXR support data', () => {
+    let ready = createWebXRLaunchRecommendation({
+      modes: { inline: true, immersiveVr: true, immersiveAr: false },
+      apis: {
+        secureContext: true,
+        navigatorXrAvailable: true,
+        requestSessionAvailable: true,
+      },
+    });
+    let blocked = createWebXRLaunchRecommendation({
+      modes: { inline: true, immersiveVr: true, immersiveAr: false },
+      apis: {
+        secureContext: false,
+        navigatorXrAvailable: true,
+        requestSessionAvailable: true,
+      },
+    });
+
+    assert.equal(ready.canLaunch, true);
+    assert.equal(ready.mode, 'immersive-vr');
+    assert.equal(ready.reason, 'ready');
+    assert.equal(blocked.canLaunch, false);
+    assert.equal(blocked.reason, 'insecure-context');
+
+    let inlineOnly = createWebXRLaunchRecommendation({
+      modes: { inline: true, immersiveVr: false, immersiveAr: false },
+      apis: {
+        secureContext: true,
+        navigatorXrAvailable: true,
+        requestSessionAvailable: true,
+      },
+    });
+    assert.equal(inlineOnly.canLaunch, false);
+    assert.equal(inlineOnly.reason, 'no-immersive-mode');
   });
 
   it('normalizes session options for optional WebXR feature negotiation', () => {

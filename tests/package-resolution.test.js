@@ -78,6 +78,7 @@ describe('package exports resolution', () => {
     assert.equal(typeof xr.createXRHtmlCanvasDiagnostics, 'function');
     assert.equal(typeof xr.createXRHtmlCanvasRenderer, 'function');
     assert.equal(typeof xr.createXRThemeSnapshot, 'function');
+    assert.equal(typeof xr.createWebXRLaunchRecommendation, 'function');
     assert.equal(typeof xr.hitTestXRPanels, 'function');
     assert.equal(typeof xr.createXRPointerHit, 'function');
     assert.equal(typeof xr.createXRPointerHitFromDomEvent, 'function');

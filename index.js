@@ -89,6 +89,7 @@ export { buildFileGraph, buildStructuredGraph } from './canvas/project-graph-bui
 export { buildGraphModelFromSkeleton, buildCanvasGraphModelFromSkeleton } from './canvas/project-graph-model.js';
 export { collectQuickOpenFilesFromSkeleton, fuzzyScore, searchQuickOpenItems } from './navigation/quick-open-utils.js';
 export { normalizeOutputList, normalizePreviewGraph } from './display/output-preview.js';
+export { createNetworkApprovalPageStyles, renderNetworkApprovalPage } from './display/network-approval-page.js';
 
 export { CARBON, CARBON_PALETTE } from './themes/carbon.js';
 export { PCB_DARK } from './themes/pcb.js';

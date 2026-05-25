@@ -99,17 +99,18 @@ describe('discover command', () => {
     assert.ok(Array.isArray(data.exports.entrypoints));
 
     let subpaths = data.exports.subpaths.map((entry) => entry.subpath);
-    for (let subpath of ['.', './ui', './layout', './manifest', './display/highlight', './display/markdown-formatter', './custom-elements.json']) {
+    for (let subpath of ['.', './ui', './layout', './manifest', './display/highlight', './display/markdown-formatter', './display/network-approval-page', './custom-elements.json']) {
       assert.ok(subpaths.includes(subpath), `${subpath} must be discoverable`);
     }
 
     let entrypoints = new Map(data.exports.entrypoints.map((entry) => [entry.specifier, entry]));
-    for (let specifier of ['symbiote-node/ui', 'symbiote-node/layout', 'symbiote-node/manifest', 'symbiote-node/custom-elements.json']) {
+    for (let specifier of ['symbiote-node/ui', 'symbiote-node/layout', 'symbiote-node/manifest', 'symbiote-node/display/network-approval-page', 'symbiote-node/custom-elements.json']) {
       assert.ok(entrypoints.has(specifier), `${specifier} must be described`);
       assert.equal(typeof entrypoints.get(specifier).description, 'string');
     }
     assert.equal(entrypoints.get('symbiote-node/ui').kind, 'browser');
     assert.equal(entrypoints.get('symbiote-node/layout').kind, 'ssr-safe');
+    assert.equal(entrypoints.get('symbiote-node/display/network-approval-page').kind, 'node-safe');
   });
 
   describe('registry', () => {

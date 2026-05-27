@@ -64,10 +64,19 @@ export {
   GRAPH_DIRECTORY_FRAME_COLORS,
   GRAPH_PATH_STYLES,
   addGraphDirectoryFrames,
+  buildFlatPathHash,
+  getFileSelectionNodeId,
+  getFlatFocusRestoreKey,
+  getGraphHashNavigationState,
   getGraphPathStyleDisplay,
   getNextGraphPathStyle,
+  resolveFlatHashChange,
   resolveInitialGraphViewMode,
+  shouldClearFocusOnSelection,
+  shouldFitForceLayoutInitialTick,
+  shouldRestoreFlatFocus,
 } from './canvas/graph-explorer.js';
+export { resolveSymbolFile, findConnectionPath } from './graph/graph-algorithms.js';
 export {
   HTML_IN_CANVAS_APIS,
   HTML_IN_CANVAS_RENDERER,

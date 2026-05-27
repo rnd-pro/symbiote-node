@@ -150,8 +150,8 @@ function createPointerDomEvent(context, pointerEvent, target) {
   let EventCtor = context.globalThis?.PointerEvent;
   if (typeof EventCtor !== 'function') return null;
   return new EventCtor(pointerEvent.type || 'pointermove', {
-    bubbles: true,
-    composed: true,
+    bubbles: false,
+    composed: false,
     clientX: target.contentPoint.x,
     clientY: target.contentPoint.y,
     buttons: pointerEvent.buttons?.primary ? 1 : 0,
@@ -166,6 +166,7 @@ export function createXRPanelHost(options = {}) {
   let panels = new Map();
   let scene = null;
   let themeSnapshot = options.themeSnapshot || null;
+  let dispatchDepth = 0;
 
   function getState() {
     return {
@@ -214,6 +215,9 @@ export function createXRPanelHost(options = {}) {
   function dispatchPointerEvent(pointerEvent, options = {}) {
     if (!pointerEvent) return { ok: false, reason: 'missing-pointer-event' };
     let panelId = pointerEvent.targetId || pointerEvent.panelId;
+    if (dispatchDepth > 0) {
+      return { ok: false, reason: 'pointer-dispatch-reentrant', panelId };
+    }
     let record = panels.get(panelId);
     if (!record?.element?.dispatchEvent) {
       return { ok: false, reason: 'panel-not-mounted', panelId };
@@ -234,11 +238,16 @@ export function createXRPanelHost(options = {}) {
       contentViewport: target.contentViewport,
     };
     let domEvent = createPointerDomEvent(context, detail, target);
-    if (domEvent) {
-      domEvent.xrPanelPointer = detail;
-      record.element.dispatchEvent(domEvent);
+    dispatchDepth += 1;
+    try {
+      if (domEvent) {
+        domEvent.xrPanelPointer = detail;
+        record.element.dispatchEvent(domEvent);
+      }
+      record.element.dispatchEvent(createHostEvent(context, 'xr-panel-pointer', detail));
+    } finally {
+      dispatchDepth -= 1;
     }
-    record.element.dispatchEvent(createHostEvent(context, 'xr-panel-pointer', detail));
     return {
       ok: true,
       panelId,

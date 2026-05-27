@@ -3,12 +3,21 @@ import assert from 'node:assert/strict';
 
 import {
   addGraphDirectoryFrames,
+  buildFlatPathHash,
+  getFileSelectionNodeId,
+  getFlatFocusRestoreKey,
+  getGraphHashNavigationState,
   getGraphPathStyleDisplay,
   getNextGraphPathStyle,
   renderGraphPathStyleButton,
   renderGraphViewModeButton,
+  resolveFlatHashChange,
   resolveInitialGraphViewMode,
+  selectGraphLabelMode,
   setGraphLayerVisible,
+  shouldClearFocusOnSelection,
+  shouldFitForceLayoutInitialTick,
+  shouldRestoreFlatFocus,
   toggleGraphLayerButtonState,
 } from '../canvas/graph-explorer.js';
 
@@ -163,4 +172,99 @@ test('toggleGraphLayerButtonState flips active and hidden attributes', () => {
   assert.equal(toggleGraphLayerButtonState(button), true);
   assert.equal(attrs.has('data-active'), true);
   assert.equal(attrs.has('data-hidden'), false);
+});
+
+test('graph explorer route helpers preserve graph paths and focus state', () => {
+  const params = new URLSearchParams('mode=flat&focus=src/app.js&style=pcb');
+
+  assert.equal(
+    buildFlatPathHash('src/components', params),
+    '#graph/src/components?mode=flat&focus=src%2Fapp.js&style=pcb',
+  );
+  assert.equal(buildFlatPathHash('', params), '#graph?mode=flat&style=pcb');
+  assert.deepEqual(
+    resolveFlatHashChange('#graph/src/components?focus=Button.js&mode=flat'),
+    { path: 'src/components', focus: 'Button.js' },
+  );
+  assert.deepEqual(
+    resolveFlatHashChange('#graph?focus=src%2Fapp.js'),
+    { path: '', focus: 'src/app.js' },
+  );
+  assert.equal(resolveFlatHashChange('#dashboard'), null);
+});
+
+test('graph explorer selection helpers normalize focus restore decisions', () => {
+  const key = getFlatFocusRestoreKey({
+    path: '',
+    focus: 'src/node/mlops/flywheel.js',
+  });
+
+  assert.equal(getFileSelectionNodeId('src/components/'), 'src/components');
+  assert.equal(getFileSelectionNodeId('src/app.js'), 'src/app.js');
+  assert.equal(key, '::src/node/mlops/flywheel.js');
+  assert.equal(shouldRestoreFlatFocus({
+    lastKey: key,
+    path: '',
+    focus: 'src/node/mlops/flywheel.js',
+  }), false);
+  assert.equal(shouldRestoreFlatFocus({
+    lastKey: key,
+    path: 'src/node',
+    focus: 'mlops/flywheel.js',
+  }), true);
+  assert.equal(shouldRestoreFlatFocus({ lastKey: null, path: '', focus: null }), false);
+  assert.equal(shouldClearFocusOnSelection({
+    selectedNodes: [],
+    initialViewRestored: true,
+    hash: '#graph?focus=src/app.js',
+  }), true);
+  assert.deepEqual(getGraphHashNavigationState('#graph/src/components'), {
+    hasPath: true,
+    hasParams: false,
+    shouldRestore: true,
+  });
+  assert.deepEqual(getGraphHashNavigationState('#graph?focus=src/app.js'), {
+    hasPath: false,
+    hasParams: true,
+    shouldRestore: true,
+  });
+  assert.deepEqual(getGraphHashNavigationState('#graph'), {
+    hasPath: false,
+    hasParams: false,
+    shouldRestore: false,
+  });
+  assert.equal(shouldFitForceLayoutInitialTick('#graph'), true);
+  assert.equal(shouldFitForceLayoutInitialTick('#graph?focus=src/app.js'), false);
+});
+
+test('selectGraphLabelMode marks one button active and updates canvas mode', () => {
+  function createButton(mode, active = false) {
+    const attrs = new Set(active ? ['data-active'] : []);
+    return {
+      attrs,
+      getAttribute(name) {
+        return name === 'data-mode' ? mode : null;
+      },
+      setAttribute(name) {
+        attrs.add(name);
+      },
+      removeAttribute(name) {
+        attrs.delete(name);
+      },
+    };
+  }
+
+  const compact = createButton('compact', true);
+  const full = createButton('full');
+  const canvasAttrs = new Map();
+  const canvas = {
+    setAttribute(name, value) {
+      canvasAttrs.set(name, value);
+    },
+  };
+
+  assert.equal(selectGraphLabelMode([compact, full], full, canvas), 'full');
+  assert.equal(compact.attrs.has('data-active'), false);
+  assert.equal(full.attrs.has('data-active'), true);
+  assert.equal(canvasAttrs.get('data-label-mode'), 'full');
 });

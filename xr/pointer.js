@@ -148,6 +148,39 @@ export function createXRPointerHitFromDomEvent(panel, element, event, options = 
   }, options);
 }
 
+export function createXRPointerRayFromDomEvent(event, element, options = {}) {
+  if (!event || !element?.getBoundingClientRect) return null;
+  let rect = element.getBoundingClientRect();
+  let width = Math.max(numberOr(rect.width, 0), 1);
+  let height = Math.max(numberOr(rect.height, 0), 1);
+  let normalizedX = (numberOr(event.clientX, rect.left) - rect.left) / width - 0.5;
+  let normalizedY = 0.5 - (numberOr(event.clientY, rect.top) - rect.top) / height;
+  let horizontalMeters = numberOr(options.horizontalMeters, 1.4);
+  let verticalMeters = numberOr(options.verticalMeters, 0.72);
+  let eyeHeight = numberOr(options.eyeHeight, 1.32);
+  let horizontalSkew = numberOr(options.horizontalSkew, 0.28);
+  let verticalSkew = numberOr(options.verticalSkew, 0.18);
+
+  return {
+    version: 'xr-dom-pointer-ray-v1',
+    source: options.source || 'dom-pointer',
+    origin: [
+      roundMetric(normalizedX * horizontalMeters),
+      roundMetric(eyeHeight + normalizedY * verticalMeters),
+      numberOr(options.originZ, 0),
+    ],
+    direction: normalize([
+      -normalizedX * horizontalSkew,
+      -normalizedY * verticalSkew,
+      -1,
+    ]),
+    normalized: {
+      x: roundMetric(normalizedX + 0.5),
+      y: roundMetric(0.5 - normalizedY),
+    },
+  };
+}
+
 export function normalizeXRInputRay(inputSource, frame, referenceSpace) {
   let pose = frame?.getPose?.(inputSource?.targetRaySpace, referenceSpace);
   let transform = pose?.transform;
@@ -160,4 +193,66 @@ export function normalizeXRInputRay(inputSource, frame, referenceSpace) {
     };
   }
   return null;
+}
+
+function inputSourceKind(inputSource = {}) {
+  let mode = inputSource.targetRayMode || '';
+  let profiles = Array.isArray(inputSource.profiles) ? inputSource.profiles.join(' ') : '';
+  if (inputSource.hand) return 'hand';
+  if (mode === 'gaze') return 'gaze';
+  if (mode === 'screen') return 'screen';
+  if (/hand|pinch/i.test(profiles)) return 'hand';
+  return 'controller';
+}
+
+export function createXRInputSourceSummary(inputSource = {}, options = {}) {
+  let profiles = Array.isArray(inputSource.profiles) ? [...inputSource.profiles].map(String) : [];
+  return {
+    version: 'xr-input-source-summary-v1',
+    id: options.id || inputSource.id || null,
+    handedness: inputSource.handedness || 'none',
+    targetRayMode: inputSource.targetRayMode || null,
+    kind: inputSourceKind(inputSource),
+    primary: options.primary === true,
+    profiles,
+    capabilities: {
+      targetRay: Boolean(inputSource.targetRaySpace),
+      grip: Boolean(inputSource.gripSpace),
+      hand: Boolean(inputSource.hand),
+      gamepad: Boolean(inputSource.gamepad),
+      squeeze: Boolean(inputSource.gamepad || inputSource.profiles?.length),
+    },
+  };
+}
+
+function inputScore(summary, options = {}) {
+  let score = 0;
+  if (summary.targetRayMode === 'tracked-pointer') score += 40;
+  if (summary.kind === 'controller') score += options.preferHands ? 8 : 20;
+  if (summary.kind === 'hand') score += options.preferHands ? 24 : 12;
+  if (summary.handedness === (options.dominantHand || 'right')) score += 8;
+  if (summary.capabilities.targetRay) score += 8;
+  if (summary.capabilities.gamepad) score += 4;
+  return score;
+}
+
+export function selectPrimaryXRInputSource(inputSources = [], options = {}) {
+  let sources = [...inputSources].map((source, index) => ({
+    source,
+    summary: createXRInputSourceSummary(source, { id: source?.id || `input-${index}` }),
+  }));
+  let selected = sources
+    .map((item) => ({ ...item, score: inputScore(item.summary, options) }))
+    .sort((a, b) => b.score - a.score)[0] || null;
+  return {
+    version: 'xr-primary-input-source-v1',
+    selected: selected ? {
+      ...selected.summary,
+      primary: true,
+      score: selected.score,
+    } : null,
+    source: selected?.source || null,
+    summaries: sources.map((item) => item.summary),
+    reason: selected ? 'best-target-ray-score' : 'no-input-sources',
+  };
 }

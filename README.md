@@ -153,7 +153,15 @@ const canvasModel = graphModelToCanvasGraphModel(model, { view: 'main' });
 
 `createProjectRuntime(project)` wraps a normalized project package with a small subscription-based host state. It applies `project-transaction-v1` updates, exposes the active graph/layout/theme records, and rejects transactions targeting a different project. Use `layout.updateNode` or `updateLayoutNode()` for focused runtime UI edits such as XR geometry changes; it only accepts `layout.rect`, `layout.weight`, `props`, and `attrs` patches. Keep `layout.setRoot` for larger structural replacements. Product apps remain responsible for persistence, permissions, and route policy.
 
-Canvas adapters bridge the universal graph contract to the existing `CanvasGraph` model shape. They are generic: product skeletons, route state, code-analysis metadata, and server policy stay in the host or provider layer.
+Canvas adapters bridge the universal graph contract to the existing `CanvasGraph` model shape. They are generic: product skeletons, route state, code-analysis metadata, and server policy stay in the host or provider layer. `buildFileGraph()`, `buildStructuredGraph()`, `buildGraphModelFromSkeleton()`, and `buildCanvasGraphModelFromSkeleton()` are public `symbiote-node/graph` helpers for projecting code skeleton data through provider graph contracts before a host renders it.
+
+Project graph build helpers are also Node-safe provider data utilities. `buildFlatGroups()` combines directory groups with optional semantic cluster metadata, `prepareGraphBuild()` coordinates cached flat/structured graph builders supplied by a host, and `buildGraphStatItems()` returns display-neutral stat rows. Host panels such as Agent Portal's dependency graph should consume these helpers from `symbiote-node/graph` instead of keeping parallel grouping and stat-shaping logic in product UI files.
+
+Project graph metadata is normalized and validated by the provider as well. Use `normalizeProjectGraphMetadata()` for permissive read-side cleanup and `validateProjectGraphMetadata()` before persisting user- or agent-authored `.portal/project-graph.json` data. Cluster colors accept hex values or published Symbiote graph token references such as `var(--sn-graph-cluster-4)`.
+
+Graph explorer route and focus helpers are provider-owned as well. `symbiote-node/ui` exposes `buildFlatPathHash()`, `resolveFlatHashChange()`, `getGraphHashNavigationState()`, `shouldRestoreFlatFocus()`, and related selection helpers so hosts can keep graph route synchronization and focus restoration behavior consistent without local wrapper modules.
+
+Graph algorithm helpers such as `resolveSymbolFile()` and `findConnectionPath()` live in `symbiote-node/graph`. Hosts should use them for symbol-to-file resolution and shortest connection path highlighting instead of duplicating traversal logic in product panels.
 
 ### Source Display And Editing
 
@@ -317,15 +325,38 @@ Hosts should keep this renderer behind capability checks. The default browser pa
 import {
   createXRHtmlCanvasRenderer,
   createXRHtmlCanvasDiagnostics,
+  createXRDeepGraphDiagnostics,
+  createXRDeepGraphPreview,
+  createXRDeepGraphPreviewOverlay,
+  createXRDeepGraphPreviewSummary,
+  createXRDeepGraphScene,
+  createXRProjectDeepGraphProjection,
+  adjustXRPanelPoseForComfort,
+  adjustXRPanelRotationForViewer,
   createXRPanelHost,
   createXRPanelContentViewport,
+  createXRPanelFacingSummary,
   createXRPanelGeometrySummary,
+  createXRPanelFrame,
+  createXRPanelPoseComfortSummary,
+  createXRPanelTextureQualitySummary,
+  createXRTextureQualityPolicy,
+  createXRSceneGeometrySummary,
+  createXRReadinessSummary,
+  createXRSceneQualitySummary,
   createXRSceneController,
+  createXRDomPanelWorkbench,
   createXRSpatialScene,
+  createXRSpatialWorkbenchSummary,
   createXRThemeSnapshot,
+  createXRWorkbenchDiagnosticPayload,
+  createXRWebGLLayerTarget,
   createWebXREmulationAdapter,
   hitTestXRPanels,
+  hitTestXRPanelFrame,
+  selectPrimaryXRInputSource,
   createXRPointerEvent,
+  createXRLayoutTransactionFromPanelPose,
 } from 'symbiote-node/xr';
 
 let scene = createXRSpatialScene(layoutTree, {
@@ -340,30 +371,158 @@ let host = createXRPanelHost({
   componentResolver: (name) => name,
 });
 let renderer = createXRHtmlCanvasRenderer();
+let panelWorkbench = createXRDomPanelWorkbench({
+  document,
+  panelHost: host,
+  sourcePanelHost: createXRPanelHost({ componentResolver: (name) => name }),
+  htmlCanvasRenderer: renderer,
+});
 let diagnostics = createXRHtmlCanvasDiagnostics(renderer.getSupport());
+let layerTarget = await createXRWebGLLayerTarget({
+  document,
+  hostElement: document.body,
+});
 
 controller.setScene(scene, { themeSnapshot });
 host.setScene(scene, { themeSnapshot });
-await controller.start('immersive-vr', { optionalFeatures: ['local-floor', 'hand-tracking'] });
+panelWorkbench.setScene(scene, { themeSnapshot });
+await controller.start('immersive-vr', {
+  optionalFeatures: ['local-floor', 'hand-tracking'],
+  canvas: layerTarget.canvas,
+  gl: layerTarget.gl,
+});
 
 for (let panel of scene.panels) {
-  let element = host.mountPanel(panel, document.createElement('div'));
-  renderer.preparePanel(element, panel);
+  let preview = panelWorkbench.mountPreviewPanel(panel, {
+    renderCanvasPreview: panel.id === scene.panels[0].id,
+  });
+  let adjusted = adjustXRPanelPoseForComfort(panel, { userSpace: scene.userSpace });
+  let facingAdjusted = adjustXRPanelRotationForViewer(adjusted, { userSpace: scene.userSpace });
   let viewport = createXRPanelContentViewport(panel);
-  let summary = createXRPanelGeometrySummary(panel);
-  console.log(diagnostics.mode, summary.sizeSource, summary.relativeRect, summary.meters, viewport);
+  let quality = createXRPanelTextureQualitySummary(panel);
+  let comfort = createXRPanelPoseComfortSummary(panel, { eyeHeight: scene.userSpace.eyeHeight });
+  let facing = createXRPanelFacingSummary(facingAdjusted);
+  let summary = createXRPanelGeometrySummary(facingAdjusted);
+  console.log(diagnostics.mode, preview.prepared?.mode, summary.sizeSource, summary.relativeRect, summary.meters, viewport, quality, comfort, facing, facingAdjusted.rotationAdjustment);
 }
+
+let sceneQuality = createXRSceneQualitySummary(scene, {
+  eyeHeight: scene.userSpace.eyeHeight,
+});
+let sceneGeometry = createXRSceneGeometrySummary(scene, {
+  eyeHeight: scene.userSpace.eyeHeight,
+});
+let readiness = createXRReadinessSummary({
+  launchGate: controller.getState?.().launchGate,
+  htmlCanvas: diagnostics,
+  sceneQuality,
+});
+let workbench = createXRSpatialWorkbenchSummary({
+  panels: scene.panels,
+  scene,
+  readiness,
+  themeSnapshot,
+});
+let diagnosticPayload = createXRWorkbenchDiagnosticPayload({
+  event: 'xr-session-check',
+  pageUrl: location.href,
+  secureContext: window.isSecureContext,
+  navigatorXr: Boolean(navigator.xr),
+  readiness,
+});
+console.log(sceneQuality.status, sceneGeometry.minPixelsPerMeter, sceneGeometry.comfortWarningCount, sceneGeometry.facingWarningCount, readiness.status, workbench.mode, diagnosticPayload.version);
 
 let hit = hitTestXRPanels(controllerRay, scene.panels);
 let event = createXRPointerEvent(hit, { source: 'xr-controller', primary: true }, 'click');
 host.dispatchPointerEvent(event);
+
+let deepGraph = createXRDeepGraphScene(graphModel);
+let deepGraphDiagnostics = createXRDeepGraphDiagnostics(deepGraph, {
+  focusNodeId: 'src/index.js',
+});
+let deepGraphPreview = createXRDeepGraphPreview(deepGraph, {
+  focusNodeId: 'src/index.js',
+  pixelsPerMeter: scene.preview.pixelsPerMeter,
+  eyeHeight: scene.userSpace.eyeHeight,
+});
+let deepGraphPreviewSummary = createXRDeepGraphPreviewSummary(deepGraphPreview);
+let deepGraphOverlay = createXRDeepGraphPreviewOverlay(deepGraphPreview, {
+  document,
+  focusNodeId: 'src/index.js',
+});
+console.log(deepGraphDiagnostics.edgeCount, deepGraphDiagnostics.edgeTypes, deepGraphDiagnostics.focus, deepGraphPreviewSummary.status, deepGraphPreviewSummary.focus, deepGraphOverlay.ok);
+
+let projectDeepGraph = createXRProjectDeepGraphProjection(projectSkeleton, {
+  metadata: projectGraphMetadata,
+  focusPath: 'src/index.js',
+});
+console.log(projectDeepGraph.graphModel.version, projectDeepGraph.scene.version, projectDeepGraph.diagnostics.focusNodeId);
 ```
+
+`createXRDomPanelWorkbench()` composes the live `XRPanelHost`, the source `XRPanelHost`, and the HTML-in-Canvas renderer. It creates DOM preview shells, mounts the real component subtree, prepares the matching texture source, and can prepare lower-level XR layer sources without host-local glue. Host apps still provide component and props resolvers, route state, persistence, permissions, and diagnostic transport.
 
 Host apps remain responsible for renderer choice. A Quest-style browser host can render projected live DOM panels as WebGL/WebGPU textures through the HTML-in-Canvas adapter, or fall back to DOM overlays while keeping the same layout, session lifecycle, theme snapshot, and pointer contracts. XR material aliases such as `--sn-xr-panel-bg` and `--sn-xr-pointer-color` derive from the default provider theme instead of defining a separate XR palette.
 
-`createXRHtmlCanvasDiagnostics(renderer.getSupport())` returns data-only support details for `layoutsubtree`, `drawElementImage`, paint requests, WebGL texture upload, and WebGPU texture copy. The diagnostic separates `blockingMissing` from optional texture capabilities, so a host can use an available HTML-in-Canvas mode without treating missing WebGL/WebGPU paths as a failure. If the browser does not expose a usable render target, the recommendation is `enable-CanvasDrawElement`; packaged hosts can set the Chromium feature flag at the shell boundary while web hosts keep the DOM fallback path.
+For hosts that already use Three.js, `symbiote-node/xr` also exposes an optional adapter and render host. The package does not import or bundle Three.js; the host supplies the runtime module while Symbiote owns renderer, camera, scene decoration, session lifecycle, controller rays, and diagnostics:
 
-XR panel size is derived from relative layout data before projection. `LayoutTree` split ratios and runtime UI `layout.weight` / `layout.rect` values normalize into panel `relativeRect` data, then into meter-based `size`. An explicit `xr.size` still wins when a host or agent needs a deliberate override. `createXRPanelContentViewport(panel, options)` keeps live DOM panels at usable internal pixel dimensions before texture or fallback scaling. `createXRPanelPointerTarget(hit, options)` maps normalized XR hits into content viewport pixel coordinates, and `XRPanelHost.dispatchPointerEvent(event)` relays those coordinates to the mounted live component. `createXRPanelGestureState()`, `updateXRPanelGesture()`, and `createXRLayoutTransactionFromGesture()` turn XR pointer gestures into `layout.updateNode` transactions for hosts that want editable spatial geometry without reimplementing provider math. `createXRPanelGeometrySummary(panel, preview)` returns data-only diagnostics for hosts that need to show the source size, normalized rectangle, meter size, preview pixels, content viewport, position, and rotation without reimplementing projection logic.
+```javascript
+import * as THREE from 'three';
+import {
+  createXRThreeHtmlCanvasTextureResolver,
+  createXRThreePanelTextureBridge,
+  createXRThreeRenderHost,
+  createXRThreeSessionController,
+  createXRThreeSessionOptions,
+  createXRThreeWebXRAdapter,
+} from 'symbiote-node/xr';
+
+let textureResolver = createXRThreeHtmlCanvasTextureResolver({
+  THREE,
+  document,
+  htmlCanvasRenderer: renderer,
+});
+let textureBridge = createXRThreePanelTextureBridge({
+  htmlCanvasRenderer: renderer,
+  getPanelElement: (panelId) => host.getPanelElement(panelId),
+  textureResolver: textureResolver.resolve,
+});
+let adapter = createXRThreeWebXRAdapter({ THREE });
+let renderHost = createXRThreeRenderHost({
+  THREE,
+  adapter,
+  hostElement: document.body,
+});
+let sessionController = createXRThreeSessionController({
+  globalThis,
+  adapter,
+  scene,
+});
+let target = renderHost.ensureTarget({ scene });
+adapter.setScene(scene, {
+  textureBridge,
+  textureOptions: { requireTextureUpload: false },
+});
+renderHost.startLoop({
+  target,
+  onFrame: () => {},
+});
+
+await sessionController.start('immersive-vr', {
+  target,
+  ...createXRThreeSessionOptions('immersive-vr', { domOverlayRoot: document.body }),
+});
+console.log(textureBridge.getState(), renderHost.getDiagnostics(), sessionController.getDiagnostics());
+```
+
+`node engine/cli.js discover` reports this as the `three-webxr` renderer with an optional `host-supplied` dependency. Product demos should use this adapter and render host instead of duplicating renderer setup, panel placement, render loop ownership, controller-ray hit testing, panel material state updates, and ray-plane drag math in the host app. `createXRThreeRenderHost()` owns renderer sizing, camera updates, scene decoration, non-immersive `setAnimationLoop()` wiring, and render-loop diagnostics through `startLoop()` / `stopLoop()`. `updateXRThreePanelMaterialStates()` applies hover, selected, and dragging material colors from provider theme snapshots and session diagnostics to both panel materials and provider frame visuals without exposing product-local Three color mutation logic. Three panel meshes also include provider-owned frame visuals for the header move zone, edge/corner resize handles, and action slots when the supplied Three runtime supports mesh primitives. Controller hits also carry provider `frameTarget` data from `hitTestXRPanelFrame()`, so headset telemetry can distinguish content hover, header move, resize handles, and action slots before a host persists any geometry transaction.
+
+`createXRThreePanelTextureBridge()` connects the provider HTML-in-Canvas renderer to Three panel materials without making Three or the experimental browser API a base dependency. The bridge prepares mounted DOM panel elements, classifies each texture source with `createXRPanelTextureSourceSummary()`, applies a Three texture when available, and records `html-in-canvas`, `provider-material-fallback`, or `unsupported` diagnostics. `createXRThreeHtmlCanvasTextureResolver()` is the provider-owned resolver for the common Three path: it renders the already mounted live DOM panel into an HTML-in-Canvas preview canvas, creates or updates a host-supplied `THREE.CanvasTexture`, applies linear filtering, sRGB color-space hints, mipmap policy, and optional anisotropy, then exposes data-only resolver diagnostics. `createXRTextureQualityPolicy(panel, options)` owns texture DPR, max texture size, pixels-per-meter thresholds, redraw mode, and capped texture dimensions. The Three resolver uses that policy with target-density sizing by default and dirty redraw, so a panel texture is uploaded only when its source key or size changes. Hosts can pass `preferTargetDensity: false` only when they deliberately want the minimum readable density. `createXRTextureDebugModeSummary()` normalizes explicit headset diagnostic modes into `requireTextureUpload`, `hideStrictTextureFailures`, and fallback flags so hosts do not duplicate strict/fallback policy. `createXRTextureGateSummary()` accepts the bridge records plus resolver state and reports both `bridgeStages` and `resolverStages`, so headset logs can distinguish missing browser support from a failed Three texture resolver. Hosts can still provide a custom texture resolver when they own a renderer-specific upload path. Pass `requireTextureUpload: true` and `hideStrictTextureFailures: true` only in explicit strict diagnostics or headset validation modes; this makes missing HTML-in-Canvas paths fail fast instead of showing material fallback panels. Normal hosts should keep the DOM/material fallback path visible.
+
+`createXRThreeControllerRayAdapter({ THREE, dragResponse })` uses Three's XR controller target-ray flow and publishes drag response diagnostics for smoothing, deadzone, max step, raw delta, and applied delta. `selectPrimaryXRInputSource(inputSources, options)` keeps controller, hand, gaze, and screen inputs from competing by choosing one primary pointer source from WebXR `targetRaySpace`, `gripSpace`, hand, gamepad, handedness, and profile metadata. `createXRThreeSessionOptions(mode, options)` builds the provider-owned WebXR session option set for Three hosts, including the VR/AR reference space choice, optional feature negotiation, and optional DOM overlay root. `createXRThreeSessionController()` also attaches optional provider-owned controller ray visuals and panel hit reticles when the supplied Three runtime includes the needed primitives, and it reports hover, selected, dragging, and interaction event state. Three select events start ray-plane drag only when provider `frameTarget.operation` is `move` or `resize`; content hits stay selection events so hosts can route UI clicks without accidentally moving the panel. Move targets update world-space panel position; resize targets update meter size through provider frame handles and report the new size in the final pose. `createXRLayoutTransactionFromPanelPose(details, options)` turns a finished Three world-space drag pose into a `layout.updateNode` transaction that persists `props.xr.position`, `props.xr.rotation`, and `props.xr.size`; `createXRSpatialScene()` reads the same `props.xr` data on the next projection pass. `createXRThreeSessionTelemetrySnapshot(diagnostics, options)` turns those diagnostics into a stable data-only telemetry payload for server logs, headset smoke tests, and public demos, including aggregated texture quality counts, warning codes, recommendation codes, prioritized action codes, and the primary next recommendation from panel texture bridge records. `createXRThreeSessionHealthSummary(telemetry, options)` classifies the same data as `healthy`, `warning`, `waiting`, or `blocked`, with explicit checks for frames, panels, panel frame visuals, texture quality, controllers, ray visuals, hit reticle, hover, FPS, and session errors. `createXRThreeSessionWatchdogSummary(diagnostics, options)` classifies delayed session startup and running sessions that still have no XR frames without owning host timers. `createXRThreeDiagnosticPayload(options)` composes telemetry, health, launch gate, HTML-in-Canvas, texture, scene quality, readiness, and redacted URL data into a standard data payload while leaving transport and storage to the host. `createXRThreeDiagnosticTimelineSummary(events, options)` normalizes recent diagnostic events into compact data/text summaries for headset debugging panels without product-specific labels. `createXRThreeDiagnosticServerSummary(summary, options)` extracts the current client, latest clients, server-side session checks, timeline summaries, and active texture/readiness diagnostics from a provider-shaped diagnostic summary without dictating host UI labels. `createXRThreeTroubleshootingSummary(summary, options)` turns that server summary into stable issue codes such as `no-xr-frames`, `panel-frame-visuals-missing`, `texture-gate-blocked`, `input-controllers-missing`, `controller-rays-missing`, and `interaction-events-missing`, so headset demos can show one high-signal diagnosis while retaining the raw metrics. Hosts can tune `dragResponse`, `controllerRayVisuals`, `panelHitReticle`, or pass host DOM overlay roots, but the interaction model, session option defaults, and diagnostics stay in `symbiote-node/xr`.
+
+`createXRHtmlCanvasDiagnostics(renderer.getSupport())` returns data-only support details for `layoutsubtree`, `drawElementImage`, paint requests, WebGL texture upload, WebGPU texture copy, and origin-trial enablement. The diagnostic reports whether an origin-trial meta tag is present and whether the page is configured, but it never exposes token content. `createXRHtmlCanvasHeaderDiagnostics(response, options)` and `readXRHtmlCanvasOriginTrialHeaderStatus(urlSource, options)` add the matching response-header check for hosts that deliver Origin-Trial through HTTP headers; they report header presence, status, and an optional host diagnostic header without exposing token values. Host-specific diagnostic header names stay in the host layer and are passed through options. HTML-in-Canvas diagnostics separate `blockingMissing` from optional texture capabilities, so a host can use an available HTML-in-Canvas mode without treating missing WebGL/WebGPU paths as a failure. If the browser does not expose a usable render target, the recommendation is `enable-CanvasDrawElement`; packaged hosts can set the Chromium feature flag at the shell boundary while web hosts keep the DOM fallback path.
+
+XR panel size is derived from relative layout data before projection. `LayoutTree` split ratios and runtime UI `layout.weight` / `layout.rect` values normalize into panel `relativeRect` data, then into meter-based `size`. An explicit `xr.size` still wins when a host or agent needs a deliberate override. `createXRPanelContentViewport(panel, options)` keeps live DOM panels at usable internal pixel dimensions before texture or fallback scaling. `createXRPanelTextureQualitySummary(panel, options)` reports texture pixels, required min/target texture pixels, pixels per meter, thresholds, warning codes, and recommendation codes so headset hosts can show why a panel is soft before changing renderer code. `createXRPanelFrame(panel, options)` and `hitTestXRPanelFrame(frame, point, options)` define provider-owned world-space window affordances: header grab zone, content zone, action slots, and edge/corner resize handles. WebXR Browser does not expose native Meta Horizon OS window controls to web pages, so this frame contract is the reusable Symbiote analog; host apps may style and render it, but hit zones and operations stay provider-owned. `createXRSceneQualitySummary(scene, options)` aggregates provider texture, comfort, and facing diagnostics for all panels so server logs and headset smoke tests can classify scene quality without product-local math. `createXRSceneGeometrySummary(scene, options)` returns the same panel geometry summaries plus aggregate counts, minimum pixel density, first-panel viewport, pose adjustments, and facing adjustments for product dashboards that should not reimplement XR geometry math. `createXRVisualTestSummary(scene, options)` is the agent-facing visual audit contract: it returns pass/warn/fail checks, a spatial panel map, world-space rectangles, overlap warnings, content viewport checks, texture density checks, pose/facing checks, and optional frame/ray/reticle interaction checks from telemetry. `createXRReadinessSummary(input)` composes launch gate, HTML-in-Canvas, texture gate, scene quality, and session health into one data-only readiness status for public demos, logs, and headset smoke tests. `createXRPanelPoseComfortSummary(panel, options)` reports distance, eye-height offset, horizontal and vertical angles, and comfort warnings so hosts can tune placement without product-local pose math. `adjustXRPanelPoseForComfort(panel, options)` applies the same provider rules and records `poseAdjustment`; `createXRSpatialScene()` uses it by default unless `adjustComfort: false` is passed. `createXRPanelFacingSummary(panel, options)` reports whether panel yaw faces the viewer, and `adjustXRPanelRotationForViewer(panel, options)` records `rotationAdjustment` when provider rules rotate a panel into an aligned world-space pose; `createXRSpatialScene()` applies it by default unless `adjustFacing: false` is passed. `createXRPanelPointerTarget(hit, options)` maps normalized XR hits into content viewport pixel coordinates, and `XRPanelHost.dispatchPointerEvent(event)` relays those coordinates to the mounted live component. `createXRPanelGestureState()`, `updateXRPanelGesture()`, and `createXRLayoutTransactionFromGesture()` turn XR pointer gestures into `layout.updateNode` transactions for hosts that want editable spatial geometry without reimplementing provider math. `createXRPanelGeometrySummary(panel, preview)` returns data-only diagnostics for hosts that need to show the source size, normalized rectangle, meter size, preview pixels, content viewport, texture quality, pose comfort, pose adjustment, facing, rotation adjustment, position, and rotation without reimplementing projection logic.
 
 Automated XR development can install an optional IWER-compatible runtime without making `iwer` a required dependency:
 

@@ -1,4 +1,6 @@
 import {
+  adjustXRPanelPoseForComfort,
+  adjustXRPanelRotationForViewer,
   createXRPanelContentViewport,
   projectLayoutToXR,
 } from './layout-projection.js';
@@ -67,7 +69,13 @@ export function createXRSpatialScene(root, options = {}) {
     userSpace,
     preview,
     layout,
-    panels: layout.panels.map((panel) => {
+    panels: layout.panels.map((sourcePanel) => {
+      let panel = options.adjustComfort === false
+        ? sourcePanel
+        : adjustXRPanelPoseForComfort(sourcePanel, { userSpace });
+      panel = options.adjustFacing === false
+        ? panel
+        : adjustXRPanelRotationForViewer(panel, { userSpace });
       let previewPixels = {
         width: panel.size[0] * preview.pixelsPerMeter,
         height: panel.size[1] * preview.pixelsPerMeter,

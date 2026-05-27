@@ -26,6 +26,7 @@ export { dirOf, baseName, resolveImport, collectSkeletonFiles } from './skeleton
 export {
   EMPTY_PROJECT_GRAPH_METADATA,
   normalizeProjectGraphMetadata,
+  validateProjectGraphMetadata,
   pathMatchesPattern,
   findClusterForPath,
   buildSemanticGroups,
@@ -33,3 +34,13 @@ export {
 } from './project-graph-metadata.js'
 export { resolveSymbolFile, findConnectionPath } from './graph-algorithms.js'
 export { extractProjectTransactionsFromMessages } from './transaction-parser.js'
+export {
+  buildFlatGroups,
+  buildGraphStatItems,
+  prepareGraphBuild,
+} from './project-graph-build.js'
+export {
+  buildCanvasGraphModelFromSkeleton,
+  buildGraphModelFromSkeleton,
+} from '../canvas/project-graph-model.js'
+export { buildFileGraph, buildStructuredGraph } from '../canvas/project-graph-builder.js'

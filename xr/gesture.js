@@ -11,6 +11,16 @@ function roundMetric(value) {
   return Math.round(value * 1_000_000) / 1_000_000;
 }
 
+function vectorPatch(value, fallback = [], length = 3) {
+  if (Array.isArray(value)) {
+    return value.slice(0, length).map((item) => roundMetric(numberOr(item, 0)));
+  }
+  if (value && typeof value === 'object') {
+    return ['x', 'y', 'z'].slice(0, length).map((key, index) => roundMetric(numberOr(value[key], fallback[index] ?? 0)));
+  }
+  return fallback.length ? fallback.slice(0, length) : null;
+}
+
 function normalizePoint(point = {}) {
   return {
     x: clamp(numberOr(point.x, 0), 0, 1),
@@ -47,17 +57,38 @@ function moveRect(rect, delta, options = {}) {
 function resizeRect(rect, delta, options = {}) {
   let minWidth = numberOr(options.minWidth, 0.08);
   let minHeight = numberOr(options.minHeight, 0.08);
-  let width = clamp(rect.width + delta.x, minWidth, 1 - rect.x);
-  let height = clamp(rect.height + delta.y, minHeight, 1 - rect.y);
+  let handle = String(options.handle || options.frameTarget?.handle || 'southEast');
+  let left = /west/i.test(handle);
+  let right = /east/i.test(handle) || !left;
+  let top = /north/i.test(handle);
+  let bottom = /south/i.test(handle) || !top;
+  let x = rect.x;
+  let y = rect.y;
+  let width = rect.width;
+  let height = rect.height;
+  if (right) width = clamp(rect.width + delta.x, minWidth, 1 - rect.x);
+  if (bottom) height = clamp(rect.height + delta.y, minHeight, 1 - rect.y);
+  if (left) {
+    let nextX = clamp(rect.x + delta.x, 0, rect.x + rect.width - minWidth);
+    width = clamp(rect.width + rect.x - nextX, minWidth, 1);
+    x = nextX;
+  }
+  if (top) {
+    let nextY = clamp(rect.y + delta.y, 0, rect.y + rect.height - minHeight);
+    height = clamp(rect.height + rect.y - nextY, minHeight, 1);
+    y = nextY;
+  }
   return {
-    x: roundMetric(rect.x),
-    y: roundMetric(rect.y),
+    x: roundMetric(x),
+    y: roundMetric(y),
     width: roundMetric(width),
     height: roundMetric(height),
   };
 }
 
 function resolveGestureMode(options = {}) {
+  if (options.frameTarget?.operation === 'resize') return 'resize';
+  if (options.frameTarget?.operation === 'move') return 'move';
   if (options.mode === 'resize' || options.operation === 'resize') return 'resize';
   if (options.mode === 'move' || options.operation === 'move') return 'move';
   return 'read-only';
@@ -65,6 +96,7 @@ function resolveGestureMode(options = {}) {
 
 export function createXRPanelGestureState(options = {}) {
   let panel = options.panel || {};
+  let frameTarget = options.frameTarget || options.pointerEvent?.frameTarget || null;
   let startPointer = normalizePoint(options.pointerEvent?.point || options.point);
   let startRect = normalizeRect(options.relativeRect || panel.relativeRect || rectFromPanel(panel));
   return {
@@ -82,6 +114,8 @@ export function createXRPanelGestureState(options = {}) {
     contentPoint: options.pointerEvent?.contentPoint || null,
     delta: { x: 0, y: 0 },
     operation: resolveGestureMode(options),
+    frameTarget,
+    handle: options.handle || frameTarget?.handle || null,
   };
 }
 
@@ -95,7 +129,11 @@ export function updateXRPanelGesture(state = {}, pointerEvent = {}, options = {}
   let operation = resolveGestureMode({ ...state, ...options });
   let startRect = normalizeRect(state.startRect || state.relativeRect);
   let relativeRect = operation === 'resize'
-    ? resizeRect(startRect, delta, options)
+    ? resizeRect(startRect, delta, {
+      ...options,
+      handle: options.handle || state.handle,
+      frameTarget: options.frameTarget || state.frameTarget,
+    })
     : operation === 'move'
       ? moveRect(startRect, delta, options)
       : startRect;
@@ -109,6 +147,8 @@ export function updateXRPanelGesture(state = {}, pointerEvent = {}, options = {}
     delta,
     relativeRect,
     operation,
+    frameTarget: options.frameTarget || state.frameTarget || null,
+    handle: options.handle || state.handle || null,
   };
 }
 
@@ -141,8 +181,47 @@ export function createXRLayoutTransactionFromGesture(state = {}, options = {}) {
       gesture: {
         panelId: state.panelId,
         operation: state.operation,
+        handle: state.handle || null,
         delta: state.delta,
         contentPoint: state.contentPoint,
+      },
+    },
+  };
+}
+
+export function createXRLayoutTransactionFromPanelPose(state = {}, options = {}) {
+  let layoutId = String(options.layoutId || state.layoutId || '');
+  let nodeId = String(options.nodeId || state.nodeId || state.panelId || '');
+  let panelId = String(state.panelId || nodeId || '');
+  let pose = state.pose && typeof state.pose === 'object' ? state.pose : state;
+  let position = vectorPatch(pose.position);
+  let rotation = vectorPatch(pose.rotation, state.rotation);
+  let size = vectorPatch(pose.size, state.size, 2);
+  if (!layoutId || !nodeId || !position) {
+    return null;
+  }
+  let xr = { position };
+  if (rotation) xr.rotation = rotation;
+  if (size) xr.size = size;
+  return {
+    version: 'project-transaction-v1',
+    id: options.id || `tx:xr-pose:${layoutId}:${nodeId}`,
+    targetProject: options.targetProject || null,
+    operations: [{
+      type: 'layout.updateNode',
+      layout: layoutId,
+      nodeId,
+      patch: {
+        props: { xr },
+      },
+    }],
+    metadata: {
+      source: 'symbiote-node/xr',
+      gesture: {
+        panelId,
+        operation: state.operation || state.frameTarget?.operation || 'move',
+        handle: state.handle || state.frameTarget?.handle || null,
+        frameTarget: state.frameTarget || null,
       },
     },
   };

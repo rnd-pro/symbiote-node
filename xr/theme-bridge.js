@@ -36,6 +36,21 @@ function readCssToken(root, cssVar, computedStyle) {
   return value || XR_THEME_FALLBACKS[cssVar] || '';
 }
 
+function resolveCssProperty(root, cssVar, property) {
+  let documentRef = root?.ownerDocument || root?.documentElement?.ownerDocument || null;
+  let parent = documentRef?.body || root;
+  if (!documentRef?.createElement || !parent?.append || typeof globalThis.getComputedStyle !== 'function') return '';
+  let probe = documentRef.createElement('span');
+  probe.style.position = 'absolute';
+  probe.style.pointerEvents = 'none';
+  probe.style.opacity = '0';
+  probe.style[property] = `var(${cssVar})`;
+  parent.append(probe);
+  let value = globalThis.getComputedStyle(probe).getPropertyValue(property).trim();
+  probe.remove?.();
+  return value;
+}
+
 export function createXRThemeSnapshot(rootOrDocument = globalThis.document, options = {}) {
   let root = resolveThemeRoot(rootOrDocument);
   let computedStyle = root && typeof globalThis.getComputedStyle === 'function'
@@ -53,12 +68,17 @@ export function createXRThemeSnapshot(rootOrDocument = globalThis.document, opti
     tokens,
     material: {
       background: tokens['--sn-xr-panel-bg'],
+      backgroundColor: resolveCssProperty(root, '--sn-xr-panel-bg', 'background-color') || tokens['--sn-xr-panel-bg'],
       border: tokens['--sn-xr-panel-border'],
+      borderColor: resolveCssProperty(root, '--sn-xr-panel-border', 'border-color') || tokens['--sn-xr-panel-border'],
       radius: tokens['--sn-xr-panel-radius'],
       shadow: tokens['--sn-xr-panel-shadow'],
       pointer: tokens['--sn-xr-pointer-color'],
+      pointerColor: resolveCssProperty(root, '--sn-xr-pointer-color', 'color') || tokens['--sn-xr-pointer-color'],
       text: tokens['--sn-text'],
+      textColor: resolveCssProperty(root, '--sn-text', 'color') || tokens['--sn-text'],
       textDim: tokens['--sn-text-dim'],
+      textDimColor: resolveCssProperty(root, '--sn-text-dim', 'color') || tokens['--sn-text-dim'],
       gap: tokens['--sn-layout-resizer-size'],
       motion: {
         duration: tokens['--sn-duration-fast'],

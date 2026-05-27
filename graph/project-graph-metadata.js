@@ -1,4 +1,4 @@
-import { normalizeGraphColorReference } from './theme-contract.js'
+import { isGraphColorReference, normalizeGraphColorReference } from './theme-contract.js'
 
 export const EMPTY_PROJECT_GRAPH_METADATA = Object.freeze({
   version: 1,
@@ -74,6 +74,48 @@ function normalizeStories(input) {
     .filter((story) => story.beats.length > 0)
 }
 
+function assertStringArray(value, pathName) {
+  if (value === undefined) return
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string' || item.trim() === '')) {
+    throw new Error(`Invalid project graph metadata: ${pathName} must be an array of non-empty strings`)
+  }
+}
+
+function validateStoriesInput(stories) {
+  if (stories === undefined) return
+  if (!Array.isArray(stories)) {
+    throw new Error('Invalid project graph metadata: "stories" must be an array')
+  }
+
+  for (let storyIndex = 0; storyIndex < stories.length; storyIndex++) {
+    let story = stories[storyIndex]
+    if (!story || typeof story !== 'object' || Array.isArray(story)) {
+      throw new Error(`Invalid project graph metadata: stories[${storyIndex}] must be an object`)
+    }
+    for (let key of ['id', 'label', 'title', 'description']) {
+      if (story[key] !== undefined && typeof story[key] !== 'string') {
+        throw new Error(`Invalid project graph metadata: stories[${storyIndex}].${key} must be a string`)
+      }
+    }
+    if (!Array.isArray(story.beats) || story.beats.length === 0) {
+      throw new Error(`Invalid project graph metadata: stories[${storyIndex}].beats must be a non-empty array`)
+    }
+    for (let beatIndex = 0; beatIndex < story.beats.length; beatIndex++) {
+      let beat = story.beats[beatIndex]
+      if (!beat || typeof beat !== 'object' || Array.isArray(beat)) {
+        throw new Error(`Invalid project graph metadata: stories[${storyIndex}].beats[${beatIndex}] must be an object`)
+      }
+      for (let key of ['id', 'label', 'title', 'narrative', 'description', 'clusterId', 'cluster', 'focusPath', 'path']) {
+        if (beat[key] !== undefined && typeof beat[key] !== 'string') {
+          throw new Error(`Invalid project graph metadata: stories[${storyIndex}].beats[${beatIndex}].${key} must be a string`)
+        }
+      }
+      assertStringArray(beat.nodes, `stories[${storyIndex}].beats[${beatIndex}].nodes`)
+      assertStringArray(beat.edges, `stories[${storyIndex}].beats[${beatIndex}].edges`)
+    }
+  }
+}
+
 export function normalizeProjectGraphMetadata(input = {}) {
   let source = input && typeof input === 'object' ? input : {}
   let clusters = Array.isArray(source.clusters) ? source.clusters : []
@@ -101,6 +143,50 @@ export function normalizeProjectGraphMetadata(input = {}) {
     hiddenNodes: Array.isArray(source.hiddenNodes) ? source.hiddenNodes : [],
     focusPresets: Array.isArray(source.focusPresets) ? source.focusPresets : [],
   }
+}
+
+export function validateProjectGraphMetadata(input = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new Error('Invalid project graph metadata: expected a JSON object')
+  }
+
+  if (input.version !== undefined && (!Number.isFinite(Number(input.version)) || Number(input.version) < 1)) {
+    throw new Error('Invalid project graph metadata: "version" must be a positive number')
+  }
+
+  if (input.clusters !== undefined && !Array.isArray(input.clusters)) {
+    throw new Error('Invalid project graph metadata: "clusters" must be an array')
+  }
+
+  for (let index = 0; index < (input.clusters || []).length; index++) {
+    let cluster = input.clusters[index]
+    if (!cluster || typeof cluster !== 'object' || Array.isArray(cluster)) {
+      throw new Error(`Invalid project graph metadata: clusters[${index}] must be an object`)
+    }
+    let paths = normalizePatterns(cluster)
+    if (paths.length === 0) {
+      throw new Error(`Invalid project graph metadata: clusters[${index}] must define at least one path`)
+    }
+    if (cluster.color !== undefined && !isGraphColorReference(cluster.color)) {
+      throw new Error(`Invalid project graph metadata: clusters[${index}].color must be a hex color or symbiote-node CSS token reference`)
+    }
+  }
+
+  for (let key of ['nodeDescriptions', 'layoutPins']) {
+    if (input[key] !== undefined && (!input[key] || typeof input[key] !== 'object' || Array.isArray(input[key]))) {
+      throw new Error(`Invalid project graph metadata: "${key}" must be an object`)
+    }
+  }
+
+  validateStoriesInput(input.stories)
+
+  for (let key of ['hiddenNodes', 'focusPresets']) {
+    if (input[key] !== undefined && !Array.isArray(input[key])) {
+      throw new Error(`Invalid project graph metadata: "${key}" must be an array`)
+    }
+  }
+
+  return normalizeProjectGraphMetadata(input)
 }
 
 function escapeRegex(value) {

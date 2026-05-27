@@ -50,7 +50,7 @@ import {
   getUiSchema,
 } from '../manifest/index.js';
 import { HTML_IN_CANVAS_RENDERER } from '../canvas/html-in-canvas.js';
-import { WEBXR_RENDERER } from '../xr/index.js';
+import { WEBXR_RENDERER, XR_THREE_WEBXR_ADAPTER } from '../xr/index.js';
 
 let __dirname = dirname(fileURLToPath(import.meta.url));
 let PKG_PATH = resolve(__dirname, '../package.json');
@@ -650,6 +650,7 @@ async function cmdDiscover(options = {}) {
       renderers: [
         HTML_IN_CANVAS_RENDERER,
         WEBXR_RENDERER,
+        XR_THREE_WEBXR_ADAPTER,
       ],
       components: listComponents().map((c) => ({
         tagName: c.tagName,

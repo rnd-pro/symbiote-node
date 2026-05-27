@@ -274,6 +274,9 @@ export function createXRWorkbenchDiagnosticPayload(options = {}) {
   let launchGate = options.launchGate ?? details.launchGate ?? null;
   let sceneQuality = options.sceneQuality ?? details.sceneQuality ?? null;
   let readiness = options.readiness ?? details.readiness ?? null;
+  let visual = options.visual ?? details.visual ?? null;
+  let visualReadiness = options.visualReadiness ?? details.visualReadiness ?? null;
+  let interactionReadiness = options.interactionReadiness ?? details.interactionReadiness ?? null;
 
   return {
     version: 'xr-workbench-diagnostic-payload-v1',
@@ -297,6 +300,9 @@ export function createXRWorkbenchDiagnosticPayload(options = {}) {
       launchGate,
       sceneQuality,
       readiness,
+      visual,
+      visualReadiness,
+      interactionReadiness,
     },
   };
 }

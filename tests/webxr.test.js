@@ -875,6 +875,9 @@ describe('WebXR provider adapter', () => {
       launchGate: { blocked: true },
       sceneQuality: { status: 'warning' },
       readiness: { status: 'blocked' },
+      visual: { version: 'xr-visual-test-summary-v1', status: 'warning' },
+      visualReadiness: { version: 'xr-visual-agent-readiness-v1', status: 'warning', reason: 'visual-warning' },
+      interactionReadiness: { version: 'xr-three-interaction-readiness-v1', status: 'blocked', reason: 'missing-hit-state' },
     });
 
     assert.equal(payload.version, 'xr-workbench-diagnostic-payload-v1');
@@ -889,6 +892,9 @@ describe('WebXR provider adapter', () => {
     assert.deepEqual(payload.details.controller, { mode: 'immersive-vr' });
     assert.deepEqual(payload.details.htmlCanvas, { supported: false });
     assert.deepEqual(payload.details.texture, { blocked: true });
+    assert.equal(payload.details.visual.version, 'xr-visual-test-summary-v1');
+    assert.equal(payload.details.visualReadiness.version, 'xr-visual-agent-readiness-v1');
+    assert.equal(payload.details.interactionReadiness.version, 'xr-three-interaction-readiness-v1');
   });
 
   it('derives XR panel sizes from relative layout ratios', () => {

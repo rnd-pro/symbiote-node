@@ -2708,6 +2708,137 @@ describe('WebXR provider adapter', () => {
     assert.equal(resolver.getState().records[0].stage, 'three-canvas-texture-ready');
   });
 
+  it('uses native Three HTMLTexture for WebGL HTML-in-Canvas texture uploads', () => {
+    class FakeHTMLTexture {
+      constructor(element) {
+        this.image = element;
+        this.isTexture = true;
+        this.needsUpdate = false;
+        this.generateMipmaps = true;
+        this.colorSpace = null;
+      }
+    }
+    let renderPreviewCount = 0;
+    let element = { dataset: { textureKey: 'content-1' } };
+    let resolver = createXRThreeHtmlCanvasTextureResolver({
+      THREE: {
+        HTMLTexture: FakeHTMLTexture,
+        LinearFilter: 'linear-filter',
+        SRGBColorSpace: 'srgb',
+      },
+      htmlCanvasRenderer: {
+        renderPanelPreview() {
+          renderPreviewCount += 1;
+          return { rendered: true, mode: 'canvas2d', preview: true };
+        },
+      },
+    });
+
+    let texture = resolver.resolve({
+      panel: {
+        id: 'chat',
+        contentViewport: { width: 1280, height: 720 },
+      },
+      element,
+      support: {
+        modes: { webgl: true },
+        diagnostics: { textureUploadAvailable: true },
+      },
+      summary: { source: 'html-in-canvas', mode: 'webgl' },
+    });
+    let state = resolver.getState();
+
+    assert.equal(texture.isTexture, true);
+    assert.equal(texture.image, element);
+    assert.equal(texture.needsUpdate, true);
+    assert.equal(renderPreviewCount, 0);
+    assert.equal(state.textureCount, 1);
+    assert.equal(state.records[0].stage, 'three-html-texture-ready');
+    assert.equal(state.records[0].mode, 'three-html-texture');
+    assert.deepEqual(state.records[0].texturePixels, { width: 1280, height: 720 });
+    assert.equal(texture.generateMipmaps, false);
+    assert.equal(texture.colorSpace, 'srgb');
+  });
+
+  it('does not report WebGL HTML-in-Canvas support as ready without Three HTMLTexture', () => {
+    let renderPreviewCount = 0;
+    let resolver = createXRThreeHtmlCanvasTextureResolver({
+      THREE: {},
+      htmlCanvasRenderer: {
+        renderPanelPreview() {
+          renderPreviewCount += 1;
+          return { rendered: false, mode: 'canvas2d', reason: 'html-in-canvas-unsupported' };
+        },
+      },
+    });
+
+    assert.equal(resolver.resolve({
+      panel: {
+        id: 'chat',
+        contentViewport: { width: 1280, height: 720 },
+      },
+      element: { dataset: {} },
+      support: {
+        modes: { webgl: true },
+        diagnostics: { textureUploadAvailable: true },
+      },
+      summary: { source: 'html-in-canvas', mode: 'webgl' },
+    }), null);
+
+    let state = resolver.getState();
+    assert.equal(state.textureCount, 0);
+    assert.equal(renderPreviewCount, 0);
+    assert.equal(state.records[0].stage, 'three-html-texture-api');
+    assert.equal(state.records[0].reason, 'three-html-texture-api-missing');
+  });
+
+  it('keeps strict texture gates blocked when WebGL HTML-in-Canvas lacks Three HTMLTexture', () => {
+    let resolver = createXRThreeHtmlCanvasTextureResolver({
+      THREE: {},
+      htmlCanvasRenderer: {
+        renderPanelPreview() {
+          return { rendered: false, mode: 'canvas2d', reason: 'html-in-canvas-unsupported' };
+        },
+      },
+    });
+    resolver.resolve({
+      panel: {
+        id: 'graph',
+        contentViewport: { width: 1280, height: 720 },
+      },
+      element: { dataset: {} },
+      support: {
+        modes: { webgl: true },
+        diagnostics: { supported: true, textureUploadAvailable: true },
+      },
+      summary: { source: 'html-in-canvas', mode: 'webgl' },
+    });
+    let gate = createXRTextureGateSummary({
+      strict: true,
+      panelCount: 1,
+      support: {
+        diagnostics: { supported: true, mode: 'webgl', textureUploadAvailable: true },
+      },
+      records: [
+        {
+          ok: false,
+          panelId: 'graph',
+          reason: 'three-html-texture-api-missing',
+          stage: 'three-html-texture-api',
+          source: 'html-in-canvas',
+          textureApplied: false,
+        },
+      ],
+      resolverState: resolver.getState(),
+    });
+
+    assert.equal(gate.blocked, true);
+    assert.equal(gate.reason, 'three-html-texture-api-missing');
+    assert.equal(gate.stage, 'three-html-texture-api');
+    assert.equal(gate.resolverTextures, 0);
+    assert.equal(gate.resolverStages[0].stage, 'three-html-texture-api');
+  });
+
   it('keeps Three panel textures dirty-driven instead of redrawing every frame', () => {
     class FakeCanvas {
       constructor() {

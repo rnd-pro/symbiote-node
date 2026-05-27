@@ -769,6 +769,32 @@ function createThreeCanvasTexture(THREE, canvas, options = {}) {
   return texture;
 }
 
+function createThreeHtmlElementTexture(THREE, element, options = {}) {
+  if (!THREE || !element || typeof THREE.HTMLTexture !== 'function') return null;
+  let texture;
+  try {
+    texture = new THREE.HTMLTexture(element);
+  } catch {
+    return null;
+  }
+  texture.name = options.name || 'sn-xr-html-element-texture';
+  applyTextureQualityOptions(THREE, texture, options);
+  if ('isTexture' in texture) texture.isTexture = true;
+  return texture;
+}
+
+function requiresThreeHtmlTexture(input = {}) {
+  let support = input.support || {};
+  let diagnostics = support.diagnostics || {};
+  return diagnostics.textureUploadAvailable === true ||
+    support.modes?.webgl === true ||
+    support.modes?.webgpu === true;
+}
+
+function canUseThreeHtmlTexture(THREE, input = {}) {
+  return typeof THREE?.HTMLTexture === 'function' && input.element && requiresThreeHtmlTexture(input);
+}
+
 function resolveCanvasSource(input = {}) {
   let explicitCanvas = input.canvas || input.prepareResult?.canvas || null;
   if (explicitCanvas) return explicitCanvas;
@@ -793,7 +819,7 @@ export function createXRThreeHtmlCanvasTextureResolver(options = {}) {
       panel.textureKey ||
       input.element?.dataset?.textureKey ||
       input.element?.dataset?.updatedAt ||
-      `${canvas.width}x${canvas.height}:${policy.texturePixelRatio}:${policy.redrawMode}`);
+      `${canvas?.width || 0}x${canvas?.height || 0}:${policy.texturePixelRatio}:${policy.redrawMode}`);
   }
 
   function resolveTexture(input = {}) {
@@ -819,11 +845,35 @@ export function createXRThreeHtmlCanvasTextureResolver(options = {}) {
       ...(input.textureQuality || {}),
       preferTargetDensity: input.textureQuality?.preferTargetDensity ?? options.preferTargetDensity ?? true,
     });
-    let canvas = resolveCanvasSource(input) || textures.get(panelId)?.canvas || createTextureCanvas(documentRef, panel, {
+    if (requiresThreeHtmlTexture(input) && typeof THREE?.HTMLTexture !== 'function') {
+      records.set(panelId, {
+        ok: false,
+        panelId,
+        reason: 'three-html-texture-api-missing',
+        stage: 'three-html-texture-api',
+        textureApplied: false,
+        width: panel.contentViewport?.width || panel.texturePixels?.width || null,
+        height: panel.contentViewport?.height || panel.texturePixels?.height || null,
+        render: null,
+        quality: createXRPanelTextureQualitySummary(panel, {
+          ...options,
+          textureWidth: panel.contentViewport?.width || panel.texturePixels?.width || 0,
+          textureHeight: panel.contentViewport?.height || panel.texturePixels?.height || 0,
+          texturePixelRatio: policy.texturePixelRatio,
+        }),
+        redraw: false,
+        renderCount: 0,
+        redrawCount: 0,
+        lastUploadMs: null,
+      });
+      return null;
+    }
+    let htmlTextureSupported = canUseThreeHtmlTexture(THREE, input);
+    let canvas = resolveCanvasSource(input) || textures.get(panelId)?.canvas || (!htmlTextureSupported ? createTextureCanvas(documentRef, panel, {
       ...options,
       qualityPolicy: policy,
-    });
-    if (!canvas) {
+    }) : null);
+    if (!canvas && !htmlTextureSupported) {
       records.set(panelId, {
         ok: false,
         panelId,
@@ -835,14 +885,16 @@ export function createXRThreeHtmlCanvasTextureResolver(options = {}) {
       });
       return null;
     }
-    resizeTextureCanvas(canvas, panel, { ...options, qualityPolicy: policy });
+    if (canvas) resizeTextureCanvas(canvas, panel, { ...options, qualityPolicy: policy });
     let dirtyKey = textureDirtyKey(input, canvas, policy);
     let entry = textures.get(panelId);
     let redrawMode = input.redrawMode || policy.redrawMode || options.redrawMode || 'dirty';
+    let textureWidth = canvas?.width || panel.contentViewport?.width || panel.texturePixels?.width || 0;
+    let textureHeight = canvas?.height || panel.contentViewport?.height || panel.texturePixels?.height || 0;
     let quality = createXRPanelTextureQualitySummary(panel, {
       ...options,
-      textureWidth: canvas.width,
-      textureHeight: canvas.height,
+      textureWidth,
+      textureHeight,
       texturePixelRatio: policy.texturePixelRatio,
     });
     if (entry?.texture && entry.dirtyKey === dirtyKey && redrawMode !== 'always') {
@@ -850,10 +902,12 @@ export function createXRThreeHtmlCanvasTextureResolver(options = {}) {
         ok: true,
         panelId,
         reason: null,
-        stage: 'three-canvas-texture-reused',
+        stage: entry.stage === 'three-html-texture-ready'
+          ? 'three-html-texture-reused'
+          : 'three-canvas-texture-reused',
         textureApplied: true,
-        width: canvas.width,
-        height: canvas.height,
+        width: textureWidth,
+        height: textureHeight,
         render: entry.render || null,
         quality,
         redraw: false,
@@ -864,6 +918,63 @@ export function createXRThreeHtmlCanvasTextureResolver(options = {}) {
       return entry.texture;
     }
     let startedAt = nowMs(options);
+    if (htmlTextureSupported) {
+      let texture = entry?.texture || createThreeHtmlElementTexture(THREE, input.element, {
+        name: `sn-xr-panel-${panelId}-html-texture`,
+        ...(options.texture || {}),
+      });
+      let finishedAt = nowMs(options);
+      if (!texture) {
+        records.set(panelId, {
+          ok: false,
+          panelId,
+          reason: 'three-html-texture-api-missing',
+          stage: 'three-html-texture-api',
+          textureApplied: false,
+          width: textureWidth || null,
+          height: textureHeight || null,
+          render: null,
+          quality,
+          redraw: true,
+          renderCount: entry?.renderCount || 0,
+          redrawCount: entry?.redrawCount || 0,
+          lastUploadMs: null,
+        });
+        return null;
+      }
+      let textureOptions = applyTextureQualityOptions(THREE, texture, options.texture || {});
+      let renderCount = (entry?.renderCount || 0) + 1;
+      let redrawCount = (entry?.redrawCount || 0) + 1;
+      let lastUploadMs = Math.max(0, finishedAt - startedAt);
+      textures.set(panelId, {
+        canvas,
+        texture,
+        dirtyKey,
+        render: { rendered: true, mode: 'three-html-texture' },
+        renderCount,
+        redrawCount,
+        lastUploadMs,
+        textureOptions,
+        stage: 'three-html-texture-ready',
+      });
+      records.set(panelId, {
+        ok: true,
+        panelId,
+        reason: null,
+        stage: 'three-html-texture-ready',
+        textureApplied: true,
+        width: textureWidth || null,
+        height: textureHeight || null,
+        render: { rendered: true, mode: 'three-html-texture' },
+        quality,
+        redraw: true,
+        renderCount,
+        redrawCount,
+        lastUploadMs,
+        textureOptions,
+      });
+      return texture;
+    }
     let renderResult = htmlCanvasRenderer.renderPanelPreview(panelId, canvas, {
       width: canvas.width,
       height: canvas.height,

@@ -2662,8 +2662,7 @@ export function createXRThreeSessionOptions(mode = 'immersive-vr', startOptions 
   let explicitOptionalFeatures = normalizeStringList(startOptions.optionalFeatures);
   let requiredFeatures = [...new Set(normalizeStringList(startOptions.requiredFeatures))];
   let optionalFeatures = [...new Set(explicitOptionalFeatures.length ? explicitOptionalFeatures : defaultOptionalFeatures)];
-  let referenceSpaceType = startOptions.referenceSpaceType ||
-    (mode === 'immersive-ar' ? WEBXR_FEATURES.local : WEBXR_FEATURES.localFloor);
+  let referenceSpaceType = startOptions.referenceSpaceType || WEBXR_FEATURES.localFloor;
   let result = {
     requiredFeatures,
     optionalFeatures,

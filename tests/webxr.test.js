@@ -21,6 +21,7 @@ import {
   createXRPanelFacingSummary,
   createXRPanelPoseComfortSummary,
   createXRPanelTextureQualitySummary,
+  createXRTextureGateSummary,
   createXRTextureQualityPolicy,
   createXRSceneGeometrySummary,
   createXRSceneQualitySummary,
@@ -231,6 +232,51 @@ describe('WebXR provider adapter', () => {
     assert.equal(ready.canStart, true);
     assert.equal(ready.reason, 'ready');
     assert.equal(ready.blockingChecks.length, 0);
+  });
+
+  it('counts public Three texture bridge records as ready texture gate input', () => {
+    let gate = createXRTextureGateSummary({
+      strict: true,
+      panelCount: 2,
+      support: {
+        diagnostics: {
+          supported: true,
+          mode: 'canvas2d',
+          missing: [],
+          blockingMissing: [],
+        },
+      },
+      records: [
+        {
+          ok: true,
+          panelId: 'left',
+          stage: 'three-material-applied',
+          source: 'html-in-canvas',
+          textureApplied: true,
+        },
+        {
+          ok: true,
+          panelId: 'right',
+          stage: 'three-material-applied',
+          source: 'html-in-canvas',
+          textureApplied: true,
+        },
+      ],
+      resolverState: {
+        version: 'xr-three-html-canvas-texture-resolver-v1',
+        textureCount: 2,
+        records: [
+          { panelId: 'left', ok: true, stage: 'three-canvas-texture-ready', textureApplied: true },
+          { panelId: 'right', ok: true, stage: 'three-canvas-texture-ready', textureApplied: true },
+        ],
+      },
+    });
+
+    assert.equal(gate.blocked, false);
+    assert.equal(gate.ready, 2);
+    assert.equal(gate.total, 2);
+    assert.equal(gate.bridgeStages[0].source, 'html-in-canvas');
+    assert.equal(gate.resolverTextures, 2);
   });
 
   it('composes XR readiness from provider diagnostics', () => {
@@ -4562,7 +4608,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(vrOptions.optionalFeatures.includes(WEBXR_FEATURES.localFloor), true);
     assert.equal(vrOptions.optionalFeatures.includes(WEBXR_FEATURES.boundedFloor), true);
     assert.equal(vrOptions.optionalFeatures.includes(WEBXR_FEATURES.domOverlay), true);
-    assert.equal(arOptions.referenceSpaceType, WEBXR_FEATURES.local);
+    assert.equal(arOptions.referenceSpaceType, WEBXR_FEATURES.localFloor);
     assert.deepEqual(arOptions.optionalFeatures, ['dom-overlay', 'hit-test']);
     assert.deepEqual(arOptions.requiredFeatures, ['local']);
   });
@@ -4605,7 +4651,7 @@ describe('WebXR provider adapter', () => {
     await controllerApi.start('immersive-ar', { target: targetRenderer });
 
     assert.equal(adapterOptions[0].referenceSpaceType, WEBXR_FEATURES.localFloor);
-    assert.equal(adapterOptions[1].referenceSpaceType, WEBXR_FEATURES.local);
+    assert.equal(adapterOptions[1].referenceSpaceType, WEBXR_FEATURES.localFloor);
     assert.equal(requests[0].options.optionalFeatures.includes(WEBXR_FEATURES.localFloor), true);
     assert.equal(requests[0].options.optionalFeatures.includes(WEBXR_FEATURES.boundedFloor), true);
     assert.equal(requests[0].options.optionalFeatures.includes(WEBXR_FEATURES.domOverlay), true);

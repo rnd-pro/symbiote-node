@@ -226,7 +226,7 @@ export function createXRPanelTextureSourceSummary(panel = {}, prepareResult = {}
 }
 
 function normalizeTextureBridgeRecord(record = {}) {
-  let source = record.summary?.source || null;
+  let source = record.summary?.source || record.source || null;
   let ok = record.ok === true && source === 'html-in-canvas';
   return {
     panelId: record.panelId || record.summary?.panelId || null,

@@ -280,6 +280,7 @@ export function createXRWorkbenchDiagnosticPayload(options = {}) {
   let visual = options.visual ?? details.visual ?? null;
   let visualReadiness = options.visualReadiness ?? details.visualReadiness ?? null;
   let interactionReadiness = options.interactionReadiness ?? details.interactionReadiness ?? null;
+  let surface = objectOr(options.surface);
 
   return {
     version: 'xr-workbench-diagnostic-payload-v1',
@@ -294,6 +295,13 @@ export function createXRWorkbenchDiagnosticPayload(options = {}) {
       reason: launch.reason || null,
     },
     clientId: options.clientId || null,
+    surface: {
+      surfaceKind: surface.surfaceKind || null,
+      entrypoint: surface.entrypoint || null,
+      projectId: surface.projectId || null,
+      targetSection: surface.targetSection || null,
+      panelContentKind: surface.panelContentKind || null,
+    },
     session: options.session || null,
     error: options.error || null,
     details: {

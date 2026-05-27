@@ -1002,6 +1002,13 @@ describe('WebXR provider adapter', () => {
       modes: { immersiveVr: true },
       launch: { canLaunch: false, mode: 'immersive-vr', reason: 'request-failed' },
       clientId: 'client-1',
+      surface: {
+        surfaceKind: 'production',
+        entrypoint: 'spatial-layout',
+        projectId: 'agent-portal',
+        targetSection: 'graph',
+        panelContentKind: 'portal-runtime-layout',
+      },
       session: { health: { status: 'failed' } },
       error: 'NotSupportedError',
       details: { controller: { mode: 'immersive-vr' } },
@@ -1024,6 +1031,11 @@ describe('WebXR provider adapter', () => {
       mode: 'immersive-vr',
       reason: 'request-failed',
     });
+    assert.equal(payload.surface.surfaceKind, 'production');
+    assert.equal(payload.surface.entrypoint, 'spatial-layout');
+    assert.equal(payload.surface.projectId, 'agent-portal');
+    assert.equal(payload.surface.targetSection, 'graph');
+    assert.equal(payload.surface.panelContentKind, 'portal-runtime-layout');
     assert.deepEqual(payload.details.controller, { mode: 'immersive-vr' });
     assert.deepEqual(payload.details.htmlCanvas, { supported: false });
     assert.deepEqual(payload.details.texture, { blocked: true });

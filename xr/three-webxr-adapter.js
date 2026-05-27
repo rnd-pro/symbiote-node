@@ -531,6 +531,29 @@ function createMaterial(THREE, panel, options = {}) {
   });
 }
 
+function applyStrictTextureDiagnosticMaterial(mesh, textureRecord, options = {}) {
+  if (!mesh) return;
+  mesh.visible = true;
+  mesh.userData ||= {};
+  mesh.userData.strictTextureHidden = false;
+  mesh.userData.strictTextureDiagnostic = true;
+  mesh.userData.strictTextureDiagnosticReason = textureRecord?.reason || textureRecord?.stage || 'texture-unavailable';
+  let material = mesh.material;
+  if (!material) return;
+  material.map = null;
+  material.transparent = true;
+  material.opacity = Number(options.strictTextureDiagnosticOpacity ?? 0.46);
+  if (material.color?.setHex) {
+    material.color.setHex(Number(options.strictTextureDiagnosticColor ?? 0x5b6572));
+  } else {
+    material.color = Number(options.strictTextureDiagnosticColor ?? 0x5b6572);
+  }
+  if (material.emissive?.setHex) {
+    material.emissive.setHex(Number(options.strictTextureDiagnosticEmissive ?? 0x15191f));
+  }
+  markMaterialUpdated(material);
+}
+
 function resolvePanelElement(panel, options = {}) {
   if (typeof options.getPanelElement === 'function') {
     return options.getPanelElement(panel.id, panel);
@@ -1147,19 +1170,17 @@ export function createXRThreePanelSceneAdapter(options = {}) {
     }
     panels.clear();
     textureRecords.clear();
-    let hiddenPanelIds = [];
+    let diagnosticPanelIds = [];
     for (let panel of xrScene?.panels || []) {
       let mesh = createPanelMesh(THREE, panel, { ...options, ...setOptions });
       let bridge = setOptions.textureBridge || textureBridge;
       if (bridge?.applyPanelTexture) {
         let texture = bridge.applyPanelTexture(mesh, panel, setOptions.textureOptions || {});
         textureRecords.set(panel.id, texture);
-        let hideStrictFailure = Boolean(setOptions.hideStrictTextureFailures ?? options.hideStrictTextureFailures);
-        if (hideStrictFailure && texture?.strictRequired && !texture.ok) {
-          mesh.visible = false;
-          mesh.userData ||= {};
-          mesh.userData.strictTextureHidden = true;
-          hiddenPanelIds.push(panel.id);
+        let diagnoseStrictFailure = Boolean(setOptions.hideStrictTextureFailures ?? options.hideStrictTextureFailures);
+        if (diagnoseStrictFailure && texture?.strictRequired && !texture.ok) {
+          applyStrictTextureDiagnosticMaterial(mesh, texture, { ...options, ...setOptions });
+          diagnosticPanelIds.push(panel.id);
         }
       }
       scene.add(mesh);
@@ -1170,8 +1191,10 @@ export function createXRThreePanelSceneAdapter(options = {}) {
       scene,
       panelCount: panels.size,
       renderedPanelCount: [...panels.values()].filter((mesh) => mesh.visible !== false).length,
-      hiddenPanelCount: hiddenPanelIds.length,
-      hiddenPanelIds,
+      hiddenPanelCount: 0,
+      hiddenPanelIds: [],
+      diagnosticPanelCount: diagnosticPanelIds.length,
+      diagnosticPanelIds,
       panelIds: [...panels.keys()],
       textureSources: [...textureRecords.values()],
     };
@@ -1195,9 +1218,11 @@ export function createXRThreePanelSceneAdapter(options = {}) {
         missing: check.missing,
         panelCount: panels.size,
         renderedPanelCount: [...panels.values()].filter((mesh) => mesh.visible !== false).length,
-        hiddenPanelCount: [...panels.values()].filter((mesh) => mesh.userData?.strictTextureHidden).length,
-        hiddenPanelIds: [...panels.values()]
-          .filter((mesh) => mesh.userData?.strictTextureHidden)
+        hiddenPanelCount: 0,
+        hiddenPanelIds: [],
+        diagnosticPanelCount: [...panels.values()].filter((mesh) => mesh.userData?.strictTextureDiagnostic).length,
+        diagnosticPanelIds: [...panels.values()]
+          .filter((mesh) => mesh.userData?.strictTextureDiagnostic)
           .map((mesh) => mesh.userData?.panelId)
           .filter(Boolean),
         panelIds: [...panels.keys()],
@@ -1227,7 +1252,9 @@ export function createXRThreePanelSceneAdapter(options = {}) {
         texturePixels: record.textureQuality?.texturePixels || null,
         requiredPixels: record.textureQuality?.requiredPixels || null,
         pixelsPerMeter: record.textureQuality?.pixelsPerMeter?.min || null,
-        hidden: Boolean(panels.get(record.panelId)?.userData?.strictTextureHidden),
+        hidden: false,
+        diagnostic: Boolean(panels.get(record.panelId)?.userData?.strictTextureDiagnostic),
+        diagnosticReason: panels.get(record.panelId)?.userData?.strictTextureDiagnosticReason || null,
         support: record.support || null,
       })),
     };

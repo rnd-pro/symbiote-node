@@ -831,12 +831,16 @@ describe('WebXR provider adapter', () => {
       readiness: { status: 'ready' },
       sceneQuality: { status: 'target' },
       threeSessionDiagnostics: {
+        frames: 42,
         hover: {
           panelId: 'graph',
           frameTarget: { panelId: 'graph', operation: 'move', zone: 'move' },
         },
       },
       threeDiagnostics: {
+        panelCount: 2,
+        renderedPanelCount: 2,
+        diagnosticPanelCount: 1,
         controller: {
           diagnostics: {
             drag: {
@@ -899,6 +903,10 @@ describe('WebXR provider adapter', () => {
     assert.deepEqual(summary.pointer, { panelId: 'graph', x: 0.25, y: 0.75 });
     assert.deepEqual(summary.gesture, { status: 'dragging', panelId: 'graph' });
     assert.equal(summary.three.hover.frameTarget.operation, 'move');
+    assert.equal(summary.three.panels, 2);
+    assert.equal(summary.three.renderedPanels, 2);
+    assert.equal(summary.three.diagnosticPanels, 1);
+    assert.equal(summary.three.frames, 42);
     assert.equal(summary.three.drag.frameTarget.zone, 'resize');
     assert.deepEqual(summary.three.drag.size, [1.4, 0.7]);
     assert.deepEqual(summary.three.drag.resize.size, [1.4, 0.7]);
@@ -2813,7 +2821,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(adapter.getState().textureSources[0].stage, 'html-in-canvas-support');
   });
 
-  it('hides strict texture failures through provider scene diagnostics', () => {
+  it('shows strict texture failures as provider scene diagnostics', () => {
     class FakeScene {
       add() {}
       remove() {}
@@ -2874,11 +2882,15 @@ describe('WebXR provider adapter', () => {
       hideStrictTextureFailures: true,
     });
 
-    assert.equal(result.renderedPanelCount, 0);
-    assert.equal(result.hiddenPanelCount, 1);
-    assert.deepEqual(result.hiddenPanelIds, ['chat']);
-    assert.equal(adapter.getPanelMesh('chat').visible, false);
-    assert.equal(adapter.getState().textureSources[0].hidden, true);
+    assert.equal(result.renderedPanelCount, 1);
+    assert.equal(result.hiddenPanelCount, 0);
+    assert.deepEqual(result.hiddenPanelIds, []);
+    assert.equal(result.diagnosticPanelCount, 1);
+    assert.deepEqual(result.diagnosticPanelIds, ['chat']);
+    assert.equal(adapter.getPanelMesh('chat').visible, true);
+    assert.equal(adapter.getState().textureSources[0].hidden, false);
+    assert.equal(adapter.getState().textureSources[0].diagnostic, true);
+    assert.equal(adapter.getState().textureSources[0].diagnosticReason, 'html-in-canvas-unsupported');
   });
 
   it('adapts Symbiote XR panels to a host-supplied Three scene', () => {
@@ -3485,7 +3497,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(adapter.getDiagnostics().controller.version, 'xr-three-controller-diagnostics-v1');
   });
 
-  it('exposes strict texture hidden panels through the Three WebXR adapter state', () => {
+  it('exposes strict texture diagnostic panels through the Three WebXR adapter state', () => {
     class FakeMesh {
       constructor() {
         this.userData = {};
@@ -3537,10 +3549,13 @@ describe('WebXR provider adapter', () => {
     });
 
     let state = adapter.getState();
-    assert.equal(state.renderedPanelCount, 0);
-    assert.equal(state.hiddenPanelCount, 1);
-    assert.deepEqual(state.hiddenPanelIds, ['chat']);
-    assert.equal(state.textureSources[0].hidden, true);
+    assert.equal(state.renderedPanelCount, 1);
+    assert.equal(state.hiddenPanelCount, 0);
+    assert.deepEqual(state.hiddenPanelIds, []);
+    assert.equal(state.diagnosticPanelCount, 1);
+    assert.deepEqual(state.diagnosticPanelIds, ['chat']);
+    assert.equal(state.textureSources[0].hidden, false);
+    assert.equal(state.textureSources[0].diagnostic, true);
   });
 
   it('adds provider-owned controller ray visuals when Three supplies line primitives', () => {

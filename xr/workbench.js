@@ -196,6 +196,9 @@ export function createXRSpatialWorkbenchSummary(options = {}) {
     three: {
       adapter: options.threeAdapterName || threeDiagnostics.name || null,
       panels: numberOr(threeDiagnostics.panelCount),
+      renderedPanels: numberOr(threeDiagnostics.renderedPanelCount),
+      diagnosticPanels: numberOr(threeDiagnostics.diagnosticPanelCount),
+      frames: numberOr(threeSessionDiagnostics.frames),
       hits: numberOr(rayCounters.hits),
       misses: numberOr(rayCounters.misses),
       raySource: threeDiagnostics.controller?.raySource || null,

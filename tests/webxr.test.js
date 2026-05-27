@@ -46,6 +46,7 @@ import {
   createXRThreeDiagnosticServerSummary,
   createXRThreeDiagnosticTimelineSummary,
   createXRThreeTroubleshootingSummary,
+  createXRThreeTextureCapabilitySummary,
   createXRThreeRenderHost,
   createXRThreeSessionController,
   createXRThreeSessionHealthSummary,
@@ -296,6 +297,30 @@ describe('WebXR provider adapter', () => {
     assert.equal(gate.total, 2);
     assert.equal(gate.bridgeStages[0].source, 'html-in-canvas');
     assert.equal(gate.resolverTextures, 2);
+  });
+
+  it('summarizes Three HTMLTexture capability separately from browser HTML-in-Canvas support', () => {
+    let blocked = createXRThreeTextureCapabilitySummary({ REVISION: 170 }, {
+      modes: { webgl: true },
+      diagnostics: { textureUploadAvailable: true },
+    });
+    assert.equal(blocked.ready, false);
+    assert.equal(blocked.threeRevision, '170');
+    assert.equal(blocked.htmlTextureRequired, true);
+    assert.equal(blocked.htmlTextureAvailable, false);
+    assert.equal(blocked.reason, 'three-html-texture-api-missing');
+
+    let ready = createXRThreeTextureCapabilitySummary({
+      REVISION: 184,
+      HTMLTexture: class {},
+    }, {
+      modes: { webgl: true },
+      diagnostics: { textureUploadAvailable: true },
+    });
+    assert.equal(ready.ready, true);
+    assert.equal(ready.threeRevision, '184');
+    assert.equal(ready.htmlTextureAvailable, true);
+    assert.equal(ready.reason, null);
   });
 
   it('composes XR readiness from provider diagnostics', () => {
@@ -4105,6 +4130,15 @@ describe('WebXR provider adapter', () => {
       environmentBlendMode: 'opaque',
       interactionMode: 'world-space',
       enabledFeatures: ['local-floor', 'dom-overlay'],
+      renderState: {
+        baseLayer: {
+          framebufferWidth: 1832,
+          framebufferHeight: 1920,
+          getViewport() {
+            return { x: 0, y: 0, width: 916, height: 1920 };
+          },
+        },
+      },
       inputSources: [
         { handedness: 'right', targetRayMode: 'tracked-pointer', profiles: ['oculus-touch-v3'] },
       ],
@@ -4224,7 +4258,17 @@ describe('WebXR provider adapter', () => {
       referenceSpaceType: 'local-floor',
     });
     controller.listeners.selectstart();
-    loop?.();
+    loop?.(16, {
+      getViewerPose() {
+        return {
+          views: [{ eye: 'left' }, { eye: 'right' }],
+          transform: {
+            position: { x: 0, y: 1.6, z: 0 },
+            orientation: { x: 0, y: 0, z: 0, w: 1 },
+          },
+        };
+      },
+    });
     controller.listeners.selectend();
     let runningDiagnostics = controllerApi.getDiagnostics();
     await controllerApi.stop();
@@ -4312,7 +4356,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(telemetry.drag.active, false);
     let health = createXRThreeSessionHealthSummary(telemetry, { fps: 72 });
     assert.equal(health.version, 'xr-three-session-health-v1');
-    assert.equal(health.status, 'warning');
+    assert.equal(health.status, 'blocked');
     assert.equal(health.checks.running, true);
     assert.equal(health.checks.controllers, 2);
     assert.equal(health.checks.panelCount, 1);
@@ -4321,6 +4365,7 @@ describe('WebXR provider adapter', () => {
     assert.ok(health.issues.some((issue) => issue.code === 'texture-quality-low'));
     assert.ok(health.issues.some((issue) => issue.code === 'texture-quality-warnings'));
     assert.ok(health.issues.some((issue) => issue.code === 'no-controller-ray-visuals'));
+    assert.ok(health.issues.some((issue) => issue.code === 'xr-base-layer-missing' || issue.code === 'xr-viewports-missing'));
     assert.equal(controllerApi.getDiagnostics().active, false);
     assert.equal(controllerApi.getDiagnostics().version, 'xr-three-session-controller-v1');
   });
@@ -4492,6 +4537,13 @@ describe('WebXR provider adapter', () => {
       launch: { canLaunch: true, mode: 'immersive-vr' },
       mode: 'immersive-vr',
       preferredMode: 'immersive-vr',
+      surface: {
+        surfaceKind: 'production',
+        entrypoint: 'spatial-layout',
+        projectId: 'agent-portal',
+        targetSection: 'graph',
+        panelContentKind: 'portal-runtime-layout',
+      },
       sessionDiagnostics: {
         status: 'running',
         active: true,
@@ -4519,6 +4571,11 @@ describe('WebXR provider adapter', () => {
     assert.equal(payload.navigatorXr, true);
     assert.equal(payload.selectedPanel, 'chat');
     assert.equal(payload.hoveredPanel, 'chat');
+    assert.equal(payload.surface.surfaceKind, 'production');
+    assert.equal(payload.surface.entrypoint, 'spatial-layout');
+    assert.equal(payload.surface.projectId, 'agent-portal');
+    assert.equal(payload.surface.targetSection, 'graph');
+    assert.equal(payload.surface.panelContentKind, 'portal-runtime-layout');
     assert.equal(payload.session.version, 'xr-three-session-telemetry-v1');
     assert.equal(payload.session.health.version, 'xr-three-session-health-v1');
     assert.equal(payload.details.custom, 'value');
@@ -4583,6 +4640,12 @@ describe('WebXR provider adapter', () => {
           clientId: 'quest',
           eventCount: 3,
           phase: 'running',
+          surface: {
+            surfaceKind: 'production',
+            entrypoint: 'spatial-layout',
+            projectId: 'agent-portal',
+            targetSection: 'graph',
+          },
           launchGate: { blocked: false, reason: 'ready' },
           session: {
             active: true,
@@ -4637,6 +4700,10 @@ describe('WebXR provider adapter', () => {
     assert.equal(summary.clientCount, 2);
     assert.equal(summary.immersiveClientCount, 1);
     assert.equal(summary.currentClient.clientId, 'quest');
+    assert.equal(summary.currentClient.surface.surfaceKind, 'production');
+    assert.equal(summary.currentClient.surface.entrypoint, 'spatial-layout');
+    assert.equal(summary.currentClient.surface.projectId, 'agent-portal');
+    assert.equal(summary.currentClient.surface.targetSection, 'graph');
     assert.equal(summary.latestClient.clientId, 'desktop');
     assert.equal(summary.latestImmersiveClient.clientId, 'quest');
     assert.equal(summary.currentRunning, true);

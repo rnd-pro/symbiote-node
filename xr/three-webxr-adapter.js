@@ -596,6 +596,65 @@ function applyMaterialColor(material, color) {
   return false;
 }
 
+function colorSummary(color) {
+  if (color == null) return null;
+  if (typeof color === 'number' || typeof color === 'string') return color;
+  if (typeof color.getHexString === 'function') return `#${color.getHexString()}`;
+  if (typeof color.getHex === 'function') return color.getHex();
+  return null;
+}
+
+function textureSummary(texture) {
+  if (!texture) return null;
+  let image = texture.image || null;
+  return {
+    name: texture.name || null,
+    isTexture: texture.isTexture === true,
+    kind: texture.isHTMLTexture ? 'html-texture' : texture.isCanvasTexture ? 'canvas-texture' : texture.isTexture ? 'texture' : 'host-texture',
+    width: Number.isFinite(Number(image?.width)) ? Number(image.width) : null,
+    height: Number.isFinite(Number(image?.height)) ? Number(image.height) : null,
+    colorSpace: texture.colorSpace || texture.encoding || null,
+    premultiplyAlpha: texture.premultiplyAlpha == null ? null : Boolean(texture.premultiplyAlpha),
+    flipY: texture.flipY == null ? null : Boolean(texture.flipY),
+    generateMipmaps: texture.generateMipmaps == null ? null : Boolean(texture.generateMipmaps),
+    needsUpdate: texture.needsUpdate == null ? null : Boolean(texture.needsUpdate),
+  };
+}
+
+function materialSummary(mesh) {
+  let material = mesh?.material || null;
+  return {
+    panelId: mesh?.userData?.panelId || null,
+    visible: mesh?.visible !== false,
+    transparent: material?.transparent === true,
+    opacity: Number.isFinite(Number(material?.opacity)) ? Number(material.opacity) : null,
+    mapApplied: Boolean(material?.map),
+    mapName: material?.map?.name || null,
+    texture: textureSummary(material?.map),
+    color: colorSummary(material?.color),
+    emissive: colorSummary(material?.emissive),
+    side: material?.side == null ? null : String(material.side),
+    depthTest: material?.depthTest == null ? null : Boolean(material.depthTest),
+    depthWrite: material?.depthWrite == null ? null : Boolean(material.depthWrite),
+    renderOrder: Number.isFinite(Number(mesh?.renderOrder)) ? Number(mesh.renderOrder) : 0,
+    strictDiagnostic: mesh?.userData?.strictTextureDiagnostic === true,
+    strictDiagnosticReason: mesh?.userData?.strictTextureDiagnosticReason || null,
+  };
+}
+
+function summarizePanelMaterials(meshes = []) {
+  let panels = meshes.map(materialSummary);
+  return {
+    version: 'xr-three-panel-material-diagnostics-v1',
+    total: panels.length,
+    transparentCount: panels.filter((panel) => panel.transparent).length,
+    mappedCount: panels.filter((panel) => panel.mapApplied).length,
+    strictDiagnosticCount: panels.filter((panel) => panel.strictDiagnostic).length,
+    strictDiagnosticPanelIds: panels.filter((panel) => panel.strictDiagnostic).map((panel) => panel.panelId).filter(Boolean),
+    panels,
+  };
+}
+
 function applyPanelFrameVisualState(mesh, resolved = {}) {
   let objects = mesh?.userData?.panelFrameVisuals?.objects || [];
   let state = resolved.state || 'default';
@@ -793,6 +852,35 @@ function requiresThreeHtmlTexture(input = {}) {
 
 function canUseThreeHtmlTexture(THREE, input = {}) {
   return typeof THREE?.HTMLTexture === 'function' && input.element && requiresThreeHtmlTexture(input);
+}
+
+export function createXRThreeTextureCapabilitySummary(THREE, support = {}) {
+  let diagnostics = support.diagnostics || {};
+  let modes = support.modes || {};
+  let textureUploadAvailable = diagnostics.textureUploadAvailable === true ||
+    modes.webgl === true ||
+    modes.webgpu === true;
+  let htmlTextureAvailable = typeof THREE?.HTMLTexture === 'function';
+  let threeRevision = THREE?.REVISION == null ? null : String(THREE.REVISION);
+  let htmlTextureRequired = textureUploadAvailable;
+  let reason = htmlTextureRequired && !htmlTextureAvailable
+    ? 'three-html-texture-api-missing'
+    : null;
+  return {
+    version: 'xr-three-texture-capability-v1',
+    renderer: 'three',
+    threeRevision,
+    htmlTextureAvailable,
+    htmlTextureRequired,
+    textureUploadAvailable,
+    modes: {
+      webgl: modes.webgl === true,
+      webgpu: modes.webgpu === true,
+      canvas2d: modes.canvas2d === true,
+    },
+    ready: !reason,
+    reason,
+  };
 }
 
 function resolveCanvasSource(input = {}) {
@@ -1390,22 +1478,22 @@ export function createXRThreePanelSceneAdapter(options = {}) {
       return [...panels.values()];
     },
     getState() {
+      let meshList = [...panels.values()];
+      let materialDiagnostics = summarizePanelMaterials(meshList);
       return {
         ok: check.ok,
         reason: check.ok ? null : check.reason,
         missing: check.missing,
         panelCount: panels.size,
         rootTransform,
-        renderedPanelCount: [...panels.values()].filter((mesh) => mesh.visible !== false).length,
+        renderedPanelCount: meshList.filter((mesh) => mesh.visible !== false).length,
         hiddenPanelCount: 0,
         hiddenPanelIds: [],
-        diagnosticPanelCount: [...panels.values()].filter((mesh) => mesh.userData?.strictTextureDiagnostic).length,
-        diagnosticPanelIds: [...panels.values()]
-          .filter((mesh) => mesh.userData?.strictTextureDiagnostic)
-          .map((mesh) => mesh.userData?.panelId)
-          .filter(Boolean),
+        diagnosticPanelCount: materialDiagnostics.strictDiagnosticCount,
+        diagnosticPanelIds: materialDiagnostics.strictDiagnosticPanelIds,
+        materialDiagnostics,
         panelIds: [...panels.keys()],
-        panelFrameVisualCount: [...panels.values()].reduce((count, mesh) => (
+        panelFrameVisualCount: meshList.reduce((count, mesh) => (
           count + Number(mesh.userData?.panelFrameVisuals?.objectCount || 0)
         ), 0),
         panelFrameVisuals: [...panels.values()].map((mesh) => ({
@@ -2031,6 +2119,32 @@ export function createXRThreeWebXRAdapter(options = {}) {
   };
 }
 
+function summarizeThreeRenderer(renderer = null) {
+  let canvas = renderer?.domElement || null;
+  let gl = renderer?.getContext?.() || null;
+  let contextAttributes = gl?.getContextAttributes?.() || null;
+  return {
+    version: 'xr-three-renderer-diagnostics-v1',
+    present: Boolean(renderer),
+    xrEnabled: renderer?.xr?.enabled === true,
+    outputColorSpace: renderer?.outputColorSpace || renderer?.outputEncoding || null,
+    canvas: canvas ? {
+      width: Number.isFinite(Number(canvas.width)) ? Number(canvas.width) : null,
+      height: Number.isFinite(Number(canvas.height)) ? Number(canvas.height) : null,
+      clientWidth: Number.isFinite(Number(canvas.clientWidth)) ? Number(canvas.clientWidth) : null,
+      clientHeight: Number.isFinite(Number(canvas.clientHeight)) ? Number(canvas.clientHeight) : null,
+    } : null,
+    contextAttributes: contextAttributes ? {
+      alpha: contextAttributes.alpha == null ? null : Boolean(contextAttributes.alpha),
+      premultipliedAlpha: contextAttributes.premultipliedAlpha == null ? null : Boolean(contextAttributes.premultipliedAlpha),
+      preserveDrawingBuffer: contextAttributes.preserveDrawingBuffer == null ? null : Boolean(contextAttributes.preserveDrawingBuffer),
+      antialias: contextAttributes.antialias == null ? null : Boolean(contextAttributes.antialias),
+      depth: contextAttributes.depth == null ? null : Boolean(contextAttributes.depth),
+      stencil: contextAttributes.stencil == null ? null : Boolean(contextAttributes.stencil),
+    } : null,
+  };
+}
+
 export function createXRThreeRenderHost(options = {}) {
   let THREE = options.THREE;
   let adapter = options.adapter || createXRThreeWebXRAdapter(options);
@@ -2159,7 +2273,10 @@ export function createXRThreeRenderHost(options = {}) {
   }
 
   function getDiagnostics() {
-    return { ...diagnostics };
+    return {
+      ...diagnostics,
+      rendererDiagnostics: summarizeThreeRenderer(renderer),
+    };
   }
 
   function startLoop(loopOptions = {}) {
@@ -2217,6 +2334,68 @@ export function createXRThreeRenderHost(options = {}) {
   };
 }
 
+function summarizeXRRenderState(session = null) {
+  let renderState = session?.renderState || null;
+  let baseLayer = renderState?.baseLayer || null;
+  let layers = Array.isArray(renderState?.layers) ? renderState.layers : [];
+  return {
+    version: 'xr-render-state-diagnostics-v1',
+    baseLayer: baseLayer ? {
+      present: true,
+      framebufferWidth: Number.isFinite(Number(baseLayer.framebufferWidth)) ? Number(baseLayer.framebufferWidth) : null,
+      framebufferHeight: Number.isFinite(Number(baseLayer.framebufferHeight)) ? Number(baseLayer.framebufferHeight) : null,
+      fixedFoveation: Number.isFinite(Number(baseLayer.fixedFoveation)) ? Number(baseLayer.fixedFoveation) : null,
+    } : { present: false },
+    layers: {
+      count: layers.length,
+      present: layers.length > 0,
+    },
+    depthNear: Number.isFinite(Number(renderState?.depthNear)) ? Number(renderState.depthNear) : null,
+    depthFar: Number.isFinite(Number(renderState?.depthFar)) ? Number(renderState.depthFar) : null,
+    inlineVerticalFieldOfView: Number.isFinite(Number(renderState?.inlineVerticalFieldOfView)) ? Number(renderState.inlineVerticalFieldOfView) : null,
+  };
+}
+
+function summarizeXRFrameViewports(frame = null, referenceSpace = null, session = null, options = {}) {
+  let baseLayer = session?.renderState?.baseLayer || null;
+  let pose = options.viewerPose || null;
+  if (!baseLayer) {
+    return {
+      version: 'xr-frame-viewport-diagnostics-v1',
+      viewCount: 0,
+      views: [],
+      reason: 'xr-base-layer-missing',
+    };
+  }
+  if (!pose && frame?.getViewerPose && referenceSpace) {
+    pose = frame.getViewerPose(referenceSpace);
+  }
+  let views = Array.isArray(pose?.views) ? pose.views : [];
+  return {
+    version: 'xr-frame-viewport-diagnostics-v1',
+    viewCount: views.length,
+    views: views.slice(0, 4).map((view) => {
+      let viewport = null;
+      try {
+        viewport = baseLayer?.getViewport?.(view) || null;
+      } catch {
+        viewport = null;
+      }
+      return {
+        eye: view.eye || null,
+        viewport: viewport ? {
+          x: Number.isFinite(Number(viewport.x)) ? Number(viewport.x) : null,
+          y: Number.isFinite(Number(viewport.y)) ? Number(viewport.y) : null,
+          width: Number.isFinite(Number(viewport.width)) ? Number(viewport.width) : null,
+          height: Number.isFinite(Number(viewport.height)) ? Number(viewport.height) : null,
+        } : null,
+        projectionMatrix: Boolean(view.projectionMatrix),
+        transform: Boolean(view.transform),
+      };
+    }),
+  };
+}
+
 export function createXRThreeSessionController(options = {}) {
   let target = options.globalThis || globalThis;
   let adapter = options.adapter || createXRThreeWebXRAdapter(options);
@@ -2247,8 +2426,10 @@ export function createXRThreeSessionController(options = {}) {
     requestedReferenceSpaceType: null,
     requestedOptionalFeatures: [],
     requestedRequiredFeatures: [],
-    requestedDomOverlay: false,
-    viewerPoseCaptured: false,
+	    requestedDomOverlay: false,
+	    renderState: null,
+	    viewports: null,
+	    viewerPoseCaptured: false,
     viewerPoseCaptureReason: null,
     viewerPoseRootTransform: null,
     lastEvent: null,
@@ -2375,6 +2556,7 @@ export function createXRThreeSessionController(options = {}) {
       mode: diagnostics.mode,
       referenceSpaceType: sessionOptions.referenceSpaceType || diagnostics.requestedReferenceSpaceType,
     });
+    let captured = result && typeof result === 'object' ? { ...result, viewerPose } : { ok: false, viewerPose };
     diagnostics.viewerPoseCaptured = result?.ok === true;
     diagnostics.viewerPoseCaptureReason = result?.ok ? null : result?.reason || 'viewer-pose-apply-failed';
     diagnostics.viewerPoseRootTransform = result?.rootTransform || null;
@@ -2382,7 +2564,7 @@ export function createXRThreeSessionController(options = {}) {
       result,
       reason: diagnostics.viewerPoseCaptureReason,
     });
-    return result;
+    return captured;
   }
 
   function cleanupSession() {
@@ -2395,22 +2577,25 @@ export function createXRThreeSessionController(options = {}) {
     emit('spatial-three-session-ended');
   }
 
-  function updateSessionRuntimeDiagnostics() {
-    if (!activeSession) {
+	  function updateSessionRuntimeDiagnostics() {
+	    if (!activeSession) {
       diagnostics.visibilityState = null;
       diagnostics.environmentBlendMode = null;
       diagnostics.interactionMode = null;
       diagnostics.enabledFeatures = [];
-      diagnostics.inputSources = [];
-      return;
-    }
+	      diagnostics.inputSources = [];
+	      diagnostics.renderState = null;
+	      diagnostics.viewports = null;
+	      return;
+	    }
     diagnostics.visibilityState = activeSession.visibilityState || null;
     diagnostics.environmentBlendMode = activeSession.environmentBlendMode || null;
     diagnostics.interactionMode = activeSession.interactionMode || null;
     diagnostics.enabledFeatures = normalizeStringList(activeSession.enabledFeatures);
-    diagnostics.inputSources = normalizeInputSources(activeSession.inputSources);
-    diagnostics.primaryInputSource = selectPrimaryXRInputSource(activeSession.inputSources || [], options.inputSource || {}).selected;
-  }
+	    diagnostics.inputSources = normalizeInputSources(activeSession.inputSources);
+	    diagnostics.primaryInputSource = selectPrimaryXRInputSource(activeSession.inputSources || [], options.inputSource || {}).selected;
+	    diagnostics.renderState = summarizeXRRenderState(activeSession);
+	  }
 
   async function start(mode = 'immersive-vr', startOptions = {}) {
     activeTarget = startOptions.target || activeTarget;
@@ -2474,9 +2659,12 @@ export function createXRThreeSessionController(options = {}) {
       diagnostics.status = 'running';
       updateSessionRuntimeDiagnostics();
       setupControllers(activeTarget.scene, activeTarget.renderer, activeTarget.camera, startOptions);
-      activeTarget.renderer.setAnimationLoop?.((time, frame) => {
-        updateSessionRuntimeDiagnostics();
-        captureViewerPose(frame, setSession.referenceSpace, xrOptions);
+	      activeTarget.renderer.setAnimationLoop?.((time, frame) => {
+	        updateSessionRuntimeDiagnostics();
+        let capturedPose = captureViewerPose(frame, setSession.referenceSpace, xrOptions);
+        diagnostics.viewports = summarizeXRFrameViewports(frame, setSession.referenceSpace, activeSession, {
+          viewerPose: capturedPose?.viewerPose || capturedPose?.result?.viewerPose,
+        });
         updateHover();
         updateDrag();
         options.onFrame?.({ time, frame, target: activeTarget, session: activeSession });
@@ -2553,6 +2741,8 @@ export function createXRThreeSessionTelemetrySnapshot(diagnostics = {}, options 
       requiredFeatures: normalizeStringList(diagnostics.requestedRequiredFeatures),
       domOverlay: Boolean(diagnostics.requestedDomOverlay),
     },
+    renderState: diagnostics.renderState || null,
+    viewports: diagnostics.viewports || null,
     frames: Number(diagnostics.frames || 0),
     controllers: Number(diagnostics.controllers || 0),
     controllerRayVisuals: Number(diagnostics.controllerRayVisuals || 0),
@@ -2571,6 +2761,7 @@ export function createXRThreeSessionTelemetrySnapshot(diagnostics = {}, options 
     lastError: diagnostics.lastError || null,
     panelCount: Number(adapter.panelCount || 0),
     panelFrameVisuals: Number(adapter.panelFrameVisualCount || 0),
+    materialDiagnostics: adapter.materialDiagnostics || null,
     textureQuality,
     drag: {
       active: Boolean(drag.active),
@@ -2618,6 +2809,26 @@ export function createXRThreeSessionHealthSummary(input = {}, options = {}) {
   }
   if (telemetry.active && telemetry.panelCount > 0 && telemetry.panelFrameVisuals <= 0) {
     issues.push({ severity: 'warning', code: 'no-panel-frame-visuals' });
+  }
+  if (telemetry.active && telemetry.renderState?.baseLayer?.present === false) {
+    issues.push({ severity: 'blocked', code: 'xr-base-layer-missing' });
+  }
+  if (telemetry.active && telemetry.viewports && Number(telemetry.viewports.viewCount || 0) <= 0) {
+    issues.push({ severity: 'blocked', code: 'xr-viewports-missing' });
+  }
+  if (telemetry.active && Number(telemetry.materialDiagnostics?.strictDiagnosticCount || 0) > 0) {
+    issues.push({
+      severity: 'blocked',
+      code: 'strict-texture-diagnostic-material',
+      value: telemetry.materialDiagnostics.strictDiagnosticCount,
+    });
+  }
+  if (telemetry.active && Number(telemetry.materialDiagnostics?.transparentCount || 0) > 0) {
+    issues.push({
+      severity: 'warning',
+      code: 'panel-material-transparent',
+      value: telemetry.materialDiagnostics.transparentCount,
+    });
   }
   if (telemetry.active && telemetry.textureQuality?.blocked > 0) {
     issues.push({
@@ -2842,6 +3053,12 @@ export function createXRThreeDiagnosticPayload(options = {}) {
     version: 'xr-three-diagnostic-payload-v1',
     clientId: options.clientId || null,
     event: options.event || null,
+    surface: options.surface || extra.surface || null,
+    surfaceKind: options.surfaceKind || options.surface?.surfaceKind || extra.surfaceKind || extra.surface?.surfaceKind || null,
+    entrypoint: options.entrypoint || options.surface?.entrypoint || extra.entrypoint || extra.surface?.entrypoint || null,
+    projectId: options.projectId || options.surface?.projectId || extra.projectId || extra.surface?.projectId || null,
+    targetSection: options.targetSection || options.surface?.targetSection || extra.targetSection || extra.surface?.targetSection || null,
+    panelContentKind: options.panelContentKind || options.surface?.panelContentKind || extra.panelContentKind || extra.surface?.panelContentKind || null,
     pageUrl: redactXRDiagnosticUrl(options.pageUrl || ''),
     secureContext: options.secureContext === true,
     navigatorXr: options.navigatorXr === true,
@@ -3048,6 +3265,23 @@ export function createXRThreeTroubleshootingSummary(diagnostics = null, options 
     Number(session.panelFrameVisuals || checks.panelFrameVisuals || 0) <= 0
   ) {
     issues.push(issue('panel-frame-visuals-missing', 'warning', 'scene'));
+  }
+  if (server.currentRunning && session.renderState?.baseLayer?.present === false) {
+    issues.push(issue('xr-base-layer-missing', 'blocked', 'renderer'));
+  }
+  if (server.currentRunning && session.viewports && Number(session.viewports.viewCount || 0) <= 0) {
+    issues.push(issue('xr-viewports-missing', 'blocked', 'renderer'));
+  }
+  if (server.currentRunning && Number(session.materialDiagnostics?.strictDiagnosticCount || 0) > 0) {
+    issues.push(issue('strict-texture-diagnostic-material', 'blocked', 'material', {
+      count: Number(session.materialDiagnostics.strictDiagnosticCount || 0),
+      panelIds: session.materialDiagnostics.strictDiagnosticPanelIds || [],
+    }));
+  }
+  if (server.currentRunning && Number(session.materialDiagnostics?.transparentCount || 0) > 0) {
+    issues.push(issue('panel-material-transparent', 'warning', 'material', {
+      count: Number(session.materialDiagnostics.transparentCount || 0),
+    }));
   }
   if (texture?.blocked) {
     issues.push(issue('texture-gate-blocked', 'blocked', 'texture', texture.reason || texture.stage || null));

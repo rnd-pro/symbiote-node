@@ -31,6 +31,7 @@ import {
   adjustXRPanelPoseForComfort,
   createXRSpatialPreview,
   createXRSpatialScene,
+  createXRSceneRootTransform,
   createXRSceneController,
   createXRSceneDiagnostics,
   createXRWebGLLayerTarget,
@@ -574,6 +575,28 @@ describe('WebXR provider adapter', () => {
     assert.deepEqual(projected.panels[0].position, [0, 1.35, -1.8]);
     assert.equal(projected.panels[1].anchor, 'left');
     assert.equal(projected.panels[2].anchor, 'upperRight');
+  });
+
+  it('creates body-space XR scene root transforms from viewer pose data', () => {
+    let transform = createXRSceneRootTransform({
+      origin: { type: 'viewer', position: [0, 0, 0], rotation: [0, 0, 0] },
+      referenceSpaceType: 'local-floor',
+    }, {
+      mode: 'immersive-ar',
+      referenceSpaceType: 'local-floor',
+      viewerPose: {
+        position: [0.42, 1.62, -0.35],
+        yawDegrees: 28,
+      },
+    });
+
+    assert.equal(transform.version, 'xr-scene-root-transform-v1');
+    assert.equal(transform.policy, 'body-space-front');
+    assert.equal(transform.mode, 'immersive-ar');
+    assert.equal(transform.referenceSpaceType, 'local-floor');
+    assert.equal(transform.originSource, 'viewer-pose');
+    assert.deepEqual(transform.position, [0.42, 0, -0.35]);
+    assert.deepEqual(transform.rotation, [0, 28, 0]);
   });
 
   it('creates a renderer-neutral XR deep graph scene', () => {
@@ -2960,6 +2983,68 @@ describe('WebXR provider adapter', () => {
     assert.equal(added[0].geometry.width, 1.2);
     assert.deepEqual(added[0].position.values, [0, 1.3, -1.8]);
     assert.equal(Math.round(added[0].rotation.values[1] * 1000), Math.round((12 * Math.PI / 180) * 1000));
+  });
+
+  it('places Three panel scenes under a provider-owned body-space root transform', () => {
+    let added = [];
+    class FakeScene {
+      add(object) { added.push(object); }
+      remove() {}
+    }
+    class FakeGroup {
+      constructor() {
+        this.children = [];
+        this.userData = {};
+        this.position = { fromArray(values) { this.values = values; } };
+        this.rotation = { set(...values) { this.values = values; } };
+      }
+      add(object) {
+        this.children.push(object);
+      }
+    }
+    class FakeMesh {
+      constructor(geometry, material) {
+        this.geometry = geometry;
+        this.material = material;
+        this.userData = {};
+        this.position = { fromArray(values) { this.values = values; } };
+        this.rotation = { set(...values) { this.values = values; } };
+      }
+    }
+    let THREE = {
+      Scene: FakeScene,
+      Group: FakeGroup,
+      PlaneGeometry: class {},
+      MeshStandardMaterial: class {},
+      Mesh: FakeMesh,
+      Raycaster: class {},
+      WebGLRenderer: class {},
+      PerspectiveCamera: class {},
+      DoubleSide: 'DoubleSide',
+    };
+    let adapter = createXRThreePanelSceneAdapter({ THREE });
+    let result = adapter.setScene({
+      panels: [
+        { id: 'chat', size: [1.2, 0.7], position: [0, 1.3, -1.8], rotation: [0, 0, 0] },
+      ],
+    }, {
+      mode: 'immersive-ar',
+      referenceSpaceType: 'local-floor',
+      viewerPose: {
+        position: [0.25, 1.55, -0.4],
+        yawDegrees: 30,
+      },
+    });
+
+    assert.equal(result.rootTransform.version, 'xr-scene-root-transform-v1');
+    assert.equal(result.rootTransform.originSource, 'viewer-pose');
+    assert.deepEqual(result.rootTransform.position, [0.25, 0, -0.4]);
+    assert.deepEqual(added[0].position.values, [0.25, 0, -0.4]);
+    assert.equal(Math.round(added[0].rotation.values[1] * 1000), Math.round((30 * Math.PI / 180) * 1000));
+    assert.equal(added[0].children.length, 1);
+    assert.equal(added[0].children[0].userData.panelId, 'chat');
+    assert.deepEqual(added[0].children[0].position.values, [0, 1.3, -1.8]);
+    assert.deepEqual(adapter.getState().rootTransform.position, [0.25, 0, -0.4]);
   });
 
   it('adds provider-owned Three panel frame visuals to panel meshes', () => {

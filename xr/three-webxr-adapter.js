@@ -17,6 +17,9 @@ import {
 import {
   selectPrimaryXRInputSource,
 } from './pointer.js';
+import {
+  createXRSceneRootTransform,
+} from './spatial-scene.js';
 
 export const XR_THREE_WEBXR_ADAPTER = Object.freeze({
   name: 'three-webxr',
@@ -1153,6 +1156,19 @@ function createPanelMesh(THREE, panel, options = {}) {
   return mesh;
 }
 
+function createRootGroup(THREE, scene, transform) {
+  if (typeof THREE?.Group !== 'function') return null;
+  let group = new THREE.Group();
+  group.name = 'sn-xr-scene-root';
+  group.userData ||= {};
+  group.userData.xrSceneRoot = true;
+  group.userData.xrSceneRootTransform = transform;
+  applyVector(group.position, transform.position);
+  applyRotation(group.rotation, transform.rotation);
+  scene.add?.(group);
+  return group;
+}
+
 export function createXRThreePanelSceneAdapter(options = {}) {
   let THREE = options.THREE;
   let check = assertThree(THREE);
@@ -1160,16 +1176,30 @@ export function createXRThreePanelSceneAdapter(options = {}) {
   let panels = new Map();
   let textureBridge = options.textureBridge || null;
   let textureRecords = new Map();
+  let rootGroup = null;
+  let rootTransform = null;
 
   function setScene(xrScene, setOptions = {}) {
     if (!check.ok) {
       return { ok: false, reason: check.reason, missing: check.missing, panelCount: 0 };
     }
-    for (let mesh of panels.values()) {
-      scene.remove?.(mesh);
+    if (rootGroup) {
+      scene.remove?.(rootGroup);
+    } else {
+      for (let mesh of panels.values()) {
+        scene.remove?.(mesh);
+      }
     }
     panels.clear();
     textureRecords.clear();
+    rootTransform = createXRSceneRootTransform(xrScene, {
+      mode: setOptions.mode,
+      referenceSpaceType: setOptions.referenceSpaceType,
+      viewerPose: setOptions.viewerPose,
+      policy: setOptions.placementPolicy || options.placementPolicy,
+    });
+    rootGroup = createRootGroup(THREE, scene, rootTransform);
+    let sceneTarget = rootGroup || scene;
     let diagnosticPanelIds = [];
     for (let panel of xrScene?.panels || []) {
       let mesh = createPanelMesh(THREE, panel, { ...options, ...setOptions });
@@ -1183,12 +1213,14 @@ export function createXRThreePanelSceneAdapter(options = {}) {
           diagnosticPanelIds.push(panel.id);
         }
       }
-      scene.add(mesh);
+      sceneTarget.add?.(mesh);
       panels.set(panel.id, mesh);
     }
     return {
       ok: true,
       scene,
+      rootGroup,
+      rootTransform,
       panelCount: panels.size,
       renderedPanelCount: [...panels.values()].filter((mesh) => mesh.visible !== false).length,
       hiddenPanelCount: 0,
@@ -1217,6 +1249,7 @@ export function createXRThreePanelSceneAdapter(options = {}) {
         reason: check.ok ? null : check.reason,
         missing: check.missing,
         panelCount: panels.size,
+        rootTransform,
         renderedPanelCount: [...panels.values()].filter((mesh) => mesh.visible !== false).length,
         hiddenPanelCount: 0,
         hiddenPanelIds: [],

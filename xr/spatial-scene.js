@@ -12,6 +12,8 @@ export const XR_SPATIAL_SPACE = Object.freeze({
   viewer: 'webxr-viewer',
 });
 
+export const XR_SCENE_ROOT_TRANSFORM_VERSION = 'xr-scene-root-transform-v1';
+
 const DEFAULT_USER_SPACE = Object.freeze({
   eyeHeight: 1.6,
   comfortRadius: 1.8,
@@ -33,6 +35,54 @@ function numberOr(value, fallback) {
 function vectorOr(value, fallback) {
   if (!Array.isArray(value)) return [...fallback];
   return fallback.map((item, index) => numberOr(value[index], item));
+}
+
+function firstVector(...values) {
+  for (let value of values) {
+    if (Array.isArray(value)) return value;
+  }
+  return null;
+}
+
+function normalizeViewerPose(input = {}) {
+  let transform = input.transform || {};
+  let position = firstVector(input.position, transform.position, input.translation);
+  let rotation = firstVector(input.rotation, transform.rotation);
+  let yaw = input.yawDegrees ?? input.yaw ?? transform.yawDegrees ?? transform.yaw;
+  if (!rotation && yaw != null) {
+    rotation = [0, numberOr(yaw, 0), 0];
+  }
+  return {
+    position: position ? vectorOr(position, [0, 0, 0]) : null,
+    rotation: rotation ? vectorOr(rotation, [0, 0, 0]) : null,
+  };
+}
+
+export function createXRSceneRootTransform(scene = {}, options = {}) {
+  let viewerPose = normalizeViewerPose(options.viewerPose || {});
+  let origin = scene.origin || {};
+  let hasViewerPose = Boolean(viewerPose.position || viewerPose.rotation);
+  let lockFloorY = options.lockFloorY !== false;
+  let position = viewerPose.position ||
+    vectorOr(options.position || origin.position, [0, 0, 0]);
+  let rotation = viewerPose.rotation ||
+    vectorOr(options.rotation || origin.rotation, [0, 0, 0]);
+
+  if (lockFloorY) {
+    position = [position[0], 0, position[2]];
+    rotation = [0, rotation[1], 0];
+  }
+
+  return {
+    version: XR_SCENE_ROOT_TRANSFORM_VERSION,
+    policy: options.policy || 'body-space-front',
+    mode: options.mode || scene.mode || null,
+    referenceSpaceType: options.referenceSpaceType || options.referenceSpace || scene.referenceSpaceType || null,
+    originSource: hasViewerPose ? 'viewer-pose' : origin.type ? `scene-origin:${origin.type}` : 'provider-default',
+    lockFloorY,
+    position,
+    rotation,
+  };
 }
 
 function normalizeUserSpace(input = {}) {
@@ -92,6 +142,14 @@ export function createXRSpatialScene(root, options = {}) {
       eventSpace: 'panel-normalized-0-1',
       supportsMouseFallback: true,
     },
+    placement: createXRSceneRootTransform({
+      origin: options.origin,
+      referenceSpaceType: options.referenceSpaceType,
+    }, {
+      mode: options.mode,
+      referenceSpaceType: options.referenceSpaceType,
+      viewerPose: options.viewerPose,
+    }),
     themeScope: options.themeScope || layout.themeScope,
   };
 }

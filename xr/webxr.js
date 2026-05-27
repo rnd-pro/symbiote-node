@@ -303,11 +303,21 @@ export function createWebXRLaunchGateSummary(support = {}, options = {}) {
   let activationOk = !requireUserActivation ||
     userActivation.isActive === true ||
     userActivation.hasBeenActive === true;
+  let probeMode = options.probeMode || options.selectedMode || launch.mode || null;
+  let canProbeMode = options.allowUnsupportedModeProbe === true &&
+    launch.canLaunch !== true &&
+    launch.reason === 'no-immersive-mode' &&
+    launch.navigatorXrAvailable === true &&
+    launch.requestSessionAvailable === true &&
+    Boolean(probeMode) &&
+    probeMode !== WEBXR_MODES.inline;
   let checks = [
     {
       id: 'webxr-launch',
-      ok: launch.canLaunch === true,
-      reason: launch.canLaunch ? null : launch.reason || 'webxr-launch-blocked',
+      ok: launch.canLaunch === true || canProbeMode,
+      reason: launch.canLaunch || canProbeMode ? null : launch.reason || 'webxr-launch-blocked',
+      probe: canProbeMode,
+      probeMode: canProbeMode ? probeMode : null,
     },
     {
       id: 'strict-texture',
@@ -332,7 +342,8 @@ export function createWebXRLaunchGateSummary(support = {}, options = {}) {
     canStart: blockingChecks.length === 0,
     blocked: blockingChecks.length > 0,
     reason: blockingChecks[0]?.reason || 'ready',
-    mode: launch.mode || options.selectedMode || null,
+    mode: launch.mode || probeMode || null,
+    canProbeMode,
     checks,
     blockingChecks,
     launch,

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   WEBXR_FEATURES,
+  WEBXR_MODES,
   WEBXR_RENDERER,
   createStableXRDiagnosticClientId,
   createWebXRAdapter,
@@ -232,6 +233,22 @@ describe('WebXR provider adapter', () => {
     assert.equal(ready.canStart, true);
     assert.equal(ready.reason, 'ready');
     assert.equal(ready.blockingChecks.length, 0);
+
+    let probe = createWebXRLaunchGateSummary({
+      modes: { inline: true, immersiveVr: false, immersiveAr: false },
+      apis: {
+        secureContext: true,
+        navigatorXrAvailable: true,
+        requestSessionAvailable: true,
+      },
+    }, {
+      allowUnsupportedModeProbe: true,
+      probeMode: WEBXR_MODES.immersiveVr,
+    });
+    assert.equal(probe.canStart, true);
+    assert.equal(probe.canProbeMode, true);
+    assert.equal(probe.mode, WEBXR_MODES.immersiveVr);
+    assert.equal(probe.checks[0].probe, true);
   });
 
   it('counts public Three texture bridge records as ready texture gate input', () => {

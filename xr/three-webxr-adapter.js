@@ -19,6 +19,7 @@ import {
 } from './pointer.js';
 import {
   createXRSceneRootTransform,
+  createXRViewerPoseSnapshot,
 } from './spatial-scene.js';
 
 export const XR_THREE_WEBXR_ADAPTER = Object.freeze({
@@ -1178,6 +1179,19 @@ export function createXRThreePanelSceneAdapter(options = {}) {
   let textureRecords = new Map();
   let rootGroup = null;
   let rootTransform = null;
+  let activeXRScene = null;
+  let activeSetOptions = {};
+
+  function applyRootTransform(transform) {
+    rootTransform = transform;
+    if (rootGroup) {
+      rootGroup.userData ||= {};
+      rootGroup.userData.xrSceneRootTransform = transform;
+      applyVector(rootGroup.position, transform.position);
+      applyRotation(rootGroup.rotation, transform.rotation);
+    }
+    return rootTransform;
+  }
 
   function setScene(xrScene, setOptions = {}) {
     if (!check.ok) {
@@ -1192,6 +1206,8 @@ export function createXRThreePanelSceneAdapter(options = {}) {
     }
     panels.clear();
     textureRecords.clear();
+    activeXRScene = xrScene || null;
+    activeSetOptions = { ...setOptions };
     rootTransform = createXRSceneRootTransform(xrScene, {
       mode: setOptions.mode,
       referenceSpaceType: setOptions.referenceSpaceType,
@@ -1234,6 +1250,25 @@ export function createXRThreePanelSceneAdapter(options = {}) {
 
   return {
     setScene,
+    applyViewerPose(viewerPose, poseOptions = {}) {
+      if (!check.ok) return { ok: false, reason: check.reason, missing: check.missing };
+      let snapshot = createXRViewerPoseSnapshot(viewerPose, poseOptions);
+      if (!snapshot.position && !snapshot.rotation) {
+        return { ok: false, reason: 'missing-viewer-pose', snapshot };
+      }
+      let transform = createXRSceneRootTransform(activeXRScene || {}, {
+        ...activeSetOptions,
+        ...poseOptions,
+        viewerPose: snapshot,
+      });
+      applyRootTransform(transform);
+      return {
+        ok: true,
+        version: 'xr-three-viewer-pose-root-transform-v1',
+        snapshot,
+        rootTransform,
+      };
+    },
     getScene() {
       return scene;
     },
@@ -1835,7 +1870,8 @@ export function createXRThreeWebXRAdapter(options = {}) {
     }
     await state.renderer.xr.setSession(session);
     state.session = session;
-    return { ok: true, session };
+    let referenceSpace = state.renderer.xr.getReferenceSpace?.() || sessionOptions.referenceSpace || null;
+    return { ok: true, session, referenceSpace };
   }
 
   return {
@@ -1844,6 +1880,7 @@ export function createXRThreeWebXRAdapter(options = {}) {
     createCamera,
     setScene,
     setSession,
+    applyViewerPose: sceneAdapter.applyViewerPose,
     getPanelMesh: sceneAdapter.getPanelMesh,
     listPanelMeshes: sceneAdapter.listPanelMeshes,
     createControllerRayVisual(controller, visualOptions = {}) {
@@ -2100,6 +2137,9 @@ export function createXRThreeSessionController(options = {}) {
     requestedOptionalFeatures: [],
     requestedRequiredFeatures: [],
     requestedDomOverlay: false,
+    viewerPoseCaptured: false,
+    viewerPoseCaptureReason: null,
+    viewerPoseRootTransform: null,
     lastEvent: null,
   };
 
@@ -2209,6 +2249,31 @@ export function createXRThreeSessionController(options = {}) {
     }
   }
 
+  function captureViewerPose(frame, referenceSpace, sessionOptions = {}) {
+    if (diagnostics.viewerPoseCaptured) return null;
+    if (!frame?.getViewerPose || !referenceSpace || !adapter.applyViewerPose) {
+      diagnostics.viewerPoseCaptureReason = 'viewer-pose-unavailable';
+      return null;
+    }
+    let viewerPose = frame.getViewerPose(referenceSpace);
+    if (!viewerPose) {
+      diagnostics.viewerPoseCaptureReason = 'viewer-pose-empty';
+      return null;
+    }
+    let result = adapter.applyViewerPose(viewerPose, {
+      mode: diagnostics.mode,
+      referenceSpaceType: sessionOptions.referenceSpaceType || diagnostics.requestedReferenceSpaceType,
+    });
+    diagnostics.viewerPoseCaptured = result?.ok === true;
+    diagnostics.viewerPoseCaptureReason = result?.ok ? null : result?.reason || 'viewer-pose-apply-failed';
+    diagnostics.viewerPoseRootTransform = result?.rootTransform || null;
+    emit(result?.ok ? 'spatial-three-viewer-pose-captured' : 'spatial-three-viewer-pose-failed', {
+      result,
+      reason: diagnostics.viewerPoseCaptureReason,
+    });
+    return result;
+  }
+
   function cleanupSession() {
     activeTarget?.renderer?.setAnimationLoop?.(null);
     activeSession = null;
@@ -2254,7 +2319,10 @@ export function createXRThreeSessionController(options = {}) {
     diagnostics.requestedReferenceSpaceType = xrOptions.referenceSpaceType || null;
     diagnostics.requestedOptionalFeatures = normalizeStringList(xrOptions.optionalFeatures);
     diagnostics.requestedRequiredFeatures = normalizeStringList(xrOptions.requiredFeatures);
-    diagnostics.requestedDomOverlay = Boolean(xrOptions.domOverlayRoot);
+      diagnostics.requestedDomOverlay = Boolean(xrOptions.domOverlayRoot);
+      diagnostics.viewerPoseCaptured = false;
+      diagnostics.viewerPoseCaptureReason = null;
+      diagnostics.viewerPoseRootTransform = null;
     emit('spatial-three-session-start-requested', {
       requestedMode: mode,
       sessionOptions: {
@@ -2297,6 +2365,7 @@ export function createXRThreeSessionController(options = {}) {
       setupControllers(activeTarget.scene, activeTarget.renderer, activeTarget.camera, startOptions);
       activeTarget.renderer.setAnimationLoop?.((time, frame) => {
         updateSessionRuntimeDiagnostics();
+        captureViewerPose(frame, setSession.referenceSpace, xrOptions);
         updateHover();
         updateDrag();
         options.onFrame?.({ time, frame, target: activeTarget, session: activeSession });

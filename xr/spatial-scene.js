@@ -37,24 +37,56 @@ function vectorOr(value, fallback) {
   return fallback.map((item, index) => numberOr(value[index], item));
 }
 
+function vectorLikeOr(value, fallback) {
+  if (Array.isArray(value)) return vectorOr(value, fallback);
+  if (!value || typeof value !== 'object') return [...fallback];
+  return fallback.map((item, index) => {
+    let key = index === 0 ? 'x' : index === 1 ? 'y' : 'z';
+    return numberOr(value[key], item);
+  });
+}
+
 function firstVector(...values) {
   for (let value of values) {
     if (Array.isArray(value)) return value;
+    if (value && typeof value === 'object' && ['x', 'y', 'z'].some((key) => key in value)) return value;
   }
   return null;
+}
+
+function yawDegreesFromQuaternion(value) {
+  if (!value || typeof value !== 'object') return null;
+  let x = numberOr(value.x, 0);
+  let y = numberOr(value.y, 0);
+  let z = numberOr(value.z, 0);
+  let w = numberOr(value.w, 1);
+  let siny = 2 * (w * y + x * z);
+  let cosy = 1 - 2 * (y * y + x * x);
+  return Math.atan2(siny, cosy) * 180 / Math.PI;
 }
 
 function normalizeViewerPose(input = {}) {
   let transform = input.transform || {};
   let position = firstVector(input.position, transform.position, input.translation);
   let rotation = firstVector(input.rotation, transform.rotation);
-  let yaw = input.yawDegrees ?? input.yaw ?? transform.yawDegrees ?? transform.yaw;
+  let yaw = input.yawDegrees ?? input.yaw ?? transform.yawDegrees ?? transform.yaw ?? yawDegreesFromQuaternion(input.orientation || transform.orientation);
   if (!rotation && yaw != null) {
     rotation = [0, numberOr(yaw, 0), 0];
   }
   return {
-    position: position ? vectorOr(position, [0, 0, 0]) : null,
-    rotation: rotation ? vectorOr(rotation, [0, 0, 0]) : null,
+    position: position ? vectorLikeOr(position, [0, 0, 0]) : null,
+    rotation: rotation ? vectorLikeOr(rotation, [0, 0, 0]) : null,
+  };
+}
+
+export function createXRViewerPoseSnapshot(viewerPose = {}, options = {}) {
+  let normalized = normalizeViewerPose(viewerPose);
+  let hasPose = Boolean(normalized.position || normalized.rotation);
+  return {
+    version: 'xr-viewer-pose-snapshot-v1',
+    source: hasPose ? options.source || 'xr-frame-viewer-pose' : 'missing-viewer-pose',
+    position: normalized.position,
+    rotation: normalized.rotation,
   };
 }
 

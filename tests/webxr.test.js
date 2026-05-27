@@ -32,6 +32,7 @@ import {
   createXRSpatialPreview,
   createXRSpatialScene,
   createXRSceneRootTransform,
+  createXRViewerPoseSnapshot,
   createXRSceneController,
   createXRSceneDiagnostics,
   createXRWebGLLayerTarget,
@@ -597,6 +598,21 @@ describe('WebXR provider adapter', () => {
     assert.equal(transform.originSource, 'viewer-pose');
     assert.deepEqual(transform.position, [0.42, 0, -0.35]);
     assert.deepEqual(transform.rotation, [0, 28, 0]);
+  });
+
+  it('normalizes native XRViewerPose transform data for scene root placement', () => {
+    let yaw = Math.PI / 6;
+    let snapshot = createXRViewerPoseSnapshot({
+      transform: {
+        position: { x: 0.25, y: 1.58, z: -0.45 },
+        orientation: { x: 0, y: Math.sin(yaw / 2), z: 0, w: Math.cos(yaw / 2) },
+      },
+    });
+
+    assert.equal(snapshot.version, 'xr-viewer-pose-snapshot-v1');
+    assert.equal(snapshot.source, 'xr-frame-viewer-pose');
+    assert.deepEqual(snapshot.position, [0.25, 1.58, -0.45]);
+    assert.equal(Math.round(snapshot.rotation[1]), 30);
   });
 
   it('creates a renderer-neutral XR deep graph scene', () => {
@@ -4772,5 +4788,85 @@ describe('WebXR provider adapter', () => {
     assert.equal(requests[0].options.optionalFeatures.includes(WEBXR_FEATURES.localFloor), true);
     assert.equal(requests[0].options.optionalFeatures.includes(WEBXR_FEATURES.boundedFloor), true);
     assert.equal(requests[0].options.optionalFeatures.includes(WEBXR_FEATURES.domOverlay), true);
+  });
+
+  it('captures the first XR frame viewer pose for Three scene root placement', async () => {
+    let loop = null;
+    let applied = [];
+    let referenceSpace = { type: 'local-floor' };
+    let target = {
+      navigator: {
+        xr: {
+          async requestSession() {
+            return { addEventListener() {} };
+          },
+        },
+      },
+    };
+    let adapter = {
+      async setSession(session, options) {
+        return { ok: true, session, referenceSpace, options };
+      },
+      applyViewerPose(viewerPose, options) {
+        applied.push({ viewerPose, options });
+        return {
+          ok: true,
+          rootTransform: {
+            version: 'xr-scene-root-transform-v1',
+            originSource: 'viewer-pose',
+            position: [0.1, 0, -0.2],
+            rotation: [0, 12, 0],
+          },
+        };
+      },
+      listPanelMeshes() {
+        return [];
+      },
+      controllerRays: {
+        endDrag() {},
+        getState() {
+          return { dragging: false };
+        },
+      },
+      getDiagnostics() {
+        return {};
+      },
+    };
+    let controllerApi = createXRThreeSessionController({ globalThis: target, adapter });
+    await controllerApi.start('immersive-vr', {
+      target: {
+        ok: true,
+        renderer: {
+          setAnimationLoop(callback) {
+            loop = callback;
+          },
+        },
+        scene: {},
+        camera: {},
+      },
+    });
+
+    loop(16, {
+      getViewerPose(space) {
+        assert.equal(space, referenceSpace);
+        return {
+          transform: {
+            position: { x: 0.1, y: 1.6, z: -0.2 },
+            orientation: { x: 0, y: 0, z: 0, w: 1 },
+          },
+        };
+      },
+    });
+    loop(32, {
+      getViewerPose() {
+        throw new Error('viewer pose should be captured once');
+      },
+    });
+
+    assert.equal(applied.length, 1);
+    assert.equal(applied[0].options.mode, 'immersive-vr');
+    assert.equal(applied[0].options.referenceSpaceType, WEBXR_FEATURES.localFloor);
+    assert.equal(controllerApi.getDiagnostics().viewerPoseCaptured, true);
+    assert.equal(controllerApi.getDiagnostics().viewerPoseRootTransform.originSource, 'viewer-pose');
   });
 });

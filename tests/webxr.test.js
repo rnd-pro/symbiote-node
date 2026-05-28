@@ -5124,4 +5124,69 @@ describe('WebXR provider adapter', () => {
     assert.equal(controllerApi.getDiagnostics().viewerPoseCaptured, true);
     assert.equal(controllerApi.getDiagnostics().viewerPoseRootTransform.originSource, 'viewer-pose');
   });
+
+  it('keeps session diagnostics alive when a Three XR frame stage throws', async () => {
+    let loop = null;
+    let events = [];
+    let target = {
+      navigator: {
+        xr: {
+          async requestSession() {
+            return { addEventListener() {} };
+          },
+        },
+      },
+    };
+    let adapter = {
+      async setSession(session) {
+        return { ok: true, session, referenceSpace: {} };
+      },
+      listPanelMeshes() {
+        return [];
+      },
+      controllerRays: {
+        endDrag() {},
+        getState() {
+          return { dragging: false };
+        },
+      },
+      getDiagnostics() {
+        return {};
+      },
+    };
+    let controllerApi = createXRThreeSessionController({
+      globalThis: target,
+      adapter,
+      onDiagnostic(event, details) {
+        events.push({ event, details });
+      },
+    });
+
+    await controllerApi.start('immersive-vr', {
+      target: {
+        ok: true,
+        renderer: {
+          setAnimationLoop(callback) {
+            loop = callback;
+          },
+          render() {
+            throw new Error('render failed');
+          },
+        },
+        scene: {},
+        camera: {},
+      },
+      attemptId: 'spatial-client:frame-error',
+    });
+
+    assert.doesNotThrow(() => loop(16, {}));
+    let diagnostics = controllerApi.getDiagnostics();
+    let frameError = events.find((event) => event.event === 'spatial-three-frame-error');
+    assert.equal(diagnostics.status, 'running');
+    assert.equal(diagnostics.frames, 1);
+    assert.equal(diagnostics.frameErrors, 1);
+    assert.equal(diagnostics.lastFrameStage, 'render');
+    assert.equal(frameError.details.failureStage, 'render');
+    assert.equal(frameError.details.attemptId, 'spatial-client:frame-error');
+  });
 });

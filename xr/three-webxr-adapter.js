@@ -2436,12 +2436,14 @@ export function createXRThreeSessionController(options = {}) {
     requestedReferenceSpaceType: null,
     requestedOptionalFeatures: [],
     requestedRequiredFeatures: [],
-	    requestedDomOverlay: false,
-	    renderState: null,
-	    viewports: null,
-	    viewerPoseCaptured: false,
+    requestedDomOverlay: false,
+    renderState: null,
+    viewports: null,
+    viewerPoseCaptured: false,
     viewerPoseCaptureReason: null,
     viewerPoseRootTransform: null,
+    frameErrors: 0,
+    lastFrameStage: null,
     lastEvent: null,
   };
 
@@ -2587,25 +2589,42 @@ export function createXRThreeSessionController(options = {}) {
     emit('spatial-three-session-ended');
   }
 
-	  function updateSessionRuntimeDiagnostics() {
-	    if (!activeSession) {
+  function updateSessionRuntimeDiagnostics() {
+    if (!activeSession) {
       diagnostics.visibilityState = null;
       diagnostics.environmentBlendMode = null;
       diagnostics.interactionMode = null;
       diagnostics.enabledFeatures = [];
-	      diagnostics.inputSources = [];
-	      diagnostics.renderState = null;
-	      diagnostics.viewports = null;
-	      return;
-	    }
+      diagnostics.inputSources = [];
+      diagnostics.renderState = null;
+      diagnostics.viewports = null;
+      return;
+    }
     diagnostics.visibilityState = activeSession.visibilityState || null;
     diagnostics.environmentBlendMode = activeSession.environmentBlendMode || null;
     diagnostics.interactionMode = activeSession.interactionMode || null;
     diagnostics.enabledFeatures = normalizeStringList(activeSession.enabledFeatures);
-	    diagnostics.inputSources = normalizeInputSources(activeSession.inputSources);
-	    diagnostics.primaryInputSource = selectPrimaryXRInputSource(activeSession.inputSources || [], options.inputSource || {}).selected;
-	    diagnostics.renderState = summarizeXRRenderState(activeSession);
-	  }
+    diagnostics.inputSources = normalizeInputSources(activeSession.inputSources);
+    diagnostics.primaryInputSource = selectPrimaryXRInputSource(activeSession.inputSources || [], options.inputSource || {}).selected;
+    diagnostics.renderState = summarizeXRRenderState(activeSession);
+  }
+
+  function captureFrameStage(stage, fn, context = {}) {
+    diagnostics.lastFrameStage = stage;
+    try {
+      return fn();
+    } catch (error) {
+      diagnostics.frameErrors += 1;
+      diagnostics.lastError = error?.name || `${stage}-failed`;
+      emit('spatial-three-frame-error', {
+        ...context,
+        failureStage: stage,
+        error: diagnostics.lastError,
+        message: error?.message || '',
+      });
+      return null;
+    }
+  }
 
   async function start(mode = 'immersive-vr', startOptions = {}) {
     activeTarget = startOptions.target || activeTarget;
@@ -2637,10 +2656,12 @@ export function createXRThreeSessionController(options = {}) {
     diagnostics.requestedReferenceSpaceType = xrOptions.referenceSpaceType || null;
     diagnostics.requestedOptionalFeatures = normalizeStringList(xrOptions.optionalFeatures);
     diagnostics.requestedRequiredFeatures = normalizeStringList(xrOptions.requiredFeatures);
-      diagnostics.requestedDomOverlay = Boolean(xrOptions.domOverlayRoot);
-      diagnostics.viewerPoseCaptured = false;
-      diagnostics.viewerPoseCaptureReason = null;
-      diagnostics.viewerPoseRootTransform = null;
+    diagnostics.requestedDomOverlay = Boolean(xrOptions.domOverlayRoot);
+    diagnostics.viewerPoseCaptured = false;
+    diagnostics.viewerPoseCaptureReason = null;
+    diagnostics.viewerPoseRootTransform = null;
+    diagnostics.frameErrors = 0;
+    diagnostics.lastFrameStage = null;
     emit('spatial-three-session-start-requested', {
       attemptId: startOptions.attemptId || null,
       requestedMode: mode,
@@ -2686,19 +2707,34 @@ export function createXRThreeSessionController(options = {}) {
       diagnostics.status = 'running';
       updateSessionRuntimeDiagnostics();
       setupControllers(activeTarget.scene, activeTarget.renderer, activeTarget.camera, startOptions);
-	      activeTarget.renderer.setAnimationLoop?.((time, frame) => {
-	        updateSessionRuntimeDiagnostics();
-        let capturedPose = captureViewerPose(frame, setSession.referenceSpace, xrOptions);
-        diagnostics.viewports = summarizeXRFrameViewports(frame, setSession.referenceSpace, activeSession, {
-          viewerPose: capturedPose?.viewerPose || capturedPose?.result?.viewerPose,
-        });
-        updateHover();
-        updateDrag();
-        options.onFrame?.({ time, frame, target: activeTarget, session: activeSession });
-        if (startOptions.renderFrame !== false) {
-          activeTarget.renderer.render?.(activeTarget.scene, activeTarget.camera);
-        }
+      activeTarget.renderer.setAnimationLoop?.((time, frame) => {
         diagnostics.frames += 1;
+        let frameContext = {
+          attemptId: startOptions.attemptId || null,
+          frameNumber: diagnostics.frames,
+          mode,
+        };
+        captureFrameStage('runtime-diagnostics', () => updateSessionRuntimeDiagnostics(), frameContext);
+        let capturedPose = captureFrameStage(
+          'viewer-pose',
+          () => captureViewerPose(frame, setSession.referenceSpace, xrOptions),
+          frameContext,
+        );
+        captureFrameStage('frame-viewports', () => {
+          diagnostics.viewports = summarizeXRFrameViewports(frame, setSession.referenceSpace, activeSession, {
+            viewerPose: capturedPose?.viewerPose || capturedPose?.result?.viewerPose,
+          });
+        }, frameContext);
+        captureFrameStage('hover', () => updateHover(), frameContext);
+        captureFrameStage('drag', () => updateDrag(), frameContext);
+        captureFrameStage('frame-callback', () => {
+          options.onFrame?.({ time, frame, target: activeTarget, session: activeSession });
+        }, frameContext);
+        if (startOptions.renderFrame !== false) {
+          captureFrameStage('render', () => {
+            activeTarget.renderer.render?.(activeTarget.scene, activeTarget.camera);
+          }, frameContext);
+        }
       });
       activeSession.addEventListener?.('end', cleanupSession, { once: true });
       emit('spatial-three-session-started', {
@@ -2776,6 +2812,8 @@ export function createXRThreeSessionTelemetrySnapshot(diagnostics = {}, options 
     renderState: diagnostics.renderState || null,
     viewports: diagnostics.viewports || null,
     frames: Number(diagnostics.frames || 0),
+    frameErrors: Number(diagnostics.frameErrors || 0),
+    lastFrameStage: diagnostics.lastFrameStage || null,
     controllers: Number(diagnostics.controllers || 0),
     controllerRayVisuals: Number(diagnostics.controllerRayVisuals || 0),
     hitReticleVisuals: Number(diagnostics.hitReticleVisuals || 0),

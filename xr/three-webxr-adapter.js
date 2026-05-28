@@ -537,10 +537,10 @@ function createMaterial(THREE, panel, options = {}) {
 
 function applyStrictTextureDiagnosticMaterial(mesh, textureRecord, options = {}) {
   if (!mesh) return;
-  mesh.visible = true;
+  mesh.visible = false;
   mesh.userData ||= {};
-  mesh.userData.strictTextureHidden = false;
-  mesh.userData.strictTextureDiagnostic = true;
+  mesh.userData.strictTextureHidden = true;
+  mesh.userData.strictTextureDiagnostic = false;
   mesh.userData.strictTextureDiagnosticReason = textureRecord?.reason || textureRecord?.stage || 'texture-unavailable';
   let material = mesh.material;
   if (!material) return;
@@ -1420,6 +1420,7 @@ export function createXRThreePanelSceneAdapter(options = {}) {
     rootGroup = createRootGroup(THREE, scene, rootTransform);
     let sceneTarget = rootGroup || scene;
     let diagnosticPanelIds = [];
+    let hiddenPanelIds = [];
     for (let panel of xrScene?.panels || []) {
       let mesh = createPanelMesh(THREE, panel, { ...options, ...setOptions });
       let bridge = setOptions.textureBridge || textureBridge;
@@ -1430,6 +1431,7 @@ export function createXRThreePanelSceneAdapter(options = {}) {
         if (diagnoseStrictFailure && texture?.strictRequired && !texture.ok) {
           applyStrictTextureDiagnosticMaterial(mesh, texture, { ...options, ...setOptions });
           diagnosticPanelIds.push(panel.id);
+          hiddenPanelIds.push(panel.id);
         }
       }
       sceneTarget.add?.(mesh);
@@ -1442,8 +1444,8 @@ export function createXRThreePanelSceneAdapter(options = {}) {
       rootTransform,
       panelCount: panels.size,
       renderedPanelCount: [...panels.values()].filter((mesh) => mesh.visible !== false).length,
-      hiddenPanelCount: 0,
-      hiddenPanelIds: [],
+      hiddenPanelCount: hiddenPanelIds.length,
+      hiddenPanelIds,
       diagnosticPanelCount: diagnosticPanelIds.length,
       diagnosticPanelIds,
       panelIds: [...panels.keys()],
@@ -1491,8 +1493,11 @@ export function createXRThreePanelSceneAdapter(options = {}) {
         panelCount: panels.size,
         rootTransform,
         renderedPanelCount: meshList.filter((mesh) => mesh.visible !== false).length,
-        hiddenPanelCount: 0,
-        hiddenPanelIds: [],
+        hiddenPanelCount: meshList.filter((mesh) => mesh.visible === false).length,
+        hiddenPanelIds: meshList
+          .filter((mesh) => mesh.visible === false)
+          .map((mesh) => mesh.userData?.panelId)
+          .filter(Boolean),
         diagnosticPanelCount: materialDiagnostics.strictDiagnosticCount,
         diagnosticPanelIds: materialDiagnostics.strictDiagnosticPanelIds,
         materialDiagnostics,
@@ -1523,7 +1528,8 @@ export function createXRThreePanelSceneAdapter(options = {}) {
         texturePixels: record.textureQuality?.texturePixels || null,
         requiredPixels: record.textureQuality?.requiredPixels || null,
         pixelsPerMeter: record.textureQuality?.pixelsPerMeter?.min || null,
-        hidden: false,
+        hidden: panels.get(record.panelId)?.visible === false ||
+          panels.get(record.panelId)?.userData?.strictTextureHidden === true,
         diagnostic: Boolean(panels.get(record.panelId)?.userData?.strictTextureDiagnostic),
         diagnosticReason: panels.get(record.panelId)?.userData?.strictTextureDiagnosticReason || null,
         support: record.support || null,
@@ -2605,11 +2611,23 @@ export function createXRThreeSessionController(options = {}) {
     activeTarget = startOptions.target || activeTarget;
     if (!activeTarget?.ok) {
       diagnostics.lastError = activeTarget?.reason || 'three-webxr-unavailable';
-      return { handled: false, ok: false, reason: diagnostics.lastError };
+      emit('spatial-three-session-failed', {
+        attemptId: startOptions.attemptId || null,
+        failureStage: 'target-unavailable',
+        error: diagnostics.lastError,
+        requestedMode: mode,
+      });
+      return { handled: false, ok: false, reason: diagnostics.lastError, failureStage: 'target-unavailable' };
     }
     if (!target?.navigator?.xr?.requestSession) {
       diagnostics.lastError = 'request-session-unavailable';
-      return { handled: false, ok: false, reason: diagnostics.lastError };
+      emit('spatial-three-session-failed', {
+        attemptId: startOptions.attemptId || null,
+        failureStage: 'request-session-unavailable',
+        error: diagnostics.lastError,
+        requestedMode: mode,
+      });
+      return { handled: false, ok: false, reason: diagnostics.lastError, failureStage: 'request-session-unavailable' };
     }
 
     diagnostics.status = 'starting';
@@ -2649,7 +2667,7 @@ export function createXRThreeSessionController(options = {}) {
           error: diagnostics.lastError,
           requestedMode: mode,
         });
-        return { handled: true, ok: false, reason: diagnostics.lastError };
+        return { handled: true, ok: false, reason: diagnostics.lastError, failureStage: 'request-session' };
       }
       let setSession = await adapter.setSession(sessionResult.session, adapterOptions);
       if (!setSession.ok) {
@@ -2662,7 +2680,7 @@ export function createXRThreeSessionController(options = {}) {
           error: diagnostics.lastError,
           requestedMode: mode,
         });
-        return { handled: true, ok: false, reason: diagnostics.lastError };
+        return { handled: true, ok: false, reason: diagnostics.lastError, failureStage: 'set-session' };
       }
       activeSession = sessionResult.session;
       diagnostics.status = 'running';
@@ -2698,7 +2716,7 @@ export function createXRThreeSessionController(options = {}) {
         message: error?.message || '',
         requestedMode: mode,
       });
-      return { handled: true, ok: false, reason: diagnostics.lastError };
+      return { handled: true, ok: false, reason: diagnostics.lastError, failureStage: 'exception', message: error?.message || '' };
     }
   }
 
@@ -3106,6 +3124,7 @@ function createXRThreeDiagnosticTimelineItem(event = {}) {
     ['texture', event.textureStage],
     ['resolver', event.textureResolverStage],
     ['gate', event.launchGateReason],
+    ['stage', event.failureStage],
     ['error', event.error],
   ]
     .map(([key, value]) => [key, normalizeTimelineValue(value)])

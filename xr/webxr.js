@@ -302,9 +302,8 @@ export function createWebXRLaunchGateSummary(support = {}, options = {}) {
   let requireUserActivation = options.requireUserActivation === true;
   let activationOk = !requireUserActivation ||
     userActivation.isActive === true ||
-    userActivation.hasBeenActive === true ||
     userActivation.available !== true ||
-    (userActivation.isActive == null && userActivation.hasBeenActive == null);
+    userActivation.isActive == null;
   let probeMode = options.probeMode || options.selectedMode || launch.mode || null;
   let canProbeMode = options.allowUnsupportedModeProbe === true &&
     launch.canLaunch !== true &&

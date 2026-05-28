@@ -251,6 +251,13 @@ describe('WebXR provider adapter', () => {
     assert.equal(inactiveActivation.canStart, false);
     assert.equal(inactiveActivation.reason, 'user-activation-required');
 
+    let expiredActivation = createWebXRLaunchGateSummary(support, {
+      requireUserActivation: true,
+      userActivation: { isActive: false, hasBeenActive: true },
+    });
+    assert.equal(expiredActivation.canStart, false);
+    assert.equal(expiredActivation.reason, 'user-activation-required');
+
     let probe = createWebXRLaunchGateSummary({
       modes: { inline: true, immersiveVr: false, immersiveAr: false },
       apis: {
@@ -3136,14 +3143,14 @@ describe('WebXR provider adapter', () => {
       hideStrictTextureFailures: true,
     });
 
-    assert.equal(result.renderedPanelCount, 1);
-    assert.equal(result.hiddenPanelCount, 0);
-    assert.deepEqual(result.hiddenPanelIds, []);
+    assert.equal(result.renderedPanelCount, 0);
+    assert.equal(result.hiddenPanelCount, 1);
+    assert.deepEqual(result.hiddenPanelIds, ['chat']);
     assert.equal(result.diagnosticPanelCount, 1);
     assert.deepEqual(result.diagnosticPanelIds, ['chat']);
-    assert.equal(adapter.getPanelMesh('chat').visible, true);
-    assert.equal(adapter.getState().textureSources[0].hidden, false);
-    assert.equal(adapter.getState().textureSources[0].diagnostic, true);
+    assert.equal(adapter.getPanelMesh('chat').visible, false);
+    assert.equal(adapter.getState().textureSources[0].hidden, true);
+    assert.equal(adapter.getState().textureSources[0].diagnostic, false);
     assert.equal(adapter.getState().textureSources[0].diagnosticReason, 'html-in-canvas-unsupported');
   });
 
@@ -3865,13 +3872,13 @@ describe('WebXR provider adapter', () => {
     });
 
     let state = adapter.getState();
-    assert.equal(state.renderedPanelCount, 1);
-    assert.equal(state.hiddenPanelCount, 0);
-    assert.deepEqual(state.hiddenPanelIds, []);
-    assert.equal(state.diagnosticPanelCount, 1);
-    assert.deepEqual(state.diagnosticPanelIds, ['chat']);
-    assert.equal(state.textureSources[0].hidden, false);
-    assert.equal(state.textureSources[0].diagnostic, true);
+    assert.equal(state.renderedPanelCount, 0);
+    assert.equal(state.hiddenPanelCount, 1);
+    assert.deepEqual(state.hiddenPanelIds, ['chat']);
+    assert.equal(state.diagnosticPanelCount, 0);
+    assert.deepEqual(state.diagnosticPanelIds, []);
+    assert.equal(state.textureSources[0].hidden, true);
+    assert.equal(state.textureSources[0].diagnostic, false);
   });
 
   it('adds provider-owned controller ray visuals when Three supplies line primitives', () => {
@@ -4652,6 +4659,7 @@ describe('WebXR provider adapter', () => {
       },
       {
         event: 'three-panels-session error',
+        failureStage: 'request-session',
         error: 'NotSupportedError',
       },
     ]);
@@ -4666,6 +4674,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(timeline.items[0].fields.resolver, 'three-canvas-texture-ready');
     assert.equal(timeline.items[0].text.includes('ready:ready'), true);
     assert.equal(timeline.items[1].event, 'three-panels-session-error');
+    assert.equal(timeline.items[1].fields.stage, 'request-session');
     assert.equal(timeline.latest.fields.error, 'NotSupportedError');
     assert.equal(timeline.text.includes(' -> '), true);
     assert.equal(createXRThreeDiagnosticTimelineSummary([]).text, null);
@@ -4963,6 +4972,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(result.handled, true);
     assert.equal(result.ok, false);
     assert.equal(result.reason, 'missing-three-webxr-manager');
+    assert.equal(result.failureStage, 'set-session');
     assert.equal(ended, true);
     assert.equal(controllerApi.getDiagnostics().status, 'failed');
     assert.equal(controllerApi.getDiagnostics().lastError, 'missing-three-webxr-manager');

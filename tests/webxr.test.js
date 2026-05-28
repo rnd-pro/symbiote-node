@@ -237,6 +237,20 @@ describe('WebXR provider adapter', () => {
     assert.equal(ready.reason, 'ready');
     assert.equal(ready.blockingChecks.length, 0);
 
+    let unknownActivation = createWebXRLaunchGateSummary(support, {
+      requireUserActivation: true,
+      userActivation: null,
+    });
+    assert.equal(unknownActivation.canStart, true);
+    assert.equal(unknownActivation.userActivation.available, false);
+
+    let inactiveActivation = createWebXRLaunchGateSummary(support, {
+      requireUserActivation: true,
+      userActivation: { isActive: false, hasBeenActive: false },
+    });
+    assert.equal(inactiveActivation.canStart, false);
+    assert.equal(inactiveActivation.reason, 'user-activation-required');
+
     let probe = createWebXRLaunchGateSummary({
       modes: { inline: true, immersiveVr: false, immersiveAr: false },
       apis: {

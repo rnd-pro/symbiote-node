@@ -257,7 +257,7 @@ export function normalizeXRPanel(panel = {}, options = {}) {
     sizeSource: explicitSize ? 'explicit' : relative.source,
     relativeRect: relative.relativeRect,
     curve: numberOr(xr.curve, options.curve ?? 0),
-    opacity: numberOr(xr.opacity, options.opacity ?? 0.96),
+    opacity: numberOr(xr.opacity, options.opacity ?? 1),
     priority: numberOr(xr.priority ?? panel.priority, options.index || 0),
     state: panel.panelState || {},
   };

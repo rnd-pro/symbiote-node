@@ -529,8 +529,8 @@ function createMaterial(THREE, panel, options = {}) {
     return new THREE.MeshBasicMaterial({
       color,
       side: THREE.DoubleSide,
-      transparent: true,
-      opacity: Number(options.opacity ?? 0.94),
+      transparent: false,
+      opacity: Number(options.opacity ?? 1),
     });
   }
   return new THREE.MeshStandardMaterial({
@@ -538,8 +538,8 @@ function createMaterial(THREE, panel, options = {}) {
     roughness: Number(options.roughness ?? 0.72),
     metalness: Number(options.metalness ?? 0.04),
     side: THREE.DoubleSide,
-    transparent: true,
-    opacity: Number(options.opacity ?? 0.94),
+    transparent: false,
+    opacity: Number(options.opacity ?? 1),
   });
 }
 
@@ -553,8 +553,8 @@ function applyStrictTextureDiagnosticMaterial(mesh, textureRecord, options = {})
   let material = mesh.material;
   if (!material) return;
   material.map = null;
-  material.transparent = true;
-  material.opacity = Number(options.strictTextureDiagnosticOpacity ?? 0.46);
+  material.transparent = false;
+  material.opacity = Number(options.strictTextureDiagnosticOpacity ?? 1);
   if (material.color?.setHex) {
     material.color.setHex(Number(options.strictTextureDiagnosticColor ?? 0x5b6572));
   } else {

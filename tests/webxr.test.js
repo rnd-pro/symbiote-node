@@ -634,6 +634,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(projected.unit, 'meter');
     assert.deepEqual(projected.panels.map((panel) => panel.id), ['graph', 'chat', 'status']);
     assert.deepEqual(projected.panels[0].position, [0, 1.35, -1.8]);
+    assert.equal(projected.panels[0].opacity, 1);
     assert.equal(projected.panels[1].anchor, 'left');
     assert.equal(projected.panels[2].anchor, 'upperRight');
   });
@@ -2682,7 +2683,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(bridge.getState().records[0].stage, 'three-material-applied');
   });
 
-  it('uses unlit basic materials for readable XR UI panels when Three supports them', () => {
+  it('uses opaque unlit basic materials for readable XR UI panels when Three supports them', () => {
     class FakeScene {
       constructor() {
         this.objects = [];
@@ -2734,7 +2735,8 @@ describe('WebXR provider adapter', () => {
 
     let mesh = adapter.getPanelMesh('chat');
     assert.equal(mesh.material.type, 'basic');
-    assert.equal(mesh.material.options.transparent, true);
+    assert.equal(mesh.material.options.transparent, false);
+    assert.equal(mesh.material.options.opacity, 1);
   });
 
   it('resets stale texture bridge records when replacing a Three XR scene', () => {

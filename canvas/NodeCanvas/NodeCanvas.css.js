@@ -29,6 +29,22 @@ node-canvas {
     outline: none;
   }
 
+  &[data-flow-layout] .canvas-container {
+    overflow: auto;
+    overscroll-behavior: contain;
+    background-color: var(--sn-bg, #1a1a2e);
+  }
+
+  &[data-flow-layout] {
+    background-image: none;
+  }
+
+  &[data-flow-layout] .content {
+    background-color: var(--sn-bg, #1a1a2e);
+    background-image: radial-gradient(circle, var(--sn-grid-dot, rgba(255,255,255,0.06)) 1px, transparent 1px);
+    background-size: var(--sn-grid-size, 20px) var(--sn-grid-size, 20px);
+  }
+
   &[data-readonly] {
     cursor: default;
   }

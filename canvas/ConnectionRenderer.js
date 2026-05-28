@@ -9,6 +9,7 @@
  */
 
 import { getShape } from '../shapes/index.js';
+import { routePcbTrace } from './PcbRouter.js';
 
 export class ConnectionRenderer {
 
@@ -83,6 +84,26 @@ export class ConnectionRenderer {
     };
   }
 
+  #buildNodeRectCache() {
+    const rects = new Map();
+    for (const [nid, el] of this.#nodeViews) {
+      if (!el) continue;
+      const size = this.#getNodeSize(el, 180, 100);
+      rects.set(nid, {
+        id: nid,
+        x: el._position?.x || 0,
+        y: el._position?.y || 0,
+        w: size.width,
+        h: size.height,
+      });
+    }
+    return rects;
+  }
+
+  #nodeRectsForRouting() {
+    return [...(this._nodeRectCache || this.#buildNodeRectCache()).values()];
+  }
+
   /**
    * Add a connection and render its SVG path
    * @param {import('../core/Connection.js').Connection} conn
@@ -140,8 +161,14 @@ export class ConnectionRenderer {
         el._slotCache = new Map();
       }
     }
-    for (const conn of conns) {
-      this.#render(conn);
+    const previousRectCache = this._nodeRectCache;
+    this._nodeRectCache = this.#buildNodeRectCache();
+    try {
+      for (const conn of conns) {
+        this.#render(conn);
+      }
+    } finally {
+      this._nodeRectCache = previousRectCache || null;
     }
   }
 
@@ -239,8 +266,14 @@ export class ConnectionRenderer {
       }
     }
 
-    for (const conn of touchedConns) {
-      this.#render(conn, nodeId);
+    const previousRectCache = this._nodeRectCache;
+    this._nodeRectCache = this.#buildNodeRectCache();
+    try {
+      for (const conn of touchedConns) {
+        this.#render(conn, nodeId);
+      }
+    } finally {
+      this._nodeRectCache = previousRectCache || null;
     }
   }
 
@@ -268,18 +301,7 @@ export class ConnectionRenderer {
     this.#dotLayer.style.display = 'none';
 
     // Pre-cache node rects for routing (prevents O(N^2) Layout Thrashing)
-    this._nodeRectCache = new Map();
-    for (const [nid, el] of this.#nodeViews) {
-      if (el) {
-        this._nodeRectCache.set(nid, {
-          id: nid,
-          x: el._position?.x || 0,
-          y: el._position?.y || 0,
-          w: el.offsetWidth || 180,
-          h: el.offsetHeight || 100,
-        });
-      }
-    }
+    this._nodeRectCache = this.#buildNodeRectCache();
 
     // ─── Three-Pass Pipeline: Side-Based Pin Assignment ───
     // Pass 1: Assign sides and distribute pins
@@ -805,230 +827,18 @@ export class ConnectionRenderer {
       }
       d = path;
     } else if (this.#pathStyle === 'pcb') {
-      // ─── PCB Grid-Based Trace Routing ───
-      // All waypoints snap to a grid. Stubs exit perpendicular to node surface
-      // with a minimum length, then route on grid channels with chamfered corners.
-
-      const TRACE_GRID = 5;  // Dense trace grid (5px)
-      const STUB_MIN = 20;   // minimum perpendicular stub from node edge
-      const CHAMFER = 8;     // 45° chamfer radius (px)
-
-      // Snap a coordinate to the trace grid
-      const snapGrid = (v) => Math.round(v / TRACE_GRID) * TRACE_GRID;
-
-      // Connection channel index for parallel trace separation
-      const connKeys = Array.from(this.#connectionData.keys());
-      const connIndex = connKeys.indexOf(conn.id);
-      
-      // Determine unique channel shift to prevent parallel traces overlapping
-      // Alternates: 0, +5, -5, +10, -10...
-      const shiftIndex = (connIndex > -1 ? connIndex % 12 : 0);
-      const channelShift = (shiftIndex % 2 === 0 ? 1 : -1) * Math.ceil(shiftIndex / 2) * TRACE_GRID;
-
-      // Compute perpendicular stub directions from surface normals
-      const fromAngle = fromOffset.angle !== undefined ? fromOffset.angle : 0;
-      const toAngle = toOffset.angle !== undefined ? toOffset.angle : 180;
-
-      // Snap angle to cardinal direction (→ ↓ ← ↑)
-      const snapDir = (deg) => {
-        const r = ((deg % 360) + 360) % 360;
-        if (r < 45 || r >= 315) return { dx: 1, dy: 0 };     // right
-        if (r >= 45 && r < 135)  return { dx: 0, dy: 1 };     // down
-        if (r >= 135 && r < 225) return { dx: -1, dy: 0 };    // left
-        return { dx: 0, dy: -1 };                              // up
-      };
-
-      const fDir = snapDir(fromAngle);
-      const tDir = snapDir(toAngle);
-
-      // Stub endpoints: extend strictly perpedicular, no grid snapping on the orthogonal axis
-      // to avoid diagonal stubs from pins that are floating (not grid aligned).
-      const stubFromX = fDir.dx === 0 ? startX : startX + fDir.dx * STUB_MIN;
-      const stubFromY = fDir.dy === 0 ? startY : startY + fDir.dy * STUB_MIN;
-      const stubToX = tDir.dx === 0 ? endX : endX + tDir.dx * STUB_MIN;
-      const stubToY = tDir.dy === 0 ? endY : endY + tDir.dy * STUB_MIN;
-
-      const fromH = fromEl.offsetHeight || 60;
-      const toH = toEl.offsetHeight || 60;
-
-      // Build orthogonal waypoints on grid
-      let pts = [
-        { x: startX, y: startY },
-        { x: stubFromX, y: stubFromY },
-      ];
-
-      // Very simple heuristic orthogonal router
-      if (endX < startX - 20) {
-        // Backwards routing: U-turn below obstacles in the path
-        const minXForObstacle = Math.min(stubFromX, stubToX);
-        const maxXForObstacle = Math.max(stubFromX, stubToX);
-        let maxObstacleY = Math.max(fromPos.y + fromH, toPos.y + toH);
-
-        const iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
-        for (const rect of iter) {
-            const nx = rect.x;
-            const ny = rect.y;
-            const nw = rect.w;
-            const nh = rect.h;
-            // Check if node is in the horizontal path of the detour
-            const pad = TRACE_GRID * 2;
-            if (nx + nw + pad >= minXForObstacle && nx - pad <= maxXForObstacle) {
-                if (ny + nh > maxObstacleY) {
-                    maxObstacleY = ny + nh;
-                }
-            }
-        }
-        
-        // Detour deeply below all nodes in the path to avoid overlaps
-        // We use absolute channelShift so tracks stack neatly downward
-        const bottomY = snapGrid(maxObstacleY + 30) + Math.abs(channelShift);
-        pts.push({ x: stubFromX, y: bottomY });
-        pts.push({ x: stubToX, y: bottomY });
-      } else {
-        // Forward routing: mid-X channel
-        let midX = snapGrid((stubFromX + stubToX) / 2) + channelShift;
-
-        // Same-height shortcut: if stubs are roughly aligned (in same track cell), connect via single horizontal
-        if (Math.abs(stubFromY - stubToY) < TRACE_GRID * 2) {
-          // Keep strictly horizontal
-          pts.push({ x: stubToX, y: stubFromY });
-        } else {
-          // Obstacle check for mid-X vertical segment
-          const minY = Math.min(stubFromY, stubToY);
-          const maxY = Math.max(stubFromY, stubToY);
-          const pad = TRACE_GRID * 4;
-
-          const iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
-          for (const rect of iter) {
-            if (rect.id === conn.from || rect.id === conn.to) continue;
-            const nx = rect.x, ny = rect.y;
-            const nw = rect.w, nh = rect.h;
-            
-            if (midX >= nx - pad && midX <= nx + nw + pad) {
-              if (ny - pad <= maxY && ny + nh + pad >= minY) {
-                // Detour around obstacle
-                const leftX = snapGrid(nx - pad) + channelShift;
-                const rightX = snapGrid(nx + nw + pad) + channelShift;
-                midX = Math.abs(midX - leftX) < Math.abs(midX - rightX) ? leftX : rightX;
-                break;
-              }
-            }
-          }
-
-          pts.push({ x: midX, y: stubFromY });
-          pts.push({ x: midX, y: stubToY });
-        }
-      }
-
-      pts.push({ x: stubToX, y: stubToY });
-      pts.push({ x: endX, y: endY });
-
-      // Path building and Chamfering
-      let debugCollisions = [];
-
-      // 1. Check if line segments intersect any nodes
-      for (let i = 0; i < pts.length - 1; i++) {
-        const segX1 = Math.min(pts[i].x, pts[i + 1].x);
-        const segY1 = Math.min(pts[i].y, pts[i + 1].y);
-        const segX2 = Math.max(pts[i].x, pts[i + 1].x);
-        const segY2 = Math.max(pts[i].y, pts[i + 1].y);
-        
-        const iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
-        for (const rect of iter) {
-          if (rect.id === conn.from || rect.id === conn.to) continue;
-          
-          const nx = rect.x, ny = rect.y;
-          const nw = rect.w, nh = rect.h;
-          
-          if (segX1 < nx + nw && segX2 > nx && segY1 < ny + nh && segY2 > ny) {
-            debugCollisions.push(`Node Collision: (${pts[i].x},${pts[i].y})->(${pts[i+1].x},${pts[i+1].y}) intersects Node[${rect.id}]`);
-          }
-        }
-      }
-
-      // 2. Self-overlap (180 degree turn)
-      for (let i = 0; i < pts.length - 2; i++) {
-        const p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2];
-        const v1x = p2.x - p1.x, v1y = p2.y - p1.y;
-        const v2x = p3.x - p2.x, v2y = p3.y - p2.y;
-        if (v1x * v2x < 0 || v1y * v2y < 0) {
-           debugCollisions.push(`180° Fold: at (${p2.x},${p2.y}) turning back toward (${p3.x},${p3.y})`);
-        }
-      }
-
-      // Store generated segments for global overlap checks
-      if (!this._allSegments) this._allSegments = [];
-      const segments = [];
-      for (let i = 0; i < pts.length - 1; i++) {
-        segments.push({
-          p1: pts[i], p2: pts[i+1],
-          connId: conn.id,
-          channel: connIndex
-        });
-      }
-      this._allSegments.push(...segments);
-
-      // Log route stats
-      if (ConnectionRenderer.debug) {
-        const fromLabel = fromEl._nodeData?.label || conn.from;
-        const toLabel = toEl._nodeData?.label || conn.to;
-        let msg = `[PCB] ${fromLabel} → ${toLabel} | waypoints=${pts.length}`;
-        if (debugCollisions.length > 0) {
-          msg += ` | ERRS: ` + debugCollisions.join(' | ');
-        }
-        console.log(msg);
-      }
-
-      // Build SVG path with 45° chamfered corners
-      let path = `M ${pts[0].x} ${pts[0].y}`;
-      for (let i = 1; i < pts.length; i++) {
-        const prev = pts[i - 1];
-        const curr = pts[i];
-        if (Math.abs(curr.x - prev.x) < 0.5 && Math.abs(curr.y - prev.y) < 0.5) continue;
-
-        const next = pts[i + 1];
-        if (next) {
-          // Determine if there's a turn at curr → need chamfer
-          const dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
-          const dx2 = next.x - curr.x, dy2 = next.y - curr.y;
-          const isH1 = Math.abs(dx1) > Math.abs(dy1);
-          const isH2 = Math.abs(dx2) > Math.abs(dy2);
-
-          if (isH1 !== isH2) {
-            // Corner turn — apply 45° chamfer
-            const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-            const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-            if (len1 < 1 || len2 < 1) {
-              // Degenerate segment — skip chamfer, go straight
-              path += ` L ${curr.x} ${curr.y}`;
-              continue;
-            }
-            const c = Math.min(CHAMFER, len1 / 2, len2 / 2);
-
-            // Pre-corner point
-            const nx1 = dx1 / len1, ny1 = dy1 / len1;
-            const preX = curr.x - nx1 * c;
-            const preY = curr.y - ny1 * c;
-            // Post-corner point
-            const nx2 = dx2 / len2, ny2 = dy2 / len2;
-            const postX = curr.x + nx2 * c;
-            const postY = curr.y + ny2 * c;
-
-            path += ` L ${preX} ${preY} L ${postX} ${postY}`;
-            continue;
-          }
-        }
-
-        // Straight segment — use H/V for axis-aligned, L for diagonal stubs
-        if (Math.abs(curr.y - prev.y) < 0.5) {
-          path += ` H ${curr.x}`;
-        } else if (Math.abs(curr.x - prev.x) < 0.5) {
-          path += ` V ${curr.y}`;
-        } else {
-          path += ` L ${curr.x} ${curr.y}`;
-        }
-      }
-      d = path;
+      const routed = routePcbTrace({
+        start: { x: startX, y: startY },
+        end: { x: endX, y: endY },
+        fromRect: { id: conn.from, x: fromPos.x, y: fromPos.y, w: fromW, h: fromH },
+        toRect: { id: conn.to, x: toPos.x, y: toPos.y, w: toW, h: toH },
+        fromAngle: fromOffset.angle ?? 0,
+        toAngle: toOffset.angle ?? 180,
+        rects: this.#nodeRectsForRouting(),
+        connections: [...this.#connectionData.values()],
+        conn,
+      });
+      d = routed.path;
     } else {
       // Tangent direction: use dynamic edge angle if available, else fixed socket angle
       let fromAngleDeg, toAngleDeg;

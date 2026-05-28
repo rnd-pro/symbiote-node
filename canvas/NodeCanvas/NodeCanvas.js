@@ -82,6 +82,15 @@ export class NodeCanvas extends Symbiote {
   /** @type {boolean} */
   #viewportLocked = false;
 
+  /** @type {null|{direction: 'vertical'|'horizontal', nodeIds: string[]|null, gap: number, padding: {top: number, right: number, bottom: number, left: number}, align: 'start'|'center'|'end'|'stretch', minNodeWidth: number, maxNodeWidth: number|null, nodeWidth: number|null, minNodeHeight: number, maxNodeHeight: number|null, nodeHeight: number|null}} */
+  #flowLayout = null;
+
+  /** @type {ResizeObserver|null} */
+  #flowResizeObserver = null;
+
+  /** @type {number} */
+  #flowLayoutRaf = 0;
+
   /** @type {boolean} */
   #panelsEnabled = true;
 
@@ -328,6 +337,7 @@ export class NodeCanvas extends Symbiote {
       } else {
         this.#viewManager.addView(node);
       }
+      this.#scheduleFlowLayout();
     });
     editor.on('noderemoved', (node) => {
       this.#viewManager.removeView(node);
@@ -337,6 +347,7 @@ export class NodeCanvas extends Symbiote {
           this.#connRenderer.remove(conn);
         }
       }
+      this.#scheduleFlowLayout();
     });
     editor.on('connectioncreated', (conn) => this.#connRenderer.add(conn));
     editor.on('connectionremoved', (conn) => {
@@ -501,6 +512,70 @@ export class NodeCanvas extends Symbiote {
   setViewportLocked(locked) {
     this.#viewportLocked = locked;
     this.toggleAttribute('data-viewport-locked', locked);
+  }
+
+  /**
+   * Arrange selected graph nodes as a scrollable flow while preserving real
+   * graph-node elements, connectors, node menus, and dragging.
+   *
+   * @param {object} [options]
+   * @param {'vertical'|'horizontal'} [options.direction='vertical']
+   * @param {string[]} [options.nodeIds] Ordered subset of nodes to place.
+   * @param {number} [options.gap=16]
+   * @param {number|{top?: number, right?: number, bottom?: number, left?: number}} [options.padding=24]
+   * @param {'start'|'center'|'end'|'stretch'} [options.align='stretch']
+   * @param {number} [options.minNodeWidth=240]
+   * @param {number|null} [options.maxNodeWidth=null]
+   * @param {number|null} [options.nodeWidth=null]
+   * @param {number} [options.minNodeHeight=120]
+   * @param {number|null} [options.maxNodeHeight=null]
+   * @param {number|null} [options.nodeHeight=null]
+   */
+  setFlowLayout(options = {}) {
+    const padding = this.#normalizeFlowPadding(options.padding ?? 24);
+    this.#flowLayout = {
+      direction: options.direction === 'horizontal' ? 'horizontal' : 'vertical',
+      nodeIds: Array.isArray(options.nodeIds) ? [...options.nodeIds] : null,
+      gap: Number.isFinite(options.gap) ? Math.max(0, options.gap) : 16,
+      padding,
+      align: ['start', 'center', 'end', 'stretch'].includes(options.align) ? options.align : 'stretch',
+      minNodeWidth: Number.isFinite(options.minNodeWidth) ? Math.max(0, options.minNodeWidth) : 240,
+      maxNodeWidth: Number.isFinite(options.maxNodeWidth) ? Math.max(0, options.maxNodeWidth) : null,
+      nodeWidth: Number.isFinite(options.nodeWidth) ? Math.max(0, options.nodeWidth) : null,
+      minNodeHeight: Number.isFinite(options.minNodeHeight) ? Math.max(0, options.minNodeHeight) : 120,
+      maxNodeHeight: Number.isFinite(options.maxNodeHeight) ? Math.max(0, options.maxNodeHeight) : null,
+      nodeHeight: Number.isFinite(options.nodeHeight) ? Math.max(0, options.nodeHeight) : null,
+    };
+    this.setAttribute('data-flow-layout', this.#flowLayout.direction);
+    this.#ensureFlowResizeObserver();
+    this.#scheduleFlowLayout();
+  }
+
+  clearFlowLayout() {
+    this.#flowLayout = null;
+    this.removeAttribute('data-flow-layout');
+    if (this.ref.content) {
+      this.ref.content.style.width = '';
+      this.ref.content.style.height = '';
+    }
+    if (this.#flowResizeObserver) {
+      this.#flowResizeObserver.disconnect();
+      this.#flowResizeObserver = null;
+    }
+    if (this.#flowLayoutRaf) {
+      cancelAnimationFrame(this.#flowLayoutRaf);
+      this.#flowLayoutRaf = 0;
+    }
+    for (const [, el] of this.#nodeViews) {
+      el.style.removeProperty('--sn-node-min-width');
+      el.style.removeProperty('--sn-node-max-width');
+      el.style.minHeight = '';
+      el.style.maxHeight = '';
+    }
+  }
+
+  refreshFlowLayout() {
+    this.#scheduleFlowLayout();
   }
 
   /**
@@ -1456,6 +1531,13 @@ export class NodeCanvas extends Symbiote {
   /** Apply viewport culling and LOD based on current transform */
   #applyCullingAndLOD() {
     if (!this.ref.canvasContainer) return;
+    if (this.#flowLayout) {
+      for (const [, el] of this.#nodeViews) {
+        if (el.style.visibility !== '') el.style.visibility = '';
+        if (el.getAttribute('data-lod') !== 'full') el.setAttribute('data-lod', 'full');
+      }
+      return;
+    }
     // Allow running even with 0 DOM nodes (phantom-only mode)
     if (this.#nodeViews.size === 0 && this.#phantomData.size === 0) return;
 
@@ -1608,6 +1690,120 @@ export class NodeCanvas extends Symbiote {
     this.#syncPhantomToRenderer();
   }
 
+  #normalizeFlowPadding(padding) {
+    if (typeof padding === 'number') {
+      return { top: padding, right: padding, bottom: padding, left: padding };
+    }
+    return {
+      top: Number.isFinite(padding?.top) ? padding.top : 24,
+      right: Number.isFinite(padding?.right) ? padding.right : 24,
+      bottom: Number.isFinite(padding?.bottom) ? padding.bottom : 24,
+      left: Number.isFinite(padding?.left) ? padding.left : 24,
+    };
+  }
+
+  #ensureFlowResizeObserver() {
+    if (this.#flowResizeObserver || typeof ResizeObserver === 'undefined') return;
+    this.#flowResizeObserver = new ResizeObserver(() => this.#scheduleFlowLayout());
+    this.#flowResizeObserver.observe(this);
+  }
+
+  #scheduleFlowLayout() {
+    if (!this.#flowLayout) return;
+    if (this.#flowLayoutRaf) cancelAnimationFrame(this.#flowLayoutRaf);
+    this.#flowLayoutRaf = requestAnimationFrame(() => {
+      this.#flowLayoutRaf = 0;
+      this.#applyFlowLayout();
+    });
+  }
+
+  #getFlowNodeIds() {
+    if (!this.#editor) return [];
+    if (this.#flowLayout?.nodeIds) return this.#flowLayout.nodeIds;
+    return this.#editor.getNodes().map((node) => node.id);
+  }
+
+  #applyFlowLayout() {
+    const layout = this.#flowLayout;
+    if (!layout || !this.ref.canvasContainer || !this.ref.content) return;
+
+    const container = this.ref.canvasContainer;
+    const content = this.ref.content;
+    const ids = this.#getFlowNodeIds().filter((id) => this.#nodeViews.has(id));
+    const p = layout.padding;
+    const containerWidth = Math.max(0, container.clientWidth);
+    const containerHeight = Math.max(0, container.clientHeight);
+    const innerWidth = Math.max(0, containerWidth - p.left - p.right);
+    const innerHeight = Math.max(0, containerHeight - p.top - p.bottom);
+    const maxNodeWidth = layout.maxNodeWidth ?? innerWidth;
+    const maxNodeHeight = layout.maxNodeHeight ?? innerHeight;
+    const flowNodeWidth = layout.nodeWidth ?? Math.min(maxNodeWidth, Math.max(layout.minNodeWidth, innerWidth));
+    const flowNodeHeight = layout.nodeHeight ?? Math.min(maxNodeHeight, Math.max(layout.minNodeHeight, innerHeight));
+
+    this.setBatchMode(true);
+
+    let cursorX = p.left;
+    let cursorY = p.top;
+    let maxX = p.left;
+    let maxY = p.top;
+
+    for (const id of ids) {
+      const el = this.#nodeViews.get(id);
+      if (!el) continue;
+
+      if (layout.direction === 'vertical') {
+        if (layout.align === 'stretch' || layout.nodeWidth) {
+          el.style.setProperty('--sn-node-min-width', `${flowNodeWidth}px`);
+          el.style.setProperty('--sn-node-max-width', `${flowNodeWidth}px`);
+        }
+
+        const nodeWidth = el.offsetWidth || flowNodeWidth;
+        const x = this.#resolveFlowCrossAxisPosition(layout.align, p.left, innerWidth, nodeWidth);
+        this.setNodePosition(id, x, cursorY);
+
+        const nodeHeight = el.offsetHeight || layout.minNodeHeight;
+        maxX = Math.max(maxX, x + nodeWidth);
+        maxY = Math.max(maxY, cursorY + nodeHeight);
+        cursorY += nodeHeight + layout.gap;
+      } else {
+        if (layout.align === 'stretch' || layout.nodeHeight) {
+          el.style.minHeight = `${flowNodeHeight}px`;
+          el.style.maxHeight = `${flowNodeHeight}px`;
+        }
+
+        const nodeHeight = el.offsetHeight || flowNodeHeight;
+        const y = this.#resolveFlowCrossAxisPosition(layout.align, p.top, innerHeight, nodeHeight);
+        this.setNodePosition(id, cursorX, y);
+
+        const nodeWidth = el.offsetWidth || layout.minNodeWidth;
+        maxX = Math.max(maxX, cursorX + nodeWidth);
+        maxY = Math.max(maxY, y + nodeHeight);
+        cursorX += nodeWidth + layout.gap;
+      }
+    }
+
+    this.setBatchMode(false);
+
+    content.style.width = `${Math.max(containerWidth, maxX + p.right)}px`;
+    content.style.height = `${Math.max(containerHeight, maxY + p.bottom)}px`;
+    this.$.panX = 0;
+    this.$.panY = 0;
+    this.$.zoom = 1;
+    this.#updateTransform();
+    requestAnimationFrame(() => this.refreshConnections());
+  }
+
+  #resolveFlowCrossAxisPosition(align, start, available, size) {
+    switch (align) {
+      case 'center':
+        return start + Math.max(0, (available - size) / 2);
+      case 'end':
+        return start + Math.max(0, available - size);
+      default:
+        return start;
+    }
+  }
+
   // --- Lifecycle ---
 
   renderCallback() {
@@ -1621,11 +1817,13 @@ export class NodeCanvas extends Symbiote {
     this.#drag.initialize(
       container,
       {
-        getPosition: () => ({ x: this.$.panX, y: this.$.panY }),
+        getPosition: () => this.#flowLayout
+          ? ({ x: -container.scrollLeft, y: -container.scrollTop })
+          : ({ x: this.$.panX, y: this.$.panY }),
         getZoom: () => 1,
       },
       {
-        shouldStart: () => !this.#viewportLocked,
+        shouldStart: () => Boolean(this.#flowLayout) || !this.#viewportLocked,
         onStart: (e) => {
           // Track start position — only unselect on click (not drag)
           this._panStart = e ? { x: e.pageX, y: e.pageY, target: e.target } : null;
@@ -1633,6 +1831,15 @@ export class NodeCanvas extends Symbiote {
         onTranslate: (x, y) => {
           if (this.#zoom?.isTranslating()) return;
           if (this.#connectFlow?.isPicking()) return;
+          if (this.#flowLayout) {
+            container.scrollLeft = -x;
+            container.scrollTop = -y;
+            this.dispatchEvent(new CustomEvent('manualviewport'));
+            if (!this.hasAttribute('data-interacting')) {
+              this.setAttribute('data-interacting', '');
+            }
+            return;
+          }
           this.$.panX = x;
           this.$.panY = y;
           this.#updateTransform();
@@ -1895,6 +2102,8 @@ export class NodeCanvas extends Symbiote {
 
   destroyCallback() {
     if (this.#panAnimFrame) cancelAnimationFrame(this.#panAnimFrame);
+    if (this.#flowLayoutRaf) cancelAnimationFrame(this.#flowLayoutRaf);
+    if (this.#flowResizeObserver) this.#flowResizeObserver.disconnect();
     if (this.#drag) this.#drag.destroy();
     if (this.#zoom) this.#zoom.destroy();
     if (this.#connectFlow) this.#connectFlow.destroy();

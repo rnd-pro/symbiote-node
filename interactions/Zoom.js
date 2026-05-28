@@ -62,6 +62,9 @@ export class Zoom {
   }
 
   #wheel = (e) => {
+    if (this.#container?.closest?.('node-canvas[data-flow-layout]')) {
+      return;
+    }
     e.preventDefault();
     const rect = this.#getRect();
     // Normalize delta: trackpads send small frequent deltas, mice send large ones

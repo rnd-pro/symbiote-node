@@ -61,7 +61,7 @@ export class CrossLayoutPortalBridge extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['source-selector', 'target-selector', 'source-side', 'target-side'];
+    return ['source-selector', 'target-selector', 'source-side', 'target-side', 'path-style'];
   }
 
   connectedCallback() {
@@ -111,16 +111,102 @@ export class CrossLayoutPortalBridge extends HTMLElement {
 
     const start = this.#anchorPoint(source, this.getAttribute('source-side') || 'right');
     const end = this.#anchorPoint(target, this.getAttribute('target-side') || 'left');
-    const dx = Math.max(48, Math.abs(end.x - start.x) * 0.45);
-    const c1 = { x: start.x + dx, y: start.y };
-    const c2 = { x: end.x - dx, y: end.y };
+    const path = this.#getPath(start, end, this.getAttribute('path-style') || 'bezier');
 
     this.#svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
-    this.#path.setAttribute('d', `M ${start.x} ${start.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${end.x} ${end.y}`);
+    this.#path.setAttribute('d', path);
     this.#sourceDot.setAttribute('cx', String(start.x));
     this.#sourceDot.setAttribute('cy', String(start.y));
     this.#targetDot.setAttribute('cx', String(end.x));
     this.#targetDot.setAttribute('cy', String(end.y));
+  }
+
+  #getPath(start, end, style) {
+    if (style === 'pcb') {
+      const grid = Number.parseFloat(getComputedStyle(this).getPropertyValue('--sn-portal-bridge-grid')) || 20;
+      const stub = Number.parseFloat(getComputedStyle(this).getPropertyValue('--sn-portal-bridge-stub')) || 36;
+      const chamfer = Number.parseFloat(getComputedStyle(this).getPropertyValue('--sn-portal-bridge-chamfer')) || 8;
+      const snap = (value) => Math.round(value / grid) * grid;
+      const startStubX = start.x + Math.sign(end.x - start.x || 1) * stub;
+      const endStubX = end.x - Math.sign(end.x - start.x || 1) * stub;
+      const channelX = snap((startStubX + endStubX) / 2);
+      return this.#orthogonalPath([
+        start,
+        { x: startStubX, y: start.y },
+        { x: channelX, y: start.y },
+        { x: channelX, y: end.y },
+        { x: endStubX, y: end.y },
+        end,
+      ], chamfer);
+    }
+
+    const dx = Math.max(48, Math.abs(end.x - start.x) * 0.45);
+    const c1 = { x: start.x + dx, y: start.y };
+    const c2 = { x: end.x - dx, y: end.y };
+    return `M ${start.x} ${start.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${end.x} ${end.y}`;
+  }
+
+  #orthogonalPath(points, chamfer = 0) {
+    const compact = [];
+    for (const point of points) {
+      const previous = compact.at(-1);
+      if (!previous || Math.abs(previous.x - point.x) > 0.5 || Math.abs(previous.y - point.y) > 0.5) {
+        compact.push(point);
+      }
+    }
+
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (let index = 1; index < compact.length - 1; index += 1) {
+        const prev = compact[index - 1];
+        const curr = compact[index];
+        const next = compact[index + 1];
+        const sameVertical = Math.abs(prev.x - curr.x) < 0.5 && Math.abs(curr.x - next.x) < 0.5;
+        const sameHorizontal = Math.abs(prev.y - curr.y) < 0.5 && Math.abs(curr.y - next.y) < 0.5;
+        if (sameVertical || sameHorizontal) {
+          compact.splice(index, 1);
+          changed = true;
+          break;
+        }
+      }
+    }
+
+    let path = `M ${compact[0].x} ${compact[0].y}`;
+    for (let index = 1; index < compact.length; index += 1) {
+      const prev = compact[index - 1];
+      const curr = compact[index];
+      const next = compact[index + 1];
+      if (next && chamfer > 0) {
+        const dx1 = curr.x - prev.x;
+        const dy1 = curr.y - prev.y;
+        const dx2 = next.x - curr.x;
+        const dy2 = next.y - curr.y;
+        const isH1 = Math.abs(dx1) > Math.abs(dy1);
+        const isH2 = Math.abs(dx2) > Math.abs(dy2);
+        if (isH1 !== isH2) {
+          const len1 = Math.hypot(dx1, dy1);
+          const len2 = Math.hypot(dx2, dy2);
+          if (len1 >= chamfer * 3 && len2 >= chamfer * 3) {
+            const c = Math.min(chamfer, len1 / 2, len2 / 2);
+            const preX = curr.x - (dx1 / len1) * c;
+            const preY = curr.y - (dy1 / len1) * c;
+            const postX = curr.x + (dx2 / len2) * c;
+            const postY = curr.y + (dy2 / len2) * c;
+            path += ` L ${preX} ${preY} L ${postX} ${postY}`;
+            continue;
+          }
+        }
+      }
+      if (Math.abs(curr.y - prev.y) < 0.5) {
+        path += ` H ${curr.x}`;
+      } else if (Math.abs(curr.x - prev.x) < 0.5) {
+        path += ` V ${curr.y}`;
+      } else {
+        path += ` H ${curr.x} V ${curr.y}`;
+      }
+    }
+    return path;
   }
 
   #anchorPoint(el, side) {

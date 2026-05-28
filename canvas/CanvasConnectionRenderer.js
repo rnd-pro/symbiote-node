@@ -1,4 +1,5 @@
 import { getShape } from '../shapes/index.js';
+import { routePcbTrace } from './PcbRouter.js';
 
 /**
  * Parallel support for connection rendering via HTML5 Canvas API.
@@ -137,11 +138,6 @@ export class CanvasConnectionRenderer {
     for (const conn of this.#connectionData.values()) {
       conn.flowing = active;
     }
-  }
-
-  setPathStyle(style) {
-    this.#pathStyle = style;
-    this.redraw();
   }
 
   highlightDotsForNodes(compatibleNodeIds) { }
@@ -722,194 +718,19 @@ export class CanvasConnectionRenderer {
       }
       d = path;
     } else if (effectiveStyle === 'pcb') {
-      // ─── PCB Grid-Based Trace Routing ───
-      // All waypoints snap to a grid. Stubs exit perpendicular to node surface
-      // with a minimum length, then route on grid channels with chamfered corners.
-
-      const TRACE_GRID = 5;  // Dense trace grid (5px)
-      const STUB_MIN = 20;   // minimum perpendicular stub from node edge
-      const CHAMFER = 8;     // 45° chamfer radius (px)
-
-      // Snap a coordinate to the trace grid
-      const snapGrid = (v) => Math.round(v / TRACE_GRID) * TRACE_GRID;
-
-      // Connection channel index for parallel trace separation
-      const connIndex = this._connIndexMap ? (this._connIndexMap.get(conn.id) ?? 0) : 0;
-
-      // Determine unique channel shift to prevent parallel traces overlapping
-      // Alternates: 0, +5, -5, +10, -10...
-      const shiftIndex = (connIndex > -1 ? connIndex % 12 : 0);
-      const channelShift = (shiftIndex % 2 === 0 ? 1 : -1) * Math.ceil(shiftIndex / 2) * TRACE_GRID;
-
-      // Compute perpendicular stub directions from surface normals
-      const fromAngle = fromOffset.angle !== undefined ? fromOffset.angle : 0;
-      const toAngle = toOffset.angle !== undefined ? toOffset.angle : 180;
-
-      // Snap angle to cardinal direction (→ ↓ ← ↑)
-      const snapDir = (deg) => {
-        const r = ((deg % 360) + 360) % 360;
-        if (r < 45 || r >= 315) return { dx: 1, dy: 0 };     // right
-        if (r >= 45 && r < 135) return { dx: 0, dy: 1 };     // down
-        if (r >= 135 && r < 225) return { dx: -1, dy: 0 };    // left
-        return { dx: 0, dy: -1 };                              // up
-      };
-
-      const fDir = snapDir(fromAngle);
-      const tDir = snapDir(toAngle);
-
-      // Stub endpoints: extend strictly perpedicular, no grid snapping on the orthogonal axis
-      // to avoid diagonal stubs from pins that are floating (not grid aligned).
-      const stubFromX = fDir.dx === 0 ? startX : startX + fDir.dx * STUB_MIN;
-      const stubFromY = fDir.dy === 0 ? startY : startY + fDir.dy * STUB_MIN;
-      const stubToX = tDir.dx === 0 ? endX : endX + tDir.dx * STUB_MIN;
-      const stubToY = tDir.dy === 0 ? endY : endY + tDir.dy * STUB_MIN;
-
-      const fromH = fromEl.offsetHeight || 60;
-      const toH = toEl.offsetHeight || 60;
-
-      // Build orthogonal waypoints on grid
-      let pts = [
-        { x: startX, y: startY },
-        { x: stubFromX, y: stubFromY },
-      ];
-      // Skip obstacle avoidance on large graphs — O(N) per connection is too expensive
-      // and produces worse visual results at high density anyway
-      const skipObstacles = this._nodeRectMap && this._nodeRectMap.size > 200;
-
-      // Very simple heuristic orthogonal router
-      if (endX < startX - 20) {
-        // Backwards routing: U-turn below obstacles in the path
-        let maxObstacleY = Math.max(fromPos.y + fromH, toPos.y + toH);
-
-        if (!skipObstacles) {
-          const minXForObstacle = Math.min(stubFromX, stubToX);
-          const maxXForObstacle = Math.max(stubFromX, stubToX);
-          const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
-          for (const rect of iter) {
-            const nx = rect.x;
-            const ny = rect.y;
-            const nw = rect.w;
-            const nh = rect.h;
-            const pad = TRACE_GRID * 2;
-            if (nx + nw + pad >= minXForObstacle && nx - pad <= maxXForObstacle) {
-              if (ny + nh > maxObstacleY) {
-                maxObstacleY = ny + nh;
-              }
-            }
-          }
-        }
-
-        const bottomY = snapGrid(maxObstacleY + 30) + Math.abs(channelShift);
-        pts.push({ x: stubFromX, y: bottomY });
-        pts.push({ x: stubToX, y: bottomY });
-      } else {
-        // Forward routing: mid-X channel
-        let midX = snapGrid((stubFromX + stubToX) / 2) + channelShift;
-
-        // Same-height shortcut
-        if (Math.abs(stubFromY - stubToY) < TRACE_GRID * 2) {
-          pts.push({ x: stubToX, y: stubFromY });
-        } else {
-          if (!skipObstacles) {
-            // Obstacle check for mid-X vertical segment
-            const minY = Math.min(stubFromY, stubToY);
-            const maxY = Math.max(stubFromY, stubToY);
-            const pad = TRACE_GRID * 4;
-
-            const iter = this._nodeRectMap ? this._nodeRectMap.values() : [];
-            for (const rect of iter) {
-              if (rect.id === conn.from || rect.id === conn.to) continue;
-              const nx = rect.x, ny = rect.y;
-              const nw = rect.w, nh = rect.h;
-
-              if (midX >= nx - pad && midX <= nx + nw + pad) {
-                if (ny - pad <= maxY && ny + nh + pad >= minY) {
-                  const leftX = snapGrid(nx - pad) + channelShift;
-                  const rightX = snapGrid(nx + nw + pad) + channelShift;
-                  midX = Math.abs(midX - leftX) < Math.abs(midX - rightX) ? leftX : rightX;
-                  break;
-                }
-              }
-            }
-          }
-
-          pts.push({ x: midX, y: stubFromY });
-          pts.push({ x: midX, y: stubToY });
-        }
-      }
-
-      pts.push({ x: stubToX, y: stubToY });
-      pts.push({ x: endX, y: endY });
-
-      // Path building and Chamfering
-
-      // Log route stats (debug only)
-      if (CanvasConnectionRenderer.debug) {
-        const fromLabel = fromEl._nodeData?.label || conn.from;
-        const toLabel = toEl._nodeData?.label || conn.to;
-        console.log(`[PCB] ${fromLabel} → ${toLabel} | waypoints=${pts.length}`);
-      }
-
-      // Build SVG path with 45° chamfered corners
-      let path = `M ${pts[0].x} ${pts[0].y}`;
-      for (let i = 1; i < pts.length; i++) {
-        const prev = pts[i - 1];
-        const curr = pts[i];
-        if (Math.abs(curr.x - prev.x) < 0.5 && Math.abs(curr.y - prev.y) < 0.5) continue;
-
-        const next = pts[i + 1];
-        if (next) {
-          // Determine if there's a turn at curr → need chamfer
-          const dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
-          const dx2 = next.x - curr.x, dy2 = next.y - curr.y;
-          const isH1 = Math.abs(dx1) > Math.abs(dy1);
-          const isH2 = Math.abs(dx2) > Math.abs(dy2);
-
-          if (isH1 !== isH2) {
-            // Corner turn — apply 45° chamfer
-            const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-            const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-            if (len1 < 1 || len2 < 1) {
-              // Degenerate segment — skip chamfer, go straight
-              path += ` L ${curr.x} ${curr.y}`;
-              continue;
-            }
-            const c = Math.min(CHAMFER, len1 / 2, len2 / 2);
-
-            // Pre-corner point
-            const nx1 = dx1 / len1, ny1 = dy1 / len1;
-            const preX = curr.x - nx1 * c;
-            const preY = curr.y - ny1 * c;
-            // Post-corner point
-            const nx2 = dx2 / len2, ny2 = dy2 / len2;
-            const postX = curr.x + nx2 * c;
-            const postY = curr.y + ny2 * c;
-
-            path += ` L ${preX} ${preY} L ${postX} ${postY}`;
-            continue;
-          }
-        }
-
-        // Straight segment — use H/V for axis-aligned, L for diagonal stubs
-        if (Math.abs(curr.y - prev.y) < 0.5) {
-          path += ` H ${curr.x}`;
-        } else if (Math.abs(curr.x - prev.x) < 0.5) {
-          path += ` V ${curr.y}`;
-        } else {
-          path += ` L ${curr.x} ${curr.y}`;
-        }
-      }
-      if (pts.length >= 2) {
-        const midIndex = Math.floor(pts.length / 2);
-        const p1 = pts[midIndex - 1];
-        const p2 = pts[midIndex];
-        if (p1 && p2) {
-          arrow.x = (p1.x + p2.x) / 2;
-          arrow.y = (p1.y + p2.y) / 2;
-          arrow.angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-        }
-      }
-      d = path;
+      const routed = routePcbTrace({
+        start: { x: startX, y: startY },
+        end: { x: endX, y: endY },
+        fromRect: { id: conn.from, x: fromPos.x, y: fromPos.y, w: fromW, h: fromH },
+        toRect: { id: conn.to, x: toPos.x, y: toPos.y, w: toW, h: toH },
+        fromAngle: fromOffset.angle ?? 0,
+        toAngle: toOffset.angle ?? 180,
+        rects: this._nodeRectMap ? [...this._nodeRectMap.values()] : [],
+        connections: [...this.#connectionData.values()],
+        conn,
+      });
+      d = routed.path;
+      arrow = routed.arrow;
     } else {
       // Tangent direction: use dynamic edge angle if available, else fixed socket angle
       let fromAngleDeg, toAngleDeg;

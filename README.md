@@ -115,6 +115,30 @@ layout.$.layoutTree = LayoutTree.createPanel('messages');
 
 `GraphNode` reads presentation fields from `Node.params`: `avatar`, `media`, `summary`, `href`, `linkLabel`, and `items`. Prefer these fields before adding product-specific Web Components.
 
+For feed-like graph surfaces, keep the nodes real and let `NodeCanvas` arrange them:
+
+```js
+canvas.setFlowLayout({
+  nodeIds: ['post-a', 'post-b', 'post-c'],
+  direction: 'vertical',
+  gap: 18,
+  padding: { top: 40, right: 24, bottom: 32, left: 120 },
+  align: 'stretch',
+  minNodeWidth: 240,
+  maxNodeWidth: 420,
+});
+```
+
+Flow layout supports `vertical` and `horizontal` directions. It uses native scrolling, drag-to-scroll canvas grabbing, preserves node menus and connector rendering, and can be combined with `setReadonly(true)` plus `setReadonlyNodeDragging(true)` when a presentation canvas should stay readonly while still allowing nodes to be moved.
+
+Graph traces can use PCB-style routing:
+
+```js
+canvas.setPathStyle('pcb');
+```
+
+PCB routing ranks obstacle-free route candidates by fold count, route length, short jogs, and bend count, then renders the selected trace with short chamfered PCB corners. It keeps traces on shared side channels and uses gaps between vertically stacked nodes where available. `cross-layout-portal-bridge` also supports `path-style="pcb"` for bridges between independent layout panels.
+
 Browser UI components automatically load the Material Symbols ligatures they own through one cumulative `icon_names` stylesheet. Host pages may still provide their own stylesheet, but built-in node, layout, toolbar, inspector, palette, search, breadcrumb, and menu components do not require the host to maintain a complete icon list.
 
 Hosts with strict CSP, privacy, or self-hosted font requirements can disable or override the loader:

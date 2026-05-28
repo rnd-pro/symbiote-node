@@ -11,6 +11,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './NodeCanvas.tpl.js';
 import { styles } from './NodeCanvas.css.js';
 import { Drag } from '../../interactions/Drag.js';
@@ -42,6 +43,7 @@ export class NodeCanvas extends Symbiote {
     zoom: 1,
     panX: 0,
     panY: 0,
+    chrome: true,
     '+contentTransform': () => `translate(${this.$.panX}px, ${this.$.panY}px) scale(${this.$.zoom})`,
   };
 
@@ -73,6 +75,15 @@ export class NodeCanvas extends Symbiote {
 
   /** @type {boolean} */
   #readonly = false;
+
+  /** @type {boolean} */
+  #readonlyNodeDragging = false;
+
+  /** @type {boolean} */
+  #viewportLocked = false;
+
+  /** @type {boolean} */
+  #panelsEnabled = true;
 
   /** @type {boolean} */
   #snapEnabled = false;
@@ -440,6 +451,59 @@ export class NodeCanvas extends Symbiote {
   }
 
   /**
+   * Allow graph nodes to move while the canvas remains readonly.
+   * This keeps connect/edit actions disabled but preserves presentation dragging.
+   * @param {boolean} enabled
+   */
+  setReadonlyNodeDragging(enabled) {
+    this.#readonlyNodeDragging = enabled;
+    this.toggleAttribute('data-readonly-node-dragging', enabled);
+    this.#viewManager?.setReadonlyNodeDragging(enabled);
+  }
+
+  /**
+   * Enable or remove viewport controls such as minimap, search, breadcrumbs,
+   * context menus, and quick toolbar affordances.
+   * @param {boolean} enabled
+   */
+  setChrome(enabled) {
+    this.$.chrome = enabled;
+    this.toggleAttribute('data-chrome-none', !enabled);
+    if (!enabled) {
+      this.ref.quickToolbar?.hide?.();
+      if (this.ref.minimap) this.ref.minimap.hidden = true;
+      if (this.ref.nodeSearch) this.ref.nodeSearch.hidden = true;
+      if (this.ref.breadcrumb) this.ref.breadcrumb.hidden = true;
+      if (this.ref.contextMenu) this.ref.contextMenu.hidden = true;
+    }
+  }
+
+  /**
+   * Enable or remove canvas panels while keeping node menus available.
+   * @param {boolean} enabled
+   */
+  setPanels(enabled) {
+    this.#panelsEnabled = enabled;
+    this.toggleAttribute('data-panels-none', !enabled);
+    if (!enabled) {
+      if (this.ref.minimap) this.ref.minimap.hidden = true;
+      if (this.ref.nodeSearch) this.ref.nodeSearch.hidden = true;
+      if (this.ref.breadcrumb) this.ref.breadcrumb.hidden = true;
+      if (this.ref.inspector) this.ref.inspector.hidden = true;
+    }
+  }
+
+  /**
+   * Lock viewport pan and zoom while keeping graph rendering active.
+   * Use this for fixed presentation surfaces.
+   * @param {boolean} locked
+   */
+  setViewportLocked(locked) {
+    this.#viewportLocked = locked;
+    this.toggleAttribute('data-viewport-locked', locked);
+  }
+
+  /**
    * Enable/disable compact mode (hides node body: ports & controls).
    * Use this for schematic/PCB views where nodes show only labels.
    * This is a structural setting — independent of visual theme.
@@ -539,6 +603,7 @@ export class NodeCanvas extends Symbiote {
     const icon = document.createElement('span');
     icon.className = 'material-symbols-outlined';
     icon.textContent = 'error';
+    ensureMaterialSymbols(['error']);
     header.append(icon, ' Error');
 
     const body = document.createElement('div');
@@ -1307,7 +1372,7 @@ export class NodeCanvas extends Symbiote {
 
     // Inspector — show selected node details, auto-hide on deselect
     const inspector = this.ref.inspector;
-    if (inspector) {
+    if (inspector && this.#panelsEnabled) {
       inspector._canvas = this;
       if (selectedNodes.size === 1) {
         const nodeId = [...selectedNodes][0];
@@ -1546,6 +1611,8 @@ export class NodeCanvas extends Symbiote {
   // --- Lifecycle ---
 
   renderCallback() {
+    ensureMaterialSymbols(['map']);
+
     const container = this.ref.canvasContainer;
     const content = this.ref.content;
 
@@ -1558,6 +1625,7 @@ export class NodeCanvas extends Symbiote {
         getZoom: () => 1,
       },
       {
+        shouldStart: () => !this.#viewportLocked,
         onStart: (e) => {
           // Track start position — only unselect on click (not drag)
           this._panStart = e ? { x: e.pageX, y: e.pageY, target: e.target } : null;
@@ -1596,6 +1664,7 @@ export class NodeCanvas extends Symbiote {
     this.#zoom = new Zoom(0.1);
     let interactingTimer = null;
     this.#zoom.initialize(container, content, (delta, ox, oy) => {
+      if (this.#viewportLocked) return;
       const k = this.$.zoom;
       const newK = k * (1 + delta);
       if (newK < 0.001 || newK > 5) return;

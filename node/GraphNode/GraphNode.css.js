@@ -50,6 +50,11 @@ graph-node {
     }
   }
 
+  &[data-readonly]:not([data-readonly-node-dragging]),
+  node-canvas[data-readonly] &:not([data-readonly-node-dragging]) {
+    cursor: default;
+  }
+
   /* Compact mode — hide node body (ports & controls).
      Activated by canvas.setCompactMode(true) which sets data-compact on the canvas.
      SubgraphNodes (node-type="subgraph") keep body visible for inner graph preview. */
@@ -179,6 +184,105 @@ graph-node {
     word-wrap: break-word;
   }
 
+  & .sn-node-media {
+    inline-size: 100%;
+    overflow: hidden;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+    background: color-mix(in srgb, var(--sn-node-accent, #4a9eff) 10%, transparent);
+  }
+
+  & .sn-node-media-img {
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  & .sn-node-content {
+    padding: 8px 12px 10px;
+    min-width: 0;
+  }
+
+  & .sn-node-summary {
+    margin: 0;
+    color: var(--sn-text-dim, #94a3b8);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  & .sn-node-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    color: var(--sn-node-selected, var(--sn-node-accent, #4a9eff));
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  & .sn-node-link:not([href]) {
+    display: none;
+  }
+
+  & .sn-node-link .material-symbols-outlined {
+    font-size: 15px;
+  }
+
+  & .sn-node-items {
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    gap: 6px;
+    max-block-size: var(--sn-node-items-max-height, 420px);
+    overflow-y: auto;
+  }
+
+  & .sn-node-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 9px;
+    border: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--sn-node-accent, #4a9eff) 8%, transparent);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  & .sn-node-item:hover {
+    border-color: color-mix(in srgb, var(--sn-node-accent, #4a9eff) 44%, transparent);
+    background: color-mix(in srgb, var(--sn-node-accent, #4a9eff) 14%, transparent);
+  }
+
+  & .sn-node-item-kicker {
+    color: var(--sn-node-accent, #4a9eff);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  & .sn-node-item-title {
+    color: var(--sn-text, #e2e8f0);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  & .sn-node-item-summary {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--sn-text-dim, #94a3b8);
+    font-size: 11px;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
 
 
   &[data-selected] .error-frame {
@@ -292,6 +396,41 @@ graph-node {
     & .controls {
       display: none;
     }
+
+    &[data-has-media] {
+      overflow: hidden;
+
+      & .sn-node-media {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        border-radius: inherit;
+      }
+
+      & .sn-node-media-img {
+        inline-size: 100%;
+        block-size: 100%;
+        aspect-ratio: 1;
+      }
+
+      & .sn-node-header {
+        position: relative;
+        z-index: 1;
+        align-self: stretch;
+        margin-top: auto;
+        padding-block: 8px 12px;
+        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.72));
+        color: white;
+      }
+
+      & .sn-node-icon {
+        display: none;
+      }
+
+      & .sn-node-label {
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+      }
+    }
   }
 
   /* Shape: diamond — condition/decision */
@@ -360,6 +499,11 @@ graph-node {
       }
     }
 
+    &[data-readonly]:not([data-readonly-node-dragging]) > svg > path,
+    node-canvas[data-readonly] &:not([data-readonly-node-dragging]) > svg > path {
+      cursor: default;
+    }
+
     & .sn-node-header {
       position: absolute;
       top: -28px;
@@ -401,6 +545,64 @@ graph-node {
     /* Hide DOM port items — ConnectionRenderer computes positions mathematically */
     & .inputs, & .outputs {
       display: none;
+    }
+
+    &[data-has-media] {
+      overflow: hidden !important;
+      border-radius: 50% !important;
+
+      & > svg {
+        z-index: 1;
+      }
+
+      & > svg > path {
+        fill: transparent;
+      }
+
+      & .sn-node-media {
+        position: absolute !important;
+        inset: 0;
+        z-index: 0;
+        border: 0;
+        margin: 0;
+        clip-path: circle(50% at 50% 50%);
+      }
+
+      & .sn-node-media-img {
+        inline-size: 100%;
+        block-size: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+      }
+
+      & .sn-node-body {
+        padding: 0;
+      }
+
+      & .sn-node-header {
+        position: absolute !important;
+        top: auto !important;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        transform: none !important;
+        justify-content: center;
+        border: 0;
+        border-radius: 0;
+        padding: 26px 10px 12px;
+        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.72));
+        color: white;
+        opacity: 1;
+      }
+
+      & .sn-node-icon,
+      & .sn-shape-watermark {
+        display: none;
+      }
+
+      & .sn-node-label {
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.72);
+      }
     }
   }
 

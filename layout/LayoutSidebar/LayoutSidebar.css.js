@@ -21,6 +21,12 @@ layout-sidebar {
     width: 48px;
     min-width: 48px;
   }
+
+  &[disabled],
+  &[sidebar-disabled],
+  &[data-disabled] {
+    display: none;
+  }
 }
 
 /* Resize handle — right edge */

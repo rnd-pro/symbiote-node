@@ -456,6 +456,9 @@ export function createSVGShape(name, pathData, options = {}) {
 
 // Common icon paths from Material Symbols (24x24 viewBox)
 export const SVG_PRESETS = {
+  // Circle path for SVG-aware perimeter connectors.
+  disc: 'M12 0A12 12 0 1 1 12 24A12 12 0 1 1 12 0Z',
+
   // Hexagon
   hexagon: 'M12 2L22 8.5V15.5L12 22L2 15.5V8.5Z',
 

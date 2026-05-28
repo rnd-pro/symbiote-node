@@ -9,6 +9,7 @@ import {
   NodeEditor, Node, Connection, Socket, Input, Output, InputControl,
   GREY_NEUTRAL,
 } from '../index.js';
+import { ensureMaterialSymbols } from '../icons/MaterialSymbols.js';
 import '../canvas/NodeCanvas/NodeCanvas.js';
 import '../node/GraphNode/GraphNode.js';
 
@@ -253,6 +254,8 @@ function reset() {
 }
 
 function init() {
+  ensureMaterialSymbols(['check_circle', 'hourglass_top', 'restart_alt', 'rocket_launch']);
+
   editor = new NodeEditor();
   canvas = document.querySelector('node-canvas');
 

@@ -5,6 +5,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import * as LayoutTree from './../LayoutTree.js';
 import { template } from './Layout.tpl.js';
 import { styles } from './Layout.css.js';
@@ -25,6 +26,10 @@ export class Layout extends Symbiote {
 
     // Panel type registry
     panelTypes: {},
+
+    // Panel chrome controls whether panel headers, type menus, fullscreen,
+    // collapse buttons, and split action zones are interactive.
+    panelChrome: true,
 
     // Current gesture state
     activeGesture: null,
@@ -57,6 +62,7 @@ export class Layout extends Symbiote {
    * @param {string} [config.component] - Custom element tag name
    */
   registerPanelType(name, config) {
+    ensureMaterialSymbols([config.icon || 'dashboard']);
     this.$.panelTypes = {
       ...this.$.panelTypes,
       [name]: config
@@ -64,6 +70,8 @@ export class Layout extends Symbiote {
   }
 
   initCallback() {
+    ensureMaterialSymbols(['dashboard']);
+
     this._loadLayout();
 
     // Listen for layout changes from children
@@ -184,6 +192,9 @@ export class Layout extends Symbiote {
     }
 
     // Pass data to root node
+    const chromeEnabled = this.$.panelChrome !== false;
+    rootNode.$.panelChrome = chromeEnabled;
+    rootNode.setAttribute('panel-chrome', chromeEnabled ? 'default' : 'none');
     rootNode.$.nodeData = this.$.layoutTree;
   }
 
@@ -194,6 +205,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onActionZoneStart(e) {
+    if (this.$.panelChrome === false) return;
     const { panelId, corner } = e.detail;
     this.$.activeGesture = { panelId, corner };
   }
@@ -203,6 +215,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onActionZoneGesture(e) {
+    if (this.$.panelChrome === false) return;
     const { panelId, gesture, dx, dy } = e.detail;
 
     // Find the panel element
@@ -234,6 +247,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onActionZoneExecute(e) {
+    if (this.$.panelChrome === false) return;
     const { panelId, corner, gesture } = e.detail;
 
     if (gesture === 'split-h') {
@@ -265,6 +279,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onPanelTypeMenu(e) {
+    if (this.$.panelChrome === false) return;
     const { panelId, currentType, x, y } = e.detail;
     const menu = this.ref.menu;
     if (!menu) return;
@@ -284,6 +299,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onPanelTypeSelect(e) {
+    if (this.$.panelChrome === false) return;
     const { panelId, type } = e.detail;
 
     // Update tree
@@ -310,6 +326,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onPanelCollapseToggle(e) {
+    if (this.$.panelChrome === false) return;
     const { panelId, collapsed } = e.detail;
     const tree = this.$.layoutTree;
     if (!tree) return;
@@ -358,6 +375,7 @@ export class Layout extends Symbiote {
    * @param {CustomEvent} e 
    */
   _onPanelFullscreen(e) {
+    if (this.$.panelChrome === false) return;
     const { panelId } = e.detail;
     const panelNode = this._findPanelNode(panelId);
     if (!panelNode) return;
@@ -619,4 +637,3 @@ Layout.template = template;
 Layout.rootStyles = styles;
 
 Layout.reg('panel-layout');
-

@@ -6,9 +6,21 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './LayoutNode.tpl.js';
 import { styles } from './LayoutNode.css.js';
 import './../ActionZone/ActionZone.js';
+
+const LAYOUT_NODE_ICONS = [
+  'arrow_drop_down',
+  'chevron_left',
+  'chevron_right',
+  'dashboard',
+  'expand_less',
+  'expand_more',
+  'fullscreen',
+  'fullscreen_exit',
+];
 
 export class LayoutNode extends Symbiote {
   static isoMode = true;
@@ -29,6 +41,7 @@ export class LayoutNode extends Symbiote {
     // Panel display
     panelTitle: 'Panel',
     panelIcon: 'dashboard',
+    panelChrome: true,
 
     // Panel states
     isCollapsed: false,
@@ -46,6 +59,7 @@ export class LayoutNode extends Symbiote {
     // Inherited from Layout
     '^panelTypes': {},
     '^fullscreenPanelId': null,
+    '^panelChrome': true,
 
     // Handlers
     onResizerDown: (e) => this._startResize(e),
@@ -56,6 +70,8 @@ export class LayoutNode extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols(LAYOUT_NODE_ICONS);
+
     // Subscribe to nodeData changes and update computed values
     this.sub('nodeData', (data) => {
       if (!data) return;
@@ -162,6 +178,7 @@ export class LayoutNode extends Symbiote {
     const config = panelTypes[this.$.panelType] || {};
     this.$.panelTitle = config.title || this.$.panelType;
     this.$.panelIcon = config.icon || 'dashboard';
+    ensureMaterialSymbols([this.$.panelIcon]);
 
     // Inject component if specified and not already created
     this._injectPanelComponent(config);
@@ -257,6 +274,8 @@ export class LayoutNode extends Symbiote {
   }
 
   _renderNode(data) {
+    this.$.panelChrome = this.$.panelChrome !== false && this.$['^panelChrome'] !== false;
+    this.setAttribute('panel-chrome', this.$.panelChrome ? 'default' : 'none');
     // Update attributes for CSS selectors
     const prevType = this.getAttribute('node-type');
     this.setAttribute('node-type', data.type);
@@ -306,6 +325,8 @@ export class LayoutNode extends Symbiote {
         setTimeout(() => child._updatePanelInfo && child._updatePanelInfo());
       }
     }
+    child.$.panelChrome = this.$.panelChrome !== false;
+    child.setAttribute('panel-chrome', this.$.panelChrome ? 'default' : 'none');
     // Use shallow copy to ensure subscription triggers even if only nested properties changed
     child.$.nodeData = { ...nodeData };
   }
@@ -401,6 +422,7 @@ export class LayoutNode extends Symbiote {
   }
 
   _toggleCollapse() {
+    if (this.$.panelChrome === false || this.$['^panelChrome'] === false) return;
     // Dispatch event to Layout - it will update the tree data
     // which triggers a re-render with declarative collapsed handling
     this.dispatchEvent(new CustomEvent('panel-collapse-toggle', {
@@ -418,6 +440,7 @@ export class LayoutNode extends Symbiote {
    * @param {boolean} collapsed 
    */
   _setCollapsed(collapsed) {
+    if (this.$.panelChrome === false || this.$['^panelChrome'] === false) return;
     if (this.$.isCollapsed === collapsed) return;
 
     // Dispatch event to Layout - it will update the tree data
@@ -432,6 +455,7 @@ export class LayoutNode extends Symbiote {
   }
 
   _toggleFullscreen() {
+    if (this.$.panelChrome === false || this.$['^panelChrome'] === false) return;
     // Don't allow fullscreen when collapsed
     if (this.$.isCollapsed) return;
 
@@ -443,6 +467,7 @@ export class LayoutNode extends Symbiote {
   }
 
   _showTypeMenu(e) {
+    if (this.$.panelChrome === false || this.$['^panelChrome'] === false) return;
     // Don't show type menu when collapsed
     if (this.$.isCollapsed) return;
 
@@ -464,4 +489,3 @@ LayoutNode.template = template;
 LayoutNode.rootStyles = styles;
 
 LayoutNode.reg('layout-node');
-

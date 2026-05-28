@@ -8,7 +8,10 @@
  * @module symbiote-node/layout/LayoutSidebar/SidebarSection
  */
 import Symbiote, { html } from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { navigate } from '../LayoutRouter/LayoutRouter.js';
+
+const SIDEBAR_SECTION_ICONS = ['chevron_right', 'close', 'drag_indicator', 'visibility', 'visibility_off'];
 
 export class SidebarSection extends Symbiote {
   isoMode = true;
@@ -44,6 +47,9 @@ export class SidebarSection extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols([...SIDEBAR_SECTION_ICONS, this.$.icon]);
+    this.sub('icon', (icon) => ensureMaterialSymbols([icon]));
+
     this.sub('isActive', (val) => {
       this.toggleAttribute('data-active', val);
     });
@@ -63,6 +69,7 @@ export class SidebarSection extends Symbiote {
 
     this.sub('subPanels', (panels) => {
       const has = panels && panels.length > 0;
+      ensureMaterialSymbols((panels || []).map((panel) => panel.icon));
       this.$.hasSubPanels = has;
       this.toggleAttribute('data-has-sub', has);
       // Collapse if no sub-panels
@@ -164,6 +171,9 @@ export class SidebarSubItem extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols(['close', this.$.icon]);
+    this.sub('icon', (icon) => ensureMaterialSymbols([icon]));
+
     this.sub('isMaster', (val) => {
       this.toggleAttribute('data-master', val);
     });

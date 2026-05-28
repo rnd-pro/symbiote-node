@@ -50,7 +50,7 @@ const results = await executor.run();
 
 ### Node Shapes
 
-Two coexisting rendering modes on the same canvas — **HTML nodes** (CSS-styled rectangles) and **SVG nodes** (arbitrary vector shapes with perimeter-aware connector positioning). Built-in presets: `hexagon`, `star`, `cloud`, `shield`, `heart`, `rect`, `pill`, `circle`, `diamond`, `comment`.
+Two coexisting rendering modes on the same canvas — **HTML nodes** (CSS-styled rectangles) and **SVG nodes** (arbitrary vector shapes with perimeter-aware connector positioning). Built-in presets: `disc`, `hexagon`, `star`, `cloud`, `shield`, `heart`, `rect`, `pill`, `circle`, `diamond`, `comment`.
 
 ```javascript
 import { createSVGShape, registerShape } from 'symbiote-node';
@@ -60,6 +60,8 @@ registerShape('myshape', myShape);
 
 const node = new Node('Custom', { shape: 'myshape' });
 ```
+
+Use `shape: 'disc'` for circular SVG nodes that need perimeter-aware connector movement. If `Node.params.avatar`, `media`, or `image` is set, `GraphNode` renders it as clipped media inside the SVG node while preserving SVG connector geometry. SVG node size can be set with `Node.params.size` or with explicit `width` and `height`.
 
 ### Theme System
 
@@ -88,6 +90,61 @@ Binary Space Partitioning layout engine for IDE-style panel workspaces. Panels r
 
 ```javascript
 import { Layout, LayoutTree, LayoutSidebar } from 'symbiote-node';
+```
+
+### Layout Panels With Graph Nodes
+
+`panel-layout` owns workspace structure. A product page should register panel types and let each panel component own its own `node-canvas` and `NodeEditor`. Use this when a screen needs independent graph surfaces, for example one layout for a profile node and another layout for a scrollable message node.
+
+```javascript
+import { applyTheme, GREY_NEUTRAL, LayoutTree, Node, NodeEditor } from 'symbiote-node';
+import 'symbiote-node/layout/Layout/Layout.js';
+import 'symbiote-node/canvas/NodeCanvas/NodeCanvas.js';
+import 'symbiote-node/node/GraphNode/GraphNode.js';
+
+applyTheme(document.documentElement, GREY_NEUTRAL);
+
+const layout = document.querySelector('panel-layout');
+layout.registerPanelType('messages', {
+  title: 'Messages',
+  icon: 'article',
+  component: 'message-node-panel',
+});
+layout.$.layoutTree = LayoutTree.createPanel('messages');
+```
+
+`GraphNode` reads presentation fields from `Node.params`: `avatar`, `media`, `summary`, `href`, `linkLabel`, and `items`. Prefer these fields before adding product-specific Web Components.
+
+Browser UI components automatically load the Material Symbols ligatures they own through one cumulative `icon_names` stylesheet. Host pages may still provide their own stylesheet, but built-in node, layout, toolbar, inspector, palette, search, breadcrumb, and menu components do not require the host to maintain a complete icon list.
+
+Hosts with strict CSP, privacy, or self-hosted font requirements can disable or override the loader:
+
+```js
+import { configureMaterialSymbols } from 'symbiote-node';
+
+configureMaterialSymbols({
+  autoload: false,
+});
+```
+
+For self-hosted stylesheets, provide an `hrefBuilder(iconNames)` function that returns the stylesheet URL for the cumulative icon list. The loader is a browser-only utility and is a no-op when imported without a real `window`/`document`.
+
+`layout-sidebar` can be removed from a workspace without CSS overrides by setting either `disabled` or `sidebar-disabled` on the element.
+
+`panel-layout` can render a fixed presentation surface by setting `layout.$.panelChrome = false` before assigning `layoutTree`. This removes panel headers, fullscreen/collapse controls, type menus, and split action zones.
+
+`node-canvas.setChrome(false)` hides viewport controls such as minimap, search, breadcrumbs, context menu, and quick toolbar while keeping nodes and connections rendered.
+
+`node-canvas.setViewportLocked(true)` freezes pan and zoom for fixed presentation surfaces.
+
+`cross-layout-portal-bridge` draws a themed viewport bridge between two DOM anchors, typically portal nodes in separate layouts:
+
+```html
+<cross-layout-portal-bridge
+  source-selector="graph-node[node-id=left-portal]"
+  target-selector="graph-node[node-id=right-portal]"
+  source-side="right"
+  target-side="left"></cross-layout-portal-bridge>
 ```
 
 ### Plugins & Interactions

@@ -8,6 +8,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './TemplatePreview.tpl.js';
 import { styles } from './TemplatePreview.css.js';
 import { extractPlaceholders } from '../../engine/packs/transform/template-builder.handler.js';
@@ -30,6 +31,8 @@ export class TemplatePreview extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols(['data_object', 'sell', 'visibility']);
+
     // Bind textarea to testData
     /** @type {HTMLTextAreaElement|null} */
     const textarea = this.querySelector('.tpl-test-data');

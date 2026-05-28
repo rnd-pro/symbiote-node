@@ -8,6 +8,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './GraphFrame.tpl.js';
 import { styles } from './GraphFrame.css.js';
 
@@ -18,6 +19,8 @@ export class GraphFrame extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols(['dashboard']);
+
     this.sub('color', (val) => {
       if (val) this.style.setProperty('--frame-color', val);
     });

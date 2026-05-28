@@ -8,6 +8,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './AiChat.tpl.js';
 import { styles } from './AiChat.css.js';
 
@@ -70,6 +71,8 @@ export class AiChat extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols(['send']);
+
     // Welcome message
     setTimeout(() => {
       this._addBubble('ai', 'Welcome! I\'m your AI assistant for this workflow. Ask me about any node, connection, or how the data flows through this pipeline.');

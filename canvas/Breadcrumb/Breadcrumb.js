@@ -8,6 +8,7 @@
  */
 
 import Symbiote, { html } from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './Breadcrumb.tpl.js';
 import { styles } from './Breadcrumb.css.js';
 
@@ -21,6 +22,9 @@ class BreadcrumbItem extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols([this.$.icon]);
+    this.sub('icon', (icon) => ensureMaterialSymbols([icon]));
+
     this.sub('isActive', (val) => {
       this.toggleAttribute('data-active', val);
     });
@@ -71,6 +75,7 @@ export class Breadcrumb extends Symbiote {
     }
 
     this.$.isVisible = true;
+    ensureMaterialSymbols(['account_tree', 'home']);
     this.$.crumbs = path.map((item, i) => ({
       label: item.label,
       icon: i === 0 ? 'home' : 'account_tree',

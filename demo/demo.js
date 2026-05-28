@@ -13,6 +13,7 @@ import {
   MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN,
   Layout, LayoutTree, applyTheme,
 } from '../index.js';
+import { ensureMaterialSymbols } from '../icons/MaterialSymbols.js';
 import '../canvas/NodeCanvas/NodeCanvas.js';
 import '../node/GraphNode/GraphNode.js';
 import '../layout/Layout/Layout.js';
@@ -25,6 +26,8 @@ import '../layout/LayoutSidebar/LayoutSidebar.js';
  * Initialize AI content pipeline demo
  */
 async function initDemo() {
+  ensureMaterialSymbols(['check_circle', 'content_copy', 'hourglass_top', 'my_location', 'palette', 'play_arrow', 'rocket_launch', 'speed', 'timeline']);
+
   const editor = new NodeEditor();
 
   // Socket types

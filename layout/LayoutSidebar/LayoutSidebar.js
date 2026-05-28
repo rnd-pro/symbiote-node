@@ -7,6 +7,7 @@
  * @module symbiote-node/layout/LayoutSidebar
  */
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { sidebarTemplate } from './LayoutSidebar.tpl.js';
 import { sidebarStyles } from './LayoutSidebar.css.js';
 import { navigate } from '../LayoutRouter/LayoutRouter.js';
@@ -15,20 +16,25 @@ import './SidebarSection.js';
 const STORAGE_KEY_COLLAPSED = 'sn-sidebar-collapsed';
 const STORAGE_KEY_CONFIG = 'sn-sidebar-config';
 const STORAGE_KEY_WIDTH = 'sn-sidebar-width';
+const SIDEBAR_ICONS = ['chevron_left', 'tune'];
 
 export class LayoutSidebar extends Symbiote {
   static isoMode = true;
 
   init$ = {
+    '@disabled': false,
+    '@sidebar-disabled': false,
     collapsed: false,
     editMode: false,
     sections: [],
 
     onToggle: () => {
+      if (this.#isDisabled()) return;
       this.$.collapsed = !this.$.collapsed;
     },
 
     onToggleEditMode: () => {
+      if (this.#isDisabled()) return;
       this.$.editMode = !this.$.editMode;
     },
   };
@@ -37,6 +43,12 @@ export class LayoutSidebar extends Symbiote {
   #allSections = [];
 
   renderCallback() {
+    ensureMaterialSymbols(SIDEBAR_ICONS);
+    this.#syncDisabled();
+
+    this.sub('@disabled', () => this.#syncDisabled());
+    this.sub('@sidebar-disabled', () => this.#syncDisabled());
+
     // Reflect attributes
     this.sub('collapsed', (val) => {
       this.toggleAttribute('collapsed', val);
@@ -103,6 +115,7 @@ export class LayoutSidebar extends Symbiote {
       };
 
       handle.addEventListener('pointerdown', (e) => {
+        if (this.#isDisabled()) return;
         e.preventDefault();
         e.stopPropagation();
         startX = e.clientX;
@@ -116,12 +129,37 @@ export class LayoutSidebar extends Symbiote {
     }
   }
 
+  #isDisabled() {
+    return this.hasAttribute('disabled')
+      || this.hasAttribute('sidebar-disabled')
+      || this.$['@disabled'] === true
+      || this.$['@disabled'] === 'true'
+      || this.$['@sidebar-disabled'] === true
+      || this.$['@sidebar-disabled'] === 'true';
+  }
+
+  #syncDisabled() {
+    const disabled = this.#isDisabled();
+    this.toggleAttribute('data-disabled', disabled);
+    if (disabled) {
+      this.setAttribute('aria-hidden', 'true');
+    } else {
+      this.removeAttribute('aria-hidden');
+    }
+    this.inert = disabled;
+    if (disabled) {
+      this.$.editMode = false;
+      this.$.collapsed = true;
+    }
+  }
+
   /**
    * Configure sidebar sections
    * @param {Array<{id: string, icon: string, label: string}>} items
    */
   setSections(items) {
     this.#allSections = items;
+    ensureMaterialSymbols(items.map((item) => item.icon));
 
     // Load saved config (order + visibility)
     const savedConfig = this.#loadConfig();

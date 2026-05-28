@@ -9,6 +9,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './QuickToolbar.tpl.js';
 import { styles } from './QuickToolbar.css.js';
 
@@ -25,6 +26,8 @@ const ACTIONS = [
   { id: 'mute', icon: 'visibility_off', label: 'Mute' },
   { id: 'delete', icon: 'delete', label: 'Delete' },
 ];
+
+const ICONS = ['code', 'content_copy', 'delete', 'hub', 'login', 'visibility', 'visibility_off'];
 
 export class QuickToolbar extends Symbiote {
 
@@ -81,6 +84,7 @@ export class QuickToolbar extends Symbiote {
   }
 
   renderCallback() {
+    ensureMaterialSymbols(ICONS);
     this.sub('visible', (val) => {
       this.toggleAttribute('hidden', !val);
     });

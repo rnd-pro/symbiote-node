@@ -34,6 +34,7 @@ export { NodeShape, RectShape, PillShape, CircleShape, DiamondShape, CommentShap
 
 // Themes (unified)
 export { applyTheme, extractTheme, DARK_DEFAULT, LIGHT_CLEAN, SYNTHWAVE, GREY_NEUTRAL, NEON_GLOW } from './themes/Theme.js';
+export { configureMaterialSymbols, ensureMaterialSymbols } from './icons/MaterialSymbols.js';
 
 // Palette (color-only)
 export { applyPalette, DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE, GREY_PALETTE } from './themes/Palette.js';
@@ -62,10 +63,11 @@ export { NodeSearch } from './canvas/NodeSearch/NodeSearch.js';
 export { Layout } from './layout/Layout/Layout.js';
 export { LayoutNode } from './layout/LayoutNode/LayoutNode.js';
 export { LayoutSidebar } from './layout/LayoutSidebar/LayoutSidebar.js';
+export { CrossLayoutPortalBridge } from './layout/CrossLayoutPortalBridge/CrossLayoutPortalBridge.js';
 export * as LayoutTree from './layout/LayoutTree.js';
 export {
   navigate, updateParams, parseQuery, buildHash, buildQuery,
-  getRoute, setDefaultPanel,
+  getRoute, setDefaultPanel, registerGlobalParam, setGlobalParam,
 } from './layout/LayoutRouter/LayoutRouter.js';
 export { syncWithRouter } from './layout/LayoutRouter/routerSync.js';
 

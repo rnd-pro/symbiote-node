@@ -2,7 +2,7 @@ import { html } from '@symbiotejs/symbiote';
 
 export const template = html`
 <div class="panel-view" ${{ '@hidden': '!isPanel' }}>
-  <div class="panel-header">
+  <div class="panel-header" ${{ '@hidden': '!panelChrome' }}>
     <button class="header-btn type-btn" ${{ onclick: 'onTypeClick' }}>
       <span class="material-symbols-outlined panel-icon" ${{ textContent: 'panelIcon' }}></span>
       <span class="panel-title" ${{ textContent: 'panelTitle' }}></span>
@@ -19,10 +19,10 @@ export const template = html`
   <div class="panel-content" ref="panelContent" ${{ '@hidden': 'isCollapsed' }}></div>
   
   <!-- Action zones for split/join -->
-  <action-zone corner="tl"></action-zone>
-  <action-zone corner="tr"></action-zone>
-  <action-zone corner="bl"></action-zone>
-  <action-zone corner="br"></action-zone>
+  <action-zone corner="tl" ${{ '@hidden': '!panelChrome' }}></action-zone>
+  <action-zone corner="tr" ${{ '@hidden': '!panelChrome' }}></action-zone>
+  <action-zone corner="bl" ${{ '@hidden': '!panelChrome' }}></action-zone>
+  <action-zone corner="br" ${{ '@hidden': '!panelChrome' }}></action-zone>
 </div>
 
 <div class="split-view" ${{ '@hidden': '!isSplit', '@direction': 'direction' }}>

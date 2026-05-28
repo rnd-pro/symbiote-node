@@ -9,6 +9,7 @@
     "./engine": "./engine/index.js",
     "./engine/*": "./engine/*",
     "./themes/*": "./themes/*",
+    "./icons/*": "./icons/*",
     "./canvas/*": "./canvas/*",
     "./layout/*": "./layout/*",
     "./interactions/*": "./interactions/*",

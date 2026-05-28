@@ -33,6 +33,24 @@ node-canvas {
     cursor: default;
   }
 
+  &[data-chrome-none] .sn-minimap-toggle,
+  &[data-chrome-none] node-minimap,
+  &[data-chrome-none] node-search,
+  &[data-chrome-none] graph-breadcrumb,
+  &[data-chrome-none] quick-toolbar,
+  &[data-chrome-none] context-menu,
+  &[data-chrome-none] inspector-panel {
+    display: none !important;
+  }
+
+  &[data-panels-none] .sn-minimap-toggle,
+  &[data-panels-none] node-minimap,
+  &[data-panels-none] node-search,
+  &[data-panels-none] graph-breadcrumb,
+  &[data-panels-none] inspector-panel {
+    display: none !important;
+  }
+
   & .content {
     position: absolute;
     top: 0;

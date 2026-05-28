@@ -63,6 +63,27 @@ export class ConnectionRenderer {
   }
 
   /**
+   * Keep the SVG renderer compatible with NodeCanvas batch initialization.
+   * @param {boolean} _on
+   */
+  setBatchMode(_on) {}
+
+  /**
+   * Read the current rendered node size. SVG nodes can resize after creation
+   * through params, so offset dimensions must take precedence over stale cache.
+   * @param {HTMLElement} nodeEl
+   * @param {number} fallbackWidth
+   * @param {number} fallbackHeight
+   * @returns {{ width: number, height: number }}
+   */
+  #getNodeSize(nodeEl, fallbackWidth, fallbackHeight) {
+    return {
+      width: nodeEl.offsetWidth || nodeEl._cachedW || fallbackWidth,
+      height: nodeEl.offsetHeight || nodeEl._cachedH || fallbackHeight,
+    };
+  }
+
+  /**
    * Add a connection and render its SVG path
    * @param {import('../core/Connection.js').Connection} conn
    */
@@ -280,14 +301,16 @@ export class ConnectionRenderer {
       const fromPos = fromEl._position;
       const toPos = toEl._position;
       if (!fromPos || !toPos) continue;
+      const toSize = this.#getNodeSize(toEl, 180, 100);
+      const fromSize = this.#getNodeSize(fromEl, 180, 100);
 
       const toCenter = {
-        x: toPos.x + (toEl._cachedW || 180) / 2,
-        y: toPos.y + (toEl._cachedH || 100) / 2,
+        x: toPos.x + toSize.width / 2,
+        y: toPos.y + toSize.height / 2,
       };
       const fromCenter = {
-        x: fromPos.x + (fromEl._cachedW || 180) / 2,
-        y: fromPos.y + (fromEl._cachedH || 100) / 2,
+        x: fromPos.x + fromSize.width / 2,
+        y: fromPos.y + fromSize.height / 2,
       };
 
       if (!nodeJobs.has(conn.from)) nodeJobs.set(conn.from, []);
@@ -305,7 +328,7 @@ export class ConnectionRenderer {
       const shape = getShape(el.getAttribute('node-shape'));
       if (!shape?.getSidePosition) continue;
 
-      const size = { width: el._cachedW || 180, height: el._cachedH || 100 };
+      const size = this.#getNodeSize(el, 180, 100);
       const cx = el._position.x + size.width / 2;
       const cy = el._position.y + size.height / 2;
 
@@ -481,7 +504,7 @@ export class ConnectionRenderer {
     const shape = getShape(nodeEl.getAttribute('node-shape'));
     const nodeData = nodeEl._nodeData;
     if (shape && shape.pathData && nodeData) {
-      const size = { width: nodeEl._cachedW || 180, height: nodeEl._cachedH || 100 };
+      const size = this.#getNodeSize(nodeEl, 180, 100);
 
       // Dynamic mode — side-based pin placement
       if (targetPos && shape.getSidePosition) {
@@ -635,10 +658,12 @@ export class ConnectionRenderer {
     const toPos = toEl._position;
 
     // Compute centers for dynamic edge positioning on SVG shapes
-    const fromW = fromEl._cachedW || fromEl.offsetWidth || 180;
-    const fromH = fromEl._cachedH || fromEl.offsetHeight || 100;
-    const toW = toEl._cachedW || toEl.offsetWidth || 180;
-    const toH = toEl._cachedH || toEl.offsetHeight || 100;
+    const fromSizeForRender = this.#getNodeSize(fromEl, 180, 100);
+    const toSizeForRender = this.#getNodeSize(toEl, 180, 100);
+    const fromW = fromSizeForRender.width;
+    const fromH = fromSizeForRender.height;
+    const toW = toSizeForRender.width;
+    const toH = toSizeForRender.height;
     const fromCenter = {
       x: fromPos.x + fromW / 2,
       y: fromPos.y + fromH / 2,

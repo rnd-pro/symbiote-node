@@ -8,6 +8,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template, ctxItemTemplate } from './ContextMenu.tpl.js';
 import { styles } from './ContextMenu.css.js';
 
@@ -46,6 +47,7 @@ export class ContextMenu extends Symbiote {
    * @param {Array<{label: string, icon: string, action: function}>} items
    */
   show(x, y, items) {
+    ensureMaterialSymbols(items.map((item) => item.icon));
     this._actions.clear();
     for (const item of items) {
       this._actions.set(item.label, item.action);

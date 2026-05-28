@@ -13,6 +13,7 @@ import { Drag } from '../interactions/Drag.js';
 import { Selector } from '../interactions/Selector.js';
 import { animateOut } from '@symbiotejs/symbiote';
 import { getShape } from '../shapes/index.js';
+import { ensureMaterialSymbols } from '../icons/MaterialSymbols.js';
 
 function readCssToken(source, token) {
   return getComputedStyle(source).getPropertyValue(token).trim();
@@ -51,6 +52,9 @@ export class NodeViewManager {
 
   /** @type {boolean} */
   #readonly = false;
+
+  /** @type {boolean} */
+  #readonlyNodeDragging = false;
 
   /** @type {boolean} */
   #snapEnabled = false;
@@ -103,6 +107,17 @@ export class NodeViewManager {
   /** @param {boolean} readonly */
   setReadonly(readonly) {
     this.#readonly = readonly;
+    for (const [, el] of this.#nodeViews) {
+      el.toggleAttribute('data-readonly', readonly);
+    }
+  }
+
+  /** @param {boolean} enabled */
+  setReadonlyNodeDragging(enabled) {
+    this.#readonlyNodeDragging = enabled;
+    for (const [, el] of this.#nodeViews) {
+      el.toggleAttribute('data-readonly-node-dragging', enabled);
+    }
   }
 
   /** @param {boolean} enabled */
@@ -166,6 +181,8 @@ export class NodeViewManager {
     el.setAttribute('node-category', node.category);
     el.setAttribute('node-shape', node.shape);
     el.setAttribute('node-type', node.type || 'default');
+    el.toggleAttribute('data-readonly', this.#readonly);
+    el.toggleAttribute('data-readonly-node-dragging', this.#readonlyNodeDragging);
     el._canvas = this.#canvas;
 
     let drag = new Drag();
@@ -179,6 +196,7 @@ export class NodeViewManager {
       },
       {
         shouldStart: (e) => {
+          if (this.#readonly && !this.#readonlyNodeDragging) return false;
 
           let svgPath = el.querySelector('svg > path');
           if (!svgPath) return true;
@@ -229,10 +247,11 @@ export class NodeViewManager {
       let vb = shape.viewBox.split(' ').map(Number);
       let vbW = vb[2];
       let vbH = vb[3];
-      let baseSize = 120;
+      let params = node.params || {};
+      let baseSize = Number(params.size || params.shapeSize) || 120;
       let aspect = vbW / vbH;
-      let nodeW = aspect >= 1 ? baseSize : Math.round(baseSize * aspect);
-      let nodeH = aspect >= 1 ? Math.round(baseSize / aspect) : baseSize;
+      let nodeW = Number(params.width) || (aspect >= 1 ? baseSize : Math.round(baseSize * aspect));
+      let nodeH = Number(params.height) || (aspect >= 1 ? Math.round(baseSize / aspect) : baseSize);
       el.style.width = nodeW + 'px';
       el.style.height = nodeH + 'px';
       el.style.minWidth = nodeW + 'px';
@@ -267,6 +286,7 @@ export class NodeViewManager {
           let watermark = document.createElement('span');
           watermark.className = 'sn-shape-watermark material-symbols-outlined';
           watermark.textContent = iconEl.textContent;
+          ensureMaterialSymbols([iconEl.textContent]);
           el.appendChild(watermark);
         }
 

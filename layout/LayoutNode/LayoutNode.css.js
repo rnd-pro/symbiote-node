@@ -35,6 +35,13 @@ export let styles = css`
       min-height: 28px;
     }
 
+    &[panel-chrome='none'] {
+      .panel-header,
+      action-zone {
+        display: none !important;
+      }
+    }
+
     .header-btn {
       display: flex;
       align-items: center;

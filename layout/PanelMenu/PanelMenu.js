@@ -3,6 +3,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './PanelMenu.tpl.js';
 import { styles } from './PanelMenu.css.js';
 
@@ -39,6 +40,7 @@ export class PanelMenu extends Symbiote {
    * @param {Array<{type: string, title: string, icon: string}>} items
    */
   show(x, y, panelId, currentType, items) {
+    ensureMaterialSymbols(items.map((item) => item.icon || 'dashboard'));
     this.$.panelId = panelId;
     this.$.currentType = currentType;
 

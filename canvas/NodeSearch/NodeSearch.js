@@ -9,6 +9,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template, searchResultTemplate } from './NodeSearch.tpl.js';
 import { styles } from './NodeSearch.css.js';
 
@@ -92,6 +93,8 @@ export class NodeSearch extends Symbiote {
   }
 
   renderCallback() {
+    ensureMaterialSymbols(['search']);
+
     this.sub('isOpen', (val) => {
       this.toggleAttribute('hidden', !val);
     });

@@ -37,6 +37,8 @@ describe('package exports resolution', () => {
     assert.ok('GraphExplorerShell' in ui, 'UI entrypoint must expose GraphExplorerShell binding');
     assert.equal(typeof ui.computeInitialGraphPositions, 'function');
     assert.ok('Layout' in ui, 'UI entrypoint must expose Layout binding');
+    assert.ok('CrossLayoutPortalBridge' in ui, 'UI entrypoint must expose CrossLayoutPortalBridge binding');
+    assert.equal(typeof ui.ensureMaterialSymbols, 'function');
     assert.ok('CellBg' in ui, 'UI entrypoint must expose CellBg binding');
     assert.ok('ChatTranscript' in ui, 'UI entrypoint must expose ChatTranscript binding');
     assert.ok('ChatComposer' in ui, 'UI entrypoint must expose ChatComposer binding');

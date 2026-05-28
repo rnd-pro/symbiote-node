@@ -8,6 +8,7 @@
  * @module symbiote-node/layout/LayoutSidebar/SidebarSection
  */
 import Symbiote, { html } from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { sidebarSectionTemplate } from './SidebarSection.tpl.js';
 import { styles } from './SidebarSection.css.js';
 import { navigate } from '../LayoutRouter/LayoutRouter.js';
@@ -46,6 +47,9 @@ export class SidebarSection extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols(['close', 'drag_indicator', 'expand_more', 'visibility', 'visibility_off', this.$.icon]);
+    this.sub('icon', (icon) => ensureMaterialSymbols([icon]));
+
     this.sub('isActive', (val) => {
       this.toggleAttribute('data-active', val);
     });
@@ -57,6 +61,7 @@ export class SidebarSection extends Symbiote {
     this.sub('isVisible', (val) => {
       this.toggleAttribute('data-hidden', !val);
       this.$.eyeIcon = val ? 'visibility' : 'visibility_off';
+      ensureMaterialSymbols([this.$.eyeIcon]);
     });
 
     this.sub('isDisabled', (val) => {
@@ -155,6 +160,9 @@ export class SidebarSubItem extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols(['close', this.$.icon]);
+    this.sub('icon', (icon) => ensureMaterialSymbols([icon]));
+
     this.sub('isMaster', (val) => {
       this.toggleAttribute('data-master', val);
     });

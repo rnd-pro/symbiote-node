@@ -17,6 +17,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 const PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
 const NPMIGNORE_PATH = path.join(PKG_ROOT, '.npmignore');
 const PKG_JSON_PATH = path.join(PKG_ROOT, 'package.json');
+const require = createRequire(import.meta.url);
 
 function parseNpmignore() {
   let raw = fs.readFileSync(NPMIGNORE_PATH, 'utf-8');
@@ -40,6 +42,18 @@ let npmignoreLines = parseNpmignore();
 function exportTarget(target) {
   if (typeof target === 'string') return target;
   return target.import || target.default || '';
+}
+
+function resolvePackageRoot(specifier) {
+  let entry = require.resolve(specifier);
+  let dir = path.dirname(entry);
+  while (dir !== path.dirname(dir)) {
+    if (fs.existsSync(path.join(dir, 'package.json'))) {
+      return dir;
+    }
+    dir = path.dirname(dir);
+  }
+  throw new Error(`Unable to resolve package root for ${specifier}`);
 }
 
 describe('Package configuration', () => {
@@ -291,7 +305,7 @@ describe('Packed package consumer boundary', () => {
       let symbioteScope = path.join(nodeModules, '@symbiotejs');
       fs.mkdirSync(symbioteScope, { recursive: true });
       fs.symlinkSync(
-        path.resolve(PKG_ROOT, '../../node_modules/@symbiotejs/symbiote'),
+        resolvePackageRoot('@symbiotejs/symbiote'),
         path.join(symbioteScope, 'symbiote'),
         'dir',
       );

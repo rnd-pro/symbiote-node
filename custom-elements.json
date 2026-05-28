@@ -26,6 +26,38 @@
           "members": [
             {
               "kind": "field",
+              "name": "mediaSrc",
+              "type": {
+                "text": "string"
+              },
+              "description": "Media or avatar image URL derived from node params."
+            },
+            {
+              "kind": "field",
+              "name": "summary",
+              "type": {
+                "text": "string"
+              },
+              "description": "Presentation summary derived from node params."
+            },
+            {
+              "kind": "field",
+              "name": "href",
+              "type": {
+                "text": "string"
+              },
+              "description": "Presentation link derived from node params."
+            },
+            {
+              "kind": "field",
+              "name": "itemsList",
+              "type": {
+                "text": "array"
+              },
+              "description": "Presentation list items derived from node params."
+            },
+            {
+              "kind": "field",
               "name": "inputPorts",
               "type": {
                 "text": "array"
@@ -72,6 +104,10 @@
             },
             {
               "name": "--sn-node-header-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-items-max-height",
               "description": "Theme CSS custom property consumed by this component."
             }
           ]
@@ -194,6 +230,38 @@
                 "text": "function"
               },
               "description": "Toggles readonly interaction mode."
+            },
+            {
+              "kind": "method",
+              "name": "setReadonlyNodeDragging",
+              "type": {
+                "text": "function"
+              },
+              "description": "Allows node dragging while readonly editing stays disabled."
+            },
+            {
+              "kind": "method",
+              "name": "setChrome",
+              "type": {
+                "text": "function"
+              },
+              "description": "Toggles canvas chrome, menus, and viewport controls."
+            },
+            {
+              "kind": "method",
+              "name": "setPanels",
+              "type": {
+                "text": "function"
+              },
+              "description": "Toggles canvas side panels while preserving node menus."
+            },
+            {
+              "kind": "method",
+              "name": "setViewportLocked",
+              "type": {
+                "text": "function"
+              },
+              "description": "Locks pan and zoom while preserving rendering."
             },
             {
               "kind": "method",
@@ -695,6 +763,14 @@
               "description": "Host-provided panel type descriptors keyed by panel type."
             },
             {
+              "kind": "field",
+              "name": "panelChrome",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether panel headers and split action zones are visible."
+            },
+            {
               "kind": "method",
               "name": "registerPanelType",
               "type": {
@@ -749,6 +825,14 @@
           "tagName": "layout-sidebar",
           "description": "Sidebar navigation component for the panel layout.",
           "members": [
+            {
+              "kind": "field",
+              "name": "disabled",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Disables and hides sidebar interactions."
+            },
             {
               "kind": "field",
               "name": "sections",
@@ -932,6 +1016,98 @@
           "name": "layout-node",
           "declaration": {
             "name": "LayoutNode"
+          }
+        }
+      ]
+    },
+    {
+      "path": "layout/CrossLayoutPortalBridge/CrossLayoutPortalBridge.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "CrossLayoutPortalBridge",
+          "tagName": "cross-layout-portal-bridge",
+          "description": "Viewport bridge component for connecting anchors across independent layouts.",
+          "attributes": [
+            {
+              "name": "source-selector",
+              "type": "string",
+              "description": "CSS selector for the source anchor element."
+            },
+            {
+              "name": "target-selector",
+              "type": "string",
+              "description": "CSS selector for the target anchor element."
+            },
+            {
+              "name": "source-side",
+              "type": "string",
+              "description": "Source anchor side."
+            },
+            {
+              "name": "target-side",
+              "type": "string",
+              "description": "Target anchor side."
+            },
+            {
+              "name": "path-style",
+              "type": "string",
+              "description": "Bridge path style, such as bezier or pcb."
+            }
+          ],
+          "members": [
+            {
+              "kind": "method",
+              "name": "requestUpdate",
+              "type": {
+                "text": "function"
+              },
+              "description": "Schedules bridge geometry refresh."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-portal-bridge-z",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-portal-bridge-stroke",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-portal-bridge-width",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-portal-bridge-dash",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-portal-bridge-dot",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-portal-bridge-grid",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-portal-bridge-stub",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-portal-bridge-chamfer",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "cross-layout-portal-bridge",
+          "declaration": {
+            "name": "CrossLayoutPortalBridge"
           }
         }
       ]

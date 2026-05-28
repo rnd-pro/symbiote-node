@@ -55,6 +55,7 @@ export {
 } from '../themes/Palette.js';
 
 export { applySkin, MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN } from '../themes/Skin.js';
+export { configureMaterialSymbols, ensureMaterialSymbols } from '../icons/MaterialSymbols.js';
 
 export { GraphHistory } from '../engine/History.js';
 export { FocusController } from '../engine/FocusController.js';
@@ -168,6 +169,7 @@ export let NodeSearch;
 export let Layout;
 export let LayoutNode;
 export let LayoutSidebar;
+export let CrossLayoutPortalBridge;
 export let ProjectTabs;
 export let CodeBlock;
 export let SourceViewer;
@@ -445,6 +447,7 @@ if (hasDOMGlobals) {
     layout,
     layoutNode,
     layoutSidebar,
+    crossLayoutPortalBridge,
     projectTabs,
     codeBlock,
     sourceViewer,
@@ -495,6 +498,7 @@ if (hasDOMGlobals) {
     import('../layout/Layout/Layout.js'),
     import('../layout/LayoutNode/LayoutNode.js'),
     import('../layout/LayoutSidebar/LayoutSidebar.js'),
+    import('../layout/CrossLayoutPortalBridge/CrossLayoutPortalBridge.js'),
     import('../layout/ProjectTabs/ProjectTabs.js'),
     import('../display/CodeBlock/CodeBlock.js'),
     import('../display/SourceViewer/SourceViewer.js'),
@@ -546,6 +550,7 @@ if (hasDOMGlobals) {
   ({ Layout } = layout);
   ({ LayoutNode } = layoutNode);
   ({ LayoutSidebar } = layoutSidebar);
+  ({ CrossLayoutPortalBridge } = crossLayoutPortalBridge);
   ({ ProjectTabs } = projectTabs);
   ({ CodeBlock } = codeBlock);
   ({ SourceViewer, getSourceLanguage, isDirectoryLikePath, buildDirectoryInfo } = sourceViewer);
@@ -607,6 +612,7 @@ if (hasDOMGlobals) {
     Layout,
     LayoutNode,
     LayoutSidebar,
+    CrossLayoutPortalBridge,
     ProjectTabs,
     CodeBlock,
     SourceViewer,

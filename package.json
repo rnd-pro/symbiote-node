@@ -63,6 +63,7 @@
     "custom-elements.json",
     "core/",
     "graph/",
+    "icons/",
     "engine/*.js",
     "manifest/",
     "tokens/",

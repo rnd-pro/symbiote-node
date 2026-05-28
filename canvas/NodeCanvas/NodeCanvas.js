@@ -13,6 +13,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './NodeCanvas.tpl.js';
 import { styles } from './NodeCanvas.css.js';
 import { Drag } from '../../interactions/Drag.js';
@@ -46,6 +47,7 @@ export class NodeCanvas extends Symbiote {
     zoom: 1,
     panX: 0,
     panY: 0,
+    chrome: true,
     '+contentTransform': () =>
       `translate(${this.$.panX}px, ${this.$.panY}px) scale(${this.$.zoom})`,
   };
@@ -86,6 +88,15 @@ export class NodeCanvas extends Symbiote {
 
   /** @type {boolean} */
   _readonly = false;
+
+  /** @type {boolean} */
+  _readonlyNodeDragging = false;
+
+  /** @type {boolean} */
+  _viewportLocked = false;
+
+  /** @type {boolean} */
+  _panelsEnabled = true;
 
   /** @type {boolean} */
   _snapEnabled = false;
@@ -275,6 +286,8 @@ export class NodeCanvas extends Symbiote {
       canvas: this,
       onSvgShapeReady: (nodeId) => this._connRenderer?.renderFreeDots(nodeId),
     });
+    this._viewManager.setReadonly(this._readonly);
+    this._viewManager.setReadonlyNodeDragging(this._readonlyNodeDragging);
 
     this._frameManager = new FrameManager({
       nodeViews: this._nodeViews,
@@ -431,6 +444,57 @@ export class NodeCanvas extends Symbiote {
   }
 
   /**
+   * Allow graph nodes to move while the canvas remains readonly.
+   * @param {boolean} enabled
+   */
+  setReadonlyNodeDragging(enabled) {
+    this._readonlyNodeDragging = enabled;
+    this.toggleAttribute('data-readonly-node-dragging', enabled);
+    this._viewManager?.setReadonlyNodeDragging(enabled);
+  }
+
+  /**
+   * Enable or remove viewport controls, context menu, and node toolbar.
+   * @param {boolean} enabled
+   */
+  setChrome(enabled) {
+    this.$.chrome = enabled;
+    this.toggleAttribute('data-chrome-none', !enabled);
+    if (!enabled) {
+      this.ref.quickToolbar?.hide?.();
+      if (this.ref.minimap) this.ref.minimap.hidden = true;
+      if (this.ref.nodeSearch) this.ref.nodeSearch.hidden = true;
+      if (this.ref.breadcrumb) this.ref.breadcrumb.hidden = true;
+      if (this.ref.contextMenu) this.ref.contextMenu.hidden = true;
+      if (this.ref.inspector) this.ref.inspector.hidden = true;
+    }
+  }
+
+  /**
+   * Enable or remove canvas side panels while keeping node menus available.
+   * @param {boolean} enabled
+   */
+  setPanels(enabled) {
+    this._panelsEnabled = enabled;
+    this.toggleAttribute('data-panels-none', !enabled);
+    if (!enabled) {
+      if (this.ref.minimap) this.ref.minimap.hidden = true;
+      if (this.ref.nodeSearch) this.ref.nodeSearch.hidden = true;
+      if (this.ref.breadcrumb) this.ref.breadcrumb.hidden = true;
+      if (this.ref.inspector) this.ref.inspector.hidden = true;
+    }
+  }
+
+  /**
+   * Lock viewport pan and zoom while keeping graph rendering active.
+   * @param {boolean} locked
+   */
+  setViewportLocked(locked) {
+    this._viewportLocked = locked;
+    this.toggleAttribute('data-viewport-locked', locked);
+  }
+
+  /**
    * Enable/disable compact mode (hides node body: ports & controls).
    * Use this for schematic/PCB views where nodes show only labels.
    * This is a structural setting — independent of visual theme.
@@ -540,6 +604,7 @@ export class NodeCanvas extends Symbiote {
     let icon = document.createElement('span');
     icon.className = 'material-symbols-outlined';
     icon.textContent = 'error';
+    ensureMaterialSymbols(['error']);
     header.append(icon, ' Error');
 
     let body = document.createElement('div');
@@ -956,6 +1021,8 @@ export class NodeCanvas extends Symbiote {
 
 
   renderCallback() {
+    ensureMaterialSymbols(['map']);
+
     let container = this.ref.canvasContainer;
     let content = this.ref.content;
 
@@ -968,11 +1035,13 @@ export class NodeCanvas extends Symbiote {
         getZoom: () => 1,
       },
       {
+        shouldStart: () => !this._viewportLocked,
         onStart: (e) => {
 
           this._panStart = e ? { x: e.pageX, y: e.pageY, target: e.target } : null;
         },
         onTranslate: (x, y) => {
+          if (this._viewportLocked) return;
           if (this._zoom?.isTranslating()) return;
           if (this._connectFlow?.isPicking()) return;
           this.$.panX = x;
@@ -1007,6 +1076,7 @@ export class NodeCanvas extends Symbiote {
       container,
       content,
       (delta, ox, oy) => {
+        if (this._viewportLocked) return;
         let k = this.$.zoom;
         let newK = k * (1 + delta);
         if (newK < 0.001 || newK > 5) return;
@@ -1028,6 +1098,7 @@ export class NodeCanvas extends Symbiote {
 
 
     container.addEventListener('contextmenu', (e) => {
+      if (!this.$.chrome) return;
       this._actions?.showContextMenu(e, this.ref.contextMenu, container, {
         panX: this.$.panX,
         panY: this.$.panY,

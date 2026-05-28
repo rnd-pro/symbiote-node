@@ -6,9 +6,21 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './LayoutNode.tpl.js';
 import { styles } from './LayoutNode.css.js';
 import './../ActionZone/ActionZone.js';
+
+const LAYOUT_NODE_ICONS = [
+  'arrow_drop_down',
+  'chevron_left',
+  'chevron_right',
+  'dashboard',
+  'expand_less',
+  'expand_more',
+  'fullscreen',
+  'fullscreen_exit',
+];
 
 export class LayoutNode extends Symbiote {
   static isoMode = true;
@@ -29,6 +41,7 @@ export class LayoutNode extends Symbiote {
 
     panelTitle: 'Panel',
     panelIcon: 'dashboard',
+    panelChrome: true,
 
 
     isCollapsed: false,
@@ -46,6 +59,7 @@ export class LayoutNode extends Symbiote {
 
     '^panelTypes': {},
     '^fullscreenPanelId': null,
+    '^panelChrome': true,
 
 
     onResizerDown: (e) => this._startResize(e),
@@ -56,6 +70,7 @@ export class LayoutNode extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols(LAYOUT_NODE_ICONS);
 
     this.sub('nodeData', (data) => {
       if (!data) return;
@@ -157,6 +172,7 @@ export class LayoutNode extends Symbiote {
     let config = panelTypes[this.$.panelType] || {};
     this.$.panelTitle = config.title || this.$.panelType;
     this.$.panelIcon = config.icon || 'dashboard';
+    ensureMaterialSymbols([this.$.panelIcon]);
 
 
     this._injectPanelComponent(config);
@@ -256,6 +272,8 @@ export class LayoutNode extends Symbiote {
   }
 
   _renderNode(data) {
+    this.$.panelChrome = this.$.panelChrome !== false && this.$['^panelChrome'] !== false;
+    this.setAttribute('panel-chrome', this.$.panelChrome ? 'default' : 'none');
 
     let prevType = this.getAttribute('node-type');
     this.#syncHostAttribute('node-type', data.type);
@@ -305,6 +323,8 @@ export class LayoutNode extends Symbiote {
       }
     }
 
+    child.$.panelChrome = this.$.panelChrome !== false;
+    child.setAttribute('panel-chrome', this.$.panelChrome ? 'default' : 'none');
     child.$.nodeData = { ...nodeData };
   }
 
@@ -317,6 +337,7 @@ export class LayoutNode extends Symbiote {
   }
 
   _startResize(e) {
+    if (this.$.panelChrome === false || this.$['^panelChrome'] === false) return;
     e.preventDefault();
     this.toggleAttribute('resizing', true);
 
@@ -408,6 +429,7 @@ export class LayoutNode extends Symbiote {
   }
 
   _toggleCollapse() {
+    if (this.$.panelChrome === false || this.$['^panelChrome'] === false) return;
 
 
     this.dispatchEvent(
@@ -427,6 +449,7 @@ export class LayoutNode extends Symbiote {
    * @param {boolean} collapsed
    */
   _setCollapsed(collapsed) {
+    if (this.$.panelChrome === false || this.$['^panelChrome'] === false) return;
     if (this.$.isCollapsed === collapsed) return;
 
 
@@ -443,6 +466,7 @@ export class LayoutNode extends Symbiote {
   }
 
   _toggleFullscreen() {
+    if (this.$.panelChrome === false || this.$['^panelChrome'] === false) return;
 
     if (this.$.isCollapsed) return;
 
@@ -456,6 +480,7 @@ export class LayoutNode extends Symbiote {
   }
 
   _showTypeMenu(e) {
+    if (this.$.panelChrome === false || this.$['^panelChrome'] === false) return;
 
     if (this.$.isCollapsed) return;
 

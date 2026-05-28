@@ -9,6 +9,7 @@
  */
 
 import Symbiote, { html } from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './PaletteBrowser.tpl.js';
 import { styles } from './PaletteBrowser.css.js';
 
@@ -22,6 +23,11 @@ class PalItem extends Symbiote {
     category: '',
     isHeader: false,
   };
+
+  renderCallback() {
+    ensureMaterialSymbols([this.$.icon]);
+    this.sub('icon', (icon) => ensureMaterialSymbols([icon]));
+  }
 }
 
 PalItem.template = html`
@@ -40,6 +46,10 @@ class PalCategory extends Symbiote {
 
   onToggle() {
     this.toggleAttribute('data-collapsed');
+  }
+
+  renderCallback() {
+    ensureMaterialSymbols(['expand_more']);
   }
 }
 
@@ -67,6 +77,10 @@ export class PaletteBrowser extends Symbiote {
   /** @type {Map<string, function>} */
   #factoryMap = new Map();
 
+  renderCallback() {
+    ensureMaterialSymbols(['widgets']);
+  }
+
   /**
    * Register palette categories and items
    * @param {Array<{ category: string, color: string, items: Array<{ name: string, icon: string, type: string, desc: string, factory: function }> }>} categories
@@ -87,6 +101,7 @@ export class PaletteBrowser extends Symbiote {
   #syncList(filter = '') {
     let lowerFilter = filter.toLowerCase();
     this.#factoryMap.clear();
+    ensureMaterialSymbols(this.#rawCategories.flatMap((cat) => cat.items.map((it) => it.icon)));
 
     this.$.categories = this.#rawCategories
       .map((cat) => {

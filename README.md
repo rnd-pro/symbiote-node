@@ -591,7 +591,7 @@ const results = await executor.run(graph);
 
 ### Node Shapes
 
-Two coexisting rendering modes on the same canvas — **HTML nodes** (CSS-styled rectangles) and **SVG nodes** (arbitrary vector shapes with perimeter-aware connector positioning). Built-in presets: `hexagon`, `star`, `cloud`, `shield`, `heart`, `rect`, `pill`, `circle`, `diamond`, `comment`.
+Two coexisting rendering modes on the same canvas — **HTML nodes** (CSS-styled rectangles) and **SVG nodes** (arbitrary vector shapes with perimeter-aware connector positioning). Built-in presets: `disc`, `hexagon`, `star`, `cloud`, `shield`, `heart`, `rect`, `pill`, `circle`, `diamond`, `comment`.
 
 ```javascript
 import { createSVGShape, registerShape } from 'symbiote-node';
@@ -600,6 +600,40 @@ const myShape = createSVGShape('myshape', 'M12 2L22 8V16L12 22L2 16V8Z');
 registerShape('myshape', myShape);
 
 const node = new Node('Custom', { shape: 'myshape' });
+```
+
+Use `shape: 'disc'` for circular SVG nodes that need connector points to move around the perimeter. `GraphNode` also reads presentation fields from `Node.params`: `avatar`, `media`, `image`, `summary`, `href`, `linkLabel`, and `items`. SVG node size can be controlled with `params.size` or explicit `params.width` and `params.height`.
+
+`node-canvas` supports presentation controls for app surfaces:
+
+```javascript
+canvas.setReadonly(true);
+canvas.setReadonlyNodeDragging(true);
+canvas.setPanels(false);
+canvas.setChrome(false);
+canvas.setViewportLocked(true);
+canvas.setPathStyle('pcb');
+```
+
+`setPanels(false)` hides side panels while preserving node menus. `setChrome(false)` hides viewport chrome including minimap, search, breadcrumbs, menus, toolbar, and inspector.
+
+`cross-layout-portal-bridge` connects anchors across independent layouts and can use a PCB-like path:
+
+```html
+<cross-layout-portal-bridge
+  source-selector="graph-node[node-id='left-portal']"
+  target-selector="graph-node[node-id='right-portal']"
+  source-side="right"
+  target-side="left"
+  path-style="pcb"></cross-layout-portal-bridge>
+```
+
+Browser UI components automatically load Material Symbols subsets they own. Hosts with strict CSP or self-hosted fonts can configure this through `symbiote-node/ui`:
+
+```javascript
+import { configureMaterialSymbols } from 'symbiote-node/ui';
+
+configureMaterialSymbols({ autoload: false });
 ```
 
 ### Theme System

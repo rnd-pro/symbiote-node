@@ -8,9 +8,20 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template, inspPortItemTemplate, inspCtrlItemTemplate } from './InspectorPanel.tpl.js';
 import { styles } from './InspectorPanel.css.js';
 import '../TemplatePreview/TemplatePreview.js';
+
+const INSPECTOR_ICONS = [
+  'account_tree',
+  'input',
+  'login',
+  'output',
+  'play_arrow',
+  'touch_app',
+  'tune',
+];
 
 export class InspectorPanel extends Symbiote {
   init$ = {
@@ -146,6 +157,8 @@ export class InspectorPanel extends Symbiote {
   }
 
   renderCallback() {
+    ensureMaterialSymbols(INSPECTOR_ICONS);
+
     this.sub('visible', (val) => {
       this.toggleAttribute('hidden', !val);
     });

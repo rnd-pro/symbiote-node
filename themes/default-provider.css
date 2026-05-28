@@ -45,6 +45,14 @@
   --sn-layout-preview-join-border: color-mix(in srgb, var(--sn-danger-color) 60%, transparent);
   --sn-layout-preview-line: var(--sn-node-selected);
   --sn-layout-preview-line-shadow: 0 0 8px var(--sn-layout-preview-line);
+  --sn-portal-bridge-z: 12;
+  --sn-portal-bridge-stroke: var(--sn-node-selected);
+  --sn-portal-bridge-width: 2;
+  --sn-portal-bridge-dash: 7 7;
+  --sn-portal-bridge-dot: var(--sn-node-selected);
+  --sn-portal-bridge-grid: 20;
+  --sn-portal-bridge-stub: 36;
+  --sn-portal-bridge-chamfer: 8;
   --sn-xr-panel-bg: var(--sn-panel-bg);
   --sn-xr-panel-border: var(--sn-node-border);
   --sn-xr-panel-radius: var(--sn-node-radius);
@@ -69,6 +77,7 @@
   --sn-node-max-width: 280px;
   --sn-node-border-width: 2px;
   --sn-node-font-size: 13px;
+  --sn-node-items-max-height: 420px;
   --sn-node-error-frame-offset: 10px;
   --sn-node-error-frame-min-width: 140px;
   --sn-node-error-frame-max-width: 320px;

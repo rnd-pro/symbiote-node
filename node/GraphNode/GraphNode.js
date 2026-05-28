@@ -8,6 +8,7 @@
  */
 
 import Symbiote from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './GraphNode.tpl.js';
 import { styles } from './GraphNode.css.js';
 import '../PortItem/PortItem.js';
@@ -36,17 +37,28 @@ export class GraphNode extends Symbiote {
     '@node-category': 'default',
     nodeLabel: '',
     nodeIcon: 'radio_button_checked',
+    mediaSrc: '',
+    mediaAlt: '',
+    summary: '',
+    href: '',
+    linkLabel: 'Open',
+    linkIcon: 'arrow_forward',
+    hasItems: false,
+    itemsList: [],
     inputPorts: [],
     outputPorts: [],
     controlsList: [],
   };
 
   renderCallback() {
+    ensureMaterialSymbols(Object.values(CATEGORY_ICONS));
+
     this.sub('@node-label', (val) => {
       this.$.nodeLabel = val || '';
     });
     this.sub('@node-category', (val) => {
       this.$.nodeIcon = CATEGORY_ICONS[val] || CATEGORY_ICONS.default;
+      ensureMaterialSymbols([this.$.nodeIcon]);
     });
 
 
@@ -55,12 +67,60 @@ export class GraphNode extends Symbiote {
     }
   }
 
+  #syncMedia() {
+    let src = this.$.mediaSrc;
+    if (src && this.ref.mediaImage) {
+      this.ref.mediaImage.src = src;
+      this.ref.mediaImage.alt = this.$.mediaAlt || '';
+      this.ref.mediaImage.draggable = false;
+    }
+    this.toggleAttribute('data-has-media', Boolean(src));
+  }
+
+  #syncLink() {
+    let href = this.$.href;
+    if (!this.ref.contentLink) return;
+    if (!href) {
+      this.ref.contentLink.removeAttribute('href');
+      return;
+    }
+    this.ref.contentLink.href = href;
+    if (href.startsWith('http://') || href.startsWith('https://')) {
+      this.ref.contentLink.target = '_blank';
+      this.ref.contentLink.rel = 'noopener noreferrer';
+      this.$.linkIcon = 'open_in_new';
+    } else {
+      this.ref.contentLink.removeAttribute('target');
+      this.ref.contentLink.removeAttribute('rel');
+      this.$.linkIcon = 'arrow_forward';
+    }
+    ensureMaterialSymbols([this.$.linkIcon]);
+  }
+
   /**
    * Populate ports and controls from Node instance
    * @param {import('../core/Node.js').Node} node
    */
   #populateFromNodeData(node) {
+    let params = node.params || {};
     this.set$({
+      nodeIcon: node.icon || CATEGORY_ICONS[node.category] || CATEGORY_ICONS.default,
+      mediaSrc: params.media || params.image || params.avatar || '',
+      mediaAlt: params.mediaAlt || params.imageAlt || params.avatarAlt || node.label || '',
+      summary: params.summary || '',
+      href: params.href || '',
+      linkLabel: params.linkLabel || 'Open',
+      hasItems: Array.isArray(params.items) && params.items.length > 0,
+      itemsList: Array.isArray(params.items)
+        ? params.items.map((item) => ({
+            href: item.href || '#',
+            target: item.external ? '_blank' : '',
+            rel: item.external ? 'noopener noreferrer' : '',
+            kicker: item.kicker || '',
+            title: item.title || '',
+            summary: item.summary || '',
+          }))
+        : [],
       inputPorts: Object.entries(node.inputs).map(([key, input]) => ({
         key,
         label: input.label || key,
@@ -83,6 +143,9 @@ export class GraphNode extends Symbiote {
         isReadonly: ctrl.readonly || false,
       })),
     });
+    ensureMaterialSymbols([this.$.nodeIcon]);
+    this.#syncMedia();
+    this.#syncLink();
   }
 }
 

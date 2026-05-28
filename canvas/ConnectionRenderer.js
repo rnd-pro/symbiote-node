@@ -10,6 +10,7 @@
  */
 
 import { getShape } from '../shapes/index.js';
+import { routePcbTrace } from './PcbRouter.js';
 
 export class ConnectionRenderer {
   /** @type {Map<string, import('../core/Connection.js').Connection>} */
@@ -724,188 +725,18 @@ export class ConnectionRenderer {
       }
       d = path;
     } else if (this.#pathStyle === 'pcb') {
-
-
-      const TRACE_GRID = 5;
-      const STUB_MIN = 20;
-      const CHAMFER = 8;
-
-
-      let snapGrid = (v) => Math.round(v / TRACE_GRID) * TRACE_GRID;
-
-
-      let connKeys = Array.from(this.#connectionData.keys());
-      let connIndex = connKeys.indexOf(conn.id);
-
-
-      let shiftIndex = connIndex > -1 ? connIndex % 12 : 0;
-      let channelShift = (shiftIndex % 2 === 0 ? 1 : -1) * Math.ceil(shiftIndex / 2) * TRACE_GRID;
-
-
-      let fromAngle = fromOffset.angle !== undefined ? fromOffset.angle : 0;
-      let toAngle = toOffset.angle !== undefined ? toOffset.angle : 180;
-
-
-      let snapDir = (deg) => {
-        let r = ((deg % 360) + 360) % 360;
-        if (r < 45 || r >= 315) return { dx: 1, dy: 0 };
-        if (r >= 45 && r < 135) return { dx: 0, dy: 1 };
-        if (r >= 135 && r < 225) return { dx: -1, dy: 0 };
-        return { dx: 0, dy: -1 };
-      };
-
-      let fDir = snapDir(fromAngle);
-      let tDir = snapDir(toAngle);
-
-
-      let stubFromX = fDir.dx === 0 ? startX : startX + fDir.dx * STUB_MIN;
-      let stubFromY = fDir.dy === 0 ? startY : startY + fDir.dy * STUB_MIN;
-      let stubToX = tDir.dx === 0 ? endX : endX + tDir.dx * STUB_MIN;
-      let stubToY = tDir.dy === 0 ? endY : endY + tDir.dy * STUB_MIN;
-
-      let fromH = fromEl.offsetHeight || 60;
-      let toH = toEl.offsetHeight || 60;
-
-
-      let pts = [
-        { x: startX, y: startY },
-        { x: stubFromX, y: stubFromY },
-      ];
-
-
-      if (endX < startX - 20) {
-
-        let minXForObstacle = Math.min(stubFromX, stubToX);
-        let maxXForObstacle = Math.max(stubFromX, stubToX);
-        let maxObstacleY = Math.max(fromPos.y + fromH, toPos.y + toH);
-
-        let iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
-        for (const rect of iter) {
-          let nx = rect.x;
-          let ny = rect.y;
-          let nw = rect.w;
-          let nh = rect.h;
-
-          let pad = TRACE_GRID * 2;
-          if (nx + nw + pad >= minXForObstacle && nx - pad <= maxXForObstacle) {
-            if (ny + nh > maxObstacleY) {
-              maxObstacleY = ny + nh;
-            }
-          }
-        }
-
-
-        let bottomY = snapGrid(maxObstacleY + 30) + Math.abs(channelShift);
-        pts.push({ x: stubFromX, y: bottomY });
-        pts.push({ x: stubToX, y: bottomY });
-      } else {
-
-        let midX = snapGrid((stubFromX + stubToX) / 2) + channelShift;
-
-
-        if (Math.abs(stubFromY - stubToY) < TRACE_GRID * 2) {
-
-          pts.push({ x: stubToX, y: stubFromY });
-        } else {
-
-          let minY = Math.min(stubFromY, stubToY);
-          let maxY = Math.max(stubFromY, stubToY);
-          let pad = TRACE_GRID * 4;
-
-          let iter = this._nodeRectCache ? this._nodeRectCache.values() : [];
-          for (const rect of iter) {
-            if (rect.id === conn.from || rect.id === conn.to) continue;
-            let nx = rect.x,
-              ny = rect.y;
-            let nw = rect.w,
-              nh = rect.h;
-
-            if (midX >= nx - pad && midX <= nx + nw + pad) {
-              if (ny - pad <= maxY && ny + nh + pad >= minY) {
-
-                let leftX = snapGrid(nx - pad) + channelShift;
-                let rightX = snapGrid(nx + nw + pad) + channelShift;
-                midX = Math.abs(midX - leftX) < Math.abs(midX - rightX) ? leftX : rightX;
-                break;
-              }
-            }
-          }
-
-          pts.push({ x: midX, y: stubFromY });
-          pts.push({ x: midX, y: stubToY });
-        }
-      }
-
-      pts.push({ x: stubToX, y: stubToY });
-      pts.push({ x: endX, y: endY });
-
-
-      if (!this._allSegments) this._allSegments = [];
-      let segments = [];
-      for (let i = 0; i < pts.length - 1; i++) {
-        segments.push({
-          p1: pts[i],
-          p2: pts[i + 1],
-          connId: conn.id,
-          channel: connIndex,
-        });
-      }
-      this._allSegments.push(...segments);
-
-
-      let path = `M ${pts[0].x} ${pts[0].y}`;
-      for (let i = 1; i < pts.length; i++) {
-        let prev = pts[i - 1];
-        let curr = pts[i];
-        if (Math.abs(curr.x - prev.x) < 0.5 && Math.abs(curr.y - prev.y) < 0.5) continue;
-
-        let next = pts[i + 1];
-        if (next) {
-
-          let dx1 = curr.x - prev.x,
-            dy1 = curr.y - prev.y;
-          let dx2 = next.x - curr.x,
-            dy2 = next.y - curr.y;
-          let isH1 = Math.abs(dx1) > Math.abs(dy1);
-          let isH2 = Math.abs(dx2) > Math.abs(dy2);
-
-          if (isH1 !== isH2) {
-
-            let len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-            let len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-            if (len1 < 1 || len2 < 1) {
-
-              path += ` L ${curr.x} ${curr.y}`;
-              continue;
-            }
-            let c = Math.min(CHAMFER, len1 / 2, len2 / 2);
-
-
-            let nx1 = dx1 / len1,
-              ny1 = dy1 / len1;
-            let preX = curr.x - nx1 * c;
-            let preY = curr.y - ny1 * c;
-
-            let nx2 = dx2 / len2,
-              ny2 = dy2 / len2;
-            let postX = curr.x + nx2 * c;
-            let postY = curr.y + ny2 * c;
-
-            path += ` L ${preX} ${preY} L ${postX} ${postY}`;
-            continue;
-          }
-        }
-
-
-        if (Math.abs(curr.y - prev.y) < 0.5) {
-          path += ` H ${curr.x}`;
-        } else if (Math.abs(curr.x - prev.x) < 0.5) {
-          path += ` V ${curr.y}`;
-        } else {
-          path += ` L ${curr.x} ${curr.y}`;
-        }
-      }
-      d = path;
+      let routed = routePcbTrace({
+        start: { x: startX, y: startY },
+        end: { x: endX, y: endY },
+        fromRect: { id: conn.from, x: fromPos.x, y: fromPos.y, w: fromW, h: fromH },
+        toRect: { id: conn.to, x: toPos.x, y: toPos.y, w: toW, h: toH },
+        fromAngle: fromOffset.angle ?? 0,
+        toAngle: toOffset.angle ?? 180,
+        rects: this._nodeRectCache ? [...this._nodeRectCache.values()] : [],
+        connections: [...this.#connectionData.values()],
+        conn,
+      });
+      d = routed.path;
     } else {
 
       let fromAngleDeg, toAngleDeg;

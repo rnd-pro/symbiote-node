@@ -9,6 +9,7 @@
  */
 
 import Symbiote, { html } from '@symbiotejs/symbiote';
+import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './GraphTabs.tpl.js';
 import { styles } from './GraphTabs.css.js';
 
@@ -28,6 +29,8 @@ class TabItem extends Symbiote {
   };
 
   renderCallback() {
+    ensureMaterialSymbols(['close', 'description']);
+
     this.sub('isActive', (val) => {
       this.toggleAttribute('data-active', val);
     });
@@ -65,6 +68,10 @@ export class GraphTabs extends Symbiote {
 
   /** @type {function|null} */
   #onClose = null;
+
+  renderCallback() {
+    ensureMaterialSymbols(['add']);
+  }
 
   /**
    * Set callbacks for tab events

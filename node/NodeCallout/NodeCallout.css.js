@@ -4,10 +4,10 @@ export const styles = css`
   node-callout {
     position: fixed;
     inset: 0 auto auto 0;
-    z-index: var(--sn-node-callout-z, 14);
+    z-index: var(--sn-node-callout-z, var(--sn-overlay-z-base, 20000));
     display: block;
     inline-size: max-content;
-    max-inline-size: min(var(--sn-node-callout-max-width, 320px), calc(100vw - 32px));
+    max-inline-size: min(var(--sn-node-callout-max-width, 520px), calc(100vw - 32px));
     pointer-events: none;
     contain: layout style;
 
@@ -35,6 +35,8 @@ export const styles = css`
       line-height: var(--sn-node-callout-line-height, 1.35);
       text-align: center;
       text-wrap: balance;
+      white-space: normal;
+      overflow-wrap: anywhere;
       opacity: 1;
       transform: translateY(0);
       transition:

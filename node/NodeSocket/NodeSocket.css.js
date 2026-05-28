@@ -7,11 +7,11 @@ import { css } from '@symbiotejs/symbiote';
 export let styles = css`
   node-socket {
     display: block;
-    width: 12px;
-    height: 12px;
+    width: var(--sn-socket-size);
+    height: var(--sn-socket-size);
     border-radius: 50%;
     background: var(--socket-color, var(--sn-node-accent));
-    border: 2px solid var(--sn-node-bg);
+    border: var(--sn-socket-border-width) solid var(--sn-node-bg);
     cursor: crosshair;
     flex-shrink: 0;
     transition:
@@ -53,8 +53,9 @@ export let styles = css`
       background: transparent;
       width: 0;
       height: 0;
-      border: 6px solid transparent;
-      border-left: 10px solid var(--socket-color, var(--sn-node-accent));
+      border: calc(var(--sn-socket-size) / 2) solid transparent;
+      border-left: calc(var(--sn-socket-size) - var(--sn-socket-border-width)) solid
+        var(--socket-color, var(--sn-node-accent));
       border-right: none;
     }
   }

@@ -30,8 +30,8 @@ export let styles = css`
 
     & .sn-socket {
       position: relative;
-      width: 20px;
-      height: 20px;
+      width: calc(var(--sn-socket-size) + 8px);
+      height: calc(var(--sn-socket-size) + 8px);
       border-radius: 50%;
       background: transparent;
       cursor: crosshair;
@@ -43,11 +43,11 @@ export let styles = css`
 
       &::after {
         content: '';
-        width: 12px;
-        height: 12px;
+        width: var(--sn-socket-size);
+        height: var(--sn-socket-size);
         border-radius: 50%;
         background: var(--socket-color, var(--sn-node-accent));
-        border: 2px solid var(--sn-node-bg);
+        border: var(--sn-socket-border-width) solid var(--sn-node-bg);
         transition:
           transform 0.2s ease-out,
           box-shadow 0.2s ease-out;
@@ -72,8 +72,9 @@ export let styles = css`
         background: transparent;
         width: 0;
         height: 0;
-        border: 6px solid transparent;
-        border-left: 10px solid var(--socket-color, var(--sn-node-accent));
+        border: calc(var(--sn-socket-size) / 2) solid transparent;
+        border-left: calc(var(--sn-socket-size) - var(--sn-socket-border-width)) solid
+          var(--socket-color, var(--sn-node-accent));
         border-right: none;
       }
 

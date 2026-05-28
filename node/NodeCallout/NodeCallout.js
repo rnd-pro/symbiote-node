@@ -1,5 +1,6 @@
 import Symbiote from '@symbiotejs/symbiote';
 import { slotProcessor } from '@symbiotejs/symbiote/core/slotProcessor.js';
+import { bringOverlayToFront } from '../../ui/overlay-stack.js';
 import { template } from './NodeCallout.tpl.js';
 import { styles } from './NodeCallout.css.js';
 
@@ -91,6 +92,7 @@ export class NodeCallout extends Symbiote {
 
   show() {
     this.hidden = false;
+    bringOverlayToFront(this);
     this.requestUpdate();
   }
 
@@ -116,6 +118,7 @@ export class NodeCallout extends Symbiote {
   #onAnchorEnter = () => {
     if (this.#trigger() !== 'hover') return;
     this.#hoverActive = true;
+    bringOverlayToFront(this);
     this.requestUpdate();
   };
 
@@ -153,8 +156,10 @@ export class NodeCallout extends Symbiote {
 
     this.#observeAnchor(anchor);
     const isOpen = this.#isOpen();
+    const wasOpen = this.hasAttribute('data-open');
     this.toggleAttribute('data-open', isOpen);
     this.style.visibility = isOpen ? '' : 'hidden';
+    if (isOpen && !wasOpen) bringOverlayToFront(this);
 
     const anchorRect = anchor.getBoundingClientRect();
     const boxRect = this.#box.getBoundingClientRect();

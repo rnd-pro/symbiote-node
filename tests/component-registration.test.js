@@ -580,8 +580,16 @@ describe('With DOM shim', () => {
     assert.ok(customElements.get('quick-toolbar'));
     assert.ok(customElements.get('sn-button'));
     let template = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.tpl.js'), 'utf8');
+    let logic = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.js'), 'utf8');
     assert.ok(template.includes('<sn-button'), 'QuickToolbar must compose sn-button controls');
     assert.equal(template.includes('<button'), false, 'QuickToolbar must not own raw button shells');
+    assert.ok(template.includes('toolbar-title'), 'QuickToolbar must compose a shared title row for headerless nodes');
+    assert.ok(logic.includes('hasOwnHeader'), 'QuickToolbar must decide title visibility from node header state');
+    assert.ok(logic.includes('bringOverlayToFront'), 'QuickToolbar must join the shared overlay z-index stack');
+    assert.ok(logic.includes('scheduleHide'), 'QuickToolbar must support hover-triggered delayed hiding');
+    for (let icon of ['login', 'hub', 'code', 'content_copy', 'visibility_off', 'delete']) {
+      assert.ok(logic.includes(`'${icon}'`), `QuickToolbar must autoload ${icon}`);
+    }
   });
 
   it('FormField can be imported with DOM shim', async () => {

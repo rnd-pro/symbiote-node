@@ -20,6 +20,7 @@ export let styles = css`
     font-size: var(--sn-node-font-size);
     -webkit-font-smoothing: antialiased;
     --sn-node-items-max-height: 420px;
+    --sn-svg-shape-media-clip: circle(50% at 50% 50%);
 
     /* Symbiote animateOut: CSS-driven exit transition */
     &[leaving] {
@@ -482,28 +483,7 @@ export let styles = css`
       }
 
       & .sn-node-header {
-        position: absolute;
-        top: -28px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(
-          --sn-node-header-bg,
-          color-mix(in srgb, var(--sn-node-accent) 20%, var(--sn-node-bg))
-        );
-        border: 2px solid var(--sn-node-border);
-        border-radius: 20px;
-        padding: 3px 12px;
-        white-space: nowrap;
-        z-index: 1;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease;
-      }
-      &:hover .sn-node-header {
-        opacity: 1;
-      }
-      &[data-selected] .sn-node-header {
-        opacity: 0;
+        display: none;
       }
       & .sn-node-body {
         padding: 4px 0;
@@ -529,8 +509,8 @@ export let styles = css`
       }
 
       &[data-has-media] {
-        overflow: hidden !important;
-        border-radius: 50% !important;
+        overflow: visible !important;
+        border-radius: 0 !important;
 
         & > svg {
           z-index: 1;
@@ -543,10 +523,12 @@ export let styles = css`
         & .sn-node-media {
           position: absolute !important;
           inset: 0;
+          inline-size: auto;
+          block-size: auto;
           z-index: 0;
           border: 0;
           margin: 0;
-          clip-path: circle(50% at 50% 50%);
+          clip-path: var(--sn-svg-shape-media-clip);
         }
 
         & .sn-node-media-img {
@@ -560,28 +542,9 @@ export let styles = css`
           padding: 0;
         }
 
-        & .sn-node-header {
-          position: absolute !important;
-          top: auto !important;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          transform: none !important;
-          justify-content: center;
-          border: 0;
-          border-radius: 0;
-          padding: 26px 10px 12px;
-          background: linear-gradient(180deg, transparent, var(--sn-bg-overlay));
-          opacity: 1;
-        }
-
         & .sn-node-icon,
         & .sn-shape-watermark {
           display: none;
-        }
-
-        & .sn-node-label {
-          text-shadow: 0 1px 4px var(--sn-shadow-color);
         }
       }
     }

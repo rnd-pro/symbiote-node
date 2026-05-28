@@ -50,8 +50,8 @@ export let PCB_DARK = {
 
     '--sn-conn-dot-fill': '#c87533',
     '--sn-conn-dot-stroke': '#222222',
-    '--sn-conn-dot-stroke-width': '1',
-    '--sn-conn-dot-r': '3.5',
+    '--sn-conn-dot-stroke-width': 'var(--sn-socket-border-width)',
+    '--sn-conn-dot-r': 'calc((var(--sn-socket-size) + var(--sn-conn-dot-stroke-width)) / 2)',
 
 
     '--sn-frame-border-style': 'dashed',

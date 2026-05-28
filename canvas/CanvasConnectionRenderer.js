@@ -13,6 +13,29 @@ function resolveThemeValue(source, token, fallbackToken) {
   return computed.getPropertyValue(fallbackToken).trim();
 }
 
+function resolveCssLength(source, value, fallback) {
+  if (!value) return fallback;
+  if (!value.includes('var(') && !value.includes('calc(')) {
+    let direct = Number.parseFloat(value);
+    if (Number.isFinite(direct)) return direct;
+  }
+
+  let probe = document.createElement('span');
+  probe.style.position = 'absolute';
+  probe.style.visibility = 'hidden';
+  probe.style.pointerEvents = 'none';
+  probe.style.width = value;
+  (source.append ? source : document.documentElement).append(probe);
+  let resolved = Number.parseFloat(getComputedStyle(probe).width);
+  probe.remove();
+  return Number.isFinite(resolved) ? resolved : fallback;
+}
+
+function resolveThemeLength(source, token, fallback) {
+  let value = getComputedStyle(source).getPropertyValue(token).trim();
+  return resolveCssLength(source, value, fallback);
+}
+
 function resolveCssVars(source, value, seen = new Set()) {
   if (!value || !value.includes('var(')) return value || '';
   return value.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^)]+))?\)/g, (_match, token, fallback = '') => {
@@ -82,6 +105,8 @@ export class CanvasConnectionRenderer {
     bg: '',
     text: '',
     width: 2,
+    dotRadius: 7,
+    dotStrokeWidth: 2,
   };
 
   /**
@@ -142,6 +167,18 @@ export class CanvasConnectionRenderer {
     this.#colorParams.bg = resolveThemeValue(source, '--sn-bg');
     this.#colorParams.text = resolveThemeValue(source, '--sn-text');
     this.#colorParams.width = parseFloat(computed.getPropertyValue('--sn-conn-width')) || 2;
+    let socketSize = resolveThemeLength(source, '--sn-socket-size', 12);
+    let socketBorderWidth = resolveThemeLength(source, '--sn-socket-border-width', 2);
+    this.#colorParams.dotStrokeWidth = resolveThemeLength(
+      source,
+      '--sn-conn-dot-stroke-width',
+      socketBorderWidth
+    );
+    this.#colorParams.dotRadius = resolveThemeLength(
+      source,
+      '--sn-conn-dot-r',
+      (socketSize + this.#colorParams.dotStrokeWidth) / 2
+    );
   }
 
   #resolveColor(value) {
@@ -525,10 +562,10 @@ export class CanvasConnectionRenderer {
       ctx.beginPath();
 
 
-      ctx.arc(pos.x, pos.y, 7, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, this.#colorParams.dotRadius, 0, Math.PI * 2);
       ctx.fillStyle = pos.color;
       ctx.fill();
-      ctx.lineWidth = 2;
+      ctx.lineWidth = this.#colorParams.dotStrokeWidth;
       ctx.strokeStyle = this.#colorParams.outline;
       ctx.stroke();
     }

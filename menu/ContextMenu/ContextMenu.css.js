@@ -8,7 +8,7 @@ export let styles = css`
   context-menu {
     position: absolute;
     inset: 0;
-    z-index: 200;
+    z-index: var(--sn-ctx-z, var(--sn-overlay-z-base, 20000));
     pointer-events: none;
 
     &[hidden] {

@@ -285,7 +285,7 @@ export class NodeCanvas extends Symbiote {
         mute: (nodeId) => {
           this._actions.muteNode(nodeId);
           let nodeEl = this._nodeViews.get(nodeId);
-          if (nodeEl) toolbar.show(nodeId, nodeEl);
+          if (nodeEl) toolbar.show(nodeId, nodeEl, { sticky: true });
         },
       };
       toolbar._onAction = (action, nodeId) => {
@@ -314,6 +314,8 @@ export class NodeCanvas extends Symbiote {
       setNodePosition: (id, x, y) => this.setNodePosition(id, x, y),
       animateNodeToPosition: (id, x, y) => this.animateNodeToPosition(id, x, y),
       onNodeClick: (id, e) => this._handleNodeClick(id, e),
+      onNodePointerEnter: (id, el) => this._handleNodePointerEnter(id, el),
+      onNodePointerLeave: (id) => this._handleNodePointerLeave(id),
       nodesLayer: this.ref.nodesLayer,
       canvas: this,
       onSvgShapeReady: (nodeId) => this._connRenderer?.renderFreeDots(nodeId),
@@ -1173,6 +1175,18 @@ export class NodeCanvas extends Symbiote {
       this._lastClickTime = now;
       this._lastClickNodeId = nodeId;
     }
+  }
+
+  _handleNodePointerEnter(nodeId, nodeEl) {
+    let toolbar = this.ref.quickToolbar;
+    if (!toolbar) return;
+    toolbar.show(nodeId, nodeEl, { sticky: false });
+  }
+
+  _handleNodePointerLeave(nodeId) {
+    let toolbar = this.ref.quickToolbar;
+    if (!toolbar) return;
+    toolbar.scheduleHide?.(undefined, nodeId);
   }
 
   _handleConnectionClick(connId, e) {

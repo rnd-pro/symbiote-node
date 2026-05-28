@@ -206,6 +206,10 @@
           ],
           "cssProperties": [
             {
+              "name": "--sn-overlay-z-base",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
               "name": "--sn-node-callout-z",
               "description": "Theme CSS custom property consumed by this component."
             },
@@ -847,6 +851,10 @@
           ],
           "cssProperties": [
             {
+              "name": "--sn-overlay-z-base",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
               "name": "--sn-ctx-bg",
               "description": "Theme CSS custom property consumed by this component."
             },
@@ -860,6 +868,10 @@
             },
             {
               "name": "--sn-ctx-hover",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-ctx-z",
               "description": "Theme CSS custom property consumed by this component."
             },
             {
@@ -2406,6 +2418,22 @@
               "description": "Toolbar visibility state."
             },
             {
+              "kind": "field",
+              "name": "hasTitle",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether the active node title row is visible."
+            },
+            {
+              "kind": "field",
+              "name": "nodeTitle",
+              "type": {
+                "text": "string"
+              },
+              "description": "Active node title shown for nodes without their own visible header."
+            },
+            {
               "kind": "method",
               "name": "show",
               "type": {
@@ -2423,6 +2451,22 @@
             },
             {
               "kind": "method",
+              "name": "scheduleHide",
+              "type": {
+                "text": "function"
+              },
+              "description": "Defers hover-triggered hiding while pointer focus may move into the toolbar."
+            },
+            {
+              "kind": "method",
+              "name": "cancelHide",
+              "type": {
+                "text": "function"
+              },
+              "description": "Cancels a pending hover-triggered hide."
+            },
+            {
+              "kind": "method",
               "name": "updatePosition",
               "type": {
                 "text": "function"
@@ -2431,6 +2475,10 @@
             }
           ],
           "cssProperties": [
+            {
+              "name": "--sn-overlay-z-base",
+              "description": "Theme CSS custom property consumed by this component."
+            },
             {
               "name": "--sn-toolbar-bg",
               "description": "Theme CSS custom property consumed by this component."
@@ -2448,6 +2496,10 @@
               "description": "Theme CSS custom property consumed by this component."
             },
             {
+              "name": "--sn-toolbar-occlusion-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
               "name": "--sn-toolbar-active",
               "description": "Theme CSS custom property consumed by this component."
             },
@@ -2457,6 +2509,38 @@
             },
             {
               "name": "--sn-toolbar-danger-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-toolbar-z",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-toolbar-title-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-toolbar-title-font-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-toolbar-title-font-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-toolbar-title-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-toolbar-title-min-width",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-toolbar-title-max-width",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-toolbar-title-lines",
               "description": "Theme CSS custom property consumed by this component."
             },
             {

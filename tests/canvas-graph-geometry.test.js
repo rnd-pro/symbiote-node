@@ -174,7 +174,19 @@ describe('CanvasGraph theme contract', () => {
       'utf8',
     );
 
-    for (let token of ['--sn-bg', '--sn-conn-color', '--sn-conn-selected', '--sn-port-outline', '--sn-node-selected', '--sn-danger-color', '--sn-text']) {
+    for (let token of [
+      '--sn-bg',
+      '--sn-conn-color',
+      '--sn-conn-selected',
+      '--sn-port-outline',
+      '--sn-node-selected',
+      '--sn-danger-color',
+      '--sn-text',
+      '--sn-socket-size',
+      '--sn-socket-border-width',
+      '--sn-conn-dot-stroke-width',
+      '--sn-conn-dot-r',
+    ]) {
       assert.ok(source.includes(token), `CanvasConnectionRenderer must read ${token}`);
     }
 
@@ -191,6 +203,85 @@ describe('CanvasGraph theme contract', () => {
     }
 
     assert.ok(source.includes('resolveCssVars'), 'CanvasConnectionRenderer must resolve provider CSS variables before canvas drawing');
+  });
+
+  it('derives SVG connector dot geometry from the socket theme size', () => {
+    let canvasCss = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.css.js'), 'utf8');
+    let portCss = fs.readFileSync(path.join(PKG_ROOT, 'node/PortItem/PortItem.css.js'), 'utf8');
+    let socketCss = fs.readFileSync(path.join(PKG_ROOT, 'node/NodeSocket/NodeSocket.css.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+
+    assert.ok(canvasCss.includes('--sn-socket-size'), 'SVG connector dots must use --sn-socket-size');
+    assert.ok(canvasCss.includes('--sn-socket-border-width'), 'SVG connector dots must use --sn-socket-border-width');
+    assert.ok(portCss.includes('width: var(--sn-socket-size);'), 'port sockets must use --sn-socket-size');
+    assert.ok(socketCss.includes('width: var(--sn-socket-size);'), 'node-socket must use --sn-socket-size');
+    assert.ok(
+      theme.includes("'--sn-conn-dot-r': 'calc((var(--sn-socket-size) + var(--sn-conn-dot-stroke-width)) / 2)'"),
+      'default SVG connector radius must derive from the socket size token'
+    );
+  });
+
+  it('keeps SVG node labels inside the shared quick toolbar title row', () => {
+    let graphNodeCss = fs.readFileSync(path.join(PKG_ROOT, 'node/GraphNode/GraphNode.css.js'), 'utf8');
+    let quickToolbar = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.js'), 'utf8');
+    let quickToolbarTemplate = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.tpl.js'), 'utf8');
+    let quickToolbarCss = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.css.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+
+    for (let token of [
+      '--sn-toolbar-title-color',
+      '--sn-toolbar-title-font-size',
+      '--sn-toolbar-title-font-weight',
+      '--sn-toolbar-title-line-height',
+      '--sn-toolbar-title-min-width',
+      '--sn-toolbar-title-max-width',
+      '--sn-toolbar-title-lines',
+      '--sn-toolbar-occlusion-bg',
+    ]) {
+      assert.ok(quickToolbarCss.includes(token), `QuickToolbar title row must read ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_DARK must define ${token}`);
+    }
+
+    assert.ok(graphNodeCss.includes('& .sn-node-header {\n        display: none;'), 'SVG nodes must not render a separate hover header');
+    assert.ok(quickToolbarTemplate.includes('toolbar-title'), 'QuickToolbar must own the title row');
+    assert.ok(quickToolbar.includes("nodeEl.hasAttribute('data-svg-shape')"), 'SVG nodes must opt into the toolbar title row');
+    assert.ok(quickToolbar.includes("nodeEl.hasAttribute('data-header-hidden')"), 'explicitly headerless nodes must opt into the toolbar title row');
+    assert.ok(quickToolbar.includes('#fitToolbarWidth'), 'QuickToolbar must fit title width to content');
+    assert.ok(quickToolbar.includes('#measureTitleTextWidth'), 'QuickToolbar must measure wrapped title width');
+    assert.ok(quickToolbarCss.includes('-webkit-line-clamp'), 'QuickToolbar title row must clamp long labels');
+    assert.ok(quickToolbarCss.includes('--sn-toolbar-fit-width'), 'QuickToolbar must expose a measured width custom property');
+    assert.ok(quickToolbarCss.includes('&[data-has-title] .toolbar'), 'QuickToolbar title min width must apply only when a title is visible');
+    assert.ok(quickToolbar.includes('toolbarHeight + QuickToolbar.GAP_Y'), 'toolbar position must account for the title row height');
+  });
+
+  it('shows node quick toolbar on hover and keeps overlays above node sockets', () => {
+    let nodeCanvas = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.js'), 'utf8');
+    let nodeCanvasTemplate = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.tpl.js'), 'utf8');
+    let nodeViewManager = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeViewManager.js'), 'utf8');
+    let quickToolbar = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.js'), 'utf8');
+    let quickToolbarCss = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.css.js'), 'utf8');
+    let contextMenu = fs.readFileSync(path.join(PKG_ROOT, 'menu/ContextMenu/ContextMenu.js'), 'utf8');
+    let nodeCallout = fs.readFileSync(path.join(PKG_ROOT, 'node/NodeCallout/NodeCallout.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+
+    assert.ok(nodeViewManager.includes('onNodePointerEnter'), 'NodeViewManager must expose node hover entry callbacks');
+    assert.ok(nodeViewManager.includes('pointerenter'), 'NodeViewManager must listen for pointerenter on graph nodes');
+    assert.ok(nodeCanvas.includes('_handleNodePointerEnter'), 'NodeCanvas must show quick toolbar from node hover');
+    assert.ok(nodeCanvas.includes('scheduleHide?.'), 'NodeCanvas must defer toolbar hide when pointer leaves a node');
+    assert.ok(
+      nodeCanvasTemplate.includes('</div>\n    <quick-toolbar ref="quickToolbar" hidden></quick-toolbar>'),
+      'QuickToolbar must render as a screen-space overlay outside transformed canvas content'
+    );
+    assert.ok(quickToolbar.includes('getBoundingClientRect'), 'QuickToolbar must position from rendered node bounds');
+    assert.ok(quickToolbar.includes('mountOverlayToDocument'), 'QuickToolbar must escape clipped canvas/layout layers');
+    assert.ok(quickToolbar.includes('data-overlay-portal'), 'QuickToolbar must switch to screen-space positioning when portaled');
+    assert.ok(quickToolbar.includes('bringOverlayToFront'), 'QuickToolbar must use the shared overlay stack');
+    assert.ok(contextMenu.includes('bringOverlayToFront'), 'ContextMenu must use the shared overlay stack');
+    assert.ok(nodeCallout.includes('bringOverlayToFront'), 'NodeCallout must use the shared overlay stack');
+    assert.ok(quickToolbarCss.includes('position: fixed'), 'Portaled QuickToolbar must not be clipped by canvas overflow');
+    assert.ok(quickToolbarCss.includes('--sn-toolbar-z'), 'QuickToolbar must read its z-index from theme tokens');
+    assert.ok(theme.includes("'--sn-overlay-z-base': '20000'"), 'DEFAULT_DARK must define the overlay z-index base');
+    assert.ok(theme.includes("'--sn-toolbar-z': 'var(--sn-overlay-z-base)'"), 'DEFAULT_DARK must theme toolbar z-index');
   });
 
   it('keeps minimap canvas colors in the default theme contract', () => {

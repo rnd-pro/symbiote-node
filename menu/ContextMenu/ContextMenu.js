@@ -9,6 +9,7 @@
 
 import Symbiote from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
+import { bringOverlayToFront } from '../../ui/overlay-stack.js';
 import { template, ctxItemTemplate } from './ContextMenu.tpl.js';
 import { styles } from './ContextMenu.css.js';
 
@@ -58,6 +59,7 @@ export class ContextMenu extends Symbiote {
       menu.style.left = `${x}px`;
       menu.style.top = `${y}px`;
     }
+    bringOverlayToFront(this);
     this.$.visible = true;
   }
 

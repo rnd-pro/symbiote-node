@@ -56,10 +56,10 @@ const CSS_TOKEN_CLASSIFIERS = [
   { kind: 'source-accent', group: 'color', pattern: /^--sn-hue-/ },
   { kind: 'color-cascade', group: 'color', pattern: /^--sn-(sat($|-)|lit-|alpha-)/ },
   { kind: 'color-cascade', group: 'accent', pattern: /^--sn-accent-/ },
-  { kind: 'semantic-alias', group: 'surface', pattern: /^--sn-(bg|panel-bg|surface|border|node-bg|node-border|node-selected|node-accent|node-hover|node-header-bg|node-radius|node-shadow|node-min-width|node-max-width|node-border-width|node-font-size|node-items-|node-callout-|node-active-border|node-error-frame-|text|text-dim|bg-overlay|shadow-color)/ },
+  { kind: 'semantic-alias', group: 'surface', pattern: /^--sn-(bg|panel-bg|surface|border|node-bg|node-border|node-selected|node-accent|node-hover|node-header-bg|node-radius|node-shadow|node-min-width|node-max-width|node-border-width|node-font-size|node-items-|node-callout-|node-active-border|node-error-frame-|text|text-dim|bg-overlay|overlay-z-base|shadow-color)/ },
   { kind: 'semantic-alias', group: 'status', pattern: /^--sn-(success|warning|danger|status|cat|subgraph|accent-warn|message-event)-/ },
   { kind: 'semantic-alias', group: 'provider-accent', pattern: /^--sn-provider-/ },
-  { kind: 'component-alias', group: 'layout', pattern: /^--sn-(layout|portal-bridge)-/ },
+  { kind: 'component-alias', group: 'layout', pattern: /^--sn-(layout|portal-bridge|panel-menu)-/ },
   { kind: 'component-alias', group: 'xr', pattern: /^--sn-xr-/ },
   { kind: 'component-alias', group: 'surface', pattern: /^--sn-(card|dialog|output-preview)-/ },
   { kind: 'component-alias', group: 'data-table', pattern: /^--sn-data-table-/ },
@@ -115,13 +115,13 @@ export let THEME_ELEMENT_GROUPS = [
   {
     name: 'panel',
     description: 'Framed layout surfaces such as sidebars, graph panels, source panes, and dialogs.',
-    tokens: ['--sn-panel-bg', '--sn-surface', '--sn-border', '--sn-card-bg', '--sn-card-border', '--sn-card-radius', '--sn-card-padding', '--sn-dialog-bg', '--sn-dialog-border', '--sn-dialog-radius', '--sn-dialog-shadow', '--sn-dialog-backdrop', '--sn-node-border', '--sn-node-shadow', '--sn-node-radius'],
+    tokens: ['--sn-panel-bg', '--sn-surface', '--sn-border', '--sn-card-bg', '--sn-card-border', '--sn-card-radius', '--sn-card-padding', '--sn-dialog-bg', '--sn-dialog-border', '--sn-dialog-radius', '--sn-dialog-shadow', '--sn-dialog-backdrop', '--sn-node-border', '--sn-node-shadow', '--sn-node-radius', '--sn-overlay-z-base'],
     usedBy: ['panel-layout', 'sn-card', 'source-viewer', 'source-editor', 'chat-transcript', 'sn-loading-overlay'],
   },
   {
     name: 'control',
     description: 'Interactive controls including buttons, icon buttons, toolbar actions, labels, inputs, selects, and textareas.',
-    tokens: ['--sn-button-bg', '--sn-button-border', '--sn-button-color', '--sn-button-hover-border', '--sn-button-primary-bg', '--sn-button-danger-color', '--sn-field-control-bg', '--sn-field-control-border', '--sn-field-control-subtle-border', '--sn-field-label-color', '--sn-field-control-focus-border', '--sn-field-select-indicator', '--sn-field-toggle-bg', '--sn-field-toggle-thumb-bg', '--sn-field-toggle-thumb-active-bg', '--sn-toolbar-bg', '--sn-toolbar-border', '--sn-toolbar-color', '--sn-toolbar-hover', '--sn-effect-hover-transition', '--sn-effect-focus-ring'],
+    tokens: ['--sn-button-bg', '--sn-button-border', '--sn-button-color', '--sn-button-hover-border', '--sn-button-primary-bg', '--sn-button-danger-color', '--sn-field-control-bg', '--sn-field-control-border', '--sn-field-control-subtle-border', '--sn-field-label-color', '--sn-field-control-focus-border', '--sn-field-select-indicator', '--sn-field-toggle-bg', '--sn-field-toggle-thumb-bg', '--sn-field-toggle-thumb-active-bg', '--sn-toolbar-bg', '--sn-toolbar-border', '--sn-toolbar-color', '--sn-toolbar-hover', '--sn-toolbar-occlusion-bg', '--sn-toolbar-z', '--sn-toolbar-title-color', '--sn-toolbar-title-min-width', '--sn-toolbar-title-max-width', '--sn-toolbar-title-lines', '--sn-effect-hover-transition', '--sn-effect-focus-ring'],
     usedBy: ['sn-button', 'sn-field', 'project-tabs', 'source-viewer', 'chat-composer'],
   },
   {
@@ -1239,6 +1239,14 @@ export let THEME_TOKENS = {
         "$type": "number",
         "$value": "500"
       },
+      "overlayZBase": {
+        "$type": "number",
+        "$value": "20000"
+      },
+      "toolbarOcclusionBackground": {
+        "$type": "color",
+        "$value": "var(--sn-panel-bg)"
+      },
       "loadingLabelSize": {
         "$type": "dimension",
         "$value": "11px"
@@ -1281,11 +1289,11 @@ export let THEME_TOKENS = {
       },
       "connectionDotStrokeWidth": {
         "$type": "dimension",
-        "$value": "1.5"
+        "$value": "var(--sn-socket-border-width)"
       },
       "connectionDotRadius": {
         "$type": "dimension",
-        "$value": "3"
+        "$value": "calc((var(--sn-socket-size) + var(--sn-conn-dot-stroke-width)) / 2)"
       },
       "graphExplorerOverlayZ": {
         "$type": "number",

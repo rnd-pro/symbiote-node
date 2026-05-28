@@ -715,6 +715,14 @@
       "$type": "number",
       "$value": "500"
     },
+    "overlayZBase": {
+      "$type": "number",
+      "$value": "20000"
+    },
+    "toolbarOcclusionBackground": {
+      "$type": "color",
+      "$value": "var(--sn-panel-bg)"
+    },
     "loadingLabelSize": {
       "$type": "dimension",
       "$value": "11px"
@@ -757,11 +765,11 @@
     },
     "connectionDotStrokeWidth": {
       "$type": "dimension",
-      "$value": "1.5"
+      "$value": "var(--sn-socket-border-width)"
     },
     "connectionDotRadius": {
       "$type": "dimension",
-      "$value": "3"
+      "$value": "calc((var(--sn-socket-size) + var(--sn-conn-dot-stroke-width)) / 2)"
     },
     "graphExplorerOverlayZ": {
       "$type": "number",

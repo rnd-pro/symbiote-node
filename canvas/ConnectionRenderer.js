@@ -855,7 +855,7 @@ export class ConnectionRenderer {
     if (!dot) {
       dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       dot.setAttribute('data-conn-dot', dotId);
-      dot.setAttribute('r', '5');
+      dot.setAttribute('r', '7');
       this.#dotLayer.appendChild(dot);
     }
     dot.setAttribute('cx', x);
@@ -1081,7 +1081,7 @@ export class ConnectionRenderer {
     dot.setAttribute('data-node-id', nodeId);
     dot.setAttribute('data-port-key', key);
     dot.setAttribute('data-port-side', side);
-    dot.setAttribute('r', '4');
+    dot.setAttribute('r', '7');
     dot.setAttribute('cx', wx);
     dot.setAttribute('cy', wy);
     dot.style.pointerEvents = 'auto';

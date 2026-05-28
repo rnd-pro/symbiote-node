@@ -15,8 +15,30 @@ import { animateOut } from '@symbiotejs/symbiote';
 import { getShape } from '../shapes/index.js';
 import { ensureMaterialSymbols } from '../icons/MaterialSymbols.js';
 
+let svgMediaClipSeq = 0;
+
 function readCssToken(source, token) {
   return getComputedStyle(source).getPropertyValue(token).trim();
+}
+
+function setSvgMediaClip(el, svg, shape) {
+  let [vx, vy, vw, vh] = shape.viewBox.split(' ').map(Number);
+  if (!Number.isFinite(vw) || !Number.isFinite(vh) || vw <= 0 || vh <= 0) return;
+
+  let clipId = `sn-node-media-clip-${++svgMediaClipSeq}`;
+  let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  let clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+  let clipShape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+  clipPath.setAttribute('id', clipId);
+  clipPath.setAttribute('clipPathUnits', 'objectBoundingBox');
+  clipShape.setAttribute('d', shape.pathData);
+  clipShape.setAttribute('transform', `matrix(${1 / vw} 0 0 ${1 / vh} ${-vx / vw} ${-vy / vh})`);
+
+  clipPath.appendChild(clipShape);
+  defs.appendChild(clipPath);
+  svg.prepend(defs);
+  el.style.setProperty('--sn-svg-shape-media-clip', `url(#${clipId})`);
 }
 
 export class NodeViewManager {
@@ -43,6 +65,12 @@ export class NodeViewManager {
 
   /** @type {function} */
   #onNodeClick;
+
+  /** @type {function|null} */
+  #onNodePointerEnter = null;
+
+  /** @type {function|null} */
+  #onNodePointerLeave = null;
 
   /** @type {Object} */
   #canvas;
@@ -75,6 +103,8 @@ export class NodeViewManager {
    * @param {function} config.setNodePosition
    * @param {function} config.animateNodeToPosition
    * @param {function} config.onNodeClick
+   * @param {function} [config.onNodePointerEnter]
+   * @param {function} [config.onNodePointerLeave]
    * @param {HTMLElement} config.nodesLayer
    * @param {Object} config.canvas - NodeCanvas reference for socket registration
    */
@@ -87,6 +117,8 @@ export class NodeViewManager {
     setNodePosition,
     animateNodeToPosition,
     onNodeClick,
+    onNodePointerEnter,
+    onNodePointerLeave,
     nodesLayer,
     canvas,
     onSvgShapeReady,
@@ -99,6 +131,8 @@ export class NodeViewManager {
     this.#setNodePosition = setNodePosition;
     this.#animateNodeToPosition = animateNodeToPosition;
     this.#onNodeClick = onNodeClick;
+    this.#onNodePointerEnter = onNodePointerEnter || null;
+    this.#onNodePointerLeave = onNodePointerLeave || null;
     this.#nodesLayer = nodesLayer;
     this.#canvas = canvas;
     this.#onSvgShapeReady = onSvgShapeReady || null;
@@ -184,6 +218,12 @@ export class NodeViewManager {
     el.toggleAttribute('data-readonly', this.#readonly);
     el.toggleAttribute('data-readonly-node-dragging', this.#readonlyNodeDragging);
     el._canvas = this.#canvas;
+    el.addEventListener('pointerenter', (event) => {
+      this.#onNodePointerEnter?.(node.id, el, event);
+    });
+    el.addEventListener('pointerleave', (event) => {
+      this.#onNodePointerLeave?.(node.id, el, event);
+    });
 
     let drag = new Drag();
     let dragStart = null;
@@ -277,6 +317,7 @@ export class NodeViewManager {
         path.setAttribute('stroke-width', 'var(--sn-shape-stroke-width, 0.4)');
         path.setAttribute('stroke-linejoin', 'round');
         svg.appendChild(path);
+        setSvgMediaClip(el, svg, shape);
         el.prepend(svg);
         el.setAttribute('data-svg-shape', shape.name);
 

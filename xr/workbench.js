@@ -299,6 +299,7 @@ export function createXRWorkbenchDiagnosticPayload(options = {}) {
       reason: launch.reason || null,
     },
     clientId: options.clientId || null,
+    attemptId: options.attemptId || details.attemptId || null,
     surface: {
       surfaceKind: surface.surfaceKind || null,
       entrypoint: surface.entrypoint || null,

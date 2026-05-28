@@ -1030,6 +1030,7 @@ describe('WebXR provider adapter', () => {
       modes: { immersiveVr: true },
       launch: { canLaunch: false, mode: 'immersive-vr', reason: 'request-failed' },
       clientId: 'client-1',
+      attemptId: 'client-1:1',
       surface: {
         surfaceKind: 'production',
         entrypoint: 'spatial-layout',
@@ -1064,6 +1065,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(payload.surface.projectId, 'agent-portal');
     assert.equal(payload.surface.targetSection, 'graph');
     assert.equal(payload.surface.panelContentKind, 'portal-runtime-layout');
+    assert.equal(payload.attemptId, 'client-1:1');
     assert.deepEqual(payload.details.controller, { mode: 'immersive-vr' });
     assert.deepEqual(payload.details.htmlCanvas, { supported: false });
     assert.deepEqual(payload.details.texture, { blocked: true });
@@ -4281,19 +4283,22 @@ describe('WebXR provider adapter', () => {
         addedControllers.push(item);
       },
     };
+    let diagnosticEvents = [];
     let controllerApi = createXRThreeSessionController({
       globalThis: target,
       adapter,
       onFrame() {
         onFrameCalls += 1;
       },
-      onDiagnostic(event) {
+      onDiagnostic(event, details) {
         events.push(event);
+        diagnosticEvents.push({ event, details });
       },
     });
 
     let result = await controllerApi.start('immersive-vr', {
       target: { ok: true, renderer, scene, camera: {} },
+      attemptId: 'spatial-client:2',
       domOverlayRoot: {},
       referenceSpaceType: 'local-floor',
     });
@@ -4326,6 +4331,8 @@ describe('WebXR provider adapter', () => {
     assert.equal(addedControllers.length, 2);
     assert.ok(events.includes('spatial-three-session-start-requested'));
     assert.ok(events.includes('spatial-three-session-started'));
+    assert.equal(diagnosticEvents.find((item) => item.event === 'spatial-three-session-start-requested')?.details?.attemptId, 'spatial-client:2');
+    assert.equal(diagnosticEvents.find((item) => item.event === 'spatial-three-session-started')?.details?.attemptId, 'spatial-client:2');
     assert.ok(events.includes('spatial-three-drag-start'));
     assert.ok(events.includes('spatial-three-drag-end'));
     assert.ok(events.includes('spatial-three-session-ended'));

@@ -2624,6 +2624,7 @@ export function createXRThreeSessionController(options = {}) {
       diagnostics.viewerPoseCaptureReason = null;
       diagnostics.viewerPoseRootTransform = null;
     emit('spatial-three-session-start-requested', {
+      attemptId: startOptions.attemptId || null,
       requestedMode: mode,
       sessionOptions: {
         referenceSpaceType: diagnostics.requestedReferenceSpaceType,
@@ -2643,6 +2644,8 @@ export function createXRThreeSessionController(options = {}) {
         diagnostics.status = 'failed';
         diagnostics.lastError = sessionResult.reason || 'three-session-failed';
         emit('spatial-three-session-failed', {
+          attemptId: startOptions.attemptId || null,
+          failureStage: 'request-session',
           error: diagnostics.lastError,
           requestedMode: mode,
         });
@@ -2654,6 +2657,8 @@ export function createXRThreeSessionController(options = {}) {
         diagnostics.status = 'failed';
         diagnostics.lastError = setSession.reason || 'three-session-failed';
         emit('spatial-three-session-failed', {
+          attemptId: startOptions.attemptId || null,
+          failureStage: 'set-session',
           error: diagnostics.lastError,
           requestedMode: mode,
         });
@@ -2678,12 +2683,17 @@ export function createXRThreeSessionController(options = {}) {
         diagnostics.frames += 1;
       });
       activeSession.addEventListener?.('end', cleanupSession, { once: true });
-      emit('spatial-three-session-started', { mode });
+      emit('spatial-three-session-started', {
+        attemptId: startOptions.attemptId || null,
+        mode,
+      });
       return { handled: true, ok: true, session: activeSession, diagnostics: getDiagnostics() };
     } catch (error) {
       diagnostics.status = 'failed';
       diagnostics.lastError = error?.name || 'three-session-failed';
       emit('spatial-three-session-failed', {
+        attemptId: startOptions.attemptId || null,
+        failureStage: 'exception',
         error: diagnostics.lastError,
         message: error?.message || '',
         requestedMode: mode,

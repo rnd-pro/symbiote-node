@@ -158,7 +158,10 @@ export function createXRSpatialWorkbenchSummary(options = {}) {
   let threeSessionDiagnostics = objectOr(options.threeSessionDiagnostics);
   let threeDiagnostics = objectOr(options.threeDiagnostics || threeSessionDiagnostics.adapter);
   let htmlCanvasSupport = objectOr(options.htmlCanvasSupport);
-  let htmlDiagnostics = objectOr(htmlCanvasSupport.diagnostics || options.htmlCanvasDiagnostics);
+  let htmlDiagnostics = objectOr({
+    ...objectOr(htmlCanvasSupport.diagnostics),
+    ...objectOr(options.htmlCanvasDiagnostics),
+  });
   let themeSnapshot = objectOr(options.themeSnapshot);
   let textureGate = objectOr(options.textureGate);
   let sceneQuality = objectOr(options.sceneQuality);
@@ -224,6 +227,7 @@ export function createXRSpatialWorkbenchSummary(options = {}) {
       recommendation: htmlDiagnostics.recommendation || null,
       availability: htmlDiagnostics.availability || null,
       textureUploadAvailable: Boolean(htmlDiagnostics.textureUploadAvailable),
+      threeTexture: htmlDiagnostics.threeTexture || null,
       preferredMode: htmlCanvasSupport.preferredMode || null,
     },
     canvasPreview: options.canvasPreviewResult || null,

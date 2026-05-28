@@ -314,6 +314,18 @@ describe('WebXR provider adapter', () => {
   });
 
   it('summarizes Three HTMLTexture capability separately from browser HTML-in-Canvas support', () => {
+    let unavailable = createXRThreeTextureCapabilitySummary({
+      REVISION: 184,
+      HTMLTexture: class {},
+    }, {
+      modes: { webgl: false },
+      diagnostics: { textureUploadAvailable: false },
+    });
+    assert.equal(unavailable.ready, false);
+    assert.equal(unavailable.htmlTextureAvailable, true);
+    assert.equal(unavailable.htmlTextureUsable, false);
+    assert.equal(unavailable.reason, 'html-in-canvas-texture-upload-missing');
+
     let blocked = createXRThreeTextureCapabilitySummary({ REVISION: 170 }, {
       modes: { webgl: true },
       diagnostics: { textureUploadAvailable: true },
@@ -322,6 +334,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(blocked.threeRevision, '170');
     assert.equal(blocked.htmlTextureRequired, true);
     assert.equal(blocked.htmlTextureAvailable, false);
+    assert.equal(blocked.htmlTextureUsable, false);
     assert.equal(blocked.reason, 'three-html-texture-api-missing');
 
     let ready = createXRThreeTextureCapabilitySummary({
@@ -334,6 +347,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(ready.ready, true);
     assert.equal(ready.threeRevision, '184');
     assert.equal(ready.htmlTextureAvailable, true);
+    assert.equal(ready.htmlTextureUsable, true);
     assert.equal(ready.reason, null);
   });
 

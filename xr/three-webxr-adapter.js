@@ -861,9 +861,12 @@ export function createXRThreeTextureCapabilitySummary(THREE, support = {}) {
     modes.webgl === true ||
     modes.webgpu === true;
   let htmlTextureAvailable = typeof THREE?.HTMLTexture === 'function';
+  let htmlTextureUsable = Boolean(htmlTextureAvailable && textureUploadAvailable);
   let threeRevision = THREE?.REVISION == null ? null : String(THREE.REVISION);
   let htmlTextureRequired = textureUploadAvailable;
-  let reason = htmlTextureRequired && !htmlTextureAvailable
+  let reason = !textureUploadAvailable
+    ? 'html-in-canvas-texture-upload-missing'
+    : htmlTextureRequired && !htmlTextureAvailable
     ? 'three-html-texture-api-missing'
     : null;
   return {
@@ -871,6 +874,7 @@ export function createXRThreeTextureCapabilitySummary(THREE, support = {}) {
     renderer: 'three',
     threeRevision,
     htmlTextureAvailable,
+    htmlTextureUsable,
     htmlTextureRequired,
     textureUploadAvailable,
     modes: {
@@ -878,7 +882,7 @@ export function createXRThreeTextureCapabilitySummary(THREE, support = {}) {
       webgpu: modes.webgpu === true,
       canvas2d: modes.canvas2d === true,
     },
-    ready: !reason,
+    ready: htmlTextureUsable,
     reason,
   };
 }

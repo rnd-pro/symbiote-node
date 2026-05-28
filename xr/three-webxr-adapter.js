@@ -525,6 +525,14 @@ function createMaterial(THREE, panel, options = {}) {
     material.backgroundColor ||
     panel.color ||
     0x243244;
+  if (typeof THREE.MeshBasicMaterial === 'function') {
+    return new THREE.MeshBasicMaterial({
+      color,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: Number(options.opacity ?? 0.94),
+    });
+  }
   return new THREE.MeshStandardMaterial({
     color,
     roughness: Number(options.roughness ?? 0.72),
@@ -1318,6 +1326,10 @@ export function createXRThreePanelTextureBridge(options = {}) {
   return {
     applyPanelTexture,
     getSupport,
+    dispose() {
+      records.clear();
+      options.textureResolverDispose?.();
+    },
     getState() {
       return {
         version: 'xr-three-panel-texture-bridge-v1',
@@ -1421,9 +1433,10 @@ export function createXRThreePanelSceneAdapter(options = {}) {
     let sceneTarget = rootGroup || scene;
     let diagnosticPanelIds = [];
     let hiddenPanelIds = [];
+    let bridge = setOptions.textureBridge || textureBridge;
+    bridge?.dispose?.();
     for (let panel of xrScene?.panels || []) {
       let mesh = createPanelMesh(THREE, panel, { ...options, ...setOptions });
-      let bridge = setOptions.textureBridge || textureBridge;
       if (bridge?.applyPanelTexture) {
         let texture = bridge.applyPanelTexture(mesh, panel, setOptions.textureOptions || {});
         textureRecords.set(panel.id, texture);

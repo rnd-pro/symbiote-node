@@ -2682,6 +2682,130 @@ describe('WebXR provider adapter', () => {
     assert.equal(bridge.getState().records[0].stage, 'three-material-applied');
   });
 
+  it('uses unlit basic materials for readable XR UI panels when Three supports them', () => {
+    class FakeScene {
+      constructor() {
+        this.objects = [];
+      }
+      add(object) {
+        this.objects.push(object);
+      }
+      remove() {}
+    }
+    class FakeMaterial {
+      constructor(options) {
+        this.options = options;
+        this.type = 'standard';
+        this.color = { setHex(value) { this.hex = value; } };
+      }
+    }
+    class FakeBasicMaterial extends FakeMaterial {
+      constructor(options) {
+        super(options);
+        this.type = 'basic';
+      }
+    }
+    class FakeMesh {
+      constructor(geometry, material) {
+        this.geometry = geometry;
+        this.material = material;
+        this.userData = {};
+        this.position = { fromArray(values) { this.values = values; } };
+        this.rotation = { set(...values) { this.values = values; } };
+      }
+    }
+    let THREE = {
+      Scene: FakeScene,
+      PlaneGeometry: class {},
+      MeshStandardMaterial: FakeMaterial,
+      MeshBasicMaterial: FakeBasicMaterial,
+      Mesh: FakeMesh,
+      Raycaster: class {},
+      WebGLRenderer: class {},
+      PerspectiveCamera: class {},
+      DoubleSide: 'DoubleSide',
+    };
+    let adapter = createXRThreePanelSceneAdapter({ THREE });
+    adapter.setScene({
+      panels: [
+        { id: 'chat', size: [1.2, 0.7], position: [0, 1.3, -1.8], rotation: [0, 0, 0] },
+      ],
+    });
+
+    let mesh = adapter.getPanelMesh('chat');
+    assert.equal(mesh.material.type, 'basic');
+    assert.equal(mesh.material.options.transparent, true);
+  });
+
+  it('resets stale texture bridge records when replacing a Three XR scene', () => {
+    class FakeScene {
+      constructor() {
+        this.objects = [];
+      }
+      add(object) {
+        this.objects.push(object);
+      }
+      remove() {}
+    }
+    class FakeMaterial {
+      constructor() {
+        this.color = { setHex(value) { this.hex = value; } };
+      }
+    }
+    class FakeMesh {
+      constructor(geometry, material) {
+        this.geometry = geometry;
+        this.material = material;
+        this.userData = {};
+        this.position = { fromArray(values) { this.values = values; } };
+        this.rotation = { set(...values) { this.values = values; } };
+      }
+    }
+    let disposed = 0;
+    let THREE = {
+      Scene: FakeScene,
+      PlaneGeometry: class {},
+      MeshStandardMaterial: FakeMaterial,
+      Mesh: FakeMesh,
+      Raycaster: class {},
+      WebGLRenderer: class {},
+      PerspectiveCamera: class {},
+      DoubleSide: 'DoubleSide',
+    };
+    let bridge = createXRThreePanelTextureBridge({
+      htmlCanvasRenderer: {
+        preparePanel(_element, panel) {
+          return { prepared: true, panelId: panel.id, mode: 'webgl', supported: true, reason: null };
+        },
+        getSupport() {
+          return {
+            supported: true,
+            preferredMode: 'webgl',
+            modes: { webgl: true },
+            diagnostics: { supported: true, mode: 'webgl', missing: [], blockingMissing: [] },
+          };
+        },
+      },
+      getPanelElement(panelId) {
+        return { id: `${panelId}-element` };
+      },
+      textureResolver({ panel }) {
+        return { id: `${panel.id}-texture`, isTexture: true };
+      },
+      textureResolverDispose() {
+        disposed += 1;
+      },
+    });
+    let adapter = createXRThreePanelSceneAdapter({ THREE, textureBridge: bridge });
+
+    adapter.setScene({ panels: [{ id: 'old' }] });
+    assert.deepEqual(bridge.getState().panelIds, ['old']);
+    adapter.setScene({ panels: [{ id: 'next' }] });
+
+    assert.deepEqual(bridge.getState().panelIds, ['next']);
+    assert.equal(disposed, 2);
+  });
+
   it('passes the direct source canvas to Three texture resolution', () => {
     let sourceCanvas = { tagName: 'CANVAS', width: 0, height: 0 };
     let element = { id: 'chat-element', parentElement: sourceCanvas };

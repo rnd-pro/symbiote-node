@@ -1,5 +1,4 @@
-const MATERIAL_SYMBOLS_BASE_URL =
-  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200';
+const MATERIAL_SYMBOLS_LOCAL_URL = new URL('./material-symbols.css', import.meta.url).href;
 
 const ICON_NAME_RE = /^[a-z0-9_]+$/;
 
@@ -16,7 +15,7 @@ const config = {
 
 /**
  * Configure Material Symbols loading for host apps with strict CSP, privacy,
- * or self-hosted font requirements.
+ * or alternative font delivery requirements.
  * @param {{ autoload?: boolean, hrefBuilder?: ((iconNames: string[]) => string)|null }} options
  */
 export function configureMaterialSymbols(options = {}) {
@@ -26,8 +25,9 @@ export function configureMaterialSymbols(options = {}) {
 
 /**
  * Ensure Material Symbols ligatures used by built-in UI are available.
- * Host pages may load a narrow `icon_names` subset, so components that own
- * fixed icons must add their own subset instead of relying on page-level lists.
+ * Components declare the icons they own so hosts can still use a custom
+ * `hrefBuilder` for subset font loading. The default provider path is a
+ * self-hosted font to keep public demos and embedded browsers deterministic.
  * @param {string[]} iconNames
  */
 export function ensureMaterialSymbols(iconNames) {
@@ -47,7 +47,7 @@ export function ensureMaterialSymbols(iconNames) {
   const iconList = [...loadedIcons].sort();
   const href = config.hrefBuilder
     ? config.hrefBuilder(iconList)
-    : `${MATERIAL_SYMBOLS_BASE_URL}&icon_names=${iconList.map(encodeURIComponent).join(',')}`;
+    : MATERIAL_SYMBOLS_LOCAL_URL;
   if (!href) return;
 
   let link = document.querySelector(LINK_SELECTOR);

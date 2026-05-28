@@ -628,7 +628,7 @@ canvas.setPathStyle('pcb');
   path-style="pcb"></cross-layout-portal-bridge>
 ```
 
-Browser UI components automatically load Material Symbols subsets they own. Hosts with strict CSP or self-hosted fonts can configure this through `symbiote-node/ui`:
+Browser UI components load the provider-hosted Material Symbols stylesheet by default, so host apps do not depend on Google Fonts at runtime. Hosts with strict CSP or custom font delivery can configure this through `symbiote-node/ui`:
 
 ```javascript
 import { configureMaterialSymbols } from 'symbiote-node/ui';

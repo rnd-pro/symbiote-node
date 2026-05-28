@@ -243,7 +243,7 @@ export class CanvasConnectionRenderer {
       };
     }
 
-    let nodeModel = this.#editor?.getNode(nodeEl.id);
+    let nodeModel = this.#editor?.getNode(nodeEl.getAttribute?.('node-id') || nodeEl.id);
     let portIndex = 0;
     let totalPorts = 1;
 
@@ -259,6 +259,27 @@ export class CanvasConnectionRenderer {
 
 
     let shapeConfig = getShape(nodeModel?.shape);
+    if (shapeConfig && shapeConfig.pathData && targetPos && shapeConfig.getEdgePoint) {
+      let portsData = side === 'output' ? nodeModel?.outputs : nodeModel?.inputs;
+      let keys = portsData ? Object.keys(portsData) : [portKey];
+      let index = Math.max(0, keys.indexOf(portKey));
+      let total = Math.max(1, keys.length);
+      let nodePos = nodeEl._position || { x: 0, y: 0 };
+      let cx = nodePos.x + w / 2;
+      let cy = nodePos.y + h / 2;
+      let baseAngle = Math.atan2(targetPos.y - cy, targetPos.x - cx);
+      let sideGap = Math.PI / 6;
+      let angle = baseAngle + (side === 'output' ? -sideGap : sideGap);
+      let shouldReverse = side === 'output' ? targetPos.y < cy : targetPos.y > cy;
+      let effectiveIndex = shouldReverse ? total - 1 - index : index;
+      if (total > 1) {
+        angle += (effectiveIndex - (total - 1) / 2) * ((2 * Math.PI) / (total * 2));
+      }
+      let step = Math.PI / 12;
+      angle = Math.round(angle / step) * step;
+      return shapeConfig.getEdgePoint(angle, { width: w, height: h });
+    }
+
     if (shapeConfig && shapeConfig.pathData && shapeConfig.getSocketPosition) {
       let pos = shapeConfig.getSocketPosition(
         side,

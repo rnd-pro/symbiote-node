@@ -97,8 +97,8 @@ export class CrossLayoutPortalBridge extends HTMLElement {
   #onWindowChange = () => this.requestUpdate();
 
   #render() {
-    const source = document.querySelector(this.getAttribute('source-selector') || '');
-    const target = document.querySelector(this.getAttribute('target-selector') || '');
+    const source = this.#endpoint('source-selector');
+    const target = this.#endpoint('target-selector');
 
     if (!source || !target) {
       this.hidden = true;
@@ -119,6 +119,23 @@ export class CrossLayoutPortalBridge extends HTMLElement {
     this.#sourceDot.setAttribute('cy', String(start.y));
     this.#targetDot.setAttribute('cx', String(end.x));
     this.#targetDot.setAttribute('cy', String(end.y));
+  }
+
+  #endpoint(attributeName) {
+    const selector = this.getAttribute(attributeName) || '';
+    const invalidAttribute = `data-${attributeName}-invalid`;
+    if (!selector) {
+      this.toggleAttribute(invalidAttribute, false);
+      return null;
+    }
+    try {
+      const endpoint = document.querySelector(selector);
+      this.toggleAttribute(invalidAttribute, false);
+      return endpoint;
+    } catch {
+      this.toggleAttribute(invalidAttribute, true);
+      return null;
+    }
   }
 
   #getPath(start, end, style) {

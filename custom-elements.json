@@ -124,6 +124,149 @@
       ]
     },
     {
+      "path": "node/NodeCallout/NodeCallout.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "NodeCallout",
+          "tagName": "node-callout",
+          "description": "Floating node callout anchored to a graph node or DOM element.",
+          "attributes": [
+            {
+              "name": "anchor-node-id",
+              "type": "string",
+              "description": "Graph node id used as the anchor element."
+            },
+            {
+              "name": "anchor-selector",
+              "type": "string",
+              "description": "CSS selector for the anchor element."
+            },
+            {
+              "name": "placement",
+              "type": "string",
+              "description": "Callout placement: top, bottom, left, or right."
+            },
+            {
+              "name": "offset",
+              "type": "number",
+              "description": "Distance in pixels between the callout and anchor."
+            },
+            {
+              "name": "trigger",
+              "type": "string",
+              "description": "Visibility trigger: always or hover."
+            },
+            {
+              "name": "text",
+              "type": "string",
+              "description": "Optional plain text content when no slotted content is used."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "anchorElement",
+              "type": {
+                "text": "Element|null"
+              },
+              "description": "Direct DOM element used as the callout anchor."
+            },
+            {
+              "kind": "method",
+              "name": "show",
+              "type": {
+                "text": "function"
+              },
+              "description": "Shows the callout."
+            },
+            {
+              "kind": "method",
+              "name": "hide",
+              "type": {
+                "text": "function"
+              },
+              "description": "Hides the callout."
+            },
+            {
+              "kind": "method",
+              "name": "requestUpdate",
+              "type": {
+                "text": "function"
+              },
+              "description": "Refreshes callout geometry."
+            }
+          ],
+          "slots": [
+            {
+              "name": "default",
+              "description": "Callout content."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--sn-node-callout-z",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-border",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-color",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-shadow",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-radius",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-padding",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-max-width",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-font-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-font-weight",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-line-height",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-node-callout-arrow-size",
+              "description": "Theme CSS custom property consumed by this component."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "node-callout",
+          "declaration": {
+            "name": "NodeCallout"
+          }
+        }
+      ]
+    },
+    {
       "path": "node/NodeSocket/NodeSocket.js",
       "declarations": [
         {
@@ -278,6 +421,22 @@
                 "text": "function"
               },
               "description": "Sets connection path rendering style."
+            },
+            {
+              "kind": "method",
+              "name": "setFlowLayout",
+              "type": {
+                "text": "function"
+              },
+              "description": "Positions nodes in vertical or horizontal document flow and can enable native canvas scrolling."
+            },
+            {
+              "kind": "method",
+              "name": "clearFlowLayout",
+              "type": {
+                "text": "function"
+              },
+              "description": "Clears flow layout sizing and scroll mode."
             },
             {
               "kind": "method",

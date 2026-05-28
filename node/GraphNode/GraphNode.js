@@ -103,6 +103,7 @@ export class GraphNode extends Symbiote {
    */
   #populateFromNodeData(node) {
     let params = node.params || {};
+    this.toggleAttribute('data-header-hidden', Boolean(params.hideHeader || params.headerHidden));
     this.set$({
       nodeIcon: node.icon || CATEGORY_ICONS[node.category] || CATEGORY_ICONS.default,
       mediaSrc: params.media || params.image || params.avatar || '',

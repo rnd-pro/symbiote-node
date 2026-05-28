@@ -33,6 +33,31 @@ export let styles = css`
       outline: none;
     }
 
+    &[data-flow-scroll] {
+      background-attachment: local;
+    }
+
+    &[data-flow-scroll='vertical'] {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    &[data-flow-scroll='horizontal'] {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    &[data-flow-scroll] .canvas-container {
+      width: max(100%, var(--sn-flow-content-width, 100%));
+      height: max(100%, var(--sn-flow-content-height, 100%));
+      overflow: visible;
+    }
+
+    &[data-flow-scroll] .content {
+      width: max(100%, var(--sn-flow-content-width, 100%));
+      height: max(100%, var(--sn-flow-content-height, 100%));
+    }
+
     &[data-readonly] {
       cursor: default;
     }

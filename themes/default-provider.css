@@ -78,6 +78,18 @@
   --sn-node-border-width: 2px;
   --sn-node-font-size: 13px;
   --sn-node-items-max-height: 420px;
+  --sn-node-callout-z: 14;
+  --sn-node-callout-bg: color-mix(in srgb, var(--sn-node-bg) 94%, var(--sn-node-selected) 6%);
+  --sn-node-callout-border: color-mix(in srgb, var(--sn-node-selected) 28%, var(--sn-node-border));
+  --sn-node-callout-color: var(--sn-text);
+  --sn-node-callout-shadow: var(--sn-shadow-lg);
+  --sn-node-callout-radius: calc(8px * var(--sn-theme-radius-scale));
+  --sn-node-callout-padding: 10px 12px;
+  --sn-node-callout-max-width: 320px;
+  --sn-node-callout-font-size: 12px;
+  --sn-node-callout-font-weight: 700;
+  --sn-node-callout-line-height: 1.35;
+  --sn-node-callout-arrow-size: 10px;
   --sn-node-error-frame-offset: 10px;
   --sn-node-error-frame-min-width: 140px;
   --sn-node-error-frame-max-width: 320px;

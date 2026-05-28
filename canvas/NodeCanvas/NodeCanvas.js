@@ -42,6 +42,35 @@ import '../NodeSearch/NodeSearch.js';
 import '../Breadcrumb/Breadcrumb.js';
 import { computeAutoLayout } from '../AutoLayout.js';
 
+const FLOW_DIRECTIONS = new Set(['vertical', 'horizontal']);
+
+function toFiniteNumber(value, fallback) {
+  let number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function normalizeFlowPadding(value) {
+  if (typeof value === 'number') {
+    return { top: value, right: value, bottom: value, left: value };
+  }
+  if (!value || typeof value !== 'object') {
+    return { top: 24, right: 24, bottom: 24, left: 24 };
+  }
+  return {
+    top: toFiniteNumber(value.top, 24),
+    right: toFiniteNumber(value.right, 24),
+    bottom: toFiniteNumber(value.bottom, 24),
+    left: toFiniteNumber(value.left, 24),
+  };
+}
+
+function clampFlowSize(value, min, max) {
+  let next = value;
+  if (Number.isFinite(min)) next = Math.max(min, next);
+  if (Number.isFinite(max)) next = Math.min(max, next);
+  return next;
+}
+
 export class NodeCanvas extends Symbiote {
   init$ = {
     zoom: 1,
@@ -121,6 +150,9 @@ export class NodeCanvas extends Symbiote {
 
   /** @type {'bezier'|'orthogonal'|'straight'|'pcb'} saved across setEditor calls */
   _pathStyle = 'bezier';
+
+  /** @type {Object|null} */
+  _flowLayout = null;
 
   /** @type {CanvasViewport|null} */
   _viewport = null;
@@ -685,6 +717,145 @@ export class NodeCanvas extends Symbiote {
   }
 
   /**
+   * Position nodes as a document-like flow and optionally make the canvas scrollable.
+   * @param {Object} [options]
+   * @param {string[]} [options.nodeIds] Nodes to lay out. Defaults to all editor nodes.
+   * @param {'vertical'|'horizontal'} [options.direction='vertical'] Main flow direction.
+   * @param {number} [options.gap=32] Main-axis spacing between nodes.
+   * @param {number|{top?: number, right?: number, bottom?: number, left?: number}} [options.padding=24]
+   * @param {'start'|'center'|'end'|'stretch'} [options.align='start'] Cross-axis alignment.
+   * @param {number} [options.minNodeWidth] Minimum node width when sizing flow items.
+   * @param {number} [options.maxNodeWidth] Maximum node width when sizing flow items.
+   * @param {number} [options.minNodeHeight] Minimum node height when sizing horizontal flow items.
+   * @param {number} [options.maxNodeHeight] Maximum node height when sizing horizontal flow items.
+   * @param {boolean} [options.scroll=false] Enables native canvas scrolling in the flow direction.
+   * @returns {{width: number, height: number, positions: Object<string, {x: number, y: number}>}}
+   */
+  setFlowLayout(options = {}) {
+    let direction = FLOW_DIRECTIONS.has(options.direction) ? options.direction : 'vertical';
+    let gap = Math.max(0, toFiniteNumber(options.gap, 32));
+    let padding = normalizeFlowPadding(options.padding);
+    let align = ['start', 'center', 'end', 'stretch'].includes(options.align) ? options.align : 'start';
+    let nodeIds = Array.isArray(options.nodeIds)
+      ? options.nodeIds
+      : this._editor?.getNodes().map((node) => node.id) || [];
+    let scroll = options.scroll === true;
+    let viewportWidth = this.clientWidth || this.ref?.canvasContainer?.clientWidth || 0;
+    let viewportHeight = this.clientHeight || this.ref?.canvasContainer?.clientHeight || 0;
+    let minNodeWidth = toFiniteNumber(options.minNodeWidth, NaN);
+    let maxNodeWidth = toFiniteNumber(options.maxNodeWidth, NaN);
+    let minNodeHeight = toFiniteNumber(options.minNodeHeight, NaN);
+    let maxNodeHeight = toFiniteNumber(options.maxNodeHeight, NaN);
+    let positions = {};
+    let cursor = direction === 'vertical' ? padding.top : padding.left;
+    let contentWidth = viewportWidth;
+    let contentHeight = viewportHeight;
+
+    this._flowLayout = {
+      ...options,
+      align,
+      direction,
+      gap,
+      padding,
+      scroll,
+    };
+
+    this.setAttribute('data-flow-layout', direction);
+    if (scroll) {
+      this.setAttribute('data-flow-scroll', direction);
+    } else {
+      this.removeAttribute('data-flow-scroll');
+    }
+
+    this.setBatchMode(true);
+
+    for (let nodeId of nodeIds) {
+      let el = this._nodeViews.get(nodeId);
+      if (!el) continue;
+
+      if (direction === 'vertical') {
+        let availableWidth = Math.max(0, viewportWidth - padding.left - padding.right);
+        let targetWidth = align === 'stretch'
+          ? clampFlowSize(availableWidth, minNodeWidth, maxNodeWidth)
+          : clampFlowSize(el.offsetWidth || availableWidth, minNodeWidth, maxNodeWidth);
+        if (Number.isFinite(targetWidth) && targetWidth > 0) {
+          el.style.width = `${targetWidth}px`;
+          el.style.setProperty('--sn-node-min-width', `${targetWidth}px`);
+          el.style.setProperty('--sn-node-max-width', `${targetWidth}px`);
+        }
+
+        let width = el.offsetWidth || targetWidth || 0;
+        let height = el.offsetHeight || 0;
+        let x = padding.left;
+        if (align === 'center') {
+          x = padding.left + Math.max(0, availableWidth - width) / 2;
+        } else if (align === 'end') {
+          x = padding.left + Math.max(0, availableWidth - width);
+        }
+        let y = cursor;
+        this.setNodePosition(nodeId, x, y);
+        positions[nodeId] = { x, y };
+        cursor += height + gap;
+        contentWidth = Math.max(contentWidth, x + width + padding.right);
+        contentHeight = Math.max(contentHeight, y + height + padding.bottom);
+      } else {
+        let availableHeight = Math.max(0, viewportHeight - padding.top - padding.bottom);
+        let targetHeight = align === 'stretch'
+          ? clampFlowSize(availableHeight, minNodeHeight, maxNodeHeight)
+          : clampFlowSize(el.offsetHeight || availableHeight, minNodeHeight, maxNodeHeight);
+        if (Number.isFinite(targetHeight) && targetHeight > 0) {
+          el.style.minHeight = `${targetHeight}px`;
+        }
+
+        let width = el.offsetWidth || 0;
+        let height = el.offsetHeight || targetHeight || 0;
+        let x = cursor;
+        let y = padding.top;
+        if (align === 'center') {
+          y = padding.top + Math.max(0, availableHeight - height) / 2;
+        } else if (align === 'end') {
+          y = padding.top + Math.max(0, availableHeight - height);
+        }
+        this.setNodePosition(nodeId, x, y);
+        positions[nodeId] = { x, y };
+        cursor += width + gap;
+        contentWidth = Math.max(contentWidth, x + width + padding.right);
+        contentHeight = Math.max(contentHeight, y + height + padding.bottom);
+      }
+    }
+
+    this.setBatchMode(false);
+    this.#setFlowContentSize(contentWidth, contentHeight);
+    this.syncPhantom();
+    this.refreshConnections();
+
+    return { width: contentWidth, height: contentHeight, positions };
+  }
+
+  clearFlowLayout() {
+    this._flowLayout = null;
+    this.removeAttribute('data-flow-layout');
+    this.removeAttribute('data-flow-scroll');
+    this.#setFlowContentSize(0, 0);
+    for (const [, el] of this._nodeViews) {
+      el.style.width = '';
+      el.style.minHeight = '';
+      el.style.removeProperty('--sn-node-min-width');
+      el.style.removeProperty('--sn-node-max-width');
+    }
+  }
+
+  #setFlowContentSize(width, height) {
+    if (!width || !height) {
+      this.style.removeProperty('--sn-flow-content-width');
+      this.style.removeProperty('--sn-flow-content-height');
+      return;
+    }
+    this.style.setProperty('--sn-flow-content-width', `${Math.ceil(width)}px`);
+    this.style.setProperty('--sn-flow-content-height', `${Math.ceil(height)}px`);
+  }
+
+  /**
    * Set preview content on a node (image URL or text)
    * @param {string} nodeId
    * @param {string} content - Image URL or text
@@ -1093,7 +1264,13 @@ export class NodeCanvas extends Symbiote {
           this.removeAttribute('data-interacting');
         }, 150);
       },
-      () => ({ x: this.$.panX, y: this.$.panY })
+      () => ({ x: this.$.panX, y: this.$.panY }),
+      {
+        shouldHandleWheel: (event) => {
+          if (!this.hasAttribute('data-flow-scroll')) return true;
+          return event.ctrlKey || event.metaKey || event.altKey;
+        },
+      }
     );
 
 

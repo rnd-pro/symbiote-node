@@ -58,6 +58,10 @@ export let styles = css`
       }
     }
 
+    &[data-header-hidden] .sn-node-header {
+      display: none !important;
+    }
+
     &[data-readonly]:not([data-readonly-node-dragging]),
     node-canvas[data-readonly] &:not([data-readonly-node-dragging]) {
       cursor: default;

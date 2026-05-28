@@ -23,6 +23,9 @@ export class Zoom {
   /** @type {function|null} */
   #onZoom = null;
 
+  /** @type {function|null} */
+  #shouldHandleWheel = null;
+
   /**
    * @param {number} [intensity=0.1] - Zoom sensitivity
    */
@@ -37,12 +40,14 @@ export class Zoom {
    * @param {HTMLElement} content - Inner content element (for getBoundingClientRect)
    * @param {function} onZoom - Callback: (delta, ox, oy, source)
    * @param {function} [getTransform] - Optional callback returning {x, y} to avoid getBoundingClientRect layout thrashing
+   * @param {{shouldHandleWheel?: function(WheelEvent): boolean}} [options]
    */
-  initialize(container, content, onZoom, getTransform = null) {
+  initialize(container, content, onZoom, getTransform = null, options = {}) {
     this.#container = container;
     this.#content = content;
     this.#onZoom = onZoom;
     this.getTransform = getTransform;
+    this.#shouldHandleWheel = options.shouldHandleWheel || null;
 
     container.addEventListener('wheel', this.#wheel, { passive: false });
     container.addEventListener('pointerdown', this.#down);
@@ -62,6 +67,7 @@ export class Zoom {
   }
 
   #wheel = (e) => {
+    if (this.#shouldHandleWheel && !this.#shouldHandleWheel(e)) return;
     e.preventDefault();
     let rect = this.#getRect();
 

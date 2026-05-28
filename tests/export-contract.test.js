@@ -218,6 +218,7 @@ const UI_EXPORTS = [
   ['CanvasGraph', 'function'],
   ['GraphExplorerShell', 'function'],
   ['GraphNode', 'function'],
+  ['NodeCallout', 'function'],
   ['NodeSocket', 'function'],
   ['FocusController', 'function'],
   ['Drag', 'function'],

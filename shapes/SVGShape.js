@@ -482,6 +482,8 @@ export function createSVGShape(name, pathData, options = {}) {
 
 
 export let SVG_PRESETS = {
+  disc: 'M12 2A10 10 0 1 1 12 22A10 10 0 1 1 12 2Z',
+
 
   hexagon: 'M12 2L22 8.5V15.5L12 22L2 15.5V8.5Z',
 

@@ -591,7 +591,7 @@ const results = await executor.run(graph);
 
 ### Node Shapes
 
-Two coexisting rendering modes on the same canvas — **HTML nodes** (CSS-styled rectangles) and **SVG nodes** (arbitrary vector shapes with perimeter-aware connector positioning). Built-in presets: `disc`, `hexagon`, `star`, `cloud`, `shield`, `heart`, `rect`, `pill`, `circle`, `diamond`, `comment`.
+Two coexisting rendering modes on the same canvas — **HTML nodes** (CSS-styled rectangles) and **SVG nodes** (arbitrary vector shapes with perimeter-aware connector positioning). Built-in presets: `disc`, `hexagon`, `pentagon`, `star`, `cloud`, `shield`, `octagon`, `parallelogram`, `trapezoid`, `cylinder`, `database`, `bolt`, `heart`, `rect`, `pill`, `circle`, `diamond`, `comment`.
 
 ```javascript
 import { createSVGShape, registerShape } from 'symbiote-node';
@@ -602,7 +602,7 @@ registerShape('myshape', myShape);
 const node = new Node('Custom', { shape: 'myshape' });
 ```
 
-Use `shape: 'disc'` for circular SVG nodes that need connector points to move around the perimeter. `GraphNode` also reads presentation fields from `Node.params`: `avatar`, `media`, `image`, `summary`, `href`, `linkLabel`, and `items`. SVG node size can be controlled with `params.size` or explicit `params.width` and `params.height`.
+Use `shape: 'disc'` for circular SVG nodes that need connector points to move around the perimeter. `GraphNode` also reads presentation fields from `Node.params`: `avatar`, `media`, `image`, `summary`, `href`, `linkLabel`, `items`, and `hideHeader`. SVG node size can be controlled with `params.size` or explicit `params.width` and `params.height`.
 
 `node-canvas` supports presentation controls for app surfaces:
 
@@ -616,6 +616,23 @@ canvas.setPathStyle('pcb');
 ```
 
 `setPanels(false)` hides side panels while preserving node menus. `setChrome(false)` hides viewport chrome including minimap, search, breadcrumbs, menus, toolbar, and inspector.
+
+Use `setFlowLayout()` when nodes should behave like document-flow items while
+remaining graph nodes. It supports vertical and horizontal flows and can make
+the canvas itself scroll in the flow direction:
+
+```javascript
+canvas.setFlowLayout({
+  nodeIds: articleNodes.map((node) => node.id),
+  direction: 'vertical',
+  gap: 88,
+  padding: { top: 210, right: 24, bottom: 32, left: 24 },
+  align: 'stretch',
+  minNodeWidth: 238,
+  maxNodeWidth: 430,
+  scroll: true,
+});
+```
 
 `cross-layout-portal-bridge` connects anchors across independent layouts and can use a PCB-like path:
 
@@ -634,6 +651,18 @@ Browser UI components automatically load Material Symbols subsets they own. Host
 import { configureMaterialSymbols } from 'symbiote-node/ui';
 
 configureMaterialSymbols({ autoload: false });
+```
+
+Use `node-callout` for floating labels or explanatory text anchored to a node while it moves:
+
+```html
+<node-callout
+  anchor-node-id="profile-avatar"
+  trigger="hover"
+  placement="top"
+  offset="18">
+  Vladimir Matiasevich | Lead Engineer / R&amp;D / Enterprise Agentic AI
+</node-callout>
 ```
 
 ### Theme System
@@ -870,7 +899,7 @@ symbiote-node/
 ├── menu/             — ContextMenu
 ├── interactions/     — Drag, Zoom, Selector, SnapGrid, ConnectFlow
 ├── display/          — CodeBlock, SourceViewer, SourceEditor, markdown formatting
-├── shapes/           — SVG shape system with 10 presets
+├── shapes/           — SVG shape system with built-in presets
 ├── themes/           — Theme, Palette, Skin, and built-in theme definitions
 ├── layout/           — BSP layout engine + LayoutSidebar + LayoutRouter
 ├── toolbar/          — QuickToolbar

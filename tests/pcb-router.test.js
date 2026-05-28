@@ -103,6 +103,39 @@ function segmentIntersectsRect(a, b, rect, pad = 0) {
   return false;
 }
 
+function sharedOrthogonalLength(a1, a2, b1, b2) {
+  if (Math.abs(a1.x - a2.x) < 0.5 && Math.abs(b1.x - b2.x) < 0.5 && Math.abs(a1.x - b1.x) < 0.5) {
+    const aMin = Math.min(a1.y, a2.y);
+    const aMax = Math.max(a1.y, a2.y);
+    const bMin = Math.min(b1.y, b2.y);
+    const bMax = Math.max(b1.y, b2.y);
+    return Math.max(0, Math.min(aMax, bMax) - Math.max(aMin, bMin));
+  }
+  if (Math.abs(a1.y - a2.y) < 0.5 && Math.abs(b1.y - b2.y) < 0.5 && Math.abs(a1.y - b1.y) < 0.5) {
+    const aMin = Math.min(a1.x, a2.x);
+    const aMax = Math.max(a1.x, a2.x);
+    const bMin = Math.min(b1.x, b2.x);
+    const bMax = Math.max(b1.x, b2.x);
+    return Math.max(0, Math.min(aMax, bMax) - Math.max(aMin, bMin));
+  }
+  return 0;
+}
+
+function maxSharedMiddleSegmentLength(aPoints, bPoints) {
+  let max = 0;
+  for (let aIndex = 1; aIndex < aPoints.length - 2; aIndex += 1) {
+    for (let bIndex = 1; bIndex < bPoints.length - 2; bIndex += 1) {
+      max = Math.max(max, sharedOrthogonalLength(
+        aPoints[aIndex],
+        aPoints[aIndex + 1],
+        bPoints[bIndex],
+        bPoints[bIndex + 1]
+      ));
+    }
+  }
+  return max;
+}
+
 describe('PCB router', () => {
   it('routes compact portal-to-card traces without 180-degree folds', () => {
     const routed = routePcbTrace({
@@ -159,5 +192,75 @@ describe('PCB router', () => {
     }
 
     assert.ok(middleSegments.some((point) => point.y > source.y + source.h && point.y < target.y), routed.path);
+  });
+
+  it('uses authoritative obstacle rects for vertical feed channels', () => {
+    const source = { id: 'source', x: 69.25, y: 210, w: 238, h: 364 };
+    const target = { id: 'target', x: 69.25, y: 662, w: 238, h: 364 };
+    const next = { id: 'next', x: 69.25, y: 1114, w: 238, h: 364 };
+    const routed = routePcbTrace({
+      start: { x: 307.25, y: 551.5703125 },
+      end: { x: 69.25, y: 854.375 },
+      fromRect: { ...source, y: 551.5703125, h: 100 },
+      toRect: { ...target, y: 854.375, h: 100 },
+      fromAngle: 0,
+      toAngle: 180,
+      rects: [source, target, next],
+      connections: [
+        { id: 'c1', from: 'source', to: 'target', out: 'next', in: 'feed' },
+        { id: 'c2', from: 'target', to: 'next', out: 'next', in: 'feed' },
+      ],
+      conn: { id: 'c1', from: 'source', to: 'target', out: 'next', in: 'feed' },
+    });
+
+    assert.equal(countReversals(routed.points), 0, routed.path);
+    assert.equal(hasLongDiagonal(parseOrthogonalPath(routed.path)), false, routed.path);
+    assert.ok(routeLength(routed.points) < 760, routed.path);
+    assert.ok(routed.points.some((point) => point.y > source.y + source.h && point.y < target.y), routed.path);
+    assert.equal(routed.points.some((point) => point.y > next.y), false, routed.path);
+  });
+
+  it('routes avatar fan-out traces around node bounds on separate channels', () => {
+    const avatar = { id: 'avatar', x: 120, y: 160, w: 220, h: 220 };
+    const portal = { id: 'portal', x: 189, y: 24, w: 82, h: 82 };
+    const about = { id: 'about', x: 92, y: 438, w: 300, h: 164 };
+    const connections = [
+      { id: 'pulse', from: 'avatar', to: 'portal', out: 'pulse', in: 'in' },
+      { id: 'profile', from: 'avatar', to: 'about', out: 'profile', in: 'profile' },
+    ];
+    const pulse = routePcbTrace({
+      start: { x: 258, y: 164 },
+      end: { x: 210, y: 101 },
+      fromRect: avatar,
+      toRect: portal,
+      fromAngle: -75,
+      toAngle: 120,
+      rects: [avatar, portal, about],
+      connections,
+      conn: connections[0],
+    });
+    const profile = routePcbTrace({
+      start: { x: 202, y: 376 },
+      end: { x: 92, y: 520 },
+      fromRect: avatar,
+      toRect: about,
+      fromAngle: 105,
+      toAngle: 180,
+      rects: [avatar, portal, about],
+      connections,
+      conn: connections[1],
+    });
+
+    assert.equal(countReversals(pulse.points), 0, pulse.path);
+    assert.equal(countReversals(profile.points), 0, profile.path);
+    assert.ok(maxSharedMiddleSegmentLength(pulse.points, profile.points) < 1, `${pulse.path}\n${profile.path}`);
+
+    for (const routed of [pulse, profile]) {
+      for (let index = 1; index < routed.points.length - 2; index += 1) {
+        assert.equal(segmentIntersectsRect(routed.points[index], routed.points[index + 1], avatar, 1), false, routed.path);
+        assert.equal(segmentIntersectsRect(routed.points[index], routed.points[index + 1], portal, 1), false, routed.path);
+        assert.equal(segmentIntersectsRect(routed.points[index], routed.points[index + 1], about, 1), false, routed.path);
+      }
+    }
   });
 });

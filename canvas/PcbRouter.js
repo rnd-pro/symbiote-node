@@ -16,10 +16,9 @@ function snapDir(deg) {
 
 function parallelShift(connections, conn, grid) {
   const group = connections.filter((candidate) =>
-    candidate.from === conn.from &&
-    candidate.to === conn.to &&
-    candidate.out === conn.out &&
-    candidate.in === conn.in
+    candidate.from === conn.from ||
+    candidate.to === conn.to ||
+    (candidate.from === conn.from && candidate.to === conn.to)
   );
   if (group.length <= 1) return 0;
   const index = Math.max(0, group.findIndex((candidate) => candidate.id === conn.id));
@@ -274,11 +273,14 @@ export function routePcbTrace({
     x: tDir.dx === 0 ? end.x : end.x + tDir.dx * stub,
     y: tDir.dy === 0 ? end.y : end.y + tDir.dy * stub,
   };
-  const obstacleRects = mergeEndpointRects(rects, fromRect, toRect);
-  const separatedDown = fromRect.y + fromRect.h + clearance < toRect.y - clearance;
-  const separatedUp = toRect.y + toRect.h + clearance < fromRect.y - clearance;
-  const minX = Math.min(fromRect.x, toRect.x);
-  const maxX = Math.max(fromRect.x + fromRect.w, toRect.x + toRect.w);
+  const rectById = new Map(rects.map((rect) => [rect.id, rect]));
+  const routeFromRect = rectById.get(fromRect.id) || fromRect;
+  const routeToRect = rectById.get(toRect.id) || toRect;
+  const obstacleRects = mergeEndpointRects(rects, routeFromRect, routeToRect);
+  const separatedDown = routeFromRect.y + routeFromRect.h + clearance < routeToRect.y - clearance;
+  const separatedUp = routeToRect.y + routeToRect.h + clearance < routeFromRect.y - clearance;
+  const minX = Math.min(routeFromRect.x, routeToRect.x);
+  const maxX = Math.max(routeFromRect.x + routeFromRect.w, routeToRect.x + routeToRect.w);
   const leftLaneX = snapOutside(minX - clearance - absShift, grid, -1) + shift;
   const rightLaneX = snapOutside(maxX + clearance + absShift, grid, 1) + shift;
   const candidates = [];
@@ -286,13 +288,14 @@ export function routePcbTrace({
 
   if (end.x < start.x - grid && (separatedDown || separatedUp)) {
     const gapTop = separatedDown
-      ? fromRect.y + fromRect.h + clearance
-      : toRect.y + toRect.h + clearance;
+      ? routeFromRect.y + routeFromRect.h + clearance
+      : routeToRect.y + routeToRect.h + clearance;
     const gapBottom = separatedDown
-      ? toRect.y - clearance
-      : fromRect.y - clearance;
-    const sourceOverTarget = fromRect.x < toRect.x + toRect.w && fromRect.x + fromRect.w > toRect.x;
-    const compactSource = fromRect.w < toRect.w * 0.75;
+      ? routeToRect.y - clearance
+      : routeFromRect.y - clearance;
+    const sourceOverTarget =
+      routeFromRect.x < routeToRect.x + routeToRect.w && routeFromRect.x + routeFromRect.w > routeToRect.x;
+    const compactSource = routeFromRect.w < routeToRect.w * 0.75;
 
     if (sourceOverTarget && compactSource) {
       const crossY = snapGrid((gapTop + gapBottom) / 2, grid) + shift;
@@ -342,12 +345,33 @@ export function routePcbTrace({
     ]);
   }
 
-  let points = chooseBestRoute(candidates, obstacleRects, fromRect, toRect, grid, 6);
+  let points = chooseBestRoute(candidates, obstacleRects, routeFromRect, routeToRect, grid, 6);
+
+  if (!points && (separatedDown || separatedUp)) {
+    const gapTop = separatedDown
+      ? routeFromRect.y + routeFromRect.h + clearance
+      : routeToRect.y + routeToRect.h + clearance;
+    const gapBottom = separatedDown
+      ? routeToRect.y - clearance
+      : routeFromRect.y - clearance;
+    const crossY = snapGrid((gapTop + gapBottom) / 2, grid) + shift;
+    const localGapRoute = simplifyCollinear([
+      start,
+      stubFrom,
+      { x: stubFrom.x, y: crossY },
+      { x: stubTo.x, y: crossY },
+      stubTo,
+      end,
+    ]);
+    if (!routeHitsBlockedArea(localGapRoute, obstacleRects, routeFromRect, routeToRect, 1)) {
+      points = localGapRoute;
+    }
+  }
 
   if (!points) {
     const maxBottom = Math.max(...obstacleRects.map((rect) => rect.y + rect.h));
     const bottomY = snapGrid(maxBottom + clearance + absShift, grid);
-    points = simplifyCollinear([
+    const bottomRoute = simplifyCollinear([
       start,
       stubFrom,
       { x: stubFrom.x, y: bottomY },
@@ -355,6 +379,23 @@ export function routePcbTrace({
       stubTo,
       end,
     ]);
+    if (!routeHitsBlockedArea(bottomRoute, obstacleRects, routeFromRect, routeToRect, 1)) {
+      points = bottomRoute;
+    } else {
+      const minTop = Math.min(...obstacleRects.map((rect) => rect.y));
+      const topY = snapGrid(minTop - clearance - absShift, grid);
+      const topRoute = simplifyCollinear([
+        start,
+        stubFrom,
+        { x: stubFrom.x, y: topY },
+        { x: stubTo.x, y: topY },
+        stubTo,
+        end,
+      ]);
+      points = !routeHitsBlockedArea(topRoute, obstacleRects, routeFromRect, routeToRect, 1)
+        ? topRoute
+        : bottomRoute;
+    }
   }
 
   const routed = buildPath(points, chamfer);

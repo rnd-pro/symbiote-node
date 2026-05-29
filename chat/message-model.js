@@ -1,4 +1,5 @@
 import { escapeHtml, formatElapsed } from '../display/markdown-formatter.js';
+import { translate } from '../locale/index.js';
 
 export function buildSessionMetaHtml(text) {
   if (!text) return '';
@@ -13,7 +14,7 @@ export function buildSessionMetaHtml(text) {
   if (exitMatch) {
     let code = parseInt(exitMatch[1]);
     let cls = code === 0 ? 'meta-ok' : 'meta-err';
-    chips.push(`<span class="meta-chip ${cls}">exit ${code}</span>`);
+    chips.push(`<span class="meta-chip ${cls}">${escapeHtml(translate('chat.meta.exit', { code }))}</span>`);
   }
   let sidMatch = text.match(/- Session ID:\s*`([^`]+)`/i);
   if (sidMatch) {
@@ -21,11 +22,11 @@ export function buildSessionMetaHtml(text) {
   }
   let tokensMatch = text.match(/- Tokens:\s*(\d+)/i);
   if (tokensMatch) {
-    chips.push(`<span class="meta-chip meta-info" title="Tokens">${tokensMatch[1]} tks</span>`);
+    chips.push(`<span class="meta-chip meta-info" title="${escapeHtml(translate('chat.meta.tokens'))}">${tokensMatch[1]} tks</span>`);
   }
   let costMatch = text.match(/- Cost:\s*\$?([\d.]+)/i);
   if (costMatch) {
-    chips.push(`<span class="meta-chip meta-info" title="Cost">$${costMatch[1]}</span>`);
+    chips.push(`<span class="meta-chip meta-info" title="${escapeHtml(translate('chat.meta.cost'))}">$${costMatch[1]}</span>`);
   }
   return chips.join('');
 }
@@ -39,12 +40,15 @@ export function buildWorkMetaHtml(meta) {
   }
   if (meta.exitCode != null) {
     let cls = meta.exitCode === 0 ? 'meta-ok' : 'meta-err';
-    items.push(`<span class="meta-chip ${cls}">exit ${meta.exitCode}</span>`);
+    items.push(`<span class="meta-chip ${cls}">${escapeHtml(translate('chat.meta.exit', { code: meta.exitCode }))}</span>`);
   }
   if (meta.sessionId) {
     items.push(`<span class="meta-chip meta-sid" title="${escapeHtml(meta.sessionId)}">${escapeHtml(meta.sessionId.substring(0, 16))}...</span>`);
   }
-  if (meta.tools) items.push(`<span class="meta-chip">${meta.tools} tool call${meta.tools > 1 ? 's' : ''}</span>`);
+  if (meta.tools) {
+    let key = meta.tools > 1 ? 'chat.meta.toolCalls' : 'chat.meta.toolCall';
+    items.push(`<span class="meta-chip">${escapeHtml(translate(key, { count: meta.tools }))}</span>`);
+  }
   if (meta.tokens != null) items.push(`<span class="meta-chip meta-info">${meta.tokens} tks</span>`);
   if (meta.cost != null) items.push(`<span class="meta-chip meta-info">$${meta.cost.toFixed(4)}</span>`);
   if (meta.errors) items.push(`<span class="meta-chip meta-err">${escapeHtml(meta.errors)}</span>`);
@@ -64,9 +68,10 @@ export function buildWorkSummaryHtml(msg, copyText) {
   let metaHtml = buildWorkMetaHtml(msg?.meta);
   let bodyHtml = metaHtml ? `<div class="work-body">${metaHtml}</div>` : '';
   let copyBtn = copyText
-    ? `<button class="work-copy-btn" type="button" title="Copy response" data-copy-text="${escapeHtml(copyText)}"><span class="material-symbols-outlined">content_copy</span></button>`
+    ? `<button class="work-copy-btn" type="button" title="${escapeHtml(translate('chat.message.copyResponse'))}" data-copy-text="${escapeHtml(copyText)}"><span class="material-symbols-outlined">content_copy</span></button>`
     : '';
-  return `<div class="work-summary-wrap"><details class="work-summary"><summary><span class="material-symbols-outlined work-summary-icon">check_circle</span>Worked for ${escapeHtml(formatElapsed(msg?.elapsed || 0))}</summary>${bodyHtml}</details>${copyBtn}</div>`;
+  let elapsed = formatElapsed(msg?.elapsed || 0);
+  return `<div class="work-summary-wrap"><details class="work-summary"><summary><span class="material-symbols-outlined work-summary-icon">check_circle</span>${escapeHtml(translate('chat.message.workedFor', { elapsed }))}</summary>${bodyHtml}</details>${copyBtn}</div>`;
 }
 
 export function toChatMessageItem(msg, options = {}) {

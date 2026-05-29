@@ -2,6 +2,7 @@ import Symbiote from '@symbiotejs/symbiote';
 import '../ChatSidebarItem/ChatSidebarItem.js';
 import template from './ChatSidebar.tpl.js';
 import css from './ChatSidebar.css.js';
+import { translate } from '../../locale/index.js';
 import {
   AUTO_COLLAPSE_WIDTH,
   AUTO_UNCOLLAPSE_WIDTH,
@@ -36,6 +37,8 @@ export class ChatSidebarShell extends Symbiote {
     navWidth: DEFAULT_NAV_WIDTH,
     groupDividers: true,
     chats: [],
+    title: translate('chat.sidebar.title'),
+    newChatTitle: translate('chat.sidebar.new'),
     onToggleNav: () => {
       this._autoCollapsed = false;
       this.setCollapsed(!this.$.navCollapsed);

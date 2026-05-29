@@ -12,6 +12,7 @@ import Symbiote, { html } from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './GraphTabs.tpl.js';
 import { styles } from './GraphTabs.css.js';
+import { translate } from '../../locale/index.js';
 
 /**
  * @typedef {Object} TabPage
@@ -52,6 +53,7 @@ TabItem.reg('tab-item');
 export class GraphTabs extends Symbiote {
   init$ = {
     tabItems: [],
+    newTabTitle: translate('tabs.new'),
   };
 
   /** @type {TabPage[]} */

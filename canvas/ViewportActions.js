@@ -1,3 +1,5 @@
+import { translate } from '../locale/index.js';
+
 /**
  * ViewportActions — context menu, keyboard shortcuts, viewport utilities
  *
@@ -184,15 +186,15 @@ export class ViewportActions {
     if (target) {
       let nodeId = target.getAttribute('node-id');
       contextMenuEl.show(menuX, menuY, [
-        { label: 'Delete Node', icon: 'delete', action: () => this.deleteNode(nodeId) },
-        { label: 'Clone Node', icon: 'content_copy', action: () => this.cloneNode(nodeId) },
-        { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
+        { label: translate('context.deleteNode'), icon: 'delete', action: () => this.deleteNode(nodeId) },
+        { label: translate('context.cloneNode'), icon: 'content_copy', action: () => this.cloneNode(nodeId) },
+        { label: translate('context.selectAll'), icon: 'select_all', action: () => this.selectAll() },
       ]);
     } else if (connTarget) {
       let connId = connTarget.getAttribute('data-conn-id');
       contextMenuEl.show(menuX, menuY, [
         {
-          label: 'Delete Connection',
+          label: translate('context.deleteConnection'),
           icon: 'link_off',
           action: () => this.deleteConnection(connId),
         },
@@ -202,25 +204,25 @@ export class ViewportActions {
       let graphY = (e.clientY - rect.top - transform.panY) / transform.zoom;
       contextMenuEl.show(menuX, menuY, [
         {
-          label: 'Add Node',
+          label: translate('context.addNode'),
           icon: 'add_box',
           action: () => this.#editor?.emit('contextadd', { x: graphX, y: graphY }),
         },
         {
-          label: 'Add Comment',
+          label: translate('context.addComment'),
           icon: 'sticky_note_2',
           action: () => this.#editor?.emit('contextaddcomment', { x: graphX, y: graphY }),
         },
         {
-          label: 'Add Frame',
+          label: translate('context.addFrame'),
           icon: 'dashboard',
           action: () => this.#editor?.emit('contextaddframe', { x: graphX, y: graphY }),
         },
-        { label: 'Paste', icon: 'content_paste', action: () => this.#pasteNodes(graphX, graphY) },
-        { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
-        { label: 'Fit View', icon: 'fit_screen', action: () => this.#canvas?.fitView() },
+        { label: translate('context.paste'), icon: 'content_paste', action: () => this.#pasteNodes(graphX, graphY) },
+        { label: translate('context.selectAll'), icon: 'select_all', action: () => this.selectAll() },
+        { label: translate('context.fitView'), icon: 'fit_screen', action: () => this.#canvas?.fitView() },
         {
-          label: 'Auto Layout',
+          label: translate('context.autoLayout'),
           icon: 'auto_fix_high',
           action: () => this.#editor?.emit('autolayout'),
         },

@@ -13,6 +13,7 @@ import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import '../../control/Button/Button.js';
 import { template } from './QuickToolbar.tpl.js';
 import { styles } from './QuickToolbar.css.js';
+import { translate } from '../../locale/index.js';
 
 /**
  * @typedef {object} ToolbarAction
@@ -23,9 +24,9 @@ import { styles } from './QuickToolbar.css.js';
 
 /** @type {ToolbarAction[]} */
 const ACTIONS = [
-  { id: 'duplicate', icon: 'content_copy', label: 'Duplicate' },
-  { id: 'mute', icon: 'visibility_off', label: 'Mute' },
-  { id: 'delete', icon: 'delete', label: 'Delete' },
+  { id: 'duplicate', icon: 'content_copy', label: translate('toolbar.duplicate') },
+  { id: 'mute', icon: 'visibility_off', label: translate('toolbar.mute') },
+  { id: 'delete', icon: 'delete', label: translate('toolbar.delete') },
 ];
 const ICONS = ['content_copy', 'delete', 'visibility', 'visibility_off'];
 
@@ -33,6 +34,12 @@ export class QuickToolbar extends Symbiote {
   init$ = {
     items: ACTIONS,
     visible: false,
+    enterSubgraphTitle: translate('toolbar.enterSubgraph'),
+    exploreConnectionsTitle: translate('toolbar.exploreConnections'),
+    viewCodeTitle: translate('toolbar.viewCode'),
+    duplicateTitle: translate('toolbar.duplicate'),
+    muteTitle: translate('toolbar.mute'),
+    deleteTitle: translate('toolbar.delete'),
     onBtnClick: (/** @type {Event} */ e) => {
       let btn = e.target.closest('[data-action]');
       if (!btn) return;

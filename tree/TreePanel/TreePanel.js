@@ -3,6 +3,7 @@ import '../TreeView/TreeView.js';
 import '../../control/Button/Button.js';
 import template from './TreePanel.tpl.js';
 import css from './TreePanel.css.js';
+import { translate } from '../../locale/index.js';
 
 function emit(el, type, detail = {}) {
   el.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
@@ -13,7 +14,7 @@ export class TreePanel extends Symbiote {
     title: '',
     titleIcon: '',
     hideTitle: true,
-    placeholder: 'Loading...',
+    placeholder: translate('tree.loading'),
     filterText: '',
     onFilterInput: (event) => {
       this.filterText = event.target.value;
@@ -130,11 +131,11 @@ export class TreePanel extends Symbiote {
 
   #syncInputChrome() {
     if (this.ref.filter) {
-      this.ref.filter.placeholder = this.getAttribute('filter-placeholder') || 'Filter...';
+      this.ref.filter.placeholder = this.getAttribute('filter-placeholder') || translate('tree.filterPlaceholder');
       this.ref.filter.value = this.filterText;
     }
     if (this.ref.collapseButton) {
-      this.ref.collapseButton.title = this.getAttribute('collapse-title') || 'Collapse all';
+      this.ref.collapseButton.title = this.getAttribute('collapse-title') || translate('tree.collapseAll');
     }
   }
 }

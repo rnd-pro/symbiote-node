@@ -45,6 +45,21 @@ describe('network approval page renderer', () => {
     assert.match(html, /&quot; onmouseover=&quot;bad/);
   });
 
+  it('uses localized defaults while preserving explicit text overrides', () => {
+    let html = renderNetworkApprovalPage({
+      locale: 'ru',
+      requestId: 'req-ru',
+      address: '127.0.0.1',
+      text: {
+        title: 'Custom title',
+      },
+    });
+
+    assert.match(html, /Custom title/);
+    assert.match(html, /Ожидание локального подтверждения/);
+    assert.match(html, /Запрос/);
+  });
+
   it('keeps the style contract on provider tokens and motion affordances', () => {
     let css = createNetworkApprovalPageStyles();
 

@@ -316,12 +316,15 @@ describe('Packed package consumer boundary', () => {
 
         let root = await import('symbiote-node');
         let layout = await import('symbiote-node/layout');
+        let locale = await import('symbiote-node/locale');
         let manifest = await import('symbiote-node/manifest');
         let ui = await import('symbiote-node/ui');
 	        let formatter = await import('symbiote-node/display/markdown-formatter');
 
         assert.equal(typeof root.NodeEditor, 'function');
         assert.equal(typeof layout.setupPanelRouting, 'function');
+        assert.equal(locale.DEFAULT_LOCALE, 'en');
+        assert.equal(typeof locale.createTranslator, 'function');
         assert.equal(typeof manifest.listComponents, 'function');
         assert.equal(typeof formatter.formatMarkdown, 'function');
 

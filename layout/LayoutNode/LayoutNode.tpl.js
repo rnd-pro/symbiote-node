@@ -11,15 +11,13 @@ export let template = html`
       <div class="header-spacer"></div>
       <button
         class="header-btn collapse-btn"
-        ${{ onclick: 'onCollapseClick', '@hidden': '!canCollapse' }}
-        title="Collapse"
+        ${{ onclick: 'onCollapseClick', '@hidden': '!canCollapse', title: 'collapseTitle' }}
       >
         <span class="material-symbols-outlined" ${{ textContent: 'collapseIcon' }}></span>
       </button>
       <button
         class="header-btn fullscreen-btn"
-        ${{ onclick: 'onFullscreenClick' }}
-        title="Fullscreen"
+        ${{ onclick: 'onFullscreenClick', title: 'fullscreenTitle' }}
       >
         <span class="material-symbols-outlined" ${{ textContent: 'fullscreenIcon' }}></span>
       </button>

@@ -1,5 +1,6 @@
 import Symbiote, { html } from '@symbiotejs/symbiote';
 import css from './ChatSidebarItem.css.js';
+import { translate } from '../../locale/index.js';
 
 const COMPACT_LABEL_MIN_CH = 8;
 const COMPACT_LABEL_MAX_CH = 38;
@@ -29,6 +30,9 @@ export class ChatSidebarItem extends Symbiote {
     isExpanded: false,
     isActive: false,
     subChats: [],
+    deleteTitle: translate('chat.sidebar.delete'),
+    deleteChatLabel: translate('chat.sidebar.deleteChat'),
+    toggleChildrenLabel: translate('chat.sidebar.toggleChildren'),
 
     onItemClick: (event) => {
       if (event.target.closest('.chat-item-delete') || event.target.closest('.chat-expand-icon')) return;
@@ -134,14 +138,14 @@ ChatSidebarItem.template = html`
 <div class="chat-item" ${{ onclick: 'onItemClick' }}>
   <span class="chat-item-icon-slot">
     <span class="material-symbols-outlined chat-icon chat-item-icon" ${{ textContent: 'icon' }}></span>
-    <button class="chat-item-delete" title="Delete" aria-label="Delete chat" ${{ onclick: 'onDelete' }}>
+    <button class="chat-item-delete" ${{ title: 'deleteTitle', '@aria-label': 'deleteChatLabel', onclick: 'onDelete' }}>
       <span class="material-symbols-outlined">delete</span>
     </button>
   </span>
   <span class="chat-item-label" ${{ textContent: 'cleanName' }}></span>
   <span class="material-symbols-outlined chat-status-icon" ref="statusIcon" ${{ textContent: 'statusIcon', title: 'statusTitle' }}></span>
   <span class="chat-item-adapter" ${{ textContent: 'adapter' }}></span>
-  <span class="material-symbols-outlined chat-expand-icon" role="button" tabindex="0" title="Toggle child chats" aria-label="Toggle child chats" ${{ onclick: 'onExpandToggle' }}>chevron_right</span>
+  <span class="material-symbols-outlined chat-expand-icon" role="button" tabindex="0" ${{ title: 'toggleChildrenLabel', '@aria-label': 'toggleChildrenLabel', onclick: 'onExpandToggle' }}>chevron_right</span>
 </div>
 <div class="chat-sub-items" itemize="subChats" item-tag="chat-sidebar-sub-item"></div>
 `;
@@ -162,6 +166,9 @@ export class ChatSidebarSubItem extends Symbiote {
     isExpanded: false,
     isActive: false,
     subChats: [],
+    deleteTitle: translate('chat.sidebar.delete'),
+    deleteChatLabel: translate('chat.sidebar.deleteChat'),
+    toggleChildrenLabel: translate('chat.sidebar.toggleChildren'),
 
     onItemClick: (event) => {
       if (event.target.closest('.chat-item-delete') || event.target.closest('.chat-expand-icon')) return;
@@ -251,14 +258,14 @@ ChatSidebarSubItem.template = html`
 <div class="chat-item-child" ${{ onclick: 'onItemClick' }}>
   <span class="chat-item-icon-slot">
     <span class="material-symbols-outlined chat-icon chat-item-icon" ${{ textContent: 'icon' }}></span>
-    <button class="chat-item-delete" title="Delete" aria-label="Delete chat" ${{ onclick: 'onDelete' }}>
+    <button class="chat-item-delete" ${{ title: 'deleteTitle', '@aria-label': 'deleteChatLabel', onclick: 'onDelete' }}>
       <span class="material-symbols-outlined">delete</span>
     </button>
   </span>
   <span class="chat-item-label" ${{ textContent: 'cleanName' }}></span>
   <span class="chat-item-type" ${{ textContent: 'agentType' }}></span>
   <span class="material-symbols-outlined chat-status-icon" ref="statusIcon" ${{ textContent: 'statusIcon', title: 'statusTitle' }}></span>
-  <span class="material-symbols-outlined chat-expand-icon" role="button" tabindex="0" title="Toggle child chats" aria-label="Toggle child chats" ${{ onclick: 'onExpandToggle' }}>chevron_right</span>
+  <span class="material-symbols-outlined chat-expand-icon" role="button" tabindex="0" ${{ title: 'toggleChildrenLabel', '@aria-label': 'toggleChildrenLabel', onclick: 'onExpandToggle' }}>chevron_right</span>
 </div>
 <div class="chat-sub-items" itemize="subChats" item-tag="chat-sidebar-sub-item"></div>
 `;

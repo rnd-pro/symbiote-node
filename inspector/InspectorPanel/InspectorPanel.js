@@ -12,6 +12,7 @@ import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template, inspPortItemTemplate, inspCtrlItemTemplate } from './InspectorPanel.tpl.js';
 import { styles } from './InspectorPanel.css.js';
 import '../TemplatePreview/TemplatePreview.js';
+import { translate } from '../../locale/index.js';
 
 const INSPECTOR_ICONS = [
   'account_tree',
@@ -38,6 +39,17 @@ export class InspectorPanel extends Symbiote {
     isSubgraph: false,
     isTemplateBuilder: false,
     innerNodeCount: 0,
+    emptyLabel: translate('inspector.empty'),
+    labelLabel: translate('inspector.label'),
+    typeLabel: translate('inspector.type'),
+    categoryLabel: translate('inspector.category'),
+    inputsLabel: translate('inspector.inputs'),
+    outputsLabel: translate('inspector.outputs'),
+    controlsLabel: translate('inspector.controls'),
+    fireLabel: translate('inspector.fire'),
+    subgraphLabel: translate('inspector.subgraph'),
+    innerNodesLabel: translate('inspector.innerNodes'),
+    enterSubgraphLabel: translate('inspector.enterSubgraph'),
     onFire: () => {
       if (this._currentNodeId) {
         this.dispatchEvent(

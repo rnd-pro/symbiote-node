@@ -1,6 +1,7 @@
 import Symbiote, { html } from '@symbiotejs/symbiote';
 import css from './ProjectTabs.css.js';
 import tpl from './ProjectTabs.tpl.js';
+import { translate } from '../../locale/index.js';
 
 function emit(el, type, detail = {}) {
   el.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
@@ -42,6 +43,7 @@ class ProjectTabItem extends Symbiote {
     icon: 'folder',
     closeable: true,
     isActive: false,
+    closeTitle: translate('tabs.close'),
     onClick: (e) => {
       if (e.target.closest('.tab-close')) return;
       emit(this, 'project-tabs-select', { id: this.$.id });
@@ -65,7 +67,7 @@ class ProjectTabItem extends Symbiote {
 ProjectTabItem.template = html`
   <span class="material-symbols-outlined" ${{ textContent: 'icon' }}></span>
   <span ${{ textContent: 'name' }}></span>
-  <button class="tab-close" title="Close" ${{ onclick: 'onCloseClick', '@hidden': '!closeable' }}>×</button>
+  <button class="tab-close" ${{ title: 'closeTitle', onclick: 'onCloseClick', '@hidden': '!closeable' }}>×</button>
 `;
 
 ProjectTabItem.reg('project-tab-item');

@@ -2,6 +2,7 @@ import Symbiote from '@symbiotejs/symbiote';
 import template from './QuickOpen.tpl.js';
 import css from './QuickOpen.css.js';
 import { fuzzyScore, normalizeQuickOpenItems, searchQuickOpenItems } from '../quick-open-utils.js';
+import { translate } from '../../locale/index.js';
 
 function emit(el, type, detail = {}) {
   el.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
@@ -22,8 +23,8 @@ export class QuickOpen extends Symbiote {
     query: '',
     resultsHTML: '',
     selectedIdx: 0,
-    placeholder: 'Search files...',
-    emptyText: 'No files found',
+    placeholder: translate('quickOpen.placeholder'),
+    emptyText: translate('quickOpen.empty'),
     maxResults: 15,
     onDialogClick: (event) => {
       event.stopPropagation();

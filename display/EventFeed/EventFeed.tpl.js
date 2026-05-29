@@ -3,7 +3,7 @@ import { html } from '@symbiotejs/symbiote';
 export default html`
 <section class="sn-event-feed">
   <header class="sn-event-feed-header" ${{ hidden: '!showHeader' }}>
-    <span>Events</span>
+    <span ${{ textContent: 'title' }}></span>
     <span class="sn-event-feed-count" ${{ textContent: 'eventCount' }}></span>
   </header>
   <div class="sn-event-feed-body-list">

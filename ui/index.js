@@ -7,8 +7,11 @@
 
 export * from '../core/index.js';
 export * from '../graph/index.js';
+export * from '../locale/index.js';
+export { configureBrowserLocalization, detectBrowserLocale } from './locale.js';
 
 import { getComponent, listComponents } from '../manifest/component-registry.js';
+import { configureBrowserLocalization } from './locale.js';
 
 export { Drag } from '../interactions/Drag.js';
 export { Zoom } from '../interactions/Zoom.js';
@@ -416,6 +419,8 @@ function registerCatalogModules(exportsByName) {
 }
 
 if (hasDOMGlobals) {
+  configureBrowserLocalization();
+
   const [
     nodeCanvas,
     canvasGraph,

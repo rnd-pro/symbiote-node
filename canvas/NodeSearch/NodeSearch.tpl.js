@@ -10,8 +10,7 @@ export let template = html`
     <input
       class="search-input"
       type="text"
-      placeholder="Search nodes..."
-      ${{ oninput: 'onSearchInput' }}
+      ${{ placeholder: 'placeholder', oninput: 'onSearchInput' }}
     />
     <span class="search-hint">Esc</span>
   </div>

@@ -2,6 +2,7 @@ import Symbiote from "@symbiotejs/symbiote";
 import "../CodeBlock/CodeBlock.js";
 import template from "./SourceViewer.tpl.js";
 import css from "./SourceViewer.css.js";
+import { translate } from "../../locale/index.js";
 
 const EXT_LANG = {
   ".md": "md",
@@ -195,6 +196,9 @@ export class SourceViewer extends Symbiote {
     statsText: "",
     showToggle: false,
     showGraphAction: true,
+    showGraphTitle: translate('sourceViewer.showInGraph'),
+    toggleModeTitle: translate('sourceViewer.toggleViewMode'),
+    graphLabel: translate('sourceViewer.graphLabel'),
     toggleIcon: "compress",
     onShowGraph: () => emit(this, "source-viewer-show-graph", { path: this._currentPath }),
     onToggleMode: () => this.toggleMode(),

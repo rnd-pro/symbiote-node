@@ -13,6 +13,7 @@ import * as engine from '../engine/index.js';
 import * as graph from '../graph/index.js';
 import * as layout from '../layout/index.js';
 import * as manifest from '../manifest/index.js';
+import * as locale from '../locale/index.js';
 
 const ROOT_EXPORTS = [
   ['NodeEditor', 'function'],
@@ -194,6 +195,18 @@ const ROOT_EXPORTS = [
   ['getGraphClusterColorToken', 'function'],
   ['isGraphColorReference', 'function'],
   ['normalizeGraphColorReference', 'function'],
+  ['DEFAULT_LOCALE', 'string'],
+  ['SUPPORTED_LOCALES', 'object'],
+  ['LOCALE_LABELS', 'object'],
+  ['LOCALE_CATALOGS', 'object'],
+  ['LOCALE_CATALOG_KEYS', 'object'],
+  ['normalizeLocale', 'function'],
+  ['resolveLocale', 'function'],
+  ['createLocaleDictionary', 'function'],
+  ['createTranslator', 'function'],
+  ['translate', 'function'],
+  ['configureLocalization', 'function'],
+  ['getLocalization', 'function'],
 ];
 
 const UI_EXPORTS = [
@@ -302,6 +315,8 @@ const UI_EXPORTS = [
   ['toChatMessageItem', 'function'],
   ['stringifyBlock', 'function'],
   ['truncateResult', 'function'],
+  ['configureBrowserLocalization', 'function'],
+  ['detectBrowserLocale', 'function'],
   ['registerModule', 'function'],
   ['getModule', 'function'],
   ['listModules', 'function'],
@@ -586,6 +601,14 @@ describe('symbiote-node core exports', () => {
   for (const [name, kind] of ROOT_EXPORTS.filter(([name]) => name in core)) {
     it(`${name} is exported from core`, () => {
       assert.equal(typeof core[name], kind, `${name} must be ${kind}`);
+    });
+  }
+});
+
+describe('symbiote-node locale exports', () => {
+  for (const [name, kind] of ROOT_EXPORTS.filter(([name]) => name in locale)) {
+    it(`${name} is exported from locale`, () => {
+      assert.equal(typeof locale[name], kind, `${name} must be ${kind}`);
     });
   }
 });

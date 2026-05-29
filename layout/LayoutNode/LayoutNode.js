@@ -10,6 +10,7 @@ import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './LayoutNode.tpl.js';
 import { styles } from './LayoutNode.css.js';
 import './../ActionZone/ActionZone.js';
+import { translate } from '../../locale/index.js';
 
 const LAYOUT_NODE_ICONS = [
   'arrow_drop_down',
@@ -51,6 +52,8 @@ export class LayoutNode extends Symbiote {
     savedRatio: 0.5,
     isFullscreen: false,
     fullscreenIcon: 'fullscreen',
+    collapseTitle: translate('layout.collapse'),
+    fullscreenTitle: translate('layout.fullscreen'),
 
 
     firstStyle: '',

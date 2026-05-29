@@ -10,20 +10,20 @@ export let template = html`
   <div class="insp-body">
     <div class="insp-empty">
       <span class="material-symbols-outlined">touch_app</span>
-      <span>Select a node</span>
+      <span ${{ textContent: 'emptyLabel' }}></span>
     </div>
 
     <div class="insp-content" hidden>
       <div class="insp-field">
-        <label>Label</label>
+        <label ${{ textContent: 'labelLabel' }}></label>
         <div class="insp-value">{{nodeLabel}}</div>
       </div>
       <div class="insp-field">
-        <label>Type</label>
+        <label ${{ textContent: 'typeLabel' }}></label>
         <div class="insp-value insp-tag">{{nodeType}}</div>
       </div>
       <div class="insp-field">
-        <label>Category</label>
+        <label ${{ textContent: 'categoryLabel' }}></label>
         <div class="insp-value insp-tag">{{nodeCategory}}</div>
       </div>
       <div class="insp-field">
@@ -33,21 +33,21 @@ export let template = html`
 
       <div class="insp-section">
         <div class="insp-section-title">
-          <span class="material-symbols-outlined">input</span> Inputs
+          <span class="material-symbols-outlined">input</span> <span ${{ textContent: 'inputsLabel' }}></span>
         </div>
         <div ${{ itemize: 'inputsList', 'item-tag': 'insp-port-item' }}></div>
       </div>
 
       <div class="insp-section">
         <div class="insp-section-title">
-          <span class="material-symbols-outlined">output</span> Outputs
+          <span class="material-symbols-outlined">output</span> <span ${{ textContent: 'outputsLabel' }}></span>
         </div>
         <div ${{ itemize: 'outputsList', 'item-tag': 'insp-port-item' }}></div>
       </div>
 
       <div class="insp-section">
         <div class="insp-section-title">
-          <span class="material-symbols-outlined">tune</span> Controls
+          <span class="material-symbols-outlined">tune</span> <span ${{ textContent: 'controlsLabel' }}></span>
         </div>
         <div ${{ itemize: 'controlsList', 'item-tag': 'insp-ctrl-item' }}></div>
       </div>
@@ -59,21 +59,21 @@ export let template = html`
       <div class="insp-fire" ${{ '@hidden': '!isFireable' }}>
         <button class="insp-fire-btn" ${{ onclick: 'onFire' }}>
           <span class="material-symbols-outlined">play_arrow</span>
-          Fire
+          <span ${{ textContent: 'fireLabel' }}></span>
         </button>
       </div>
 
       <div class="insp-subgraph" hidden>
         <div class="insp-section-title">
-          <span class="material-symbols-outlined">account_tree</span> Subgraph
+          <span class="material-symbols-outlined">account_tree</span> <span ${{ textContent: 'subgraphLabel' }}></span>
         </div>
         <div class="insp-field">
-          <label>Inner Nodes</label>
+          <label ${{ textContent: 'innerNodesLabel' }}></label>
           <div class="insp-value">{{innerNodeCount}}</div>
         </div>
         <button class="insp-enter-btn" ${{ onclick: 'onEnterSubgraph' }}>
           <span class="material-symbols-outlined">login</span>
-          Enter Subgraph
+          <span ${{ textContent: 'enterSubgraphLabel' }}></span>
         </button>
       </div>
     </div>

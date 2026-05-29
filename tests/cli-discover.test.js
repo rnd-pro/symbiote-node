@@ -99,17 +99,18 @@ describe('discover command', () => {
     assert.ok(Array.isArray(data.exports.entrypoints));
 
     let subpaths = data.exports.subpaths.map((entry) => entry.subpath);
-    for (let subpath of ['.', './ui', './layout', './manifest', './display/highlight', './display/markdown-formatter', './display/network-approval-page', './custom-elements.json']) {
+    for (let subpath of ['.', './ui', './layout', './locale', './manifest', './display/highlight', './display/markdown-formatter', './display/network-approval-page', './custom-elements.json']) {
       assert.ok(subpaths.includes(subpath), `${subpath} must be discoverable`);
     }
 
     let entrypoints = new Map(data.exports.entrypoints.map((entry) => [entry.specifier, entry]));
-    for (let specifier of ['symbiote-node/ui', 'symbiote-node/layout', 'symbiote-node/manifest', 'symbiote-node/display/network-approval-page', 'symbiote-node/custom-elements.json']) {
+    for (let specifier of ['symbiote-node/ui', 'symbiote-node/layout', 'symbiote-node/locale', 'symbiote-node/manifest', 'symbiote-node/display/network-approval-page', 'symbiote-node/custom-elements.json']) {
       assert.ok(entrypoints.has(specifier), `${specifier} must be described`);
       assert.equal(typeof entrypoints.get(specifier).description, 'string');
     }
     assert.equal(entrypoints.get('symbiote-node/ui').kind, 'browser');
     assert.equal(entrypoints.get('symbiote-node/layout').kind, 'ssr-safe');
+    assert.equal(entrypoints.get('symbiote-node/locale').kind, 'node-safe');
     assert.equal(entrypoints.get('symbiote-node/display/network-approval-page').kind, 'node-safe');
   });
 
@@ -163,6 +164,14 @@ describe('discover command', () => {
   });
 
   describe('manifest', () => {
+    it('exposes localization metadata', () => {
+      assert.equal(data.manifest.localization.defaultLocale, 'en');
+      assert.deepEqual(data.manifest.localization.supportedLocales, ['en', 'ru', 'es']);
+      assert.equal(data.manifest.localization.autoDetection, 'browser-navigator-languages');
+      assert.ok(data.manifest.localization.catalogKeys.includes('dialog.cancel'));
+      assert.ok(data.manifest.localization.catalogKeys.includes('networkApproval.title'));
+    });
+
     it('exposes experimental renderer capabilities', () => {
       assert.ok(Array.isArray(data.manifest.renderers));
       let renderer = data.manifest.renderers.find((item) => item.name === 'html-in-canvas');

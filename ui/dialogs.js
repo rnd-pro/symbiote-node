@@ -1,3 +1,5 @@
+import { translate } from '../locale/index.js';
+
 const dialogStyles = `
 .sn-dialog {
   border: var(--sn-dialog-border-width) solid var(--sn-dialog-border);
@@ -163,8 +165,8 @@ export function uiConfirm(message) {
     body.append(
       createMessage(message),
       createActions(
-        createButton('cancel', 'sn-dialog-btn', 'Cancel'),
-        createButton('confirm', 'sn-dialog-btn sn-dialog-btn-danger', 'Confirm')
+        createButton('cancel', 'sn-dialog-btn', translate('dialog.cancel')),
+        createButton('confirm', 'sn-dialog-btn sn-dialog-btn-danger', translate('dialog.confirm'))
       )
     );
     dialog.appendChild(body);
@@ -188,8 +190,8 @@ export function uiPrompt(message, defaultValue = '') {
       createMessage(message),
       input,
       createActions(
-        createButton('cancel', 'sn-dialog-btn', 'Cancel'),
-        createButton('confirm', 'sn-dialog-btn sn-dialog-btn-primary', 'OK')
+        createButton('cancel', 'sn-dialog-btn', translate('dialog.cancel')),
+        createButton('confirm', 'sn-dialog-btn sn-dialog-btn-primary', translate('dialog.ok'))
       )
     );
     dialog.appendChild(body);
@@ -210,7 +212,7 @@ export function uiAlert(message) {
     body.className = 'sn-dialog-body';
     body.append(
       createMessage(message),
-      createActions(createButton('ok', 'sn-dialog-btn sn-dialog-btn-primary', 'OK'))
+      createActions(createButton('ok', 'sn-dialog-btn sn-dialog-btn-primary', translate('dialog.ok')))
     );
     dialog.appendChild(body);
     openDialog(dialog);

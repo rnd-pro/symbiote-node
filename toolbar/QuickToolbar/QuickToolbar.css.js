@@ -37,7 +37,8 @@ export let styles = css`
       box-shadow:
         0 8px 32px var(--sn-shadow-color),
         0 0 0 1px var(--sn-shadow-color);
-      transform: translateX(-50%);
+      transform: translateX(-50%) scale(var(--sn-toolbar-scale, 1));
+      transform-origin: center top;
       animation: toolbar-in 0.2s ease-out;
       inline-size: var(--sn-toolbar-fit-width, max-content);
       min-inline-size: 0;
@@ -96,11 +97,11 @@ export let styles = css`
   @keyframes toolbar-in {
     from {
       opacity: 0;
-      transform: translateX(-50%) translateY(6px) scale(0.92);
+      transform: translateX(-50%) translateY(6px) scale(calc(var(--sn-toolbar-scale, 1) * 0.92));
     }
     to {
       opacity: 1;
-      transform: translateX(-50%) translateY(0) scale(1);
+      transform: translateX(-50%) translateY(0) scale(var(--sn-toolbar-scale, 1));
     }
   }
 

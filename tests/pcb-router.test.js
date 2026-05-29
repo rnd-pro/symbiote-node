@@ -137,6 +137,50 @@ function maxSharedMiddleSegmentLength(aPoints, bPoints) {
 }
 
 describe('PCB router', () => {
+  it('uses a sharp orthogonal route when the trace is too short for PCB lanes', () => {
+    const routed = routePcbTrace({
+      start: { x: 100, y: 100 },
+      end: { x: 140, y: 126 },
+      fromRect: { id: 'source', x: 60, y: 80, w: 40, h: 40 },
+      toRect: { id: 'target', x: 140, y: 106, w: 40, h: 40 },
+      fromAngle: 0,
+      toAngle: 180,
+      rects: [
+        { id: 'source', x: 60, y: 80, w: 40, h: 40 },
+        { id: 'target', x: 140, y: 106, w: 40, h: 40 },
+      ],
+      connections: [{ id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' }],
+      conn: { id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' },
+    });
+
+    assert.equal(routed.path, 'M 100 100 H 120 V 126 H 140');
+    assert.equal(countReversals(routed.points), 0, routed.path);
+    assert.equal(routeLength(routed.points), 66, routed.path);
+  });
+
+  it('collapses tiny traces to a straight line when there is no room for an elbow', () => {
+    const routed = routePcbTrace({
+      start: { x: 100, y: 100 },
+      end: { x: 112, y: 106 },
+      fromRect: { id: 'source', x: 60, y: 80, w: 40, h: 40 },
+      toRect: { id: 'target', x: 112, y: 86, w: 40, h: 40 },
+      fromAngle: 0,
+      toAngle: 180,
+      rects: [
+        { id: 'source', x: 60, y: 80, w: 40, h: 40 },
+        { id: 'target', x: 112, y: 86, w: 40, h: 40 },
+      ],
+      connections: [{ id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' }],
+      conn: { id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' },
+    });
+
+    assert.equal(routed.path, 'M 100 100 L 112 106');
+    assert.deepEqual(routed.points, [
+      { x: 100, y: 100 },
+      { x: 112, y: 106 },
+    ]);
+  });
+
   it('routes compact portal-to-card traces without 180-degree folds', () => {
     const routed = routePcbTrace({
       start: { x: 196.25, y: 126 },

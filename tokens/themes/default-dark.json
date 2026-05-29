@@ -1279,6 +1279,26 @@
       "$type": "color",
       "$value": "hsl(var(--sn-hue-danger) var(--sn-sat-vivid) 70%)"
     },
+    "typeDefault": {
+      "$type": "color",
+      "$value": "var(--sn-node-category-accent)"
+    },
+    "typeProfile": {
+      "$type": "color",
+      "$value": "hsl(var(--sn-hue-data) var(--sn-sat-vivid) 58%)"
+    },
+    "typeProfileInfo": {
+      "$type": "color",
+      "$value": "var(--sn-success-color)"
+    },
+    "typePortal": {
+      "$type": "color",
+      "$value": "var(--sn-cat-control)"
+    },
+    "typeProject": {
+      "$type": "color",
+      "$value": "hsl(24 var(--sn-sat-vivid) 62%)"
+    },
     "accentWarning": {
       "$type": "color",
       "$value": "var(--sn-warning-color)"

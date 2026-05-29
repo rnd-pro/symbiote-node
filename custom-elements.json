@@ -21,6 +21,11 @@
               "name": "node-category",
               "type": "string",
               "description": "Semantic node category used for icon and accent selection."
+            },
+            {
+              "name": "node-type",
+              "type": "string",
+              "description": "Semantic node type used for type-specific accent selection when a matching theme token exists."
             }
           ],
           "members": [

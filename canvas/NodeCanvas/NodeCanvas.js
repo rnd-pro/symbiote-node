@@ -130,6 +130,9 @@ export class NodeCanvas extends Symbiote {
   /** @type {boolean} */
   _snapEnabled = false;
 
+  /** @type {boolean} */
+  _nodeDragActive = false;
+
   /** @type {number|null} */
   _panAnimFrame = null;
 
@@ -316,6 +319,8 @@ export class NodeCanvas extends Symbiote {
       onNodeClick: (id, e) => this._handleNodeClick(id, e),
       onNodePointerEnter: (id, el) => this._handleNodePointerEnter(id, el),
       onNodePointerLeave: (id) => this._handleNodePointerLeave(id),
+      onNodeDragStart: (id, el, e) => this._handleNodeDragStart(id, el, e),
+      onNodeDragEnd: (id, el, e) => this._handleNodeDragEnd(id, el, e),
       nodesLayer: this.ref.nodesLayer,
       canvas: this,
       onSvgShapeReady: (nodeId) => this._connRenderer?.renderFreeDots(nodeId),
@@ -1178,6 +1183,7 @@ export class NodeCanvas extends Symbiote {
   }
 
   _handleNodePointerEnter(nodeId, nodeEl) {
+    if (this._nodeDragActive) return;
     let toolbar = this.ref.quickToolbar;
     if (!toolbar) return;
     toolbar.show(nodeId, nodeEl, { sticky: false });
@@ -1187,6 +1193,29 @@ export class NodeCanvas extends Symbiote {
     let toolbar = this.ref.quickToolbar;
     if (!toolbar) return;
     toolbar.scheduleHide?.(undefined, nodeId);
+  }
+
+  _handleNodeDragStart(nodeId) {
+    this._nodeDragActive = true;
+    this.setAttribute('data-node-dragging', nodeId);
+    this.ref.quickToolbar?.hide?.();
+  }
+
+  _handleNodeDragEnd(nodeId, nodeEl, event) {
+    this._nodeDragActive = false;
+    this.removeAttribute('data-node-dragging');
+
+    if (!nodeEl?.isConnected || !this._selector.isNodeSelected(nodeId)) return;
+
+    let restoreToolbar = () => {
+      if (this._nodeDragActive || !nodeEl.isConnected || !this._selector.isNodeSelected(nodeId)) return;
+      this.ref.quickToolbar?.show?.(nodeId, nodeEl, { sticky: true });
+    };
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(restoreToolbar);
+    } else {
+      restoreToolbar();
+    }
   }
 
   _handleConnectionClick(connId, e) {

@@ -246,6 +246,77 @@ function midpointArrow(points) {
   };
 }
 
+function pointsHaveMinimumSegments(points, minLength) {
+  return segmentDirections(points).every((segment) => segment.length >= minLength);
+}
+
+function shortOrthogonalCandidates(start, end, fDir, tDir, shift) {
+  const startHorizontal = fDir.dx !== 0;
+  const endHorizontal = tDir.dx !== 0;
+
+  if (startHorizontal && endHorizontal) {
+    const midX = (start.x + end.x) / 2 + shift;
+    return [[start, { x: midX, y: start.y }, { x: midX, y: end.y }, end]];
+  }
+
+  if (!startHorizontal && !endHorizontal) {
+    const midY = (start.y + end.y) / 2 + shift;
+    return [[start, { x: start.x, y: midY }, { x: end.x, y: midY }, end]];
+  }
+
+  return startHorizontal
+    ? [[start, { x: end.x, y: start.y }, end]]
+    : [[start, { x: start.x, y: end.y }, end]];
+}
+
+function compactTraceRoute({
+  start,
+  end,
+  fDir,
+  tDir,
+  shift,
+  routeFromRect,
+  routeToRect,
+  obstacleRects,
+  grid,
+  stub,
+  chamfer,
+}) {
+  const dx = Math.abs(end.x - start.x);
+  const dy = Math.abs(end.y - start.y);
+  const directLength = Math.hypot(dx, dy);
+  const manhattanLength = dx + dy;
+  const compactLimit = Math.max(stub * 4, grid * 8);
+  const minKneeSegment = Math.max(grid * 1.5, chamfer * 2);
+
+  if (directLength > compactLimit && manhattanLength > compactLimit + grid * 4) return null;
+
+  const limitedShift = Math.max(-grid, Math.min(grid, shift));
+  const candidates = shortOrthogonalCandidates(start, end, fDir, tDir, limitedShift)
+    .map((candidate) => simplifyCollinear(candidate))
+    .filter((candidate) => candidate.length > 2 && pointsHaveMinimumSegments(candidate, minKneeSegment));
+
+  if (candidates.length) {
+    const points = chooseBestRoute(candidates, obstacleRects, routeFromRect, routeToRect, grid, 1);
+    if (!points) return null;
+    const routed = buildPath(points, 0);
+
+    return {
+      path: routed.path,
+      points: routed.points,
+      arrow: midpointArrow(routed.points),
+    };
+  }
+
+  const routed = buildPath([start, end], 0);
+
+  return {
+    path: routed.path,
+    points: routed.points,
+    arrow: midpointArrow(routed.points),
+  };
+}
+
 export function routePcbTrace({
   start,
   end,
@@ -277,6 +348,21 @@ export function routePcbTrace({
   const routeFromRect = rectById.get(fromRect.id) || fromRect;
   const routeToRect = rectById.get(toRect.id) || toRect;
   const obstacleRects = mergeEndpointRects(rects, routeFromRect, routeToRect);
+  const compactRoute = compactTraceRoute({
+    start,
+    end,
+    fDir,
+    tDir,
+    shift,
+    routeFromRect,
+    routeToRect,
+    obstacleRects,
+    grid,
+    stub,
+    chamfer,
+  });
+  if (compactRoute) return compactRoute;
+
   const separatedDown = routeFromRect.y + routeFromRect.h + clearance < routeToRect.y - clearance;
   const separatedUp = routeToRect.y + routeToRect.h + clearance < routeFromRect.y - clearance;
   const minX = Math.min(routeFromRect.x, routeToRect.x);

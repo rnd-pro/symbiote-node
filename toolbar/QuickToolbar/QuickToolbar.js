@@ -77,6 +77,20 @@ export class QuickToolbar extends Symbiote {
   /** @type {boolean} */
   _hoverEventsBound = false;
 
+  /** @type {boolean} */
+  _viewportEventsBound = false;
+
+  /** @type {number} */
+  _positionFrame = 0;
+
+  _onViewportChange = () => {
+    this.#requestPositionUpdate();
+  };
+
+  _onWheel = (/** @type {WheelEvent} */ e) => {
+    this.#forwardWheelToCanvas(e);
+  };
+
   /** @type {number} Toolbar height + gap */
   static OFFSET_Y = 48;
 
@@ -127,6 +141,7 @@ export class QuickToolbar extends Symbiote {
   /** Hide toolbar */
   hide() {
     this.cancelHide();
+    this.#cancelPositionUpdate();
     this._nodeId = null;
     this._nodeEl = null;
     this._sticky = false;
@@ -136,6 +151,7 @@ export class QuickToolbar extends Symbiote {
     this.$.nodeTitle = '';
     this.toggleAttribute('data-has-title', false);
     this.style.removeProperty('--sn-toolbar-fit-width');
+    this.style.removeProperty('--sn-toolbar-scale');
     restoreOverlayHome(this);
   }
 
@@ -151,11 +167,26 @@ export class QuickToolbar extends Symbiote {
         this._hoverInside = false;
         this.scheduleHide();
       });
+      this.addEventListener('wheel', this._onWheel, { passive: false });
       this._hoverEventsBound = true;
+    }
+    if (!this._viewportEventsBound && typeof window !== 'undefined') {
+      window.addEventListener('resize', this._onViewportChange, { passive: true });
+      window.addEventListener('scroll', this._onViewportChange, { passive: true, capture: true });
+      this._viewportEventsBound = true;
     }
     this.sub('visible', (val) => {
       this.toggleAttribute('hidden', !val);
     });
+  }
+
+  destroyCallback() {
+    this.#cancelPositionUpdate();
+    if (this._viewportEventsBound && typeof window !== 'undefined') {
+      window.removeEventListener('resize', this._onViewportChange);
+      window.removeEventListener('scroll', this._onViewportChange, { capture: true });
+      this._viewportEventsBound = false;
+    }
   }
 
   /**
@@ -193,6 +224,102 @@ export class QuickToolbar extends Symbiote {
     this.#positionAtNode(nodeEl);
   }
 
+  #requestPositionUpdate() {
+    if (!this._nodeId || !this._nodeEl || !this.$.visible || this.hidden) return;
+    if (this._positionFrame) return;
+
+    if (typeof requestAnimationFrame !== 'function') {
+      this.#positionAtNode(this._nodeEl);
+      return;
+    }
+
+    this._positionFrame = requestAnimationFrame(() => {
+      this._positionFrame = 0;
+      if (!this._nodeId || !this._nodeEl || !this.$.visible || this.hidden) return;
+      this.#positionAtNode(this._nodeEl);
+    });
+  }
+
+  #cancelPositionUpdate() {
+    if (!this._positionFrame) return;
+    if (typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this._positionFrame);
+    }
+    this._positionFrame = 0;
+  }
+
+  /**
+   * Portaled toolbars live outside node-canvas, so wheel events no longer
+   * bubble into the canvas zoom/scroll handlers unless we route them back.
+   * @param {WheelEvent} e
+   */
+  #forwardWheelToCanvas(e) {
+    if (!this.hasAttribute('data-overlay-portal') || !this._nodeEl) return;
+
+    let canvas = this._nodeEl.closest?.('node-canvas');
+    if (!canvas) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (canvas.hasAttribute?.('data-flow-scroll') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (typeof canvas.scrollBy === 'function') {
+        canvas.scrollBy({ left: e.deltaX || 0, top: e.deltaY || 0, behavior: 'auto' });
+      } else {
+        canvas.scrollLeft += e.deltaX || 0;
+        canvas.scrollTop += e.deltaY || 0;
+      }
+      this.#requestPositionUpdate();
+      return;
+    }
+
+    let target = canvas.ref?.canvasContainer || canvas.querySelector?.('.canvas-container') || canvas;
+    let forwarded = this.#cloneWheelEvent(e);
+    if (forwarded) {
+      target.dispatchEvent(forwarded);
+      this.#requestPositionUpdate();
+    }
+  }
+
+  /**
+   * @param {WheelEvent} e
+   * @returns {WheelEvent|Event|null}
+   */
+  #cloneWheelEvent(e) {
+    let init = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      deltaX: e.deltaX || 0,
+      deltaY: e.deltaY || 0,
+      deltaZ: e.deltaZ || 0,
+      deltaMode: e.deltaMode || 0,
+      clientX: e.clientX || 0,
+      clientY: e.clientY || 0,
+      screenX: e.screenX || 0,
+      screenY: e.screenY || 0,
+      ctrlKey: Boolean(e.ctrlKey),
+      shiftKey: Boolean(e.shiftKey),
+      altKey: Boolean(e.altKey),
+      metaKey: Boolean(e.metaKey),
+      buttons: e.buttons || 0,
+    };
+
+    if (typeof WheelEvent === 'function') {
+      return new WheelEvent('wheel', init);
+    }
+
+    let doc = this.ownerDocument;
+    if (typeof doc?.createEvent !== 'function') return null;
+
+    let event = doc.createEvent('Event');
+    event.initEvent('wheel', true, true);
+    Object.defineProperties(event, Object.fromEntries(
+      Object.entries(init).map(([key, value]) => [key, { value }])
+    ));
+    return event;
+  }
+
   /**
    * Position toolbar centered above a node in screen-space.
    * @param {HTMLElement} nodeEl
@@ -200,14 +327,17 @@ export class QuickToolbar extends Symbiote {
   #positionAtNode(nodeEl) {
     let toolbarEl = this.querySelector('.toolbar');
     let toolbarHeight = toolbarEl?.offsetHeight || (QuickToolbar.OFFSET_Y - QuickToolbar.GAP_Y);
-    let offsetY = toolbarHeight + QuickToolbar.GAP_Y;
     let nodeRect = nodeEl.getBoundingClientRect?.();
     let containerRect = this.parentElement?.getBoundingClientRect?.();
+    let scale = this.#resolveNodeVisualScale(nodeEl, nodeRect);
+    let offsetY = (toolbarHeight + QuickToolbar.GAP_Y) * scale;
+
+    this.style.setProperty('--sn-toolbar-scale', String(scale));
 
     if (nodeRect && containerRect) {
       if (this.hasAttribute('data-overlay-portal')) {
         let x = nodeRect.left + nodeRect.width / 2;
-        let toolbarWidth = toolbarEl?.offsetWidth || 0;
+        let toolbarWidth = (toolbarEl?.offsetWidth || 0) * scale;
         let viewportWidth = this.ownerDocument?.documentElement?.clientWidth || window.innerWidth || 0;
         let edgeInset = QuickToolbar.TOOLBAR_EDGE_INSET;
         if (toolbarWidth && viewportWidth) {
@@ -236,6 +366,23 @@ export class QuickToolbar extends Symbiote {
     let x = pos.x + w / 2;
     let y = pos.y - offsetY;
     this.style.transform = `translate(${x}px, ${y}px)`;
+  }
+
+  /**
+   * Match the screen-space toolbar to the visual scale of a transformed node.
+   * @param {HTMLElement} nodeEl
+   * @param {DOMRect|undefined} nodeRect
+   * @returns {number}
+   */
+  #resolveNodeVisualScale(nodeEl, nodeRect) {
+    let rectWidth = nodeRect?.width || 0;
+    let baseWidth = nodeEl.offsetWidth || nodeEl._cachedW || 0;
+    let scale = baseWidth > 0 && rectWidth > 0
+      ? rectWidth / baseWidth
+      : this._transform?.zoom || 1;
+
+    if (!Number.isFinite(scale) || scale <= 0) return 1;
+    return Math.max(0.05, Math.min(scale, 8));
   }
 
   /**

@@ -71,10 +71,11 @@ export let COMPONENTS = [
       status: 'draft',
       schemaVersion: 'component-descriptor-v1',
       dataSchema: 'schemas/graph-model-v1.json',
-      capabilities: ['node-card', 'ports', 'controls', 'category-accent', 'error-state'],
+      capabilities: ['node-card', 'ports', 'controls', 'category-accent', 'type-accent', 'error-state'],
       attributes: [
         { name: 'node-label', type: 'string', description: 'Rendered node label.' },
         { name: 'node-category', type: 'string', description: 'Semantic node category used for icon and accent selection.' },
+        { name: 'node-type', type: 'string', description: 'Semantic node type used for type-specific accent selection when a matching theme token exists.' },
       ],
       properties: [
         { name: 'mediaSrc', type: 'string', description: 'Media or avatar image URL derived from node params.' },

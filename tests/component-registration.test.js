@@ -317,6 +317,55 @@ describe('With DOM shim', () => {
     assert.equal(canvas._nodeViews.get('alpha').style.getPropertyValue('--sn-node-min-width'), '');
   });
 
+  it('NodeCanvas hides quick toolbar while a node is dragged', async () => {
+    let { NodeCanvas } = await import('../canvas/NodeCanvas/NodeCanvas.js');
+    let canvas = new NodeCanvas();
+    let calls = [];
+    let nodeEl = {
+      isConnected: true,
+    };
+    let previousRequestAnimationFrame = globalThis.requestAnimationFrame;
+
+    try {
+      globalThis.requestAnimationFrame = (callback) => {
+        callback();
+        return 1;
+      };
+      canvas.ref = {
+        quickToolbar: {
+          hide() {
+            calls.push({ action: 'hide' });
+          },
+          show(nodeId, el, options) {
+            calls.push({ action: 'show', nodeId, el, options });
+          },
+        },
+      };
+      canvas._selector = {
+        isNodeSelected(nodeId) {
+          return nodeId === 'node-a';
+        },
+      };
+
+      canvas._handleNodeDragStart('node-a');
+      assert.equal(canvas.getAttribute('data-node-dragging'), 'node-a');
+      canvas._handleNodePointerEnter('node-a', nodeEl);
+      canvas._handleNodeDragEnd('node-a', nodeEl);
+
+      assert.equal(canvas.hasAttribute('data-node-dragging'), false);
+      assert.deepEqual(calls, [
+        { action: 'hide' },
+        { action: 'show', nodeId: 'node-a', el: nodeEl, options: { sticky: true } },
+      ]);
+    } finally {
+      if (previousRequestAnimationFrame) {
+        globalThis.requestAnimationFrame = previousRequestAnimationFrame;
+      } else {
+        delete globalThis.requestAnimationFrame;
+      }
+    }
+  });
+
   it('Zoom can pass native wheel scrolling through flow layouts', async () => {
     let { Zoom } = await import('../interactions/Zoom.js');
     let previousAddEventListener = globalThis.addEventListener;

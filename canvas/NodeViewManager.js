@@ -16,15 +16,73 @@ import { getShape } from '../shapes/index.js';
 import { ensureMaterialSymbols } from '../icons/MaterialSymbols.js';
 
 let svgMediaClipSeq = 0;
+let svgPathBoundsCache = new Map();
+
+function nodeTypeTokenName(type) {
+  let segment = String(type || 'default')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `--sn-type-${segment || 'default'}`;
+}
 
 function readCssToken(source, token) {
   return getComputedStyle(source).getPropertyValue(token).trim();
+}
+
+function getFallbackPathBounds(viewBox) {
+  let [x, y, width, height] = viewBox;
+  return { x, y, width, height };
+}
+
+function measureSvgPathBounds(shape, viewBox) {
+  let cacheKey = `${shape.viewBox}|${shape.pathData}`;
+  if (svgPathBoundsCache.has(cacheKey)) return svgPathBoundsCache.get(cacheKey);
+  if (typeof document === 'undefined' || !document.body) return getFallbackPathBounds(viewBox);
+
+  let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  svg.setAttribute('viewBox', shape.viewBox);
+  svg.style.position = 'absolute';
+  svg.style.inlineSize = '0';
+  svg.style.blockSize = '0';
+  svg.style.overflow = 'hidden';
+  path.setAttribute('d', shape.pathData);
+  svg.appendChild(path);
+  document.body.appendChild(svg);
+
+  let bounds;
+  try {
+    let box = path.getBBox();
+    bounds = {
+      x: box.x,
+      y: box.y,
+      width: box.width,
+      height: box.height,
+    };
+  } catch {
+    bounds = getFallbackPathBounds(viewBox);
+  } finally {
+    svg.remove();
+  }
+
+  if (!Number.isFinite(bounds.width) || !Number.isFinite(bounds.height) || bounds.width <= 0 || bounds.height <= 0) {
+    bounds = getFallbackPathBounds(viewBox);
+  }
+  svgPathBoundsCache.set(cacheKey, bounds);
+  return bounds;
+}
+
+function percent(value) {
+  return `${value * 100}%`;
 }
 
 function setSvgMediaClip(el, svg, shape) {
   let [vx, vy, vw, vh] = shape.viewBox.split(' ').map(Number);
   if (!Number.isFinite(vw) || !Number.isFinite(vh) || vw <= 0 || vh <= 0) return;
 
+  let bounds = measureSvgPathBounds(shape, [vx, vy, vw, vh]);
   let clipId = `sn-node-media-clip-${++svgMediaClipSeq}`;
   let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
   let clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
@@ -33,12 +91,19 @@ function setSvgMediaClip(el, svg, shape) {
   clipPath.setAttribute('id', clipId);
   clipPath.setAttribute('clipPathUnits', 'objectBoundingBox');
   clipShape.setAttribute('d', shape.pathData);
-  clipShape.setAttribute('transform', `matrix(${1 / vw} 0 0 ${1 / vh} ${-vx / vw} ${-vy / vh})`);
+  clipShape.setAttribute(
+    'transform',
+    `matrix(${1 / bounds.width} 0 0 ${1 / bounds.height} ${-bounds.x / bounds.width} ${-bounds.y / bounds.height})`
+  );
 
   clipPath.appendChild(clipShape);
   defs.appendChild(clipPath);
   svg.prepend(defs);
   el.style.setProperty('--sn-svg-shape-media-clip', `url(#${clipId})`);
+  el.style.setProperty('--sn-svg-shape-media-left', percent((bounds.x - vx) / vw));
+  el.style.setProperty('--sn-svg-shape-media-top', percent((bounds.y - vy) / vh));
+  el.style.setProperty('--sn-svg-shape-media-width', percent(bounds.width / vw));
+  el.style.setProperty('--sn-svg-shape-media-height', percent(bounds.height / vh));
 }
 
 export class NodeViewManager {
@@ -71,6 +136,12 @@ export class NodeViewManager {
 
   /** @type {function|null} */
   #onNodePointerLeave = null;
+
+  /** @type {function|null} */
+  #onNodeDragStart = null;
+
+  /** @type {function|null} */
+  #onNodeDragEnd = null;
 
   /** @type {Object} */
   #canvas;
@@ -105,6 +176,8 @@ export class NodeViewManager {
    * @param {function} config.onNodeClick
    * @param {function} [config.onNodePointerEnter]
    * @param {function} [config.onNodePointerLeave]
+   * @param {function} [config.onNodeDragStart]
+   * @param {function} [config.onNodeDragEnd]
    * @param {HTMLElement} config.nodesLayer
    * @param {Object} config.canvas - NodeCanvas reference for socket registration
    */
@@ -119,6 +192,8 @@ export class NodeViewManager {
     onNodeClick,
     onNodePointerEnter,
     onNodePointerLeave,
+    onNodeDragStart,
+    onNodeDragEnd,
     nodesLayer,
     canvas,
     onSvgShapeReady,
@@ -133,6 +208,8 @@ export class NodeViewManager {
     this.#onNodeClick = onNodeClick;
     this.#onNodePointerEnter = onNodePointerEnter || null;
     this.#onNodePointerLeave = onNodePointerLeave || null;
+    this.#onNodeDragStart = onNodeDragStart || null;
+    this.#onNodeDragEnd = onNodeDragEnd || null;
     this.#nodesLayer = nodesLayer;
     this.#canvas = canvas;
     this.#onSvgShapeReady = onSvgShapeReady || null;
@@ -214,7 +291,9 @@ export class NodeViewManager {
     el.setAttribute('node-label', node.label);
     el.setAttribute('node-category', node.category);
     el.setAttribute('node-shape', node.shape);
-    el.setAttribute('node-type', node.type || 'default');
+    let nodeType = node.type || 'default';
+    el.setAttribute('node-type', nodeType);
+    el.style.setProperty('--sn-node-type-accent', `var(${nodeTypeTokenName(nodeType)}, var(--sn-node-category-accent))`);
     el.toggleAttribute('data-readonly', this.#readonly);
     el.toggleAttribute('data-readonly-node-dragging', this.#readonlyNodeDragging);
     el._canvas = this.#canvas;
@@ -227,6 +306,7 @@ export class NodeViewManager {
 
     let drag = new Drag();
     let dragStart = null;
+    let dragMoved = false;
 
     drag.initialize(
       el,
@@ -251,18 +331,26 @@ export class NodeViewManager {
         },
         onStart: (e) => {
           dragStart = { x: e.pageX, y: e.pageY };
+          dragMoved = false;
           this.#autoSelectOnDragStart(node.id, e);
           this.#captureDragStartPositions();
           this.#bringToFront(node.id);
           this.#applyLift(el);
           this.#editor.emit('nodepicked', node);
         },
-        onTranslate: (x, y) => {
+        onTranslate: (x, y, e) => {
+          if (!dragMoved) {
+            dragMoved = true;
+            this.#onNodeDragStart?.(node.id, el, e);
+          }
           this.#handleGroupTranslate(node.id, el, x, y);
         },
         onDrop: (e) => {
+          let wasDragging = dragMoved;
           this.#handleDrop(node.id, el, e, dragStart);
+          if (wasDragging) this.#onNodeDragEnd?.(node.id, el, e);
           dragStart = null;
+          dragMoved = false;
         },
       }
     );

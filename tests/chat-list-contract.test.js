@@ -72,6 +72,22 @@ describe('chat list components', () => {
       'ChatSidebarItem compact delete affordance must work in Light DOM collapsed nav'
     );
     assert.ok(
+      sidebarCss.includes('--sn-chat-compact-label-width'),
+      'ChatSidebarItem compact flyout must reserve label width through a reusable CSS token'
+    );
+    assert.ok(
+      sidebarCss.includes('width: var(--sn-chat-compact-flyout-width);'),
+      'ChatSidebarItem compact hover bridge must cover the label and delete button'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item:hover .chat-item-label'),
+      'ChatSidebarItem compact flyout must expose the chat title with the delete affordance'
+    );
+    assert.ok(
+      sidebarCss.includes('inset: 0 auto 0 calc(48px + var(--sn-chat-compact-label-width));'),
+      'ChatSidebarItem compact delete affordance must slide out after the chat title'
+    );
+    assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-delete'),
       'ChatSidebarSubItem compact delete affordance must use the same full flyout hit area'
     );

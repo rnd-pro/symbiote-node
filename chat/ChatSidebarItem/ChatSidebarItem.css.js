@@ -3,6 +3,9 @@ export default `
 chat-sidebar-item,
 chat-sidebar-sub-item {
   display: block;
+  --sn-chat-compact-label-width: 176px;
+  --sn-chat-compact-delete-width: 44px;
+  --sn-chat-compact-flyout-width: calc(var(--sn-chat-compact-label-width) + var(--sn-chat-compact-delete-width));
 }
 
 .chat-item {
@@ -270,13 +273,10 @@ chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child::be
   content: none;
 }
 
-:host-context(.chat-nav[collapsed]) .chat-item-label,
 :host-context(.chat-nav[collapsed]) .chat-item-adapter,
 :host-context(.chat-nav[collapsed]) .chat-expand-icon,
 :host-context(.chat-nav[collapsed]) .chat-status-icon,
 :host-context(.chat-nav[collapsed]) .chat-item-type,
-.chat-nav[collapsed] chat-sidebar-item .chat-item-label,
-.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-label,
 .chat-nav[collapsed] chat-sidebar-item .chat-item-adapter,
 .chat-nav[collapsed] chat-sidebar-sub-item .chat-item-adapter,
 .chat-nav[collapsed] chat-sidebar-item .chat-expand-icon,
@@ -304,11 +304,56 @@ chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child::be
   content: '';
   position: absolute;
   top: 0;
-  right: -48px;
+  right: calc(-1 * var(--sn-chat-compact-flyout-width));
   bottom: 0;
-  width: 48px;
+  width: var(--sn-chat-compact-flyout-width);
   z-index: 20;
   pointer-events: auto;
+}
+
+:host-context(.chat-nav[collapsed]) .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-item .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-label {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 48px;
+  inline-size: var(--sn-chat-compact-label-width);
+  display: flex;
+  align-items: center;
+  padding-inline: 10px 8px;
+  background: var(--sn-node-bg);
+  color: var(--sn-text);
+  box-shadow: var(--sn-chat-item-child-shadow);
+  z-index: 29;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-4px);
+  transition: opacity 0.12s, transform 0.12s;
+}
+
+:host-context(.chat-nav[collapsed]) .chat-item:hover .chat-item-label,
+:host-context(.chat-nav[collapsed]) .chat-item:focus-within .chat-item-label,
+:host-context(.chat-nav[collapsed]) .chat-item:has(.chat-item-delete:hover) .chat-item-label,
+:host-context(.chat-nav[collapsed]) .chat-item:has(.chat-item-delete:focus-visible) .chat-item-label,
+:host-context(.chat-nav[collapsed]) .chat-item-child:hover .chat-item-label,
+:host-context(.chat-nav[collapsed]) .chat-item-child:focus-within .chat-item-label,
+:host-context(.chat-nav[collapsed]) .chat-item-child:has(.chat-item-delete:hover) .chat-item-label,
+:host-context(.chat-nav[collapsed]) .chat-item-child:has(.chat-item-delete:focus-visible) .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-item .chat-item:hover .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-item .chat-item:focus-within .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-item .chat-item:has(.chat-item-delete:hover) .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-item .chat-item:has(.chat-item-delete:focus-visible) .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-item .chat-item-child:hover .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-item .chat-item-child:focus-within .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-item .chat-item-child:has(.chat-item-delete:hover) .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-item .chat-item-child:has(.chat-item-delete:focus-visible) .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child:hover .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child:focus-within .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child:has(.chat-item-delete:hover) .chat-item-label,
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child:has(.chat-item-delete:focus-visible) .chat-item-label {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
 }
 
 :host-context(.chat-nav[collapsed]) .chat-item-icon-slot,
@@ -328,14 +373,12 @@ chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child::be
 :host-context(.chat-nav[collapsed]) .chat-item-delete,
 .chat-nav[collapsed] chat-sidebar-item .chat-item-delete,
 .chat-nav[collapsed] chat-sidebar-sub-item .chat-item-delete {
-  inset: auto -48px 0 auto;
-  top: 0;
-  width: 48px;
+  inset: 0 auto 0 calc(48px + var(--sn-chat-compact-label-width));
+  width: var(--sn-chat-compact-delete-width);
   height: 100%;
   background: var(--sn-node-bg);
   border-radius: 0 4px 4px 0;
-  box-shadow: var(--sn-chat-item-child-shadow);
-  z-index: 30;
+  z-index: 31;
   transition: color 0.12s, opacity 0.12s;
 }
 

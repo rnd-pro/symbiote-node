@@ -364,8 +364,8 @@ describe('discover command', () => {
     });
 
     it('exposes themes with token data', () => {
-      assert.ok(data.manifest.themes.length >= 8);
-      assert.ok(data.manifest.themes.some((theme) => theme.name === 'default-dark'));
+      assert.equal(data.manifest.themes.length, 1);
+      assert.equal(data.manifest.themes[0].name, 'default-provider');
       for (let t of data.manifest.themes) {
         assert.equal(typeof t.name, 'string');
         assert.ok(t.tokens, `${t.name} must have tokens`);
@@ -375,7 +375,7 @@ describe('discover command', () => {
     });
 
     it('exposes tokenFiles', () => {
-      assert.ok(data.manifest.tokenFiles.length >= 9);
+      assert.equal(data.manifest.tokenFiles.length, 2);
       let baseFile = data.manifest.tokenFiles.find((f) => f.name === 'base');
       assert.ok(baseFile, 'base token file must exist');
       assert.equal(baseFile.kind, 'base');
@@ -388,7 +388,7 @@ describe('discover command', () => {
         assert.ok(kinds.includes(kind), `${kind} theme rule block must be discoverable`);
       }
       let componentAlias = data.manifest.themeRuleBlocks.find((block) => block.kind === 'component-alias');
-      assert.equal(componentAlias.theme, 'default-dark');
+      assert.equal(componentAlias.theme, 'default-provider');
       assert.ok(componentAlias.outputs.includes('--sn-layout-gap-bg'));
       assert.ok(componentAlias.appliesTo.includes('chat-composer'));
       assert.ok(componentAlias.derivations.some((item) => item.output === '--sn-layout-border'));
@@ -398,16 +398,16 @@ describe('discover command', () => {
     });
 
     it('exposes theme recipes for agent composition', () => {
-      assert.ok(Array.isArray(data.manifest.themeControls['default-dark']));
-      assert.ok(data.manifest.themeControls['default-dark'].some((control) => control.name === 'hue'));
-      assert.ok(data.manifest.themeControls['default-dark'].some((control) => control.cssVar === '--sn-theme-density'));
+      assert.ok(Array.isArray(data.manifest.themeControls['default-provider']));
+      assert.ok(data.manifest.themeControls['default-provider'].some((control) => control.name === 'hue'));
+      assert.ok(data.manifest.themeControls['default-provider'].some((control) => control.cssVar === '--sn-theme-density'));
       assert.ok(Array.isArray(data.manifest.themeElementGroups));
       assert.ok(data.manifest.themeElementGroups.some((group) => group.name === 'graph'));
       assert.ok(data.manifest.themeElementGroups.some((group) => group.name === 'row'));
       assert.ok(Array.isArray(data.manifest.themeRecipes));
-      let recipe = data.manifest.themeRecipes.find((item) => item.name === 'default-dark');
-      assert.ok(recipe, 'default-dark recipe must be discoverable');
-      assert.equal(recipe.tokenFile, 'tokens/themes/default-dark.json');
+      let recipe = data.manifest.themeRecipes.find((item) => item.name === 'default-provider');
+      assert.ok(recipe, 'default-provider recipe must be discoverable');
+      assert.equal(recipe.tokenFile, 'tokens/themes/default-provider.json');
       assert.equal(recipe.flatTokens['control.hue'].$value, '218');
       assert.equal(recipe.flatTokens['color.accent'].$value, 'hsl(var(--sn-hue-accent) var(--sn-sat-vivid) var(--sn-lit-accent))');
       assert.equal(recipe.cssTokens['--sn-layout-border'], 'transparent');
@@ -419,8 +419,6 @@ describe('discover command', () => {
       assert.ok(recipe.controls.some((control) => control.name === 'chroma'));
       assert.ok(recipe.elementGroups.some((group) => group.name === 'control'));
       assert.ok(recipe.ruleBlocks.some((block) => block.kind === 'component-alias'));
-      let darkRecipe = data.manifest.themeRecipes.find((item) => item.name === 'dark');
-      assert.equal(darkRecipe.cssTokenSource, 'not-runtime-complete');
     });
 
     it('exposes rulesets with inline rules', () => {

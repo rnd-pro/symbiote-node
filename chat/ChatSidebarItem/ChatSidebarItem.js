@@ -17,6 +17,7 @@ export class ChatSidebarItem extends Symbiote {
     statusIcon: '',
     statusTitle: '',
     hasChildren: false,
+    isGroup: false,
     isExpanded: false,
     isActive: false,
     subChats: [],
@@ -24,6 +25,15 @@ export class ChatSidebarItem extends Symbiote {
     onItemClick: (event) => {
       if (event.target.closest('.chat-item-delete') || event.target.closest('.chat-expand-icon')) return;
       event.stopPropagation();
+      if (this.$.isGroup) {
+        this.$.isExpanded = !this.$.isExpanded;
+        emit(this, 'chat-sidebar-toggle', {
+          id: this.$.id,
+          expanded: this.$.isExpanded,
+          item: this.$,
+        });
+        return;
+      }
       if (this.$.id) emit(this, 'chat-sidebar-select', { id: this.$.id, item: this.$ });
     },
 
@@ -58,11 +68,15 @@ export class ChatSidebarItem extends Symbiote {
       this.toggleAttribute('data-has-sub', value);
       if (!value) this.$.isExpanded = false;
     });
+    this.sub('isGroup', (value) => {
+      this.toggleAttribute('data-group', value);
+    });
     this.sub('agentColor', (value) => this._syncAgentColor(value));
     this.sub('statusKind', () => this._syncStatus());
     this.sub('statusIcon', () => this._syncStatus());
     this._syncAgentColor(this.$.agentColor);
     this._syncStatus();
+    this.toggleAttribute('data-group', this.$.isGroup);
 
     this.sub('subChats', (chats) => {
       let has = chats && chats.length > 0;
@@ -130,12 +144,26 @@ export class ChatSidebarSubItem extends Symbiote {
     statusIcon: '',
     statusTitle: '',
     agentType: '',
+    hasChildren: false,
+    isExpanded: false,
     isActive: false,
+    subChats: [],
 
     onItemClick: (event) => {
-      if (event.target.closest('.chat-item-delete')) return;
+      if (event.target.closest('.chat-item-delete') || event.target.closest('.chat-expand-icon')) return;
       event.stopPropagation();
       if (this.$.id) emit(this, 'chat-sidebar-select', { id: this.$.id, item: this.$ });
+    },
+
+    onExpandToggle: (event) => {
+      event.stopPropagation();
+      if (!this.$.hasChildren) return;
+      this.$.isExpanded = !this.$.isExpanded;
+      emit(this, 'chat-sidebar-toggle', {
+        id: this.$.id,
+        expanded: this.$.isExpanded,
+        item: this.$,
+      });
     },
 
     onDelete: (event) => {
@@ -147,12 +175,34 @@ export class ChatSidebarSubItem extends Symbiote {
   renderCallback() {
     this.sub('isActive', (value) => {
       this.toggleAttribute('data-active', value);
+      this._syncAutoExpanded();
+    });
+    this.sub('isExpanded', (value) => {
+      this.toggleAttribute('data-expanded', value);
+    });
+    this.sub('hasChildren', (value) => {
+      this.toggleAttribute('data-has-sub', value);
+      if (!value) this.$.isExpanded = false;
     });
     this.sub('agentColor', (value) => this._syncAgentColor(value));
     this.sub('statusKind', () => this._syncStatus());
     this.sub('statusIcon', () => this._syncStatus());
     this._syncAgentColor(this.$.agentColor);
     this._syncStatus();
+    this.sub('subChats', (chats) => {
+      let has = chats && chats.length > 0;
+      this.$.hasChildren = has;
+      this._syncAutoExpanded();
+    });
+  }
+
+  _syncAutoExpanded() {
+    let chats = this.$.subChats || [];
+    let hasActiveChild = chats.some((chat) => chat.isActive);
+    let hasRunningChild = chats.some((chat) => chat.pendingTaskId);
+    if (chats.length && (this.$.isActive || hasActiveChild || hasRunningChild)) {
+      this.$.isExpanded = true;
+    }
   }
 
   _syncAgentColor(value) {
@@ -188,7 +238,9 @@ ChatSidebarSubItem.template = html`
   <span class="chat-item-label" ${{ textContent: 'cleanName' }}></span>
   <span class="chat-item-type" ${{ textContent: 'agentType' }}></span>
   <span class="material-symbols-outlined chat-status-icon" ref="statusIcon" ${{ textContent: 'statusIcon', title: 'statusTitle' }}></span>
+  <span class="material-symbols-outlined chat-expand-icon" role="button" tabindex="0" title="Toggle child chats" aria-label="Toggle child chats" ${{ onclick: 'onExpandToggle' }}>chevron_right</span>
 </div>
+<div class="chat-sub-items" itemize="subChats" item-tag="chat-sidebar-sub-item"></div>
 `;
 
 ChatSidebarItem.rootStyles = css;

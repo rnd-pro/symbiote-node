@@ -131,14 +131,7 @@ describe('SSR-safe import boundary', () => {
       '../themes/Theme.js',
       '../themes/Palette.js',
       '../themes/Skin.js',
-      '../themes/carbon.js',
-      '../themes/dark.js',
-      '../themes/light.js',
-      '../themes/ebook.js',
-      '../themes/grey.js',
-      '../themes/neon.js',
-      '../themes/pcb.js',
-      '../themes/synthwave.js',
+      '../themes/default-provider.js',
     ];
     for (let mod of modules) {
       await assert.doesNotReject(

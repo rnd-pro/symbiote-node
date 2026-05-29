@@ -1,9 +1,11 @@
 export default `
-:host {
+:host,
+quick-open {
   display: block;
 }
 
-  :host { position: fixed; inset: 0; z-index: 9999; pointer-events: none; }
+  :host { position: fixed; inset: 0; z-index: 9999; pointer-events: none; },
+  quick-open { position: fixed; inset: 0; z-index: 9999; pointer-events: none; }
   .qo-overlay {
     position: fixed; inset: 0; z-index: 9999;
     background: var(--sn-bg-overlay);

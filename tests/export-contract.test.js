@@ -44,21 +44,10 @@ const ROOT_EXPORTS = [
   ['SVGShape', 'function'],
   ['createSVGShape', 'function'],
   ['SVG_PRESETS', 'object'],
-  ['DARK_DEFAULT', 'object'],
-  ['LIGHT_CLEAN', 'object'],
-  ['SYNTHWAVE', 'object'],
-  ['GREY_NEUTRAL', 'object'],
-  ['NEON_GLOW', 'object'],
-  ['DEFAULT_DARK', 'object'],
-  ['DEFAULT_THEME', 'object'],
   ['DEFAULT_PROVIDER_THEME', 'object'],
-  ['DARK_PALETTE', 'object'],
-  ['LIGHT_PALETTE', 'object'],
-  ['SYNTHWAVE_PALETTE', 'object'],
-  ['GREY_PALETTE', 'object'],
-  ['DEFAULT_DARK_PALETTE', 'object'],
-  ['DEFAULT_PALETTE', 'object'],
+  ['DEFAULT_THEME', 'object'],
   ['DEFAULT_PROVIDER_PALETTE', 'object'],
+  ['DEFAULT_PALETTE', 'object'],
   ['MODERN_SKIN', 'object'],
   ['COMPACT_SKIN', 'object'],
   ['ROUNDED_SKIN', 'object'],
@@ -205,12 +194,6 @@ const ROOT_EXPORTS = [
   ['getGraphClusterColorToken', 'function'],
   ['isGraphColorReference', 'function'],
   ['normalizeGraphColorReference', 'function'],
-  ['CARBON', 'object'],
-  ['CARBON_PALETTE', 'object'],
-  ['PCB_DARK', 'object'],
-  ['EBOOK', 'object'],
-  ['EBOOK_PALETTE', 'object'],
-  ['NEON_PALETTE', 'object'],
 ];
 
 const UI_EXPORTS = [
@@ -645,11 +628,9 @@ describe('symbiote-node UI exports', () => {
     assert.notEqual(ui.History, ui.GraphHistory);
   });
 
-  it('uses default dark as the default theme and palette', () => {
-    assert.equal(ui.DEFAULT_THEME, ui.DEFAULT_DARK);
-    assert.equal(ui.DEFAULT_PROVIDER_THEME, ui.DEFAULT_DARK);
-    assert.equal(ui.DEFAULT_PALETTE, ui.DEFAULT_DARK_PALETTE);
-    assert.equal(ui.DEFAULT_PROVIDER_PALETTE, ui.DEFAULT_DARK_PALETTE);
+  it('uses default provider as the default theme and palette', () => {
+    assert.equal(ui.DEFAULT_THEME, ui.DEFAULT_PROVIDER_THEME);
+    assert.equal(ui.DEFAULT_PALETTE, ui.DEFAULT_PROVIDER_PALETTE);
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-theme-hue'], '218');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-hue-accent'], 'var(--sn-theme-hue)');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-panel-bg'], 'hsl(0 0% var(--sn-lit-surface))');

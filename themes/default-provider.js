@@ -1,13 +1,13 @@
 /**
- * Default Dark — default production theme for symbiote-node UI
+ * Default Provider — default production theme for symbiote-node UI
  *
  * Cascadeable neutral shell aligned with the current Agent Portal theme.
  * Host applications can override the source controls at :root or a subtree.
  *
- * @module symbiote-node/themes/default-dark
+ * @module symbiote-node/themes/default-provider
  */
 
-const DEFAULT_DARK_TOKENS = {
+const DEFAULT_PROVIDER_THEME_TOKENS = {
   '--sn-theme-hue': '218',
   '--sn-theme-chroma': '89%',
   '--sn-theme-bg-lightness': '10%',
@@ -506,6 +506,9 @@ const DEFAULT_DARK_TOKENS = {
   '--sn-composer-radius': 'calc(20px * var(--sn-theme-radius-scale))',
   '--sn-composer-send-size': '32px',
   '--sn-composer-send-icon-size': '18px',
+  '--sn-composer-send-hover-bg': 'var(--sn-tabs-accent)',
+  '--sn-composer-footer-icon-size': '12px',
+  '--sn-composer-footer-toggle-icon-size': '18px',
   '--sn-composer-collapsed-control-width': '10px',
   '--sn-composer-collapsed-control-padding': '10px',
   '--sn-composer-control-gap': '8px',
@@ -554,6 +557,7 @@ const DEFAULT_DARK_TOKENS = {
   '--sn-source-action-bg': 'var(--sn-bg)',
   '--sn-source-action-hover-bg': 'var(--sn-node-hover)',
   '--sn-source-action-radius': 'calc(4px * var(--sn-theme-radius-scale))',
+  '--sn-source-action-icon-size': '14px',
 
   '--sn-source-editor-bg': 'var(--sn-bg)',
   '--sn-editor-bg': 'var(--sn-source-editor-bg)',
@@ -632,7 +636,7 @@ const DEFAULT_DARK_TOKENS = {
   '--text-color-muted': 'var(--sn-text-dim)',
 };
 
-const DEFAULT_DARK_PALETTE_COLORS = {
+const DEFAULT_PROVIDER_PALETTE_COLORS = {
   '--sn-theme-hue': '218',
   '--sn-theme-chroma': '89%',
   '--sn-theme-bg-lightness': '10%',
@@ -664,13 +668,13 @@ const DEFAULT_DARK_PALETTE_COLORS = {
 };
 
 /** @type {import('./Theme.js').ThemeDefinition} */
-export let DEFAULT_DARK = {
-  name: 'default-dark',
-  tokens: { ...DEFAULT_DARK_TOKENS },
+export let DEFAULT_PROVIDER_THEME = {
+  name: 'default-provider',
+  tokens: { ...DEFAULT_PROVIDER_THEME_TOKENS },
 };
 
 /** @type {import('./Palette.js').PaletteDefinition} */
-export let DEFAULT_DARK_PALETTE = {
-  name: 'default-dark',
-  colors: { ...DEFAULT_DARK_PALETTE_COLORS },
+export let DEFAULT_PROVIDER_PALETTE = {
+  name: 'default-provider',
+  colors: { ...DEFAULT_PROVIDER_PALETTE_COLORS },
 };

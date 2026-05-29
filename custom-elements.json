@@ -1515,6 +1515,10 @@
             {
               "name": "--sn-source-toolbar-gap",
               "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-source-action-icon-size",
+              "description": "Theme CSS custom property consumed by this component."
             }
           ]
         }
@@ -3542,6 +3546,18 @@
             },
             {
               "name": "--sn-composer-control-gap",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-composer-send-hover-bg",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-composer-footer-icon-size",
+              "description": "Theme CSS custom property consumed by this component."
+            },
+            {
+              "name": "--sn-composer-footer-toggle-icon-size",
               "description": "Theme CSS custom property consumed by this component."
             },
             {

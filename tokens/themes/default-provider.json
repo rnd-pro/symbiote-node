@@ -1,5 +1,5 @@
 {
-  "name": "default-dark",
+  "name": "default-provider",
   "extends": "../base.json",
   "$description": "Cascadeable neutral provider default aligned with the current Agent Portal shell values. Runtime CSS variables derive neutral surfaces, accents, controls, geometry, motion, and elevation from native HSL controls and color-mix aliases.",
   "$extensions": {

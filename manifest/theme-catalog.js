@@ -1,19 +1,11 @@
-import { DEFAULT_DARK } from '../themes/default-dark.js';
+import { DEFAULT_PROVIDER_THEME } from '../themes/default-provider.js';
 
 export let THEME_NAMES = [
-  'default-dark',
-  'dark',
-  'light',
-  'carbon',
-  'pcb',
-  'neon',
-  'grey',
-  'synthwave',
-  'ebook',
+  'default-provider',
 ];
 
 export let THEME_METADATA = {
-  'default-dark': {
+  'default-provider': {
     role: 'neutral-default',
     aliases: ['symbiote-default', 'default-provider', 'DEFAULT_PROVIDER_THEME'],
     defaultExport: 'DEFAULT_PROVIDER_THEME',
@@ -48,7 +40,7 @@ export let TOKEN_FILES = [
 ];
 
 const RUNTIME_THEMES = {
-  'default-dark': DEFAULT_DARK,
+  'default-provider': DEFAULT_PROVIDER_THEME,
 };
 
 const CSS_TOKEN_CLASSIFIERS = [
@@ -98,7 +90,7 @@ function classifyCssToken(cssVar) {
 }
 
 export let THEME_CONTROLS = {
-  'default-dark': [
+  'default-provider': [
     { name: 'hue', type: 'number', default: '218', cssVar: '--sn-theme-hue', description: 'Primary accent hue in native CSS HSL space.' },
     { name: 'chroma', type: 'percentage', default: '89%', cssVar: '--sn-theme-chroma', description: 'Primary accent saturation/chroma used by selected, focus, and loading states.' },
     { name: 'backgroundLightness', type: 'percentage', default: '10%', cssVar: '--sn-theme-bg-lightness', description: 'Root surface lightness; can move the preset between darker and lighter modes.' },
@@ -188,8 +180,8 @@ export let THEME_ELEMENT_GROUPS = [
 
 export let THEME_RULE_BLOCKS = [
   {
-    name: 'default-dark-source-accents',
-    theme: 'default-dark',
+    name: 'default-provider-source-accents',
+    theme: 'default-provider',
     kind: 'source-accent',
     description: 'Minimal human or agent-selected inputs for the default provider theme.',
     parameters: [
@@ -210,8 +202,8 @@ export let THEME_RULE_BLOCKS = [
     ],
   },
   {
-    name: 'default-dark-color-cascade',
-    theme: 'default-dark',
+    name: 'default-provider-color-cascade',
+    theme: 'default-provider',
     kind: 'color-cascade',
     description: 'Derives surfaces, text, borders, overlays, hover, and selected states from source accents.',
     parameters: [
@@ -281,8 +273,8 @@ export let THEME_RULE_BLOCKS = [
     ],
   },
   {
-    name: 'default-dark-geometry-cascade',
-    theme: 'default-dark',
+    name: 'default-provider-geometry-cascade',
+    theme: 'default-provider',
     kind: 'geometry-cascade',
     description: 'Derives density, panel gaps, row heights, radii, and control sizes from one spacing scale.',
     parameters: [
@@ -308,8 +300,8 @@ export let THEME_RULE_BLOCKS = [
     ],
   },
   {
-    name: 'default-dark-typography-cascade',
-    theme: 'default-dark',
+    name: 'default-provider-typography-cascade',
+    theme: 'default-provider',
     kind: 'typography-cascade',
     description: 'Defines compact application typography for panels, lists, chat, and code surfaces.',
     parameters: [
@@ -328,8 +320,8 @@ export let THEME_RULE_BLOCKS = [
     ],
   },
   {
-    name: 'default-dark-motion-effects',
-    theme: 'default-dark',
+    name: 'default-provider-motion-effects',
+    theme: 'default-provider',
     kind: 'motion-effects',
     description: 'Defines transition and shadow aliases for hover, active, focus, drag, and loading states.',
     parameters: [
@@ -347,8 +339,8 @@ export let THEME_RULE_BLOCKS = [
     ],
   },
   {
-    name: 'default-dark-semantic-aliases',
-    theme: 'default-dark',
+    name: 'default-provider-semantic-aliases',
+    theme: 'default-provider',
     kind: 'semantic-alias',
     description: 'Maps cascade outputs to semantic application aliases without component ownership.',
     parameters: [
@@ -370,8 +362,8 @@ export let THEME_RULE_BLOCKS = [
     ],
   },
   {
-    name: 'default-dark-component-aliases',
-    theme: 'default-dark',
+    name: 'default-provider-component-aliases',
+    theme: 'default-provider',
     kind: 'component-alias',
     description: 'Maps semantic theme aliases to reusable Symbiote Node component surfaces.',
     parameters: [
@@ -522,8 +514,8 @@ export let THEME_RULE_BLOCKS = [
 ];
 
 export let THEME_TOKENS = {
-  "default-dark": {
-    "name": "default-dark",
+  "default-provider": {
+    "name": "default-provider",
     "extends": "../base.json",
     "$description": "Cascadeable neutral provider default aligned with the current Agent Portal shell values. Runtime CSS variables derive neutral surfaces, accents, controls, geometry, motion, and elevation from native HSL controls and color-mix aliases.",
     "$extensions": {
@@ -2036,222 +2028,6 @@ export let THEME_TOKENS = {
         "$value": "0 -8px calc(28px * var(--sn-theme-elevation-scale)) hsl(var(--sn-hue-base) var(--sn-sat-muted) 0% / 0.32)"
       }
     }
-  },
-  "dark": {
-    "name": "dark",
-    "extends": "../base.json",
-    "color": {
-      "background": {
-        "$type": "color",
-        "$value": "hsl(230, 30%, 12%)"
-      },
-      "surface": {
-        "$type": "color",
-        "$value": "hsl(230, 30%, 18%)"
-      },
-      "border": {
-        "$type": "color",
-        "$value": "hsl(230, 15%, 22%)"
-      },
-      "text": {
-        "$type": "color",
-        "$value": "hsl(230, 15%, 89%)"
-      },
-      "textDim": {
-        "$type": "color",
-        "$value": "hsl(230, 15%, 63%)"
-      },
-      "accent": {
-        "$type": "color",
-        "$value": "hsl(215, 60%, 65%)"
-      }
-    }
-  },
-  "light": {
-    "name": "light",
-    "extends": "../base.json",
-    "color": {
-      "background": {
-        "$type": "color",
-        "$value": "hsl(220, 14%, 95%)"
-      },
-      "surface": {
-        "$type": "color",
-        "$value": "hsl(0, 0%, 100%)"
-      },
-      "border": {
-        "$type": "color",
-        "$value": "hsl(220, 8%, 78%)"
-      },
-      "text": {
-        "$type": "color",
-        "$value": "hsl(220, 10%, 15%)"
-      },
-      "textDim": {
-        "$type": "color",
-        "$value": "hsl(220, 8%, 45%)"
-      },
-      "accent": {
-        "$type": "color",
-        "$value": "hsl(217, 60%, 50%)"
-      }
-    }
-  },
-  "carbon": {
-    "name": "carbon",
-    "extends": "../base.json",
-    "color": {
-      "background": {
-        "$type": "color",
-        "$value": "hsl(220, 13%, 9%)"
-      },
-      "surface": {
-        "$type": "color",
-        "$value": "hsl(220, 13%, 14%)"
-      },
-      "border": {
-        "$type": "color",
-        "$value": "hsl(220, 10%, 24%)"
-      },
-      "text": {
-        "$type": "color",
-        "$value": "hsl(210, 16%, 92%)"
-      },
-      "accent": {
-        "$type": "color",
-        "$value": "hsl(196, 100%, 55%)"
-      }
-    }
-  },
-  "pcb": {
-    "name": "pcb",
-    "extends": "../base.json",
-    "color": {
-      "background": {
-        "$type": "color",
-        "$value": "hsl(159, 82%, 9%)"
-      },
-      "surface": {
-        "$type": "color",
-        "$value": "hsl(158, 66%, 13%)"
-      },
-      "border": {
-        "$type": "color",
-        "$value": "hsl(45, 92%, 48%)"
-      },
-      "text": {
-        "$type": "color",
-        "$value": "hsl(142, 42%, 88%)"
-      },
-      "accent": {
-        "$type": "color",
-        "$value": "hsl(45, 92%, 58%)"
-      }
-    }
-  },
-  "neon": {
-    "name": "neon",
-    "extends": "../base.json",
-    "color": {
-      "background": {
-        "$type": "color",
-        "$value": "hsl(252, 45%, 8%)"
-      },
-      "surface": {
-        "$type": "color",
-        "$value": "hsl(252, 42%, 13%)"
-      },
-      "border": {
-        "$type": "color",
-        "$value": "hsl(286, 100%, 62%)"
-      },
-      "text": {
-        "$type": "color",
-        "$value": "hsl(186, 100%, 88%)"
-      },
-      "accent": {
-        "$type": "color",
-        "$value": "hsl(286, 100%, 62%)"
-      }
-    }
-  },
-  "grey": {
-    "name": "grey",
-    "extends": "../base.json",
-    "color": {
-      "background": {
-        "$type": "color",
-        "$value": "hsl(210, 8%, 12%)"
-      },
-      "surface": {
-        "$type": "color",
-        "$value": "hsl(210, 7%, 18%)"
-      },
-      "border": {
-        "$type": "color",
-        "$value": "hsl(210, 6%, 30%)"
-      },
-      "text": {
-        "$type": "color",
-        "$value": "hsl(210, 8%, 88%)"
-      },
-      "accent": {
-        "$type": "color",
-        "$value": "hsl(210, 16%, 64%)"
-      }
-    }
-  },
-  "synthwave": {
-    "name": "synthwave",
-    "extends": "../base.json",
-    "color": {
-      "background": {
-        "$type": "color",
-        "$value": "hsl(257, 48%, 10%)"
-      },
-      "surface": {
-        "$type": "color",
-        "$value": "hsl(257, 44%, 16%)"
-      },
-      "border": {
-        "$type": "color",
-        "$value": "hsl(326, 95%, 60%)"
-      },
-      "text": {
-        "$type": "color",
-        "$value": "hsl(46, 100%, 86%)"
-      },
-      "accent": {
-        "$type": "color",
-        "$value": "hsl(326, 95%, 60%)"
-      }
-    }
-  },
-  "ebook": {
-    "name": "ebook",
-    "extends": "../base.json",
-    "color": {
-      "background": {
-        "$type": "color",
-        "$value": "hsl(44, 52%, 94%)"
-      },
-      "surface": {
-        "$type": "color",
-        "$value": "hsl(44, 48%, 98%)"
-      },
-      "border": {
-        "$type": "color",
-        "$value": "hsl(38, 24%, 72%)"
-      },
-      "text": {
-        "$type": "color",
-        "$value": "hsl(32, 24%, 20%)"
-      },
-      "accent": {
-        "$type": "color",
-        "$value": "hsl(207, 48%, 42%)"
-      }
-    }
   }
 };
 
@@ -2265,6 +2041,7 @@ export function getTheme(name) {
 }
 
 export function getThemeTokens(name) {
+  if (!THEME_NAMES.includes(name)) return undefined;
   return THEME_TOKENS[name];
 }
 

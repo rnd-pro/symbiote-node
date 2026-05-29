@@ -1,5 +1,6 @@
 export default `
-:host {
+:host,
+chat-message-item {
   display: contents;
 }
 

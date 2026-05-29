@@ -1,5 +1,6 @@
 export default /*css*/ `
-:host {
+:host,
+chat-list-item {
   display: block;
 }
 
@@ -18,7 +19,8 @@ export default /*css*/ `
   background: var(--sn-node-hover);
 }
 
-:host([active]) .chat-list-item {
+:host([active]) .chat-list-item,
+chat-list-item[active] .chat-list-item {
   background: var(--sn-node-bg);
   border-left: 3px solid var(--sn-node-selected);
   padding-left: 11px;
@@ -30,13 +32,15 @@ export default /*css*/ `
   gap: 6px;
 }
 
-:host([nested]) .chat-list-item {
+:host([nested]) .chat-list-item,
+chat-list-item[nested] .chat-list-item {
   margin-left: 16px;
   border-left: 2px solid var(--sn-node-border);
   position: relative;
 }
 
-:host([nested]) .chat-list-item::before {
+:host([nested]) .chat-list-item::before,
+chat-list-item[nested] .chat-list-item::before {
   content: '';
   position: absolute;
   top: 14px;

@@ -120,6 +120,9 @@ describe('SourceViewer display helpers', () => {
     for (let token of ['--sn-syntax-keyword', '--sn-syntax-string', '--sn-syntax-comment', '--sn-diagnostic-error-bg']) {
       assert.ok(codeBlockCss.includes(token), `CodeBlock must consume ${token}`);
     }
+
+    let sourceViewerCss = fs.readFileSync(path.join(ROOT, 'display/SourceViewer/SourceViewer.css.js'), 'utf8');
+    assert.ok(sourceViewerCss.includes('--sn-source-action-icon-size'));
   });
 
   it('exposes a public content setter for host display adapters', () => {

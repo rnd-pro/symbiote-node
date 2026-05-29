@@ -117,6 +117,13 @@ describe('package exports resolution', () => {
     assert.equal(typeof markdownFormatter.escapeHtml, 'function');
   });
 
+  it('does not expose removed legacy themes as package subpaths', async () => {
+    for (let theme of ['dark', 'light', 'synthwave', 'grey', 'neon', 'carbon', 'pcb', 'ebook', 'default-dark']) {
+      await assert.rejects(import(`symbiote-node/themes/${theme}.js`));
+    }
+    await assert.doesNotReject(import('symbiote-node/themes/default-provider.js'));
+  });
+
   it('exposes markdown formatting as a reusable display utility', async () => {
     let { formatMarkdown } = await import('symbiote-node/display/markdown-formatter');
 

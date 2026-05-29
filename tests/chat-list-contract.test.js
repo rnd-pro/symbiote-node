@@ -52,6 +52,22 @@ describe('chat list components', () => {
       'ChatComposer drag-over styling must work without Shadow DOM :host'
     );
     assert.ok(
+      composerCss.includes('sn-button.btn-send[variant="icon"] {'),
+      'ChatComposer send affordance must override the shared icon-button background contract'
+    );
+    assert.ok(
+      composerCss.includes('background: var(--sn-button-bg);'),
+      'ChatComposer send affordance must render as an inverted action button'
+    );
+    assert.ok(
+      composerCss.includes('border: 0;'),
+      'ChatComposer send affordance must remove the shared button border'
+    );
+    assert.ok(
+      composerCss.includes('--sn-button-hover-bg: var(--sn-composer-send-hover-bg);'),
+      'ChatComposer send hover must use the project accent theme token'
+    );
+    assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item-delete'),
       'ChatSidebarItem compact delete affordance must work in Light DOM collapsed nav'
     );
@@ -78,6 +94,67 @@ describe('chat list components', () => {
     assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item:has(.chat-item-delete:hover) .chat-item-delete'),
       'ChatSidebarItem compact delete affordance must not disappear when pointer moves onto the flyout button'
+    );
+    assert.equal(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-sub-items'),
+      false,
+      'Collapsed chat navigation must still allow expanded chat groups to render their nested icons'
+    );
+    assert.equal(
+      sidebarCss.includes(':host-context(.chat-nav[collapsed]) .chat-sub-items'),
+      false,
+      'Shadow-context collapsed chat navigation must not suppress expanded nested chats'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child::before'),
+      'Collapsed nested chat rows must suppress vertical tree rails so they do not cross centered icons'
+    );
+  });
+
+  it('supports grouped project chat trees with recursive sub-items', () => {
+    let sidebarJs = read('chat/ChatSidebarItem/ChatSidebarItem.js');
+    let sidebarCss = read('chat/ChatSidebarItem/ChatSidebarItem.css.js');
+
+    assert.ok(
+      sidebarJs.includes('isGroup: false'),
+      'ChatSidebarItem must expose an explicit group mode for non-chat tree roots'
+    );
+    assert.ok(
+      sidebarJs.includes("emit(this, 'chat-sidebar-toggle'"),
+      'ChatSidebarItem group and expand controls must emit toggle events instead of selecting chats'
+    );
+    assert.ok(
+      sidebarJs.includes('this.toggleAttribute(\'data-group\', value)'),
+      'ChatSidebarItem must reflect project groups to a host attribute for theme styling'
+    );
+    assert.equal(
+      (sidebarJs.match(/item-tag="chat-sidebar-sub-item"/g) || []).length,
+      2,
+      'ChatSidebarItem and ChatSidebarSubItem must both render recursive chat-sidebar-sub-item children'
+    );
+    assert.ok(
+      sidebarCss.includes('var(--sn-chat-item-icon-color, var(--sn-cat-server)) 14%'),
+      'Active chat rows must derive selection tint from the project or agent icon color'
+    );
+    assert.ok(
+      sidebarCss.includes('chat-sidebar-item[data-group] > .chat-item .chat-item-delete'),
+      'Project group roots must not expose chat delete controls'
+    );
+    assert.ok(
+      sidebarCss.includes('chat-sidebar-item[data-group] + chat-sidebar-item[data-group]'),
+      'Adjacent project chat groups must use a horizontal divider instead of a vertical rail'
+    );
+    assert.ok(
+      sidebarCss.includes('inline-size: 16px;'),
+      'Project chat group dividers must match the icon width in collapsed navigation'
+    );
+    assert.ok(
+      sidebarCss.includes('background: var(--sn-tabs-divider);'),
+      'Project chat group dividers must reuse the project tabs divider token'
+    );
+    assert.ok(
+      sidebarCss.includes('chat-sidebar-sub-item[data-expanded] > .chat-sub-items'),
+      'Nested chat sub-items must be able to expand their own child chats'
     );
   });
 });

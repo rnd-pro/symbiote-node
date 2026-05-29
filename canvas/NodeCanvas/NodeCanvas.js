@@ -105,7 +105,7 @@ export class NodeCanvas extends Symbiote {
   _panAnimFrame = null;
 
   /** @type {string} */
-  _themeName = 'dark-default';
+  _themeName = 'default-provider';
 
   /** @type {NodeViewManager|null} */
   _viewManager = null;

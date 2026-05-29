@@ -643,20 +643,11 @@ Separate **Palette** (colors), **Skin** (geometry), and **Theme** (combined) lay
 | Theme | Description |
 |-------|-------------|
 | `DEFAULT_PROVIDER_THEME` / `DEFAULT_THEME` | Cascadeable provider default aligned with the current Agent Portal shell; parameterized by source controls rather than locked to a dark/light mode |
-| `DEFAULT_DARK` | Backward-compatible name for the current provider default preset |
-| `GREY_NEUTRAL` | Balanced grey UI |
-| `DARK_DEFAULT` | Professional dark interface |
-| `LIGHT_CLEAN` | Light mode |
-| `SYNTHWAVE` | Neon retro aesthetic |
-| `NEON_GLOW` | Vivid glow effects |
-| `CARBON` | IBM Carbon-inspired |
-| `EBOOK` | Warm paper-like reading theme |
 
 ```javascript
-import { applyTheme, DEFAULT_PROVIDER_THEME, applyPalette, SYNTHWAVE_PALETTE } from 'symbiote-node/ui';
+import { applyTheme, DEFAULT_PROVIDER_THEME } from 'symbiote-node/ui';
 
 applyTheme(appShellElement, DEFAULT_PROVIDER_THEME); // Full provider theme
-applyPalette(canvasElement, SYNTHWAVE_PALETTE); // Colors only
 ```
 
 For first paint before JavaScript applies a runtime theme, host shells can load the static provider defaults:
@@ -847,7 +838,7 @@ Use `--json` with `run`, `validate`, `list`, and `inspect` when integrating with
 - `schemas/` — graph JSON schemas
 - `node engine/cli.js discover` — one JSON payload for component, theme, rule, token, schema, and export discovery
 
-Theme recipes are available through `getThemeRecipe(name)` from `symbiote-node/manifest` and through `discover.manifest.themeRecipes`. A recipe combines theme metadata, the theme file, DTCG token tree, flattened token paths, runtime CSS custom properties, parametric controls, element groups, and rule blocks so agents can build or modify themes from explicit source accents, cascade formulas, semantic aliases, and component aliases. The default provider theme exposes native CSS controls such as `--sn-theme-hue`, `--sn-theme-chroma`, `--sn-theme-density`, `--sn-theme-radius-scale`, `--sn-theme-motion-scale`, and `--sn-theme-elevation-scale`; host apps can override those at `:root` or any subtree boundary without per-component style patches. HSL/alpha-HSL and `color-mix()` aliases, geometry tokens, and control tokens are part of the manifest recipe and DTCG token file. Themeable library CSS should reference `--sn-*` tokens directly and rely on `DEFAULT_PROVIDER_THEME` for defaults; raw component colors or geometry belong in `themes/default-dark.js`, `tokens/themes/default-dark.json`, and the theme catalog.
+Theme recipes are available through `getThemeRecipe(name)` from `symbiote-node/manifest` and through `discover.manifest.themeRecipes`. A recipe combines theme metadata, the theme file, DTCG token tree, flattened token paths, runtime CSS custom properties, parametric controls, element groups, and rule blocks so agents can build or modify themes from explicit source accents, cascade formulas, semantic aliases, and component aliases. The default provider theme exposes native CSS controls such as `--sn-theme-hue`, `--sn-theme-chroma`, `--sn-theme-density`, `--sn-theme-radius-scale`, `--sn-theme-motion-scale`, and `--sn-theme-elevation-scale`; host apps can override those at `:root` or any subtree boundary without per-component style patches. HSL/alpha-HSL and `color-mix()` aliases, geometry tokens, and control tokens are part of the manifest recipe and DTCG token file. Themeable library CSS should reference `--sn-*` tokens directly and rely on `DEFAULT_PROVIDER_THEME` for defaults; raw component colors or geometry belong in `themes/default-provider.js`, `tokens/themes/default-provider.json`, and the theme catalog.
 
 ## Engine Handlers
 

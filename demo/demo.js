@@ -17,14 +17,8 @@ import {
   Frame,
   History,
   SubgraphNode,
-  DARK_DEFAULT,
-  SYNTHWAVE,
-  GREY_NEUTRAL,
-  NEON_GLOW,
-  DARK_PALETTE,
-  LIGHT_PALETTE,
-  SYNTHWAVE_PALETTE,
-  GREY_PALETTE,
+  DEFAULT_PROVIDER_THEME,
+  DEFAULT_PROVIDER_PALETTE,
   MODERN_SKIN,
   COMPACT_SKIN,
   ROUNDED_SKIN,
@@ -280,7 +274,7 @@ async function initDemo() {
 
 
   const applyToRoot = (theme) => applyTheme(document.documentElement, theme);
-  applyToRoot(GREY_NEUTRAL);
+  applyToRoot(DEFAULT_PROVIDER_THEME);
 
 
   const PANEL_TYPES = {
@@ -439,7 +433,7 @@ async function initDemo() {
     }
 
     canvas.setEditor(editor);
-    canvas.setTheme(GREY_NEUTRAL);
+    canvas.setTheme(DEFAULT_PROVIDER_THEME);
     canvas.setSnapGrid(true, 20);
 
 
@@ -566,13 +560,10 @@ async function initDemo() {
     }
 
 
-    const themes = [GREY_NEUTRAL, DARK_DEFAULT, SYNTHWAVE, NEON_GLOW];
-    let themeIdx = 0;
     const btnTheme = document.getElementById('btnTheme');
     const switchTheme = () => {
-      themeIdx = (themeIdx + 1) % themes.length;
-      canvas.setTheme(themes[themeIdx]);
-      applyToRoot(themes[themeIdx]);
+      canvas.setTheme(DEFAULT_PROVIDER_THEME);
+      applyToRoot(DEFAULT_PROVIDER_THEME);
     };
     if (btnTheme) btnTheme.addEventListener('click', switchTheme);
     window.switchTheme = switchTheme;
@@ -630,11 +621,8 @@ async function initDemo() {
     }
 
 
-    const palettes = [GREY_PALETTE, DARK_PALETTE, LIGHT_PALETTE, SYNTHWAVE_PALETTE];
-    let paletteIdx = 0;
     window.switchPalette = () => {
-      paletteIdx = (paletteIdx + 1) % palettes.length;
-      canvas.setPalette(palettes[paletteIdx]);
+      canvas.setPalette(DEFAULT_PROVIDER_PALETTE);
     };
 
     const skins = [MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN];

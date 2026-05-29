@@ -21,7 +21,7 @@ sn-tree-view[hidden] {
 }
 
 .sn-tree-row {
-  --sn-tree-indent-width: var(--sn-tree-indent);
+  --sn-tree-depth-indent: 0px;
   box-sizing: border-box;
   display: grid;
   grid-template-columns: var(--sn-tree-toggle-width) var(--sn-tree-icon-width) minmax(0, 1fr) auto auto;
@@ -29,7 +29,7 @@ sn-tree-view[hidden] {
   gap: var(--sn-tree-gap);
   min-height: var(--sn-tree-row-min-height, var(--sn-tree-row-height));
   padding-block: var(--sn-tree-row-padding-block);
-  padding-inline: calc(var(--sn-tree-depth, 0) * var(--sn-tree-indent-width)) 8px;
+  padding-inline: var(--sn-tree-depth-indent) 8px;
   border: 1px solid transparent;
   border-radius: var(--sn-tree-row-radius);
   background: var(--sn-tree-row-bg, transparent);

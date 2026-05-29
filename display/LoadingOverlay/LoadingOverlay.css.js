@@ -1,5 +1,7 @@
 export default /*css*/ `
-:host {
+:host,
+sn-loading-overlay,
+loading-overlay {
   position: absolute;
   inset: 0;
   display: block;

@@ -43,51 +43,52 @@ chat-composer {
   color: var(--sn-text-dim);
 }
 
-.btn-send {
+sn-button.btn-send[variant="icon"] {
   --sn-button-icon-size: var(--sn-composer-send-size);
   --sn-button-icon-font-size: var(--sn-composer-send-icon-size);
-  --sn-button-border: transparent;
   --sn-button-radius: 50%;
-  --sn-button-bg: var(--chat-composer-action-bg);
-  --sn-button-hover-bg: color-mix(in srgb, var(--chat-composer-action-bg) 78%, var(--sn-text) 12%);
-  --sn-button-hover-border: transparent;
-  --sn-button-color: var(--sn-text-dim);
+  --sn-button-bg: var(--sn-text);
+  --sn-button-hover-bg: var(--sn-composer-send-hover-bg);
+  --sn-button-color: var(--chat-composer-bg);
   --sn-button-disabled-opacity: 0.3;
   --sn-button-focus-ring: 2px solid color-mix(in srgb, var(--sn-text-dim) 50%, transparent);
-  color: var(--sn-text-dim);
+  background: var(--sn-button-bg);
+  border: 0;
+  color: var(--sn-button-color);
   box-shadow: var(--sn-shadow-sm);
   transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 
-.btn-send .material-symbols-outlined {
+sn-button.btn-send[variant="icon"] .material-symbols-outlined {
   font-size: var(--sn-composer-send-icon-size);
 }
 
-.btn-send:hover {
-  color: var(--sn-text);
+sn-button.btn-send[variant="icon"]:hover {
+  background: var(--sn-button-hover-bg);
+  color: var(--sn-button-color);
   box-shadow: var(--sn-shadow-md);
   transform: scale(1.05);
 }
 
-.btn-send:focus-visible {
+sn-button.btn-send[variant="icon"]:focus-visible {
   outline-offset: 2px;
 }
 
-.btn-send[disabled] {
+sn-button.btn-send[variant="icon"][disabled] {
   transform: none;
 }
 
-.btn-send.btn-stop {
+sn-button.btn-send[variant="icon"].btn-stop {
   --sn-button-bg: var(--sn-danger-color);
   --sn-button-hover-bg: var(--sn-danger-color);
   color: var(--sn-text);
 }
 
-.btn-send.btn-stop:hover {
+sn-button.btn-send[variant="icon"].btn-stop:hover {
   color: var(--sn-text);
 }
 
-.btn-send.btn-stop .material-symbols-outlined {
+sn-button.btn-send[variant="icon"].btn-stop .material-symbols-outlined {
   font-variation-settings: 'FILL' 1;
 }
 
@@ -130,7 +131,7 @@ chat-composer {
 }
 
 .composer-footer-btn .material-symbols-outlined {
-  font-size: 14px;
+  font-size: var(--sn-composer-footer-icon-size);
   opacity: 0.75;
   flex: 0 0 auto;
 }
@@ -167,7 +168,7 @@ chat-composer {
 }
 
 .composer-toggle-icon {
-  font-size: 20px !important;
+  font-size: var(--sn-composer-footer-toggle-icon-size) !important;
 }
 
 .composer-footer-label {

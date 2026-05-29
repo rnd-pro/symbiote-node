@@ -2053,11 +2053,21 @@ export function createXRThreeWebXRAdapter(options = {}) {
 
   function createRenderer(rendererOptions = {}) {
     if (!check.ok) return { ok: false, reason: check.reason, missing: check.missing };
-    let renderer = rendererOptions.renderer || new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      ...(rendererOptions.webgl || {}),
-    });
+    let renderer;
+    try {
+      renderer = rendererOptions.renderer || new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        ...(rendererOptions.webgl || {}),
+      });
+    } catch (error) {
+      return {
+        ok: false,
+        reason: 'webgl-renderer-create-failed',
+        error: error?.name || 'Error',
+        message: error?.message || '',
+      };
+    }
     if (renderer.xr) renderer.xr.enabled = true;
     state.renderer = renderer;
     return { ok: true, renderer };

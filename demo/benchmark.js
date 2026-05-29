@@ -13,7 +13,7 @@ import {
   Input,
   Output,
   InputControl,
-  GREY_NEUTRAL,
+  DEFAULT_PROVIDER_THEME,
 } from '../index.js';
 import '../canvas/NodeCanvas/NodeCanvas.js';
 import '../node/GraphNode/GraphNode.js';
@@ -269,10 +269,10 @@ function init() {
 
 
   const root = document.documentElement;
-  for (const [k, v] of Object.entries(GREY_NEUTRAL.tokens)) {
+  for (const [k, v] of Object.entries(DEFAULT_PROVIDER_THEME.tokens)) {
     root.style.setProperty(k, v);
   }
-  canvas.setTheme(GREY_NEUTRAL);
+  canvas.setTheme(DEFAULT_PROVIDER_THEME);
 
 
   document.getElementById('btnStart').addEventListener('click', runBenchmark);

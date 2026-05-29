@@ -33,25 +33,14 @@ export {
 export {
   applyTheme,
   extractTheme,
-  DARK_DEFAULT,
-  LIGHT_CLEAN,
-  SYNTHWAVE,
-  GREY_NEUTRAL,
-  NEON_GLOW,
-  DEFAULT_DARK,
-  DEFAULT_THEME,
   DEFAULT_PROVIDER_THEME,
+  DEFAULT_THEME,
 } from '../themes/Theme.js';
 
 export {
   applyPalette,
-  DARK_PALETTE,
-  LIGHT_PALETTE,
-  SYNTHWAVE_PALETTE,
-  GREY_PALETTE,
-  DEFAULT_DARK_PALETTE,
-  DEFAULT_PALETTE,
   DEFAULT_PROVIDER_PALETTE,
+  DEFAULT_PALETTE,
 } from '../themes/Palette.js';
 
 export { applySkin, MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN } from '../themes/Skin.js';
@@ -149,11 +138,6 @@ export {
   uploadHtmlElementToWebGLTexture,
 } from '../canvas/html-in-canvas.js';
 export * from '../xr/index.js';
-
-export { CARBON, CARBON_PALETTE } from '../themes/carbon.js';
-export { PCB_DARK } from '../themes/pcb.js';
-export { EBOOK, EBOOK_PALETTE } from '../themes/ebook.js';
-export { NEON_PALETTE } from '../themes/neon.js';
 
 export let NodeCanvas;
 export let CanvasGraph;

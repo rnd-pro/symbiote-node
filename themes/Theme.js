@@ -14,14 +14,8 @@
  */
 
 
-export { DARK_DEFAULT } from './dark.js';
-export { LIGHT_CLEAN } from './light.js';
-export { SYNTHWAVE } from './synthwave.js';
-export { GREY_NEUTRAL } from './grey.js';
-export { NEON_GLOW } from './neon.js';
-export { DEFAULT_DARK } from './default-dark.js';
-export { DEFAULT_DARK as DEFAULT_THEME } from './default-dark.js';
-export { DEFAULT_DARK as DEFAULT_PROVIDER_THEME } from './default-dark.js';
+export { DEFAULT_PROVIDER_THEME } from './default-provider.js';
+export { DEFAULT_PROVIDER_THEME as DEFAULT_THEME } from './default-provider.js';
 
 /**
  * Mapping from layout global tokens to symbiote-node tokens.

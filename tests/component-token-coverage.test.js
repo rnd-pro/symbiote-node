@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getThemeCssTokens } from '../manifest/theme-catalog.js';
-import { DEFAULT_DARK } from '../themes/default-dark.js';
+import { DEFAULT_PROVIDER_THEME } from '../themes/default-provider.js';
 
 let PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -123,13 +123,13 @@ function isCoveredByRuntimeTheme(token, references, runtimeTokens) {
 }
 
 describe('component token coverage', () => {
-  it('keeps DEFAULT_DARK runtime tokens aligned with the theme catalog', () => {
-    assert.deepEqual(getThemeCssTokens('default-dark'), DEFAULT_DARK.tokens);
+  it('keeps DEFAULT_PROVIDER_THEME runtime tokens aligned with the theme catalog', () => {
+    assert.deepEqual(getThemeCssTokens('default-provider'), DEFAULT_PROVIDER_THEME.tokens);
   });
 
-  it('covers public component CSS token references with DEFAULT_DARK', () => {
+  it('covers public component CSS token references with DEFAULT_PROVIDER_THEME', () => {
     let references = collectTokenReferences(collectComponentCssFiles());
-    let runtimeTokens = new Set(Object.keys(DEFAULT_DARK.tokens));
+    let runtimeTokens = new Set(Object.keys(DEFAULT_PROVIDER_THEME.tokens));
     let uncovered = [...references.entries()]
       .filter(([token, tokenReferences]) => !isCoveredByRuntimeTheme(token, tokenReferences, runtimeTokens))
       .sort(([left], [right]) => left.localeCompare(right));
@@ -137,7 +137,7 @@ describe('component token coverage', () => {
     assert.deepEqual(
       uncovered.map(([token]) => token),
       [],
-      `Public component token references missing from DEFAULT_DARK:\n${formatTokenReferences(uncovered)}`
+      `Public component token references missing from DEFAULT_PROVIDER_THEME:\n${formatTokenReferences(uncovered)}`
     );
   });
 
@@ -173,7 +173,7 @@ describe('component token coverage', () => {
     assert.deepEqual(
       violations,
       [],
-      `Critical theme cascade CSS must get defaults from DEFAULT_DARK tokens:\n${violations.join('\n')}`,
+      `Critical theme cascade CSS must get defaults from DEFAULT_PROVIDER_THEME tokens:\n${violations.join('\n')}`,
     );
   });
 
@@ -205,15 +205,15 @@ describe('component token coverage', () => {
   it('keeps CellBg visual identity in public theme tokens', () => {
     let component = fs.readFileSync(path.join(PKG_ROOT, 'effects/CellBg/CellBg.js'), 'utf-8');
     let styles = fs.readFileSync(path.join(PKG_ROOT, 'effects/CellBg/CellBg.css.js'), 'utf-8');
-    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf-8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-provider.js'), 'utf-8');
 
     for (let token of ['--sn-cell-bg', '--sn-cell-dot', '--sn-cell-base-alpha', '--sn-cell-alpha-span']) {
       assert.ok(component.includes(token), `CellBg runtime must read ${token}`);
-      assert.ok(theme.includes(token), `DEFAULT_DARK must provide ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_PROVIDER_THEME must provide ${token}`);
     }
     for (let token of ['--sn-cell-glare', '--sn-cell-vignette-mid', '--sn-cell-vignette-edge', '--sn-cell-noise']) {
       assert.ok(styles.includes(token), `CellBg CSS must use ${token}`);
-      assert.ok(theme.includes(token), `DEFAULT_DARK must provide ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_PROVIDER_THEME must provide ${token}`);
     }
 
     assert.equal(component.includes('BG_COLOR'), false, 'CellBg must not keep a local background color constant.');
@@ -230,7 +230,7 @@ describe('component token coverage', () => {
     let layout = fs.readFileSync(path.join(PKG_ROOT, 'layout/Layout/Layout.css.js'), 'utf-8');
     let layoutNode = fs.readFileSync(path.join(PKG_ROOT, 'layout/LayoutNode/LayoutNode.css.js'), 'utf-8');
     let layoutSidebar = fs.readFileSync(path.join(PKG_ROOT, 'layout/LayoutSidebar/LayoutSidebar.css.js'), 'utf-8');
-    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf-8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-provider.js'), 'utf-8');
 
     assert.ok(layout.includes('background: var(--sn-layout-gap-bg)'), 'Layout root must expose transparent gap background.');
     assert.ok(layoutNode.includes('background: var(--sn-layout-gap-bg)'), 'Split resizer must inherit transparent gap background.');
@@ -247,7 +247,7 @@ describe('component token coverage', () => {
 
   it('keeps dialog helper visuals in public theme tokens', () => {
     let source = fs.readFileSync(path.join(PKG_ROOT, 'ui/dialogs.js'), 'utf-8');
-    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf-8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-provider.js'), 'utf-8');
 
     for (let token of [
       '--sn-dialog-bg',
@@ -260,7 +260,7 @@ describe('component token coverage', () => {
       '--sn-dialog-actions-gap',
     ]) {
       assert.ok(source.includes(token), `Dialog helpers must use ${token}`);
-      assert.ok(theme.includes(token), `DEFAULT_DARK must provide ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_PROVIDER_THEME must provide ${token}`);
     }
 
     assert.equal(/#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|hsl\(/.test(source), false, 'Dialog helpers must not hardcode colors.');

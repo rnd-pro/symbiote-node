@@ -1,10 +1,12 @@
 export default /*css*/ `
-:host {
+:host,
+sn-list-item {
   display: block;
   color: var(--sn-text);
 }
 
-:host([hidden]) {
+:host([hidden]),
+sn-list-item[hidden]  {
   display: none !important;
 }
 
@@ -36,21 +38,25 @@ export default /*css*/ `
   border-color: var(--sn-list-item-focus-border);
 }
 
-:host([active]) .sn-list-item {
+:host([active]) .sn-list-item,
+sn-list-item[active] .sn-list-item {
   background: var(--sn-list-item-active-bg);
   border-color: var(--sn-list-item-active-border);
 }
 
-:host([disabled]) {
+:host([disabled]),
+sn-list-item[disabled]  {
   color: var(--sn-list-item-disabled-color);
 }
 
-:host([disabled]) .sn-list-item {
+:host([disabled]) .sn-list-item,
+sn-list-item[disabled] .sn-list-item {
   cursor: default;
   opacity: 0.58;
 }
 
-:host([disabled]) .sn-list-item:hover {
+:host([disabled]) .sn-list-item:hover,
+sn-list-item[disabled] .sn-list-item:hover {
   background: var(--sn-list-item-bg);
 }
 

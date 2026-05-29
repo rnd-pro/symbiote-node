@@ -280,16 +280,25 @@ export class TreeView extends Symbiote {
     localStorage.setItem(this.#storageKey, JSON.stringify(this.expandedIds));
   }
 
+  #getIndentSize() {
+    if (typeof getComputedStyle !== 'function') return 16;
+    let rawValue = getComputedStyle(this).getPropertyValue('--sn-tree-indent').trim();
+    if (!rawValue.endsWith('px')) return 16;
+    let size = Number.parseFloat(rawValue);
+    return Number.isFinite(size) ? size : 16;
+  }
+
   #renderTree() {
     if (!this.ref.tree) return;
     this.#visibleItems = [];
     let filtered = TreeView.filterItems(this.#items, this.#filterText);
     let nodes = [];
-    this.#appendBranches(nodes, filtered, 0, Boolean(this.#filterText.trim()));
+    let indentSize = this.#getIndentSize();
+    this.#appendBranches(nodes, filtered, 0, Boolean(this.#filterText.trim()), indentSize);
     this.ref.tree.replaceChildren(...nodes);
   }
 
-  #appendBranches(parent, branches, depth, forceExpanded) {
+  #appendBranches(parent, branches, depth, forceExpanded, indentSize) {
     for (let { item, children } of branches) {
       let id = getItemId(item);
       let hasChildren = children.length > 0;
@@ -302,6 +311,7 @@ export class TreeView extends Symbiote {
       row.dataset.index = String(rowIndex);
       row.dataset.treeId = id;
       row.style.setProperty('--sn-tree-depth', String(depth));
+      row.style.setProperty('--sn-tree-depth-indent', `${depth * indentSize}px`);
       row.setAttribute('aria-selected', String(id === this.#selectedId));
       row.setAttribute('aria-expanded', hasChildren ? String(expanded) : 'false');
       row.toggleAttribute('muted', Boolean(item.muted));
@@ -342,7 +352,7 @@ export class TreeView extends Symbiote {
       parent.push(row);
 
       if (hasChildren && expanded) {
-        this.#appendBranches(parent, children, depth + 1, forceExpanded);
+        this.#appendBranches(parent, children, depth + 1, forceExpanded, indentSize);
       }
     }
   }

@@ -195,11 +195,11 @@ describe('CanvasGraph theme contract', () => {
 
   it('keeps minimap canvas colors in the default theme contract', () => {
     let minimap = fs.readFileSync(path.join(PKG_ROOT, 'canvas/Minimap/Minimap.js'), 'utf8');
-    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-provider.js'), 'utf8');
 
     for (let token of ['--sn-minimap-bg', '--sn-minimap-node', '--sn-minimap-node-stroke', '--sn-minimap-bypassed-node', '--sn-minimap-viewport', '--sn-minimap-viewport-fill']) {
       assert.ok(minimap.includes(token), `Minimap must read ${token}`);
-      assert.ok(theme.includes(token), `DEFAULT_DARK must define ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_PROVIDER_THEME must define ${token}`);
     }
 
     for (let forbidden of [
@@ -216,7 +216,9 @@ describe('CanvasGraph theme contract', () => {
   it('keeps node canvas trace and subgraph preview visuals theme-driven', () => {
     let nodeCanvas = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.js'), 'utf8');
     let nodeViewManager = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeViewManager.js'), 'utf8');
-    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-provider.js'), 'utf8');
+
+    assert.match(nodeCanvas, /_themeName = 'default-provider'/);
 
     for (let forbidden of [
       'sn-fire-keyframes',
@@ -239,7 +241,7 @@ describe('CanvasGraph theme contract', () => {
       '--sn-subgraph-preview-idle-stroke',
     ]) {
       assert.ok(nodeViewManager.includes(token), `NodeViewManager must read ${token}`);
-      assert.ok(theme.includes(token), `DEFAULT_DARK must define ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_PROVIDER_THEME must define ${token}`);
     }
 
     for (let forbidden of [

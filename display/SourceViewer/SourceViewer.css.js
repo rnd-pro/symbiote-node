@@ -57,6 +57,10 @@ export default `
     letter-spacing: 0.5px;
     transition: all 120ms ease;
   }
+  .sv-action .material-symbols-outlined {
+    font-size: var(--sn-source-action-icon-size);
+    line-height: 1;
+  }
   .sv-action:hover {
     background: var(--sn-source-action-hover-bg);
     color: var(--sn-text);

@@ -293,6 +293,14 @@ describe('TreeView behavior', () => {
     assert.deepEqual(second.expandedIds, []);
   });
 
+  it('renders nested rows with resolved indent lengths', () => {
+    let tree = createTree();
+    tree.expandedIds = ['src'];
+    tree.setItems(items);
+
+    assert.match(tree.ref.tree.serialized, /data-tree-id="src-app"[^>]*style="--sn-tree-depth-indent: 16px;"/);
+  });
+
   it('can toggle branch rows on select', () => {
     storage.clear();
     let tree = createTree();
@@ -393,5 +401,8 @@ describe('TreeView behavior', () => {
     assert.match(css, /sn-tree-view \{/);
     assert.match(css, /sn-tree-view\[hidden\]/);
     assert.match(css, /var\(--sn-icon-font\)/);
+    assert.doesNotMatch(css, /calc\(var\(--sn-tree-depth/);
+    assert.match(css, /--sn-tree-depth-indent: 0px/);
+    assert.match(css, /var\(--sn-tree-depth-indent\)/);
   });
 });

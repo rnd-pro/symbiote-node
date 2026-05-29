@@ -1,11 +1,13 @@
 export default /*css*/ `
-:host {
+:host,
+output-list-preview {
   display: block;
   color: var(--sn-text);
   font-family: var(--sn-font-ui, inherit);
 }
 
-:host([hidden]) {
+:host([hidden]),
+output-list-preview[hidden] {
   display: none !important;
 }
 

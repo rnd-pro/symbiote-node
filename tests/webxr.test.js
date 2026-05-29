@@ -3946,6 +3946,29 @@ describe('WebXR provider adapter', () => {
     assert.equal(adapter.getDiagnostics().controller.version, 'xr-three-controller-diagnostics-v1');
   });
 
+  it('returns a structured fallback result when WebGLRenderer construction fails', () => {
+    let THREE = {
+      Scene: class { add() {} remove() {} },
+      PerspectiveCamera: class {},
+      WebGLRenderer: class {
+        constructor() {
+          throw new DOMException('WebGL unavailable', 'NotSupportedError');
+        }
+      },
+      PlaneGeometry: class {},
+      MeshStandardMaterial: class {},
+      Mesh: class {},
+      Raycaster: class {},
+    };
+    let adapter = createXRThreeWebXRAdapter({ THREE });
+    let result = adapter.createRenderer();
+
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'webgl-renderer-create-failed');
+    assert.equal(result.error, 'NotSupportedError');
+    assert.equal(adapter.getDiagnostics().renderer, false);
+  });
+
   it('exposes strict texture diagnostic panels through the Three WebXR adapter state', () => {
     class FakeMesh {
       constructor() {

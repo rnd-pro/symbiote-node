@@ -3,9 +3,9 @@ import { getThemeControls } from '../manifest/theme-catalog.js';
 
 const LOCAL_PATH_PATTERN = /(^|[\s"'=:])(?:\/Users\/|\/home\/|[A-Za-z]:\\)/;
 const PROVIDER_THEME_ALIASES = new Map([
-  ['symbiote-default', 'default-dark'],
-  ['symbiote-default-dark', 'default-dark'],
-  ['default-dark', 'default-dark'],
+  ['symbiote-default', 'default-provider'],
+  ['symbiote-default-provider', 'default-provider'],
+  ['default-provider', 'default-provider'],
 ]);
 
 function asObject(value) {

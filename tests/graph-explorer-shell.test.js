@@ -187,6 +187,8 @@ test('light DOM CSS contracts cover slotted graph shell and loading overlay stat
   assert.match(shellCss, /graph-explorer-shell > \[slot="canvas"\]/);
   assert.match(shellCss, /graph-explorer-shell > \[slot="overlay"\]/);
   assert.doesNotMatch(shellCss, /pg-canvas-graph/);
+  assert.match(loadingCss, /sn-loading-overlay/);
+  assert.match(loadingCss, /pointer-events: none/);
   assert.match(loadingCss, /sn-loading-overlay\[hidden-state\] \.sn-loading-overlay/);
 });
 

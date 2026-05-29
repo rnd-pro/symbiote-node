@@ -1,5 +1,6 @@
 export default /*css*/ `
-:host {
+:host,
+project-tabs {
   display: block;
   height: var(--sn-tabs-height);
   background: var(--sn-tabs-bg);
@@ -8,7 +9,8 @@ export default /*css*/ `
   position: relative;
 }
 
-:host::after {
+:host::after,
+project-tabs::after {
   content: '';
   position: absolute;
   bottom: 0;

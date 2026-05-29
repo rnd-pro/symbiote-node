@@ -1,5 +1,6 @@
 export default /*css*/ `
-:host {
+:host,
+chat-list {
   display: block;
 }
 

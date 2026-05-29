@@ -48,10 +48,10 @@ const CSS_TOKEN_CLASSIFIERS = [
   { kind: 'source-accent', group: 'color', pattern: /^--sn-hue-/ },
   { kind: 'color-cascade', group: 'color', pattern: /^--sn-(sat($|-)|lit-|alpha-)/ },
   { kind: 'color-cascade', group: 'accent', pattern: /^--sn-accent-/ },
-  { kind: 'semantic-alias', group: 'surface', pattern: /^--sn-(bg|panel-bg|surface|border|node-bg|node-border|node-selected|node-accent|node-hover|node-header-bg|node-radius|node-shadow|node-min-width|node-max-width|node-border-width|node-font-size|node-items-|node-active-border|node-error-frame-|text|text-dim|bg-overlay|shadow-color)/ },
-  { kind: 'semantic-alias', group: 'status', pattern: /^--sn-(success|warning|danger|status|cat|subgraph|accent-warn|message-event)-/ },
+  { kind: 'semantic-alias', group: 'surface', pattern: /^--sn-(bg|panel-bg|surface|border|node-bg|node-border|node-selected|node-accent|node-hover|node-header-bg|node-radius|node-shadow|node-min-width|node-max-width|node-border-width|node-font-size|node-items-|node-callout-|node-active-border|node-error-frame-|text|text-dim|bg-overlay|overlay-z-base|shadow-color)/ },
+  { kind: 'semantic-alias', group: 'status', pattern: /^--sn-(success|warning|danger|status|cat|type|subgraph|accent-warn|message-event)-/ },
   { kind: 'semantic-alias', group: 'provider-accent', pattern: /^--sn-provider-/ },
-  { kind: 'component-alias', group: 'layout', pattern: /^--sn-(layout|portal-bridge)-/ },
+  { kind: 'component-alias', group: 'layout', pattern: /^--sn-(layout|portal-bridge|panel-menu)-/ },
   { kind: 'component-alias', group: 'xr', pattern: /^--sn-xr-/ },
   { kind: 'component-alias', group: 'surface', pattern: /^--sn-(card|dialog|output-preview)-/ },
   { kind: 'component-alias', group: 'data-table', pattern: /^--sn-data-table-/ },
@@ -107,13 +107,13 @@ export let THEME_ELEMENT_GROUPS = [
   {
     name: 'panel',
     description: 'Framed layout surfaces such as sidebars, graph panels, source panes, and dialogs.',
-    tokens: ['--sn-panel-bg', '--sn-surface', '--sn-border', '--sn-card-bg', '--sn-card-border', '--sn-card-radius', '--sn-card-padding', '--sn-dialog-bg', '--sn-dialog-border', '--sn-dialog-radius', '--sn-dialog-shadow', '--sn-dialog-backdrop', '--sn-node-border', '--sn-node-shadow', '--sn-node-radius'],
+    tokens: ['--sn-panel-bg', '--sn-surface', '--sn-border', '--sn-card-bg', '--sn-card-border', '--sn-card-radius', '--sn-card-padding', '--sn-dialog-bg', '--sn-dialog-border', '--sn-dialog-radius', '--sn-dialog-shadow', '--sn-dialog-backdrop', '--sn-node-border', '--sn-node-shadow', '--sn-node-radius', '--sn-overlay-z-base'],
     usedBy: ['panel-layout', 'sn-card', 'source-viewer', 'source-editor', 'chat-transcript', 'sn-loading-overlay'],
   },
   {
     name: 'control',
     description: 'Interactive controls including buttons, icon buttons, toolbar actions, labels, inputs, selects, and textareas.',
-    tokens: ['--sn-button-bg', '--sn-button-border', '--sn-button-color', '--sn-button-hover-border', '--sn-button-primary-bg', '--sn-button-danger-color', '--sn-field-control-bg', '--sn-field-control-border', '--sn-field-control-subtle-border', '--sn-field-label-color', '--sn-field-control-focus-border', '--sn-field-select-indicator', '--sn-field-toggle-bg', '--sn-field-toggle-thumb-bg', '--sn-field-toggle-thumb-active-bg', '--sn-toolbar-bg', '--sn-toolbar-border', '--sn-toolbar-color', '--sn-toolbar-hover', '--sn-effect-hover-transition', '--sn-effect-focus-ring'],
+    tokens: ['--sn-button-bg', '--sn-button-border', '--sn-button-color', '--sn-button-hover-border', '--sn-button-primary-bg', '--sn-button-danger-color', '--sn-field-control-bg', '--sn-field-control-border', '--sn-field-control-subtle-border', '--sn-field-label-color', '--sn-field-control-focus-border', '--sn-field-select-indicator', '--sn-field-toggle-bg', '--sn-field-toggle-thumb-bg', '--sn-field-toggle-thumb-active-bg', '--sn-toolbar-bg', '--sn-toolbar-border', '--sn-toolbar-color', '--sn-toolbar-hover', '--sn-toolbar-occlusion-bg', '--sn-toolbar-z', '--sn-toolbar-title-color', '--sn-toolbar-title-min-width', '--sn-toolbar-title-max-width', '--sn-toolbar-title-lines', '--sn-effect-hover-transition', '--sn-effect-focus-ring'],
     usedBy: ['sn-button', 'sn-field', 'project-tabs', 'source-viewer', 'chat-composer'],
   },
   {
@@ -869,6 +869,134 @@ export let THEME_TOKENS = {
         "$type": "color",
         "$value": "var(--sn-text)"
       },
+      "scrollbarThumb": {
+        "$type": "color",
+        "$value": "hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.08)"
+      },
+      "scrollbarThumbHover": {
+        "$type": "color",
+        "$value": "hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.25)"
+      },
+      "nodeActiveBorder": {
+        "$type": "color",
+        "$value": "color-mix(in srgb, var(--sn-node-selected) 50%, transparent)"
+      },
+      "connectionLinecap": {
+        "$type": "string",
+        "$value": "round"
+      },
+      "connectionLinejoin": {
+        "$type": "string",
+        "$value": "round"
+      },
+      "connectionDotFill": {
+        "$type": "color",
+        "$value": "var(--sn-conn-color)"
+      },
+      "connectionDotStroke": {
+        "$type": "color",
+        "$value": "var(--sn-node-bg)"
+      },
+      "dotOutput": {
+        "$type": "color",
+        "$value": "hsl(var(--sn-hue-warning) var(--sn-sat-vivid) 63%)"
+      },
+      "dotInput": {
+        "$type": "color",
+        "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) 63%)"
+      },
+      "dotExec": {
+        "$type": "color",
+        "$value": "hsl(var(--sn-hue-warning) var(--sn-sat-vivid) 64%)"
+      },
+      "dotCtrl": {
+        "$type": "color",
+        "$value": "var(--sn-success-color)"
+      },
+      "outputPreviewBorder": {
+        "$type": "color",
+        "$value": "var(--sn-border)"
+      },
+      "outputPreviewBackground": {
+        "$type": "color",
+        "$value": "var(--sn-surface)"
+      },
+      "outputPreviewMuted": {
+        "$type": "color",
+        "$value": "var(--sn-text-dim)"
+      },
+      "outputPreviewTitle": {
+        "$type": "color",
+        "$value": "var(--sn-text)"
+      },
+      "outputPreviewLabel": {
+        "$type": "color",
+        "$value": "var(--sn-text)"
+      },
+      "outputPreviewGrid": {
+        "$type": "color",
+        "$value": "hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.04)"
+      },
+      "outputPreviewItemBorder": {
+        "$type": "color",
+        "$value": "var(--sn-border)"
+      },
+      "outputPreviewItemBackground": {
+        "$type": "color",
+        "$value": "var(--sn-node-bg)"
+      },
+      "outputPreviewEdgeBackground": {
+        "$type": "color",
+        "$value": "var(--sn-node-hover)"
+      },
+      "chatItemIconColor": {
+        "$type": "color",
+        "$value": "currentColor"
+      },
+      "chatItemChildShadow": {
+        "$type": "shadow",
+        "$value": "2px 0 4px color-mix(in srgb, var(--sn-bg) 70%, transparent)"
+      },
+      "listItemDisabledColor": {
+        "$type": "color",
+        "$value": "var(--sn-text-dim)"
+      },
+      "listItemIconColor": {
+        "$type": "color",
+        "$value": "var(--sn-text-dim)"
+      },
+      "listItemLabelColor": {
+        "$type": "color",
+        "$value": "var(--sn-text)"
+      },
+      "listItemDescriptionColor": {
+        "$type": "color",
+        "$value": "var(--sn-text-dim)"
+      },
+      "listItemMetaColor": {
+        "$type": "color",
+        "$value": "var(--sn-text-dim)"
+      },
+      "listDetailColor": {
+        "$type": "color",
+        "$value": "var(--sn-text)"
+      },
+      "listDetailIconColor": {
+        "$type": "color",
+        "$value": "var(--sn-text-dim)"
+      },
+      "listDetailTitleColor": {
+        "$type": "color",
+        "$value": "var(--sn-text)"
+      },
+      "listDetailDescriptionColor": {
+        "$type": "color",
+        "$value": "var(--sn-text-dim)"
+      },
+      "sourceEditorPlaceholderColor": {
+        "$type": "color",
+        "$value": "var(--sn-text-dim)"
+      },
       "metricGap": {
         "$type": "dimension",
         "$value": "12px"
@@ -1000,134 +1128,6 @@ export let THEME_TOKENS = {
       "dataTableEmptyColor": {
         "$type": "color",
         "$value": "var(--sn-text-dim)"
-      },
-      "scrollbarThumb": {
-        "$type": "color",
-        "$value": "hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.08)"
-      },
-      "scrollbarThumbHover": {
-        "$type": "color",
-        "$value": "hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.25)"
-      },
-      "nodeActiveBorder": {
-        "$type": "color",
-        "$value": "color-mix(in srgb, var(--sn-node-selected) 50%, transparent)"
-      },
-      "connectionLinecap": {
-        "$type": "string",
-        "$value": "round"
-      },
-      "connectionLinejoin": {
-        "$type": "string",
-        "$value": "round"
-      },
-      "connectionDotFill": {
-        "$type": "color",
-        "$value": "var(--sn-conn-color)"
-      },
-      "connectionDotStroke": {
-        "$type": "color",
-        "$value": "var(--sn-node-bg)"
-      },
-      "dotOutput": {
-        "$type": "color",
-        "$value": "hsl(var(--sn-hue-warning) var(--sn-sat-vivid) 63%)"
-      },
-      "dotInput": {
-        "$type": "color",
-        "$value": "hsl(var(--sn-hue-accent) var(--sn-sat-vivid) 63%)"
-      },
-      "dotExec": {
-        "$type": "color",
-        "$value": "hsl(var(--sn-hue-warning) var(--sn-sat-vivid) 64%)"
-      },
-      "dotCtrl": {
-        "$type": "color",
-        "$value": "var(--sn-success-color)"
-      },
-      "outputPreviewBorder": {
-        "$type": "color",
-        "$value": "var(--sn-border)"
-      },
-      "outputPreviewBackground": {
-        "$type": "color",
-        "$value": "var(--sn-surface)"
-      },
-      "outputPreviewMuted": {
-        "$type": "color",
-        "$value": "var(--sn-text-dim)"
-      },
-      "outputPreviewTitle": {
-        "$type": "color",
-        "$value": "var(--sn-text)"
-      },
-      "outputPreviewLabel": {
-        "$type": "color",
-        "$value": "var(--sn-text)"
-      },
-      "outputPreviewGrid": {
-        "$type": "color",
-        "$value": "hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.04)"
-      },
-      "outputPreviewItemBorder": {
-        "$type": "color",
-        "$value": "var(--sn-border)"
-      },
-      "outputPreviewItemBackground": {
-        "$type": "color",
-        "$value": "var(--sn-node-bg)"
-      },
-      "outputPreviewEdgeBackground": {
-        "$type": "color",
-        "$value": "var(--sn-node-hover)"
-      },
-      "chatItemIconColor": {
-        "$type": "color",
-        "$value": "currentColor"
-      },
-      "chatItemChildShadow": {
-        "$type": "shadow",
-        "$value": "2px 0 4px color-mix(in srgb, var(--sn-bg) 70%, transparent)"
-      },
-      "listItemDisabledColor": {
-        "$type": "color",
-        "$value": "var(--sn-text-dim)"
-      },
-      "listItemIconColor": {
-        "$type": "color",
-        "$value": "var(--sn-text-dim)"
-      },
-      "listItemLabelColor": {
-        "$type": "color",
-        "$value": "var(--sn-text)"
-      },
-      "listItemDescriptionColor": {
-        "$type": "color",
-        "$value": "var(--sn-text-dim)"
-      },
-      "listItemMetaColor": {
-        "$type": "color",
-        "$value": "var(--sn-text-dim)"
-      },
-      "listDetailColor": {
-        "$type": "color",
-        "$value": "var(--sn-text)"
-      },
-      "listDetailIconColor": {
-        "$type": "color",
-        "$value": "var(--sn-text-dim)"
-      },
-      "listDetailTitleColor": {
-        "$type": "color",
-        "$value": "var(--sn-text)"
-      },
-      "listDetailDescriptionColor": {
-        "$type": "color",
-        "$value": "var(--sn-text-dim)"
-      },
-      "sourceEditorPlaceholderColor": {
-        "$type": "color",
-        "$value": "var(--sn-text-dim)"
       }
     },
     "geometry": {
@@ -1231,6 +1231,14 @@ export let THEME_TOKENS = {
         "$type": "number",
         "$value": "500"
       },
+      "overlayZBase": {
+        "$type": "number",
+        "$value": "20000"
+      },
+      "toolbarOcclusionBackground": {
+        "$type": "color",
+        "$value": "var(--sn-panel-bg)"
+      },
       "loadingLabelSize": {
         "$type": "dimension",
         "$value": "11px"
@@ -1273,11 +1281,11 @@ export let THEME_TOKENS = {
       },
       "connectionDotStrokeWidth": {
         "$type": "dimension",
-        "$value": "1.5"
+        "$value": "var(--sn-socket-border-width)"
       },
       "connectionDotRadius": {
         "$type": "dimension",
-        "$value": "3"
+        "$value": "calc((var(--sn-socket-size) + var(--sn-conn-dot-stroke-width)) / 2)"
       },
       "graphExplorerOverlayZ": {
         "$type": "number",
@@ -1787,6 +1795,26 @@ export let THEME_TOKENS = {
         "$type": "color",
         "$value": "hsl(var(--sn-hue-danger) var(--sn-sat-vivid) 70%)"
       },
+      "typeDefault": {
+        "$type": "color",
+        "$value": "var(--sn-node-category-accent)"
+      },
+      "typeProfile": {
+        "$type": "color",
+        "$value": "hsl(var(--sn-hue-data) var(--sn-sat-vivid) 58%)"
+      },
+      "typeProfileInfo": {
+        "$type": "color",
+        "$value": "var(--sn-success-color)"
+      },
+      "typePortal": {
+        "$type": "color",
+        "$value": "var(--sn-cat-control)"
+      },
+      "typeProject": {
+        "$type": "color",
+        "$value": "hsl(24 var(--sn-sat-vivid) 62%)"
+      },
       "accentWarning": {
         "$type": "color",
         "$value": "var(--sn-warning-color)"
@@ -2030,7 +2058,6 @@ export let THEME_TOKENS = {
     }
   }
 };
-
 export function listThemes() {
   return THEME_NAMES.map((name) => getTheme(name));
 }

@@ -2,9 +2,6 @@ import Symbiote, { html } from '@symbiotejs/symbiote';
 import css from './ChatSidebarItem.css.js';
 import { translate } from '../../locale/index.js';
 
-const COMPACT_LABEL_MIN_CH = 8;
-const COMPACT_LABEL_MAX_CH = 38;
-
 function emit(el, type, detail = {}) {
   el.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 }
@@ -165,10 +162,8 @@ export class ChatSidebarSubItem extends Symbiote {
     hasChildren: false,
     isExpanded: false,
     isActive: false,
-    subChats: [],
     deleteTitle: translate('chat.sidebar.delete'),
     deleteChatLabel: translate('chat.sidebar.deleteChat'),
-    toggleChildrenLabel: translate('chat.sidebar.toggleChildren'),
 
     onItemClick: (event) => {
       if (event.target.closest('.chat-item-delete') || event.target.closest('.chat-expand-icon')) return;

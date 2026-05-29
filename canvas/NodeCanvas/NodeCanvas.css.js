@@ -33,6 +33,31 @@ export let styles = css`
       outline: none;
     }
 
+    &[data-flow-scroll] {
+      background-attachment: local;
+    }
+
+    &[data-flow-scroll='vertical'] {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    &[data-flow-scroll='horizontal'] {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    &[data-flow-scroll] .canvas-container {
+      width: max(100%, var(--sn-flow-content-width, 100%));
+      height: max(100%, var(--sn-flow-content-height, 100%));
+      overflow: visible;
+    }
+
+    &[data-flow-scroll] .content {
+      width: max(100%, var(--sn-flow-content-width, 100%));
+      height: max(100%, var(--sn-flow-content-height, 100%));
+    }
+
     &[data-readonly] {
       cursor: default;
     }
@@ -95,7 +120,7 @@ export let styles = css`
       overflow: visible;
     }
 
-    & graph-node[data-svg-shape] > :not(.sn-node-shape-svg) {
+    & graph-node[data-svg-shape] > :not(.sn-node-shape-svg):not(.sn-node-media):not(.sn-shape-watermark) {
       position: relative;
     }
 
@@ -159,8 +184,11 @@ export let styles = css`
     display: none;
     fill: var(--sn-conn-dot-fill, var(--sn-conn-color));
     stroke: var(--sn-conn-dot-stroke, var(--sn-node-bg));
-    stroke-width: var(--sn-conn-dot-stroke-width);
-    r: var(--sn-conn-dot-r);
+    stroke-width: var(--sn-conn-dot-stroke-width, var(--sn-socket-border-width));
+    r: var(
+      --sn-conn-dot-r,
+      calc((var(--sn-socket-size) + var(--sn-socket-border-width)) / 2)
+    );
     opacity: 0.9;
     pointer-events: none;
     /* PERF: removed filter:drop-shadow — 672 GPU layers killed Chrome renderer */
@@ -174,17 +202,31 @@ export let styles = css`
   .sn-free-dot {
     fill: var(--sn-conn-color);
     stroke: var(--sn-node-bg);
-    stroke-width: 1.5;
+    stroke-width: var(--sn-conn-dot-stroke-width, var(--sn-socket-border-width));
+    r: var(
+      --sn-conn-dot-r,
+      calc((var(--sn-socket-size) + var(--sn-socket-border-width)) / 2)
+    );
     opacity: 0.9;
     /* PERF: removed filter:drop-shadow — see .sn-conn-dot */
   }
   .sn-free-dot:hover {
-    r: 6;
+    r: calc(
+      var(
+          --sn-conn-dot-r,
+          calc((var(--sn-socket-size) + var(--sn-socket-border-width)) / 2)
+        ) + 1px
+    );
   }
 
   /* Dot highlight during compatible connector drag */
   .sn-dot-hint {
-    r: 7;
+    r: calc(
+      var(
+          --sn-conn-dot-r,
+          calc((var(--sn-socket-size) + var(--sn-socket-border-width)) / 2)
+        ) + 1px
+    );
     /* PERF: removed filter:drop-shadow — GPU layer per dot */
     animation: sn-dot-pulse 0.6s ease-in-out infinite;
   }

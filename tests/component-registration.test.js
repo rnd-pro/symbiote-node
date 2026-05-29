@@ -21,6 +21,22 @@ import { fileURLToPath } from 'node:url';
 const NO_DOM_ERROR = /customElements|HTMLElement|document/;
 const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+class TestStyle {
+  #props = new Map();
+
+  setProperty(name, value) {
+    this.#props.set(name, String(value));
+  }
+
+  getPropertyValue(name) {
+    return this.#props.get(name) || '';
+  }
+
+  removeProperty(name) {
+    this.#props.delete(name);
+  }
+}
+
 let hadCustomElements;
 let hadHTMLElement;
 let hadWindow;
@@ -94,6 +110,7 @@ describe('With DOM shim', () => {
 
     globalThis.HTMLElement = class {
       #attributes = new Map();
+      style = new TestStyle();
 
       getAttribute(name) {
         return this.#attributes.get(name) ?? null;
@@ -230,10 +247,196 @@ describe('With DOM shim', () => {
   });
 
   it('NodeCanvas can be imported with DOM shim', async () => {
-    await assert.doesNotReject(
-      import('../canvas/NodeCanvas/NodeCanvas.js'),
-      'NodeCanvas must import without throwing'
-    );
+    let { NodeCanvas } = await import('../canvas/NodeCanvas/NodeCanvas.js');
+
+    assert.equal(typeof NodeCanvas.prototype.setNodePosition, 'function');
+    assert.equal(typeof NodeCanvas.prototype.setFlowLayout, 'function');
+    assert.equal(typeof NodeCanvas.prototype.clearFlowLayout, 'function');
+  });
+
+  it('NodeCanvas flow layout positions nodes and exposes scroll metadata', async () => {
+    let { NodeCanvas } = await import('../canvas/NodeCanvas/NodeCanvas.js');
+    let canvas = new NodeCanvas();
+    canvas.clientWidth = 500;
+    canvas.clientHeight = 200;
+    canvas._viewport = {
+      updateTransform() {},
+      syncPhantom() {},
+    };
+    canvas._connRenderer = {
+      refreshAll() {},
+      updateForNode() {},
+    };
+
+    let createNodeView = (width, height) => ({
+      style: new TestStyle(),
+      get offsetWidth() {
+        let styledWidth = Number.parseFloat(this.style.width || '');
+        return Number.isFinite(styledWidth) ? styledWidth : width;
+      },
+      get offsetHeight() {
+        return height;
+      },
+      hasAttribute() {
+        return false;
+      },
+    });
+    canvas._nodeViews = new Map([
+      ['alpha', createNodeView(140, 80)],
+      ['beta', createNodeView(180, 110)],
+    ]);
+
+    let layout = canvas.setFlowLayout({
+      nodeIds: ['alpha', 'beta'],
+      direction: 'vertical',
+      gap: 30,
+      padding: { top: 20, right: 60, bottom: 50, left: 40 },
+      align: 'stretch',
+      minNodeWidth: 180,
+      maxNodeWidth: 260,
+      scroll: true,
+    });
+
+    assert.equal(canvas.getAttribute('data-flow-layout'), 'vertical');
+    assert.equal(canvas.getAttribute('data-flow-scroll'), 'vertical');
+    assert.deepEqual(layout.positions, {
+      alpha: { x: 40, y: 20 },
+      beta: { x: 40, y: 130 },
+    });
+    assert.equal(layout.height, 290);
+    assert.equal(canvas.style.getPropertyValue('--sn-flow-content-height'), '290px');
+    assert.equal(canvas._nodeViews.get('alpha').style.width, '260px');
+    assert.equal(canvas._nodeViews.get('alpha').style.getPropertyValue('--sn-node-min-width'), '260px');
+
+    canvas.clearFlowLayout();
+
+    assert.equal(canvas.hasAttribute('data-flow-layout'), false);
+    assert.equal(canvas.hasAttribute('data-flow-scroll'), false);
+    assert.equal(canvas.style.getPropertyValue('--sn-flow-content-height'), '');
+    assert.equal(canvas._nodeViews.get('alpha').style.width, '');
+    assert.equal(canvas._nodeViews.get('alpha').style.getPropertyValue('--sn-node-min-width'), '');
+  });
+
+  it('NodeCanvas hides quick toolbar while a node is dragged', async () => {
+    let { NodeCanvas } = await import('../canvas/NodeCanvas/NodeCanvas.js');
+    let canvas = new NodeCanvas();
+    let calls = [];
+    let nodeEl = {
+      isConnected: true,
+    };
+    let previousRequestAnimationFrame = globalThis.requestAnimationFrame;
+
+    try {
+      globalThis.requestAnimationFrame = (callback) => {
+        callback();
+        return 1;
+      };
+      canvas.ref = {
+        quickToolbar: {
+          hide() {
+            calls.push({ action: 'hide' });
+          },
+          show(nodeId, el, options) {
+            calls.push({ action: 'show', nodeId, el, options });
+          },
+        },
+      };
+      canvas._selector = {
+        isNodeSelected(nodeId) {
+          return nodeId === 'node-a';
+        },
+      };
+
+      canvas._handleNodeDragStart('node-a');
+      assert.equal(canvas.getAttribute('data-node-dragging'), 'node-a');
+      canvas._handleNodePointerEnter('node-a', nodeEl);
+      canvas._handleNodeDragEnd('node-a', nodeEl);
+
+      assert.equal(canvas.hasAttribute('data-node-dragging'), false);
+      assert.deepEqual(calls, [
+        { action: 'hide' },
+        { action: 'show', nodeId: 'node-a', el: nodeEl, options: { sticky: true } },
+      ]);
+    } finally {
+      if (previousRequestAnimationFrame) {
+        globalThis.requestAnimationFrame = previousRequestAnimationFrame;
+      } else {
+        delete globalThis.requestAnimationFrame;
+      }
+    }
+  });
+
+  it('Zoom can pass native wheel scrolling through flow layouts', async () => {
+    let { Zoom } = await import('../interactions/Zoom.js');
+    let previousAddEventListener = globalThis.addEventListener;
+    let previousRemoveEventListener = globalThis.removeEventListener;
+    globalThis.addEventListener = () => {};
+    globalThis.removeEventListener = () => {};
+
+    try {
+      let handlers = new Map();
+      let container = {
+        addEventListener(type, handler) {
+          handlers.set(type, handler);
+        },
+        getBoundingClientRect() {
+          return { left: 0, top: 0 };
+        },
+      };
+      let content = {
+        getBoundingClientRect() {
+          return { left: 0, top: 0 };
+        },
+      };
+      let calls = [];
+      let zoom = new Zoom(0.1);
+      zoom.initialize(
+        container,
+        content,
+        (delta, ox, oy, source) => calls.push({ delta, ox, oy, source }),
+        null,
+        { shouldHandleWheel: (event) => event.ctrlKey || event.metaKey || event.altKey }
+      );
+
+      let nativeScrollEvent = {
+        altKey: false,
+        ctrlKey: false,
+        metaKey: false,
+        deltaY: 120,
+        clientX: 10,
+        clientY: 10,
+        prevented: false,
+        preventDefault() {
+          this.prevented = true;
+        },
+      };
+      handlers.get('wheel')(nativeScrollEvent);
+
+      assert.equal(nativeScrollEvent.prevented, false);
+      assert.equal(calls.length, 0);
+
+      let zoomEvent = {
+        ...nativeScrollEvent,
+        metaKey: true,
+        prevented: false,
+      };
+      handlers.get('wheel')(zoomEvent);
+
+      assert.equal(zoomEvent.prevented, true);
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0].source, 'wheel');
+    } finally {
+      if (previousAddEventListener) {
+        globalThis.addEventListener = previousAddEventListener;
+      } else {
+        delete globalThis.addEventListener;
+      }
+      if (previousRemoveEventListener) {
+        globalThis.removeEventListener = previousRemoveEventListener;
+      } else {
+        delete globalThis.removeEventListener;
+      }
+    }
   });
 
   it('ListDetailShell can be imported with DOM shim', async () => {
@@ -426,8 +629,16 @@ describe('With DOM shim', () => {
     assert.ok(customElements.get('quick-toolbar'));
     assert.ok(customElements.get('sn-button'));
     let template = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.tpl.js'), 'utf8');
+    let logic = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.js'), 'utf8');
     assert.ok(template.includes('<sn-button'), 'QuickToolbar must compose sn-button controls');
     assert.equal(template.includes('<button'), false, 'QuickToolbar must not own raw button shells');
+    assert.ok(template.includes('toolbar-title'), 'QuickToolbar must compose a shared title row for headerless nodes');
+    assert.ok(logic.includes('hasOwnHeader'), 'QuickToolbar must decide title visibility from node header state');
+    assert.ok(logic.includes('bringOverlayToFront'), 'QuickToolbar must join the shared overlay z-index stack');
+    assert.ok(logic.includes('scheduleHide'), 'QuickToolbar must support hover-triggered delayed hiding');
+    for (let icon of ['login', 'hub', 'code', 'content_copy', 'visibility_off', 'delete']) {
+      assert.ok(logic.includes(`'${icon}'`), `QuickToolbar must autoload ${icon}`);
+    }
   });
 
   it('FormField can be imported with DOM shim', async () => {

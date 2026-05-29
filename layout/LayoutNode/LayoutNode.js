@@ -23,17 +23,6 @@ const LAYOUT_NODE_ICONS = [
   'fullscreen_exit',
 ];
 
-const LAYOUT_NODE_ICONS = [
-  'arrow_drop_down',
-  'chevron_left',
-  'chevron_right',
-  'dashboard',
-  'expand_less',
-  'expand_more',
-  'fullscreen',
-  'fullscreen_exit',
-];
-
 export class LayoutNode extends Symbiote {
   static isoMode = true;
 

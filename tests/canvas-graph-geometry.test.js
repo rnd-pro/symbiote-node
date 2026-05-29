@@ -213,7 +213,19 @@ describe('CanvasGraph theme contract', () => {
       'utf8',
     );
 
-    for (let token of ['--sn-bg', '--sn-conn-color', '--sn-conn-selected', '--sn-port-outline', '--sn-node-selected', '--sn-danger-color', '--sn-text']) {
+    for (let token of [
+      '--sn-bg',
+      '--sn-conn-color',
+      '--sn-conn-selected',
+      '--sn-port-outline',
+      '--sn-node-selected',
+      '--sn-danger-color',
+      '--sn-text',
+      '--sn-socket-size',
+      '--sn-socket-border-width',
+      '--sn-conn-dot-stroke-width',
+      '--sn-conn-dot-r',
+    ]) {
       assert.ok(source.includes(token), `CanvasConnectionRenderer must read ${token}`);
     }
 
@@ -230,6 +242,149 @@ describe('CanvasGraph theme contract', () => {
     }
 
     assert.ok(source.includes('resolveCssVars'), 'CanvasConnectionRenderer must resolve provider CSS variables before canvas drawing');
+  });
+
+  it('derives SVG connector dot geometry from the socket theme size', () => {
+    let canvasCss = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.css.js'), 'utf8');
+    let portCss = fs.readFileSync(path.join(PKG_ROOT, 'node/PortItem/PortItem.css.js'), 'utf8');
+    let socketCss = fs.readFileSync(path.join(PKG_ROOT, 'node/NodeSocket/NodeSocket.css.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+
+    assert.ok(canvasCss.includes('--sn-socket-size'), 'SVG connector dots must use --sn-socket-size');
+    assert.ok(canvasCss.includes('--sn-socket-border-width'), 'SVG connector dots must use --sn-socket-border-width');
+    assert.ok(portCss.includes('width: var(--sn-socket-size);'), 'port sockets must use --sn-socket-size');
+    assert.ok(socketCss.includes('width: var(--sn-socket-size);'), 'node-socket must use --sn-socket-size');
+    assert.ok(
+      theme.includes("'--sn-conn-dot-r': 'calc((var(--sn-socket-size) + var(--sn-conn-dot-stroke-width)) / 2)'"),
+      'default SVG connector radius must derive from the socket size token'
+    );
+  });
+
+  it('derives graph node icon accents from node type before category', () => {
+    let graphNodeCss = fs.readFileSync(path.join(PKG_ROOT, 'node/GraphNode/GraphNode.css.js'), 'utf8');
+    let nodeViewManager = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeViewManager.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+
+    assert.ok(nodeViewManager.includes('nodeTypeTokenName'), 'NodeViewManager must normalize node types into theme token names');
+    assert.ok(nodeViewManager.includes('--sn-node-type-accent'), 'NodeViewManager must expose a type accent custom property on node hosts');
+    assert.ok(graphNodeCss.includes('--sn-node-category-accent: var(--sn-cat-default);'), 'GraphNode must keep category accent as fallback');
+    assert.ok(graphNodeCss.includes('var(--sn-node-type-accent, var(--sn-node-category-accent))'), 'GraphNode must prefer node type accents');
+    assert.ok(graphNodeCss.includes("--sn-node-category-accent: var(--sn-cat-data);"), 'GraphNode category accents must stay theme-driven');
+
+    for (let token of ['--sn-type-profile', '--sn-type-profile-info', '--sn-type-portal', '--sn-type-project']) {
+      assert.ok(theme.includes(token), `DEFAULT_DARK must define ${token}`);
+    }
+    assert.equal(theme.includes("'--sn-hue-data': '265'"), false, 'default data accent must not use the previous purple hue');
+  });
+
+  it('keeps SVG node labels inside the shared quick toolbar title row', () => {
+    let graphNodeCss = fs.readFileSync(path.join(PKG_ROOT, 'node/GraphNode/GraphNode.css.js'), 'utf8');
+    let quickToolbar = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.js'), 'utf8');
+    let quickToolbarTemplate = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.tpl.js'), 'utf8');
+    let quickToolbarCss = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.css.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+
+    for (let token of [
+      '--sn-toolbar-title-color',
+      '--sn-toolbar-title-font-size',
+      '--sn-toolbar-title-font-weight',
+      '--sn-toolbar-title-line-height',
+      '--sn-toolbar-title-min-width',
+      '--sn-toolbar-title-max-width',
+      '--sn-toolbar-title-lines',
+      '--sn-toolbar-occlusion-bg',
+    ]) {
+      assert.ok(quickToolbarCss.includes(token), `QuickToolbar title row must read ${token}`);
+      assert.ok(theme.includes(token), `DEFAULT_DARK must define ${token}`);
+    }
+
+    assert.ok(graphNodeCss.includes('& .sn-node-header {\n        display: none;'), 'SVG nodes must not render a separate hover header');
+    assert.ok(quickToolbarTemplate.includes('toolbar-title'), 'QuickToolbar must own the title row');
+    assert.ok(quickToolbar.includes("nodeEl.hasAttribute('data-svg-shape')"), 'SVG nodes must opt into the toolbar title row');
+    assert.ok(quickToolbar.includes("nodeEl.hasAttribute('data-header-hidden')"), 'explicitly headerless nodes must opt into the toolbar title row');
+    assert.ok(quickToolbar.includes('#fitToolbarWidth'), 'QuickToolbar must fit title width to content');
+    assert.ok(quickToolbar.includes('#measureTitleTextWidth'), 'QuickToolbar must measure wrapped title width');
+    assert.ok(quickToolbarCss.includes('-webkit-line-clamp'), 'QuickToolbar title row must clamp long labels');
+    assert.ok(quickToolbarCss.includes('--sn-toolbar-fit-width'), 'QuickToolbar must expose a measured width custom property');
+    assert.ok(quickToolbarCss.includes('&[data-has-title] .toolbar'), 'QuickToolbar title min width must apply only when a title is visible');
+    assert.ok(quickToolbar.includes('toolbarHeight + QuickToolbar.GAP_Y'), 'toolbar position must account for the title row height');
+    assert.ok(quickToolbar.includes('--sn-toolbar-scale'), 'QuickToolbar must expose a visual scale custom property');
+    assert.ok(quickToolbar.includes('#resolveNodeVisualScale'), 'QuickToolbar must derive scale from the rendered node bounds');
+    assert.ok(quickToolbar.includes('nodeEl.offsetWidth'), 'QuickToolbar scale must compare rendered width with layout width');
+    assert.ok(quickToolbarCss.includes('scale(var(--sn-toolbar-scale, 1))'), 'QuickToolbar visuals must scale with transformed nodes');
+  });
+
+  it('supports compact inverse SVG nodes without body content', () => {
+    let graphNode = fs.readFileSync(path.join(PKG_ROOT, 'node/GraphNode/GraphNode.js'), 'utf8');
+    let graphNodeCss = fs.readFileSync(path.join(PKG_ROOT, 'node/GraphNode/GraphNode.css.js'), 'utf8');
+
+    assert.ok(graphNode.includes('params.hideContent'), 'GraphNode must expose params.hideContent for icon-only nodes');
+    assert.ok(graphNode.includes('data-content-hidden'), 'GraphNode must mark hidden body content on the host');
+    assert.ok(graphNode.includes('params.tone || params.nodeTone'), 'GraphNode must expose reusable tone metadata');
+    assert.ok(graphNode.includes("if (tone === 'inverted') return 'inverse';"), 'GraphNode must normalize inverted tone aliases');
+    assert.ok(graphNodeCss.includes('&[data-content-hidden]'), 'GraphNode must hide node body content from a host attribute');
+    assert.ok(graphNodeCss.includes("&[data-svg-shape][data-node-tone='inverse']"), 'SVG nodes must support inverse node tone');
+    assert.ok(graphNodeCss.includes('--sn-shape-fill: var(--sn-node-accent);'), 'inverse SVG tone must swap the node fill to the accent');
+    assert.ok(graphNodeCss.includes('color: var(--sn-node-bg);'), 'inverse SVG tone must swap the icon color to the node background');
+  });
+
+  it('maps SVG shape media to the path bounds instead of the padded viewBox', () => {
+    let nodeViewManager = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeViewManager.js'), 'utf8');
+    let graphNodeCss = fs.readFileSync(path.join(PKG_ROOT, 'node/GraphNode/GraphNode.css.js'), 'utf8');
+
+    assert.ok(nodeViewManager.includes('measureSvgPathBounds'), 'SVG media clip must measure the actual path bounds');
+    assert.ok(nodeViewManager.includes('path.getBBox()'), 'SVG media clip must use the rendered path box when available');
+    assert.ok(nodeViewManager.includes('1 / bounds.width'), 'SVG media clip must normalize paths by path width');
+    assert.ok(nodeViewManager.includes('--sn-svg-shape-media-left'), 'SVG media clip must expose path-bounds left inset');
+    assert.ok(nodeViewManager.includes('--sn-svg-shape-media-height'), 'SVG media clip must expose path-bounds height');
+    assert.ok(graphNodeCss.includes('var(--sn-svg-shape-media-width, 100%)'), 'SVG media element must size to the measured path bounds');
+    assert.ok(graphNodeCss.includes('var(--sn-svg-shape-media-top, 0%)'), 'SVG media element must offset to the measured path bounds');
+  });
+
+  it('shows node quick toolbar on hover and keeps overlays above node sockets', () => {
+    let nodeCanvas = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.js'), 'utf8');
+    let nodeCanvasTemplate = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.tpl.js'), 'utf8');
+    let nodeViewManager = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeViewManager.js'), 'utf8');
+    let quickToolbar = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.js'), 'utf8');
+    let quickToolbarCss = fs.readFileSync(path.join(PKG_ROOT, 'toolbar/QuickToolbar/QuickToolbar.css.js'), 'utf8');
+    let contextMenu = fs.readFileSync(path.join(PKG_ROOT, 'menu/ContextMenu/ContextMenu.js'), 'utf8');
+    let nodeCallout = fs.readFileSync(path.join(PKG_ROOT, 'node/NodeCallout/NodeCallout.js'), 'utf8');
+    let theme = fs.readFileSync(path.join(PKG_ROOT, 'themes/default-dark.js'), 'utf8');
+
+    assert.ok(nodeViewManager.includes('onNodePointerEnter'), 'NodeViewManager must expose node hover entry callbacks');
+    assert.ok(nodeViewManager.includes('pointerenter'), 'NodeViewManager must listen for pointerenter on graph nodes');
+    assert.ok(nodeViewManager.includes('onNodeDragStart'), 'NodeViewManager must expose actual node drag start callbacks');
+    assert.ok(nodeViewManager.includes('onNodeDragEnd'), 'NodeViewManager must expose node drag end callbacks');
+    assert.ok(nodeViewManager.includes('if (!dragMoved)'), 'NodeViewManager must fire node drag start only after real movement');
+    assert.ok(nodeCanvas.includes('_handleNodePointerEnter'), 'NodeCanvas must show quick toolbar from node hover');
+    assert.ok(nodeCanvas.includes('if (this._nodeDragActive) return;'), 'NodeCanvas must suppress hover toolbar while dragging nodes');
+    assert.ok(nodeCanvas.includes('_handleNodeDragStart'), 'NodeCanvas must hide quick toolbar when node dragging starts');
+    assert.ok(nodeCanvas.includes("this.setAttribute('data-node-dragging', nodeId)"), 'NodeCanvas must expose node dragging state on the host');
+    assert.ok(nodeCanvas.includes('this.ref.quickToolbar?.hide?.();'), 'NodeCanvas must hide the node quick toolbar during node dragging');
+    assert.ok(nodeCanvas.includes('_handleNodeDragEnd'), 'NodeCanvas must leave node drag suppression on pointer release');
+    assert.ok(nodeCanvas.includes("this.ref.quickToolbar?.show?.(nodeId, nodeEl, { sticky: true })"), 'NodeCanvas must restore the selected node toolbar after drag release');
+    assert.ok(nodeCanvas.includes('scheduleHide?.'), 'NodeCanvas must defer toolbar hide when pointer leaves a node');
+    assert.ok(
+      nodeCanvasTemplate.includes('</div>\n    <quick-toolbar ref="quickToolbar" hidden></quick-toolbar>'),
+      'QuickToolbar must render as a screen-space overlay outside transformed canvas content'
+    );
+    assert.ok(quickToolbar.includes('getBoundingClientRect'), 'QuickToolbar must position from rendered node bounds');
+    assert.ok(quickToolbar.includes('mountOverlayToDocument'), 'QuickToolbar must escape clipped canvas/layout layers');
+    assert.ok(quickToolbar.includes('data-overlay-portal'), 'QuickToolbar must switch to screen-space positioning when portaled');
+    assert.ok(quickToolbar.includes('bringOverlayToFront'), 'QuickToolbar must use the shared overlay stack');
+    assert.ok(quickToolbar.includes("window.addEventListener('scroll'"), 'QuickToolbar must track scroll containers while portaled');
+    assert.ok(quickToolbar.includes('#requestPositionUpdate'), 'QuickToolbar must throttle scroll-driven repositioning');
+    assert.ok(quickToolbar.includes("this.addEventListener('wheel'"), 'QuickToolbar must catch wheel events while portaled');
+    assert.ok(quickToolbar.includes('#forwardWheelToCanvas'), 'QuickToolbar must route overlay wheel events back to the owning canvas');
+    assert.ok(quickToolbar.includes("canvas.hasAttribute?.('data-flow-scroll')"), 'QuickToolbar must preserve native flow scrolling from overlays');
+    assert.ok(quickToolbar.includes('canvas.ref?.canvasContainer'), 'QuickToolbar must forward zoom wheels to the canvas zoom container');
+    assert.ok(quickToolbar.includes('new WheelEvent'), 'QuickToolbar must clone wheel events for canvas zoom handlers');
+    assert.ok(contextMenu.includes('bringOverlayToFront'), 'ContextMenu must use the shared overlay stack');
+    assert.ok(nodeCallout.includes('bringOverlayToFront'), 'NodeCallout must use the shared overlay stack');
+    assert.ok(quickToolbarCss.includes('position: fixed'), 'Portaled QuickToolbar must not be clipped by canvas overflow');
+    assert.ok(quickToolbarCss.includes('--sn-toolbar-z'), 'QuickToolbar must read its z-index from theme tokens');
+    assert.ok(theme.includes("'--sn-overlay-z-base': '20000'"), 'DEFAULT_DARK must define the overlay z-index base');
+    assert.ok(theme.includes("'--sn-toolbar-z': 'var(--sn-overlay-z-base)'"), 'DEFAULT_DARK must theme toolbar z-index');
   });
 
   it('keeps minimap canvas colors in the default theme contract', () => {

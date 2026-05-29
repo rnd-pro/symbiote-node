@@ -38,6 +38,7 @@ describe('package exports resolution', () => {
     assert.equal(typeof ui.createWebXRAdapter, 'function');
     assert.equal(ui.WEBXR_RENDERER.status, 'experimental');
     assert.ok('GraphExplorerShell' in ui, 'UI entrypoint must expose GraphExplorerShell binding');
+    assert.ok('NodeCallout' in ui, 'UI entrypoint must expose NodeCallout binding');
     assert.equal(typeof ui.computeInitialGraphPositions, 'function');
     assert.ok('Layout' in ui, 'UI entrypoint must expose Layout binding');
     assert.ok('CrossLayoutPortalBridge' in ui, 'UI entrypoint must expose CrossLayoutPortalBridge binding');
@@ -149,6 +150,7 @@ describe('package exports resolution', () => {
       'symbiote-node/canvas/graph-explorer.js',
       'symbiote-node/interactions/Drag.js',
       'symbiote-node/node/GraphNode/GraphNode.js',
+      'symbiote-node/node/NodeCallout/NodeCallout.js',
       'symbiote-node/toolbar/QuickToolbar/QuickToolbar.js',
       'symbiote-node/inspector/InspectorPanel/InspectorPanel.js',
       'symbiote-node/palette/PaletteBrowser/PaletteBrowser.js',

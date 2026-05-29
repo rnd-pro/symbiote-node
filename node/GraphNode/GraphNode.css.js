@@ -20,6 +20,9 @@ export let styles = css`
     font-size: var(--sn-node-font-size);
     -webkit-font-smoothing: antialiased;
     --sn-node-items-max-height: 420px;
+    --sn-svg-shape-media-clip: circle(50% at 50% 50%);
+    --sn-node-category-accent: var(--sn-cat-default);
+    --sn-node-accent: var(--sn-node-type-accent, var(--sn-node-category-accent));
 
     /* Symbiote animateOut: CSS-driven exit transition */
     &[leaving] {
@@ -55,6 +58,17 @@ export let styles = css`
 
       & .sn-node-label {
         text-decoration: line-through;
+      }
+    }
+
+    &[data-header-hidden] .sn-node-header {
+      display: none !important;
+    }
+
+    &[data-content-hidden] {
+      & .sn-node-content,
+      & .sn-node-items {
+        display: none !important;
       }
     }
 
@@ -300,35 +314,35 @@ export let styles = css`
     }
 
     &[node-category='server'] {
-      --sn-node-accent: var(--sn-cat-server);
+      --sn-node-category-accent: var(--sn-cat-server);
     }
     &[node-category='instance'] {
-      --sn-node-accent: var(--sn-cat-instance);
+      --sn-node-category-accent: var(--sn-cat-instance);
     }
     &[node-category='control'] {
-      --sn-node-accent: var(--sn-cat-control);
+      --sn-node-category-accent: var(--sn-cat-control);
     }
     &[node-category='data'] {
-      --sn-node-accent: var(--sn-cat-data);
+      --sn-node-category-accent: var(--sn-cat-data);
     }
     &[node-category='default'] {
-      --sn-node-accent: var(--sn-cat-default);
+      --sn-node-category-accent: var(--sn-cat-default);
     }
     /* Codebase categories */
     &[node-category='directory'] {
-      --sn-node-accent: var(--sn-cat-directory);
+      --sn-node-category-accent: var(--sn-cat-directory);
     }
     &[node-category='file'] {
-      --sn-node-accent: var(--sn-cat-file);
+      --sn-node-category-accent: var(--sn-cat-file);
     }
     &[node-category='function'] {
-      --sn-node-accent: var(--sn-cat-function);
+      --sn-node-category-accent: var(--sn-cat-function);
     }
     &[node-category='class'] {
-      --sn-node-accent: var(--sn-cat-class);
+      --sn-node-category-accent: var(--sn-cat-class);
     }
     &[node-category='module'] {
-      --sn-node-accent: var(--sn-cat-module);
+      --sn-node-category-accent: var(--sn-cat-module);
     }
 
     /* Shape: pill — compact horizontal capsule */
@@ -478,28 +492,7 @@ export let styles = css`
       }
 
       & .sn-node-header {
-        position: absolute;
-        top: -28px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(
-          --sn-node-header-bg,
-          color-mix(in srgb, var(--sn-node-accent) 20%, var(--sn-node-bg))
-        );
-        border: 2px solid var(--sn-node-border);
-        border-radius: 20px;
-        padding: 3px 12px;
-        white-space: nowrap;
-        z-index: 1;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease;
-      }
-      &:hover .sn-node-header {
-        opacity: 1;
-      }
-      &[data-selected] .sn-node-header {
-        opacity: 0;
+        display: none;
       }
       & .sn-node-body {
         padding: 4px 0;
@@ -525,8 +518,8 @@ export let styles = css`
       }
 
       &[data-has-media] {
-        overflow: hidden !important;
-        border-radius: 50% !important;
+        overflow: visible !important;
+        border-radius: 0 !important;
 
         & > svg {
           z-index: 1;
@@ -538,11 +531,13 @@ export let styles = css`
 
         & .sn-node-media {
           position: absolute !important;
-          inset: 0;
+          inset: var(--sn-svg-shape-media-top, 0%) auto auto var(--sn-svg-shape-media-left, 0%);
+          inline-size: var(--sn-svg-shape-media-width, 100%);
+          block-size: var(--sn-svg-shape-media-height, 100%);
           z-index: 0;
           border: 0;
           margin: 0;
-          clip-path: circle(50% at 50% 50%);
+          clip-path: var(--sn-svg-shape-media-clip);
         }
 
         & .sn-node-media-img {
@@ -556,29 +551,19 @@ export let styles = css`
           padding: 0;
         }
 
-        & .sn-node-header {
-          position: absolute !important;
-          top: auto !important;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          transform: none !important;
-          justify-content: center;
-          border: 0;
-          border-radius: 0;
-          padding: 26px 10px 12px;
-          background: linear-gradient(180deg, transparent, var(--sn-bg-overlay));
-          opacity: 1;
-        }
-
         & .sn-node-icon,
         & .sn-shape-watermark {
           display: none;
         }
+      }
+    }
 
-        & .sn-node-label {
-          text-shadow: 0 1px 4px var(--sn-shadow-color);
-        }
+    &[data-svg-shape][data-node-tone='inverse'] {
+      --sn-shape-fill: var(--sn-node-accent);
+      --sn-shape-stroke: var(--sn-node-accent);
+
+      & .sn-shape-watermark {
+        color: var(--sn-node-bg);
       }
     }
 

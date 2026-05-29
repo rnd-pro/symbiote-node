@@ -29,6 +29,20 @@ const CATEGORY_ICONS = {
   default: 'radio_button_checked',
 };
 
+function setOptionalAttribute(el, name, value) {
+  if (value) {
+    el.setAttribute(name, String(value));
+  } else {
+    el.removeAttribute(name);
+  }
+}
+
+function normalizeNodeTone(value) {
+  let tone = String(value || '').trim().toLowerCase();
+  if (tone === 'inverted') return 'inverse';
+  return tone;
+}
+
 export class GraphNode extends Symbiote {
   destructionDelay = 200;
 
@@ -103,15 +117,19 @@ export class GraphNode extends Symbiote {
    */
   #populateFromNodeData(node) {
     let params = node.params || {};
+    let contentHidden = Boolean(params.hideContent || params.contentHidden);
+    this.toggleAttribute('data-header-hidden', Boolean(params.hideHeader || params.headerHidden));
+    this.toggleAttribute('data-content-hidden', contentHidden);
+    setOptionalAttribute(this, 'data-node-tone', normalizeNodeTone(params.tone || params.nodeTone));
     this.set$({
       nodeIcon: node.icon || CATEGORY_ICONS[node.category] || CATEGORY_ICONS.default,
       mediaSrc: params.media || params.image || params.avatar || '',
       mediaAlt: params.mediaAlt || params.imageAlt || params.avatarAlt || node.label || '',
-      summary: params.summary || '',
+      summary: contentHidden ? '' : params.summary || '',
       href: params.href || '',
       linkLabel: params.linkLabel || 'Open',
-      hasItems: Array.isArray(params.items) && params.items.length > 0,
-      itemsList: Array.isArray(params.items)
+      hasItems: !contentHidden && Array.isArray(params.items) && params.items.length > 0,
+      itemsList: !contentHidden && Array.isArray(params.items)
         ? params.items.map((item) => ({
             href: item.href || '#',
             target: item.external ? '_blank' : '',

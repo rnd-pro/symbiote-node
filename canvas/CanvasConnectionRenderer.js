@@ -13,6 +13,29 @@ function resolveThemeValue(source, token, fallbackToken) {
   return computed.getPropertyValue(fallbackToken).trim();
 }
 
+function resolveCssLength(source, value, fallback) {
+  if (!value) return fallback;
+  if (!value.includes('var(') && !value.includes('calc(')) {
+    let direct = Number.parseFloat(value);
+    if (Number.isFinite(direct)) return direct;
+  }
+
+  let probe = document.createElement('span');
+  probe.style.position = 'absolute';
+  probe.style.visibility = 'hidden';
+  probe.style.pointerEvents = 'none';
+  probe.style.width = value;
+  (source.append ? source : document.documentElement).append(probe);
+  let resolved = Number.parseFloat(getComputedStyle(probe).width);
+  probe.remove();
+  return Number.isFinite(resolved) ? resolved : fallback;
+}
+
+function resolveThemeLength(source, token, fallback) {
+  let value = getComputedStyle(source).getPropertyValue(token).trim();
+  return resolveCssLength(source, value, fallback);
+}
+
 function resolveCssVars(source, value, seen = new Set()) {
   if (!value || !value.includes('var(')) return value || '';
   return value.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^)]+))?\)/g, (_match, token, fallback = '') => {
@@ -82,6 +105,8 @@ export class CanvasConnectionRenderer {
     bg: '',
     text: '',
     width: 2,
+    dotRadius: 7,
+    dotStrokeWidth: 2,
   };
 
   /**
@@ -142,6 +167,18 @@ export class CanvasConnectionRenderer {
     this.#colorParams.bg = resolveThemeValue(source, '--sn-bg');
     this.#colorParams.text = resolveThemeValue(source, '--sn-text');
     this.#colorParams.width = parseFloat(computed.getPropertyValue('--sn-conn-width')) || 2;
+    let socketSize = resolveThemeLength(source, '--sn-socket-size', 12);
+    let socketBorderWidth = resolveThemeLength(source, '--sn-socket-border-width', 2);
+    this.#colorParams.dotStrokeWidth = resolveThemeLength(
+      source,
+      '--sn-conn-dot-stroke-width',
+      socketBorderWidth
+    );
+    this.#colorParams.dotRadius = resolveThemeLength(
+      source,
+      '--sn-conn-dot-r',
+      (socketSize + this.#colorParams.dotStrokeWidth) / 2
+    );
   }
 
   #resolveColor(value) {
@@ -243,7 +280,7 @@ export class CanvasConnectionRenderer {
       };
     }
 
-    let nodeModel = this.#editor?.getNode(nodeEl.id);
+    let nodeModel = this.#editor?.getNode(nodeEl.getAttribute?.('node-id') || nodeEl.id);
     let portIndex = 0;
     let totalPorts = 1;
 
@@ -259,6 +296,27 @@ export class CanvasConnectionRenderer {
 
 
     let shapeConfig = getShape(nodeModel?.shape);
+    if (shapeConfig && shapeConfig.pathData && targetPos && shapeConfig.getEdgePoint) {
+      let portsData = side === 'output' ? nodeModel?.outputs : nodeModel?.inputs;
+      let keys = portsData ? Object.keys(portsData) : [portKey];
+      let index = Math.max(0, keys.indexOf(portKey));
+      let total = Math.max(1, keys.length);
+      let nodePos = nodeEl._position || { x: 0, y: 0 };
+      let cx = nodePos.x + w / 2;
+      let cy = nodePos.y + h / 2;
+      let baseAngle = Math.atan2(targetPos.y - cy, targetPos.x - cx);
+      let sideGap = Math.PI / 6;
+      let angle = baseAngle + (side === 'output' ? -sideGap : sideGap);
+      let shouldReverse = side === 'output' ? targetPos.y < cy : targetPos.y > cy;
+      let effectiveIndex = shouldReverse ? total - 1 - index : index;
+      if (total > 1) {
+        angle += (effectiveIndex - (total - 1) / 2) * ((2 * Math.PI) / (total * 2));
+      }
+      let step = Math.PI / 12;
+      angle = Math.round(angle / step) * step;
+      return shapeConfig.getEdgePoint(angle, { width: w, height: h });
+    }
+
     if (shapeConfig && shapeConfig.pathData && shapeConfig.getSocketPosition) {
       let pos = shapeConfig.getSocketPosition(
         side,
@@ -504,10 +562,10 @@ export class CanvasConnectionRenderer {
       ctx.beginPath();
 
 
-      ctx.arc(pos.x, pos.y, 7, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, this.#colorParams.dotRadius, 0, Math.PI * 2);
       ctx.fillStyle = pos.color;
       ctx.fill();
-      ctx.lineWidth = 2;
+      ctx.lineWidth = this.#colorParams.dotStrokeWidth;
       ctx.strokeStyle = this.#colorParams.outline;
       ctx.stroke();
     }

@@ -128,7 +128,7 @@ export class SelectionSync {
       if (selectedNodes.size === 1) {
         let nodeId = [...selectedNodes][0];
         let nodeEl = this.#nodeViews.get(nodeId);
-        if (nodeEl) toolbar.show(nodeId, nodeEl);
+        if (nodeEl) toolbar.show(nodeId, nodeEl, { sticky: true });
       } else {
         toolbar.hide();
       }

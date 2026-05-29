@@ -142,6 +142,21 @@ export class ConnectionRenderer {
     }
   }
 
+  #nodeRects() {
+    const rects = [];
+    for (const [nid, el] of this.#nodeViews) {
+      if (!el?._position) continue;
+      rects.push({
+        id: nid,
+        x: el._position.x,
+        y: el._position.y,
+        w: el.offsetWidth || el._cachedW || 180,
+        h: el.offsetHeight || el._cachedH || 100,
+      });
+    }
+    return rects;
+  }
+
   /**
    * Full re-render: clear all slots for affected nodes, recalculate everything
    * @param {Set<string>} nodeIds
@@ -305,8 +320,8 @@ export class ConnectionRenderer {
           id: nid,
           x: el._position?.x || 0,
           y: el._position?.y || 0,
-          w: el.offsetWidth || 180,
-          h: el.offsetHeight || 100,
+          w: el.offsetWidth || el._cachedW || 180,
+          h: el.offsetHeight || el._cachedH || 100,
         });
       }
     }
@@ -351,6 +366,7 @@ export class ConnectionRenderer {
       if (!el?._position) continue;
 
       let shape = getShape(el.getAttribute('node-shape'));
+      if (shape?.pathData && shape.getEdgePoint) continue;
       if (!shape?.getSidePosition) continue;
 
       let size = { width: el._cachedW || 180, height: el._cachedH || 100 };
@@ -448,7 +464,7 @@ export class ConnectionRenderer {
 
   /**
    * Set connection path style
-   * @param {'bezier'|'orthogonal'|'straight'} style
+   * @param {'bezier'|'orthogonal'|'straight'|'pcb'} style
    */
   setPathStyle(style) {
     this.#pathStyle = style;
@@ -480,32 +496,6 @@ export class ConnectionRenderer {
     let nodeData = nodeEl._nodeData;
     if (shape && shape.pathData && nodeData) {
       let size = { width: nodeEl._cachedW || 180, height: nodeEl._cachedH || 100 };
-
-
-      if (targetPos && shape.getSidePosition) {
-
-        if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
-        let cacheKey = `${portKey}:${side}`;
-        if (nodeEl._slotCache.has(cacheKey)) {
-          return nodeEl._slotCache.get(cacheKey);
-        }
-
-
-        let nodePos = nodeEl._position;
-        let cx = nodePos.x + size.width / 2;
-        let cy = nodePos.y + size.height / 2;
-        let dx = targetPos.x - cx;
-        let dy = targetPos.y - cy;
-
-
-        let nodeSide =
-          Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'bottom' : 'top';
-
-        let pos = shape.getSidePosition(nodeSide, 0.5, size);
-        let result = { x: pos.x, y: pos.y, angle: pos.angle };
-        nodeEl._slotCache.set(cacheKey, result);
-        return result;
-      }
 
 
       if (targetPos && shape.getEdgePoint) {
@@ -542,7 +532,7 @@ export class ConnectionRenderer {
 
 
         if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
-        let cacheKey = `${portKey}:${side}`;
+        let cacheKey = `${portKey}:${side}:${Math.round(angle * 1000)}`;
         if (nodeEl._slotCache.has(cacheKey)) {
           return nodeEl._slotCache.get(cacheKey);
         }
@@ -564,6 +554,32 @@ export class ConnectionRenderer {
 
         let pos = shape.getEdgePoint(nudged, size);
         nodeEl._usedCoords.push({ x: pos.x, y: pos.y });
+        let result = { x: pos.x, y: pos.y, angle: pos.angle };
+        nodeEl._slotCache.set(cacheKey, result);
+        return result;
+      }
+
+
+      if (targetPos && shape.getSidePosition) {
+
+        if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
+        let cacheKey = `${portKey}:${side}`;
+        if (nodeEl._slotCache.has(cacheKey)) {
+          return nodeEl._slotCache.get(cacheKey);
+        }
+
+
+        let nodePos = nodeEl._position;
+        let cx = nodePos.x + size.width / 2;
+        let cy = nodePos.y + size.height / 2;
+        let dx = targetPos.x - cx;
+        let dy = targetPos.y - cy;
+
+
+        let nodeSide =
+          Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'bottom' : 'top';
+
+        let pos = shape.getSidePosition(nodeSide, 0.5, size);
         let result = { x: pos.x, y: pos.y, angle: pos.angle };
         nodeEl._slotCache.set(cacheKey, result);
         return result;
@@ -787,7 +803,7 @@ export class ConnectionRenderer {
         toRect: { id: conn.to, x: toPos.x, y: toPos.y, w: toW, h: toH },
         fromAngle: fromOffset.angle ?? 0,
         toAngle: toOffset.angle ?? 180,
-        rects: this._nodeRectCache ? [...this._nodeRectCache.values()] : [],
+        rects: this._nodeRectCache ? [...this._nodeRectCache.values()] : this.#nodeRects(),
         connections: [...this.#connectionData.values()],
         conn,
       });
@@ -894,7 +910,7 @@ export class ConnectionRenderer {
     if (!dot) {
       dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       dot.setAttribute('data-conn-dot', dotId);
-      dot.setAttribute('r', '5');
+      dot.setAttribute('r', '7');
       this.#dotLayer.appendChild(dot);
     }
     dot.setAttribute('cx', x);
@@ -1120,7 +1136,7 @@ export class ConnectionRenderer {
     dot.setAttribute('data-node-id', nodeId);
     dot.setAttribute('data-port-key', key);
     dot.setAttribute('data-port-side', side);
-    dot.setAttribute('r', '4');
+    dot.setAttribute('r', '7');
     dot.setAttribute('cx', wx);
     dot.setAttribute('cy', wy);
     dot.style.pointerEvents = 'auto';

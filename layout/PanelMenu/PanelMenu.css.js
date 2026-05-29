@@ -3,7 +3,7 @@ import { css } from '@symbiotejs/symbiote';
 export let styles = css`
   panel-menu {
     position: fixed;
-    z-index: 1000;
+    z-index: var(--sn-panel-menu-z, var(--sn-overlay-z-base, 20000));
     pointer-events: none;
 
     .menu-container {

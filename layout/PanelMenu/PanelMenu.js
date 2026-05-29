@@ -4,6 +4,7 @@
 
 import Symbiote from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
+import { bringOverlayToFront } from '../../ui/overlay-stack.js';
 import { template } from './PanelMenu.tpl.js';
 import { styles } from './PanelMenu.css.js';
 
@@ -55,6 +56,7 @@ export class PanelMenu extends Symbiote {
 
     this.style.left = `${x}px`;
     this.style.top = `${y}px`;
+    bringOverlayToFront(this);
     this.$.visible = true;
 
 

@@ -290,6 +290,7 @@ describe('component registry', () => {
       'graph-tabs',
       'graph-breadcrumb',
       'graph-frame',
+      'node-callout',
     ]) {
       let component = getComponent(tag);
       assert.ok(component.contract, `${tag} must expose contract metadata`);

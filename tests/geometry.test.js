@@ -15,6 +15,7 @@ import { NodeEditor } from '../core/Editor.js';
 import { Node } from '../core/Node.js';
 import { Connection } from '../core/Connection.js';
 import { Socket, Input, Output, InputControl } from '../core/Socket.js';
+import { getShape } from '../shapes/index.js';
 
 
 /**
@@ -128,6 +129,16 @@ describe('Connection-port consistency', () => {
     for (const conn of editor.getConnections()) {
       assert.notEqual(conn.from, conn.to, 'Self-connection is not allowed');
     }
+  });
+});
+
+describe('SVG shape registry', () => {
+  it('exposes disc as an SVG shape preset', () => {
+    const disc = getShape('disc');
+    assert.equal(disc.name, 'disc');
+    assert.equal(typeof disc.pathData, 'string');
+    assert.ok(disc.pathData.includes('A10 10'), 'disc must be a path-based SVG circle');
+    assert.equal(typeof disc.getEdgePoint, 'function');
   });
 });
 

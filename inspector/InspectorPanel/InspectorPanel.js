@@ -24,16 +24,6 @@ const INSPECTOR_ICONS = [
   'tune',
 ];
 
-const INSPECTOR_ICONS = [
-  'account_tree',
-  'input',
-  'login',
-  'output',
-  'play_arrow',
-  'touch_app',
-  'tune',
-];
-
 export class InspectorPanel extends Symbiote {
   init$ = {
     visible: false,

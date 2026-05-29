@@ -147,6 +147,7 @@ export let CanvasGraph;
 export let GraphExplorerShell;
 export let ContextMenu;
 export let GraphNode;
+export let NodeCallout;
 export let GraphFrame;
 export let NodeSocket;
 export let QuickToolbar;
@@ -208,6 +209,7 @@ export let StatusRibbon;
 export let stringifyBlock;
 export let truncateResult;
 export { sharedUiStyles } from './shared-styles.js';
+export { bringOverlayToFront, nextOverlayZIndex, resetOverlayStack } from './overlay-stack.js';
 export { escapeHtml } from '../display/markdown-formatter.js';
 export { normalizeOutputList, normalizePreviewGraph } from '../display/output-preview.js';
 export { createNetworkApprovalPageStyles, renderNetworkApprovalPage } from '../display/network-approval-page.js';
@@ -427,6 +429,7 @@ if (hasDOMGlobals) {
     graphExplorerShell,
     contextMenu,
     graphNode,
+    nodeCallout,
     graphFrame,
     nodeSocket,
     quickToolbar,
@@ -478,6 +481,7 @@ if (hasDOMGlobals) {
     import('../canvas/GraphExplorerShell/GraphExplorerShell.js'),
     import('../menu/ContextMenu/ContextMenu.js'),
     import('../node/GraphNode/GraphNode.js'),
+    import('../node/NodeCallout/NodeCallout.js'),
     import('../node/GraphFrame/GraphFrame.js'),
     import('../node/NodeSocket/NodeSocket.js'),
     import('../toolbar/QuickToolbar/QuickToolbar.js'),
@@ -530,6 +534,7 @@ if (hasDOMGlobals) {
   ({ GraphExplorerShell } = graphExplorerShell);
   ({ ContextMenu } = contextMenu);
   ({ GraphNode } = graphNode);
+  ({ NodeCallout } = nodeCallout);
   ({ GraphFrame } = graphFrame);
   ({ NodeSocket } = nodeSocket);
   ({ QuickToolbar } = quickToolbar);
@@ -592,6 +597,7 @@ if (hasDOMGlobals) {
     GraphExplorerShell,
     ContextMenu,
     GraphNode,
+    NodeCallout,
     GraphFrame,
     NodeSocket,
     QuickToolbar,

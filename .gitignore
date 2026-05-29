@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 *.log
+.project-graph-cache.json
 TMP/
 .agent/
 .agents/

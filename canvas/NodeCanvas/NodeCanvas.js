@@ -404,7 +404,7 @@ export class NodeCanvas extends Symbiote {
           this._connRenderer.remove(conn);
         }
       }
-      this.#scheduleFlowLayout();
+      this.refreshFlowLayout();
     });
     editor.on('connectioncreated', (conn) => this._connRenderer.add(conn));
     editor.on('connectionremoved', (conn) => {
@@ -534,123 +534,6 @@ export class NodeCanvas extends Symbiote {
   setViewportLocked(locked) {
     this._viewportLocked = locked;
     this.toggleAttribute('data-viewport-locked', locked);
-  }
-
-  /**
-   * Allow graph nodes to move while the canvas remains readonly.
-   * This keeps connect/edit actions disabled but preserves presentation dragging.
-   * @param {boolean} enabled
-   */
-  setReadonlyNodeDragging(enabled) {
-    this.#readonlyNodeDragging = enabled;
-    this.toggleAttribute('data-readonly-node-dragging', enabled);
-    this.#viewManager?.setReadonlyNodeDragging(enabled);
-  }
-
-  /**
-   * Enable or remove viewport controls such as minimap, search, breadcrumbs,
-   * context menus, and quick toolbar affordances.
-   * @param {boolean} enabled
-   */
-  setChrome(enabled) {
-    this.$.chrome = enabled;
-    this.toggleAttribute('data-chrome-none', !enabled);
-    if (!enabled) {
-      this.ref.quickToolbar?.hide?.();
-      if (this.ref.minimap) this.ref.minimap.hidden = true;
-      if (this.ref.nodeSearch) this.ref.nodeSearch.hidden = true;
-      if (this.ref.breadcrumb) this.ref.breadcrumb.hidden = true;
-      if (this.ref.contextMenu) this.ref.contextMenu.hidden = true;
-    }
-  }
-
-  /**
-   * Enable or remove canvas panels while keeping node menus available.
-   * @param {boolean} enabled
-   */
-  setPanels(enabled) {
-    this.#panelsEnabled = enabled;
-    this.toggleAttribute('data-panels-none', !enabled);
-    if (!enabled) {
-      if (this.ref.minimap) this.ref.minimap.hidden = true;
-      if (this.ref.nodeSearch) this.ref.nodeSearch.hidden = true;
-      if (this.ref.breadcrumb) this.ref.breadcrumb.hidden = true;
-      if (this.ref.inspector) this.ref.inspector.hidden = true;
-    }
-  }
-
-  /**
-   * Lock viewport pan and zoom while keeping graph rendering active.
-   * Use this for fixed presentation surfaces.
-   * @param {boolean} locked
-   */
-  setViewportLocked(locked) {
-    this.#viewportLocked = locked;
-    this.toggleAttribute('data-viewport-locked', locked);
-  }
-
-  /**
-   * Arrange selected graph nodes as a scrollable flow while preserving real
-   * graph-node elements, connectors, node menus, and dragging.
-   *
-   * @param {object} [options]
-   * @param {'vertical'|'horizontal'} [options.direction='vertical']
-   * @param {string[]} [options.nodeIds] Ordered subset of nodes to place.
-   * @param {number} [options.gap=16]
-   * @param {number|{top?: number, right?: number, bottom?: number, left?: number}} [options.padding=24]
-   * @param {'start'|'center'|'end'|'stretch'} [options.align='stretch']
-   * @param {number} [options.minNodeWidth=240]
-   * @param {number|null} [options.maxNodeWidth=null]
-   * @param {number|null} [options.nodeWidth=null]
-   * @param {number} [options.minNodeHeight=120]
-   * @param {number|null} [options.maxNodeHeight=null]
-   * @param {number|null} [options.nodeHeight=null]
-   */
-  setFlowLayout(options = {}) {
-    const padding = this.#normalizeFlowPadding(options.padding ?? 24);
-    this.#flowLayout = {
-      direction: options.direction === 'horizontal' ? 'horizontal' : 'vertical',
-      nodeIds: Array.isArray(options.nodeIds) ? [...options.nodeIds] : null,
-      gap: Number.isFinite(options.gap) ? Math.max(0, options.gap) : 16,
-      padding,
-      align: ['start', 'center', 'end', 'stretch'].includes(options.align) ? options.align : 'stretch',
-      minNodeWidth: Number.isFinite(options.minNodeWidth) ? Math.max(0, options.minNodeWidth) : 240,
-      maxNodeWidth: Number.isFinite(options.maxNodeWidth) ? Math.max(0, options.maxNodeWidth) : null,
-      nodeWidth: Number.isFinite(options.nodeWidth) ? Math.max(0, options.nodeWidth) : null,
-      minNodeHeight: Number.isFinite(options.minNodeHeight) ? Math.max(0, options.minNodeHeight) : 120,
-      maxNodeHeight: Number.isFinite(options.maxNodeHeight) ? Math.max(0, options.maxNodeHeight) : null,
-      nodeHeight: Number.isFinite(options.nodeHeight) ? Math.max(0, options.nodeHeight) : null,
-    };
-    this.setAttribute('data-flow-layout', this.#flowLayout.direction);
-    this.#ensureFlowResizeObserver();
-    this.#scheduleFlowLayout();
-  }
-
-  clearFlowLayout() {
-    this.#flowLayout = null;
-    this.removeAttribute('data-flow-layout');
-    if (this.ref.content) {
-      this.ref.content.style.width = '';
-      this.ref.content.style.height = '';
-    }
-    if (this.#flowResizeObserver) {
-      this.#flowResizeObserver.disconnect();
-      this.#flowResizeObserver = null;
-    }
-    if (this.#flowLayoutRaf) {
-      cancelAnimationFrame(this.#flowLayoutRaf);
-      this.#flowLayoutRaf = 0;
-    }
-    for (const [, el] of this.#nodeViews) {
-      el.style.removeProperty('--sn-node-min-width');
-      el.style.removeProperty('--sn-node-max-width');
-      el.style.minHeight = '';
-      el.style.maxHeight = '';
-    }
-  }
-
-  refreshFlowLayout() {
-    this.#scheduleFlowLayout();
   }
 
   /**
@@ -970,6 +853,10 @@ export class NodeCanvas extends Symbiote {
       el.style.removeProperty('--sn-node-min-width');
       el.style.removeProperty('--sn-node-max-width');
     }
+  }
+
+  refreshFlowLayout() {
+    if (this._flowLayout) this.setFlowLayout(this._flowLayout);
   }
 
   #setFlowContentSize(width, height) {
@@ -1365,7 +1252,7 @@ export class NodeCanvas extends Symbiote {
     this._drag.initialize(
       container,
       {
-        getPosition: () => this.#flowLayout
+        getPosition: () => this._flowLayout
           ? ({ x: -container.scrollLeft, y: -container.scrollTop })
           : ({ x: this.$.panX, y: this.$.panY }),
         getZoom: () => 1,

@@ -43,8 +43,6 @@ const ICONS = [
   'visibility_off',
 ];
 
-const ICONS = ['code', 'content_copy', 'delete', 'hub', 'login', 'visibility', 'visibility_off'];
-
 export class QuickToolbar extends Symbiote {
   init$ = {
     items: ACTIONS,

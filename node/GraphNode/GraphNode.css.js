@@ -63,6 +63,13 @@ export let styles = css`
       display: none !important;
     }
 
+    &[data-content-hidden] {
+      & .sn-node-content,
+      & .sn-node-items {
+        display: none !important;
+      }
+    }
+
     &[data-readonly]:not([data-readonly-node-dragging]),
     node-canvas[data-readonly] &:not([data-readonly-node-dragging]) {
       cursor: default;
@@ -546,6 +553,15 @@ export let styles = css`
         & .sn-shape-watermark {
           display: none;
         }
+      }
+    }
+
+    &[data-svg-shape][data-node-tone='inverse'] {
+      --sn-shape-fill: var(--sn-node-accent);
+      --sn-shape-stroke: var(--sn-node-accent);
+
+      & .sn-shape-watermark {
+        color: var(--sn-node-bg);
       }
     }
 

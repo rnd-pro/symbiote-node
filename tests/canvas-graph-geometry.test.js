@@ -254,6 +254,20 @@ describe('CanvasGraph theme contract', () => {
     assert.ok(quickToolbar.includes('toolbarHeight + QuickToolbar.GAP_Y'), 'toolbar position must account for the title row height');
   });
 
+  it('supports compact inverse SVG nodes without body content', () => {
+    let graphNode = fs.readFileSync(path.join(PKG_ROOT, 'node/GraphNode/GraphNode.js'), 'utf8');
+    let graphNodeCss = fs.readFileSync(path.join(PKG_ROOT, 'node/GraphNode/GraphNode.css.js'), 'utf8');
+
+    assert.ok(graphNode.includes('params.hideContent'), 'GraphNode must expose params.hideContent for icon-only nodes');
+    assert.ok(graphNode.includes('data-content-hidden'), 'GraphNode must mark hidden body content on the host');
+    assert.ok(graphNode.includes('params.tone || params.nodeTone'), 'GraphNode must expose reusable tone metadata');
+    assert.ok(graphNode.includes("if (tone === 'inverted') return 'inverse';"), 'GraphNode must normalize inverted tone aliases');
+    assert.ok(graphNodeCss.includes('&[data-content-hidden]'), 'GraphNode must hide node body content from a host attribute');
+    assert.ok(graphNodeCss.includes("&[data-svg-shape][data-node-tone='inverse']"), 'SVG nodes must support inverse node tone');
+    assert.ok(graphNodeCss.includes('--sn-shape-fill: var(--sn-node-accent);'), 'inverse SVG tone must swap the node fill to the accent');
+    assert.ok(graphNodeCss.includes('color: var(--sn-node-bg);'), 'inverse SVG tone must swap the icon color to the node background');
+  });
+
   it('shows node quick toolbar on hover and keeps overlays above node sockets', () => {
     let nodeCanvas = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.js'), 'utf8');
     let nodeCanvasTemplate = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.tpl.js'), 'utf8');

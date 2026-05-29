@@ -6,8 +6,10 @@ import { fileURLToPath } from 'node:url';
 
 import {
   DOT_RADIUS,
+  getCanvasNodeScreenHit,
   getGroupOrbitMetrics,
   getLayerTransform,
+  getNodeHitRadius,
   getNodeColor,
   getNodeRadius,
   getRadialMenuHit,
@@ -105,6 +107,43 @@ describe('CanvasGraph geometry helpers', () => {
       E: 0.9 * 2 * 100 + 400 * 0.1 - 0.8,
       F: 0.9 * 2 * 50 + 300 * 0.1 + 0.4,
     });
+  });
+
+  it('hit-tests nodes in their rendered layer transform', () => {
+    let transform = getLayerTransform({
+      depth: 0,
+      layerAnim: { 0: { scale: 1.2, parallax: 0 } },
+      dpr: 2,
+      zoom: 0.5,
+      panX: 100,
+      panY: 50,
+      vcx: 400,
+      vcy: 300,
+      focusActive: true,
+      focusX: 250,
+      focusY: 125,
+      dragDeltaX: 0,
+      dragDeltaY: 0,
+    });
+    let hit = getCanvasNodeScreenHit({
+      clientX: 405,
+      clientY: 247.5,
+      canvasRect: { left: 10, top: 20 },
+      node: { id: 'node-a' },
+      position: { x: 500, y: 300 },
+      transform,
+      dpr: 2,
+    });
+
+    assert.equal(hit.hit, true);
+    assert.equal(hit.screenX, 405);
+    assert.equal(hit.screenY, 247.5);
+    assert.equal(hit.screenRadius, 8.4);
+  });
+
+  it('expands group hit radius consistently with canvas hit testing', () => {
+    assert.equal(getNodeHitRadius({ isGroup: true }), 21);
+    assert.equal(getNodeHitRadius({ isGroup: false }), 14);
   });
 
   it('detects radial menu hits by action item', () => {

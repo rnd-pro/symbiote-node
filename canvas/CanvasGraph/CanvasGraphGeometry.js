@@ -44,6 +44,40 @@ export function getNodeRadius(node, conns, opts = {}) {
   return DOT_RADIUS * hubScale * aScale;
 }
 
+export function getNodeHitRadius(node, hitRadius = HIT_RADIUS) {
+  return node?.isGroup ? hitRadius * 1.5 : hitRadius;
+}
+
+export function getCanvasNodeScreenHit(options) {
+  let {
+    clientX,
+    clientY,
+    canvasRect,
+    node,
+    position,
+    transform,
+    dpr = 1,
+    hitRadius = getNodeHitRadius(node),
+  } = options || {};
+
+  if (!canvasRect || !node || !position || !transform || !Number.isFinite(dpr) || dpr <= 0) {
+    return null;
+  }
+
+  let screenX = canvasRect.left + ((transform.A * position.x + transform.E) / dpr);
+  let screenY = canvasRect.top + ((transform.A * position.y + transform.F) / dpr);
+  let screenRadius = Math.max(4, Math.abs(transform.A) * hitRadius / dpr);
+  let dx = clientX - screenX;
+  let dy = clientY - screenY;
+
+  return {
+    hit: dx * dx + dy * dy <= screenRadius * screenRadius,
+    screenX,
+    screenY,
+    screenRadius,
+  };
+}
+
 /**
  * @param {object} options
  * @param {number} options.depth

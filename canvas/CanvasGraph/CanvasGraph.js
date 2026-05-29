@@ -5,8 +5,10 @@ import css from './CanvasGraph.css.js';
 import {
   DOT_RADIUS,
   HIT_RADIUS,
+  getCanvasNodeScreenHit,
   getGroupOrbitMetrics,
   getLayerTransform,
+  getNodeHitRadius,
   getNodeColor,
   getNodeRadius,
   getRadialMenuHit,
@@ -179,6 +181,8 @@ export class CanvasGraph extends Symbiote {
     this._idleFrames = 0;      // Count consecutive frames with no visual change
     this._prevDragDeltaX = 0;  // Previous frame's focus drag delta X
     this._prevDragDeltaY = 0;  // Previous frame's focus drag delta Y
+    this._visualDragDeltaX = 0;
+    this._visualDragDeltaY = 0;
     this._layoutSnapshot = null;
 
     // Info panel state (typewriter HUD to the right of active node)
@@ -847,6 +851,8 @@ export class CanvasGraph extends Symbiote {
     this.focusActive = focus.focusActive;
     dragDeltaX = focus.dragDeltaX;
     dragDeltaY = focus.dragDeltaY;
+    this._visualDragDeltaX = dragDeltaX;
+    this._visualDragDeltaY = dragDeltaY;
     this._infoPanel._centeredForNode = focus.centeredForNode;
     if (focus.targetPanX !== null) {
       this._targetPanX = focus.targetPanX;
@@ -1430,11 +1436,32 @@ export class CanvasGraph extends Symbiote {
     ctx.restore();
   }
 
-  screenToWorld(sx, sy) {
+  getVisualLayerTransform(depth = 0) {
+    let dpr = window.devicePixelRatio || 1;
+    return getLayerTransform({
+      depth,
+      layerAnim: this.layerAnim,
+      dpr,
+      zoom: this.zoom,
+      panX: this.panX,
+      panY: this.panY,
+      vcx: this.canvas.width / 2,
+      vcy: this.canvas.height / 2,
+      focusActive: this.focusActive,
+      focusX: this.focusX,
+      focusY: this.focusY,
+      dragDeltaX: this._visualDragDeltaX || 0,
+      dragDeltaY: this._visualDragDeltaY || 0,
+    });
+  }
+
+  screenToWorld(sx, sy, depth = 0) {
     const rect = this.canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const transform = this.getVisualLayerTransform(depth);
     return {
-      x: (sx - rect.left - this.panX) / this.zoom,
-      y: (sy - rect.top - this.panY) / this.zoom,
+      x: ((sx - rect.left) * dpr - transform.E) / transform.A,
+      y: ((sy - rect.top) * dpr - transform.F) / transform.A,
     };
   }
 
@@ -1456,10 +1483,40 @@ export class CanvasGraph extends Symbiote {
     return null;
   }
 
+  hitTestScreen(sx, sy) {
+    const inGroup = !!this.currentGroupId;
+    const activeGroupId = this.currentGroupId;
+    const rect = this.canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    for (let i = this.nodes.length - 1; i >= 0; i--) {
+      const node = this.nodes[i];
+      if (inGroup && node.parentId !== activeGroupId && node.id !== activeGroupId) continue;
+      const pos = this.getSmooth(node.id);
+      if (!pos) continue;
+
+      if (this.renderMode === 'dots') {
+        const depth = node.targetDepth ?? 0;
+        const hit = getCanvasNodeScreenHit({
+          clientX: sx,
+          clientY: sy,
+          canvasRect: rect,
+          node,
+          position: pos,
+          transform: this.getVisualLayerTransform(depth),
+          dpr,
+          hitRadius: getNodeHitRadius(node, HIT_RADIUS),
+        });
+        if (hit?.hit) return node;
+      }
+    }
+    return null;
+  }
+
   bindEvents() {
     this.canvas.addEventListener('pointerdown', (e) => {
       this._wakeLoop();  // User interaction — resume rendering
-      const world = this.screenToWorld(e.clientX, e.clientY);
+      const world = this.screenToWorld(e.clientX, e.clientY, 0);
 
       if (this.activeNode && !this.dragNode && this.menuAnim > 0.5) {
         const apos = this.getSmooth(this.activeNode.id);
@@ -1491,7 +1548,7 @@ export class CanvasGraph extends Symbiote {
         }
       }
 
-      const hit = this.hitTest(world.x, world.y);
+      const hit = this.hitTestScreen(e.clientX, e.clientY);
       if (hit) {
         const vis = this.getSmooth(hit.id);
         const sim = this.nodePositions.get(hit.id);
@@ -1520,8 +1577,9 @@ export class CanvasGraph extends Symbiote {
         }
         this._nodeActivatedOnDown = isNewActivation;
         const pos = this.nodePositions.get(hit.id);
-        this.dragOffset.x = world.x - pos.x;
-        this.dragOffset.y = world.y - pos.y;
+        const dragWorld = this.screenToWorld(e.clientX, e.clientY, hit.targetDepth ?? 0);
+        this.dragOffset.x = dragWorld.x - pos.x;
+        this.dragOffset.y = dragWorld.y - pos.y;
         this._dragStartX = e.clientX;
         this._dragStartY = e.clientY;
         this.canvas.style.cursor = 'grabbing';
@@ -1544,7 +1602,7 @@ export class CanvasGraph extends Symbiote {
     this.canvas.addEventListener('pointermove', (e) => {
       if (this.dragNode) {
         this._wakeLoop();  // Dragging node — resume rendering
-        const world = this.screenToWorld(e.clientX, e.clientY);
+        const world = this.screenToWorld(e.clientX, e.clientY, this.dragNode.targetDepth ?? 0);
         const newX = world.x - this.dragOffset.x;
         const newY = world.y - this.dragOffset.y;
         this.nodePositions.set(this.dragNode.id, { x: newX, y: newY });
@@ -1556,8 +1614,7 @@ export class CanvasGraph extends Symbiote {
         this.panY = this.panStart.y + (e.clientY - this.panStart.py);
         this.hoverNode = null;
       } else {
-        const world = this.screenToWorld(e.clientX, e.clientY);
-        this.hoverNode = this.hitTest(world.x, world.y);
+        this.hoverNode = this.hitTestScreen(e.clientX, e.clientY);
       }
     });
 
@@ -1576,8 +1633,7 @@ export class CanvasGraph extends Symbiote {
       const wasClick = (dx * dx + dy * dy) < 25;
 
       if (wasClick) {
-        const world = this.screenToWorld(e.clientX, e.clientY);
-        const node = this.hitTest(world.x, world.y);
+        const node = this.hitTestScreen(e.clientX, e.clientY);
         if (node) {
           if (node.isGroup) {
             const now = Date.now();
@@ -1633,8 +1689,7 @@ export class CanvasGraph extends Symbiote {
 
     this.canvas.addEventListener('dblclick', (e) => {
       // Check if we didn't hit a node
-      const world = this.screenToWorld(e.clientX, e.clientY);
-      if (!this.hitTest(world.x, world.y)) {
+      if (!this.hitTestScreen(e.clientX, e.clientY)) {
         if (!this.nodePositions.size) return;
         let sx = 0, sy = 0, count = 0;
         for (const pos of this.nodePositions.values()) { sx += pos.x; sy += pos.y; count++; }

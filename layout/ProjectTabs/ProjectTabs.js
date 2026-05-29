@@ -12,8 +12,8 @@ export class ProjectTabs extends Symbiote {
     activeId: null,
     tabs: [],
     homeIcon: 'home',
-    homeLabel: 'Home',
-    addTitle: 'Open project',
+    homeLabel: translate('tabs.home'),
+    addTitle: translate('tabs.openProject'),
     onHomeClick: () => emit(this, 'project-tabs-home'),
     onAddClick: () => emit(this, 'project-tabs-add'),
   };

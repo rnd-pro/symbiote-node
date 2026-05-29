@@ -1,6 +1,11 @@
 export const DEFAULT_LOCALE = 'en';
 
 export const SUPPORTED_LOCALES = Object.freeze(['en', 'ru', 'es']);
+export const DEFAULT_LOCALE_MODE = 'auto';
+export const SUPPORTED_LOCALE_MODES = Object.freeze([
+  DEFAULT_LOCALE_MODE,
+  ...SUPPORTED_LOCALES,
+]);
 
 export const LOCALE_LABELS = Object.freeze({
   en: 'English',
@@ -101,6 +106,8 @@ const EN_MESSAGES = Object.freeze({
   'layout.resetAll': 'Reset all layouts to default',
   'tabs.close': 'Close',
   'tabs.new': 'New tab',
+  'tabs.home': 'Home',
+  'tabs.openProject': 'Open project',
   'sourceViewer.showInGraph': 'Show in Graph',
   'sourceViewer.toggleViewMode': 'Toggle view mode',
   'sourceViewer.graphLabel': 'graph',
@@ -199,6 +206,8 @@ const RU_MESSAGES = Object.freeze({
   'layout.resetAll': 'Сбросить все раскладки',
   'tabs.close': 'Закрыть',
   'tabs.new': 'Новая вкладка',
+  'tabs.home': 'Главная',
+  'tabs.openProject': 'Открыть проект',
   'sourceViewer.showInGraph': 'Показать в графе',
   'sourceViewer.toggleViewMode': 'Переключить режим просмотра',
   'sourceViewer.graphLabel': 'граф',
@@ -297,6 +306,8 @@ const ES_MESSAGES = Object.freeze({
   'layout.resetAll': 'Restablecer todos los diseños',
   'tabs.close': 'Cerrar',
   'tabs.new': 'Nueva pestaña',
+  'tabs.home': 'Inicio',
+  'tabs.openProject': 'Abrir proyecto',
   'sourceViewer.showInGraph': 'Mostrar en grafo',
   'sourceViewer.toggleViewMode': 'Alternar modo de vista',
   'sourceViewer.graphLabel': 'grafo',
@@ -311,6 +322,7 @@ export const LOCALE_CATALOGS = Object.freeze({
 export const LOCALE_CATALOG_KEYS = Object.freeze(Object.keys(EN_MESSAGES).sort());
 
 let configuredLocale = DEFAULT_LOCALE;
+let configuredLocaleMode = DEFAULT_LOCALE_MODE;
 let configuredMessages = {};
 let explicitlyConfiguredLocale = false;
 
@@ -350,6 +362,15 @@ export function normalizeLocale(value, options = {}) {
   return SUPPORTED_LOCALES.includes(base) ? base : fallback;
 }
 
+export function normalizeLocaleMode(value, options = {}) {
+  let fallback = options.fallback ?? DEFAULT_LOCALE_MODE;
+  if (value == null) return fallback;
+  let tag = String(value).trim().toLowerCase().replaceAll('_', '-');
+  if (!tag) return fallback;
+  if (tag === DEFAULT_LOCALE_MODE) return DEFAULT_LOCALE_MODE;
+  return normalizeLocale(tag, { fallback: '' }) || fallback;
+}
+
 export function resolveLocale(preferences, options = {}) {
   let fallback = normalizeLocale(options.fallback ?? DEFAULT_LOCALE);
   let values = Array.isArray(preferences) ? preferences : [preferences];
@@ -358,6 +379,14 @@ export function resolveLocale(preferences, options = {}) {
     if (locale) return locale;
   }
   return fallback;
+}
+
+export function resolveLocaleForMode(mode, preferences, options = {}) {
+  let resolvedMode = normalizeLocaleMode(mode);
+  if (resolvedMode === DEFAULT_LOCALE_MODE) {
+    return resolveLocale(preferences, options);
+  }
+  return resolvedMode;
 }
 
 export function createLocaleDictionary(locale = DEFAULT_LOCALE, overrides = {}) {
@@ -415,8 +444,19 @@ export function configureLocalization(options = {}) {
     };
   }
 
+  if (options.mode != null) {
+    configuredLocaleMode = normalizeLocaleMode(options.mode);
+    configuredLocale = resolveLocaleForMode(
+      configuredLocaleMode,
+      options.preferences ?? configuredLocale,
+      { fallback: options.fallbackLocale ?? DEFAULT_LOCALE },
+    );
+    explicitlyConfiguredLocale = options.explicit ?? configuredLocaleMode !== DEFAULT_LOCALE_MODE;
+  }
+
   if (options.locale != null) {
     configuredLocale = normalizeLocale(options.locale);
+    configuredLocaleMode = configuredLocale;
     explicitlyConfiguredLocale = options.explicit !== false;
   }
 
@@ -427,8 +467,11 @@ export function getLocalization() {
   let locale = configuredLocale;
   return {
     locale,
+    mode: configuredLocaleMode,
     defaultLocale: DEFAULT_LOCALE,
+    defaultMode: DEFAULT_LOCALE_MODE,
     supportedLocales: [...SUPPORTED_LOCALES],
+    supportedModes: [...SUPPORTED_LOCALE_MODES],
     explicit: explicitlyConfiguredLocale,
     messages: createLocaleDictionary(locale, configuredMessages[locale]),
     t: createTranslator({ locale }),
@@ -437,6 +480,7 @@ export function getLocalization() {
 
 export function resetLocalization() {
   configuredLocale = DEFAULT_LOCALE;
+  configuredLocaleMode = DEFAULT_LOCALE_MODE;
   configuredMessages = {};
   explicitlyConfiguredLocale = false;
   return getLocalization();

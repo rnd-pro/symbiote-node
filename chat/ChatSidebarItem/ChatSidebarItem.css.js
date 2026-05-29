@@ -3,7 +3,7 @@ export default `
 chat-sidebar-item,
 chat-sidebar-sub-item {
   display: block;
-  --sn-chat-compact-label-width: 176px;
+  --sn-chat-compact-label-width: clamp(72px, calc(var(--sn-chat-compact-label-ch, 18) * 1ch + 24px), 320px);
   --sn-chat-compact-delete-width: 44px;
   --sn-chat-compact-flyout-width: calc(var(--sn-chat-compact-label-width) + var(--sn-chat-compact-delete-width));
 }
@@ -42,13 +42,13 @@ chat-sidebar-item[data-group] > .chat-item {
   font-weight: 600;
 }
 
-chat-sidebar-item[data-group] + chat-sidebar-item[data-group] {
+.chat-nav[data-group-dividers] chat-sidebar-item[data-group] + chat-sidebar-item[data-group] {
   position: relative;
   margin-block-start: 4px;
   padding-block-start: 4px;
 }
 
-chat-sidebar-item[data-group] + chat-sidebar-item[data-group]::before {
+.chat-nav[data-group-dividers] chat-sidebar-item[data-group] + chat-sidebar-item[data-group]::before {
   content: '';
   position: absolute;
   inset-block-start: 0;
@@ -271,6 +271,13 @@ chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child::be
 :host-context(.chat-nav[collapsed]) .chat-item-child::before,
 .chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child::before {
   content: none;
+}
+
+:host-context(.chat-nav[collapsed]) .chat-sub-items,
+.chat-nav[collapsed] chat-sidebar-item .chat-sub-items,
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-sub-items {
+  display: none;
+  max-height: 0;
 }
 
 :host-context(.chat-nav[collapsed]) .chat-item-adapter,

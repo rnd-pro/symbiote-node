@@ -1366,11 +1366,13 @@ export let COMPONENTS = [
         { name: 'chats', type: 'array', description: 'Nested chat descriptors.' },
         { name: 'navCollapsed', type: 'boolean', description: 'Collapsed navigation state.' },
         { name: 'navWidth', type: 'number', description: 'Expanded navigation width.' },
+        { name: 'groupDividers', type: 'boolean', description: 'Whether grouped root chat rows render project dividers.' },
       ],
       methods: [
         { name: 'setChats', type: 'function', description: 'Replaces nested chat descriptors.' },
         { name: 'setCollapsed', type: 'function', description: 'Sets collapsed state.' },
         { name: 'setWidth', type: 'function', description: 'Sets clamped navigation width.' },
+        { name: 'setGroupDividers', type: 'function', description: 'Toggles grouped root chat dividers.' },
       ],
       events: [
         { name: 'chat-sidebar-new', description: 'Requests creating a chat.' },

@@ -3860,6 +3860,14 @@
               "description": "Expanded navigation width."
             },
             {
+              "kind": "field",
+              "name": "groupDividers",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether grouped root chat rows render project dividers."
+            },
+            {
               "kind": "method",
               "name": "setChats",
               "type": {
@@ -3882,6 +3890,14 @@
                 "text": "function"
               },
               "description": "Sets clamped navigation width."
+            },
+            {
+              "kind": "method",
+              "name": "setGroupDividers",
+              "type": {
+                "text": "function"
+              },
+              "description": "Toggles grouped root chat dividers."
             }
           ],
           "events": [

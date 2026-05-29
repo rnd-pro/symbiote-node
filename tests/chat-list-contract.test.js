@@ -41,6 +41,7 @@ describe('chat list components', () => {
 
   it('keeps portal chat composition styled for Light DOM hosts', () => {
     let composerCss = read('chat/ChatComposer/ChatComposer.css.js');
+    let sidebarJs = read('chat/ChatSidebarItem/ChatSidebarItem.js');
     let sidebarCss = read('chat/ChatSidebarItem/ChatSidebarItem.css.js');
 
     assert.ok(
@@ -74,6 +75,14 @@ describe('chat list components', () => {
     assert.ok(
       sidebarCss.includes('--sn-chat-compact-label-width'),
       'ChatSidebarItem compact flyout must reserve label width through a reusable CSS token'
+    );
+    assert.ok(
+      sidebarCss.includes('--sn-chat-compact-label-ch'),
+      'ChatSidebarItem compact flyout must size labels from per-row text length'
+    );
+    assert.ok(
+      sidebarJs.includes('getCompactChatLabelCh'),
+      'ChatSidebarItem must expose a deterministic compact label width helper'
     );
     assert.ok(
       sidebarCss.includes('width: var(--sn-chat-compact-flyout-width);'),
@@ -111,15 +120,13 @@ describe('chat list components', () => {
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item:has(.chat-item-delete:hover) .chat-item-delete'),
       'ChatSidebarItem compact delete affordance must not disappear when pointer moves onto the flyout button'
     );
-    assert.equal(
+    assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-sub-items'),
-      false,
-      'Collapsed chat navigation must still allow expanded chat groups to render their nested icons'
+      'Collapsed chat navigation must hide nested chat lists'
     );
-    assert.equal(
+    assert.ok(
       sidebarCss.includes(':host-context(.chat-nav[collapsed]) .chat-sub-items'),
-      false,
-      'Shadow-context collapsed chat navigation must not suppress expanded nested chats'
+      'Shadow-context collapsed chat navigation must hide nested chat lists'
     );
     assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child::before'),
@@ -128,6 +135,7 @@ describe('chat list components', () => {
   });
 
   it('supports grouped project chat trees with recursive sub-items', () => {
+    let shellJs = read('chat/ChatSidebar/ChatSidebar.js');
     let sidebarJs = read('chat/ChatSidebarItem/ChatSidebarItem.js');
     let sidebarCss = read('chat/ChatSidebarItem/ChatSidebarItem.css.js');
 
@@ -157,8 +165,12 @@ describe('chat list components', () => {
       'Project group roots must not expose chat delete controls'
     );
     assert.ok(
-      sidebarCss.includes('chat-sidebar-item[data-group] + chat-sidebar-item[data-group]'),
-      'Adjacent project chat groups must use a horizontal divider instead of a vertical rail'
+      shellJs.includes('setGroupDividers(enabled)'),
+      'ChatSidebarShell must expose grouped divider policy as a reusable library control'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-nav[data-group-dividers] chat-sidebar-item[data-group] + chat-sidebar-item[data-group]'),
+      'Adjacent project chat groups must use opt-in horizontal dividers'
     );
     assert.ok(
       sidebarCss.includes('inline-size: 16px;'),

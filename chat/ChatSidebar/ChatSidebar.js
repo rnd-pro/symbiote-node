@@ -34,6 +34,7 @@ export class ChatSidebarShell extends Symbiote {
   init$ = {
     navCollapsed: true,
     navWidth: DEFAULT_NAV_WIDTH,
+    groupDividers: true,
     chats: [],
     onToggleNav: () => {
       this._autoCollapsed = false;
@@ -66,6 +67,10 @@ export class ChatSidebarShell extends Symbiote {
       });
     });
 
+    this.sub('groupDividers', () => {
+      this._applyGroupDividers();
+    });
+
     if (typeof ResizeObserver === 'function') {
       this._resizeObserver = new ResizeObserver(() => this._syncCollapseForAvailableWidth());
       let shell = this.closest('.chat-shell') || this.parentElement;
@@ -74,6 +79,7 @@ export class ChatSidebarShell extends Symbiote {
 
     queueMicrotask(() => {
       this._applyNavWidth();
+      this._applyGroupDividers();
       this._syncCollapseForAvailableWidth();
     });
   }
@@ -98,12 +104,21 @@ export class ChatSidebarShell extends Symbiote {
     this.$.navWidth = clampChatSidebarWidth(Number(width) || DEFAULT_NAV_WIDTH);
   }
 
+  setGroupDividers(enabled) {
+    this.$.groupDividers = Boolean(enabled);
+  }
+
   _applyNavWidth() {
     let width = this.$.navCollapsed ? COLLAPSED_NAV_WIDTH : clampChatSidebarWidth(this.$.navWidth);
     this.style.setProperty('--chat-nav-width', `${width}px`);
     let nav = this.querySelector('.chat-nav');
     if (nav) nav.toggleAttribute('collapsed', this.$.navCollapsed);
     this.toggleAttribute('collapsed', this.$.navCollapsed);
+  }
+
+  _applyGroupDividers() {
+    let nav = this.querySelector('.chat-nav');
+    if (nav) nav.toggleAttribute('data-group-dividers', Boolean(this.$.groupDividers));
   }
 
   _syncCollapseForAvailableWidth() {

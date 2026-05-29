@@ -1,8 +1,16 @@
 import Symbiote, { html } from '@symbiotejs/symbiote';
 import css from './ChatSidebarItem.css.js';
 
+const COMPACT_LABEL_MIN_CH = 8;
+const COMPACT_LABEL_MAX_CH = 38;
+
 function emit(el, type, detail = {}) {
   el.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
+}
+
+export function getCompactChatLabelCh(value = '') {
+  let length = [...String(value || '').trim()].length;
+  return Math.min(COMPACT_LABEL_MAX_CH, Math.max(COMPACT_LABEL_MIN_CH, length));
 }
 
 export class ChatSidebarItem extends Symbiote {
@@ -72,9 +80,11 @@ export class ChatSidebarItem extends Symbiote {
       this.toggleAttribute('data-group', value);
     });
     this.sub('agentColor', (value) => this._syncAgentColor(value));
+    this.sub('cleanName', (value) => this._syncCompactLabelWidth(value));
     this.sub('statusKind', () => this._syncStatus());
     this.sub('statusIcon', () => this._syncStatus());
     this._syncAgentColor(this.$.agentColor);
+    this._syncCompactLabelWidth(this.$.cleanName || this.$.name);
     this._syncStatus();
     this.toggleAttribute('data-group', this.$.isGroup);
 
@@ -100,6 +110,10 @@ export class ChatSidebarItem extends Symbiote {
     } else {
       this.style.removeProperty('--sn-chat-item-icon-color');
     }
+  }
+
+  _syncCompactLabelWidth(value) {
+    this.style.setProperty('--sn-chat-compact-label-ch', String(getCompactChatLabelCh(value)));
   }
 
   _syncStatus() {
@@ -185,9 +199,11 @@ export class ChatSidebarSubItem extends Symbiote {
       if (!value) this.$.isExpanded = false;
     });
     this.sub('agentColor', (value) => this._syncAgentColor(value));
+    this.sub('cleanName', (value) => this._syncCompactLabelWidth(value));
     this.sub('statusKind', () => this._syncStatus());
     this.sub('statusIcon', () => this._syncStatus());
     this._syncAgentColor(this.$.agentColor);
+    this._syncCompactLabelWidth(this.$.cleanName || this.$.name);
     this._syncStatus();
     this.sub('subChats', (chats) => {
       let has = chats && chats.length > 0;
@@ -211,6 +227,10 @@ export class ChatSidebarSubItem extends Symbiote {
     } else {
       this.style.removeProperty('--sn-chat-item-icon-color');
     }
+  }
+
+  _syncCompactLabelWidth(value) {
+    this.style.setProperty('--sn-chat-compact-label-ch', String(getCompactChatLabelCh(value)));
   }
 
   _syncStatus() {

@@ -3,6 +3,7 @@ import { escapeHtml } from '../markdown-formatter.js';
 import { normalizePreviewGraph } from '../output-preview.js';
 import template from './OutputGraphPreview.tpl.js';
 import css from './OutputGraphPreview.css.js';
+import { translate } from '../../locale/index.js';
 
 function renderNode(node) {
   let description = node.description
@@ -37,9 +38,9 @@ function renderGraph(data) {
 
 export class OutputGraphPreview extends Symbiote {
   init$ = {
-    title: 'Graph',
+    title: translate('outputGraph.title'),
     countText: '0 nodes',
-    emptyText: 'No graph data',
+    emptyText: translate('outputGraph.empty'),
     graphHtml: '',
     truncatedText: '',
     isEmpty: true,
@@ -70,7 +71,7 @@ export class OutputGraphPreview extends Symbiote {
     this.set$({
       countText: `${data.nodes.length} ${nodePlural}, ${data.edges.length} ${edgePlural}`,
       graphHtml: renderGraph(data),
-      truncatedText: data.truncated ? 'Preview truncated' : '',
+      truncatedText: data.truncated ? translate('outputGraph.truncated') : '',
       isEmpty: data.empty,
       isTruncated: data.truncated,
     });

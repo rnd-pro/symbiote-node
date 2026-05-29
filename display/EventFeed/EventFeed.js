@@ -3,6 +3,7 @@ import '../EmptyState/EmptyState.js';
 import './EventFeedItem.js';
 import template from './EventFeed.tpl.js';
 import css from './EventFeed.css.js';
+import { translate } from '../../locale/index.js';
 
 function normalizeEvents(events) {
   return Array.isArray(events) ? events.filter((event) => event && typeof event === 'object') : [];
@@ -13,7 +14,8 @@ export class EventFeed extends Symbiote {
     eventsList: [],
     eventCount: '0',
     hasEvents: false,
-    emptyText: 'No events',
+    emptyText: translate('eventFeed.empty'),
+    title: translate('eventFeed.title'),
     showHeader: true,
   };
 

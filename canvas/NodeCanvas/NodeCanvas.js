@@ -41,6 +41,7 @@ import '../Minimap/Minimap.js';
 import '../NodeSearch/NodeSearch.js';
 import '../Breadcrumb/Breadcrumb.js';
 import { computeAutoLayout } from '../AutoLayout.js';
+import { translate } from '../../locale/index.js';
 
 const FLOW_DIRECTIONS = new Set(['vertical', 'horizontal']);
 
@@ -77,6 +78,7 @@ export class NodeCanvas extends Symbiote {
     panX: 0,
     panY: 0,
     chrome: true,
+    minimapToggleTitle: translate('nodeCanvas.toggleMinimap'),
     '+contentTransform': () =>
       `translate(${this.$.panX}px, ${this.$.panY}px) scale(${this.$.zoom})`,
   };
@@ -383,7 +385,7 @@ export class NodeCanvas extends Symbiote {
         let menuY = y * this.$.zoom + this.$.panY;
         this.ref.contextMenu?.show(menuX, menuY, [
           {
-            label: 'Add Node',
+            label: translate('nodeCanvas.addNode'),
             icon: 'add_box',
             action: () => this._editor?.emit('contextadd', { x, y }),
           },

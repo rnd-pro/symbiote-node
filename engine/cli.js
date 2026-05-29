@@ -51,6 +51,7 @@ import {
 } from '../manifest/index.js';
 import { HTML_IN_CANVAS_RENDERER } from '../canvas/html-in-canvas.js';
 import { WEBXR_RENDERER, XR_THREE_WEBXR_ADAPTER } from '../xr/index.js';
+import { DEFAULT_LOCALE, LOCALE_CATALOG_KEYS, SUPPORTED_LOCALES } from '../locale/index.js';
 
 let __dirname = dirname(fileURLToPath(import.meta.url));
 let PKG_PATH = resolve(__dirname, '../package.json');
@@ -76,6 +77,11 @@ const EXPORT_ENTRYPOINTS = [
     specifier: 'symbiote-node/graph',
     kind: 'node-safe',
     description: 'Universal graph model normalization for UI, workflow, automation, and media projects.',
+  },
+  {
+    specifier: 'symbiote-node/locale',
+    kind: 'node-safe',
+    description: 'Node-safe localization catalogs and translation helpers for built-in UI strings.',
   },
   {
     specifier: 'symbiote-node/manifest',
@@ -647,6 +653,12 @@ async function cmdDiscover(options = {}) {
       description: s.description || null,
     })),
     manifest: {
+      localization: {
+        defaultLocale: DEFAULT_LOCALE,
+        supportedLocales: [...SUPPORTED_LOCALES],
+        autoDetection: 'browser-navigator-languages',
+        catalogKeys: [...LOCALE_CATALOG_KEYS],
+      },
       renderers: [
         HTML_IN_CANVAS_RENDERER,
         WEBXR_RENDERER,

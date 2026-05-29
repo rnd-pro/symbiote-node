@@ -12,7 +12,7 @@ export let template = html`
     <quick-toolbar ref="quickToolbar" hidden></quick-toolbar>
     <context-menu ref="contextMenu" hidden></context-menu>
     <node-minimap ref="minimap" hidden></node-minimap>
-    <button ref="minimapToggle" class="sn-minimap-toggle" title="Toggle minimap">
+    <button ref="minimapToggle" class="sn-minimap-toggle" ${{ title: 'minimapToggleTitle' }}>
       <span class="material-symbols-outlined">map</span>
     </button>
     <node-search ref="nodeSearch" hidden></node-search>

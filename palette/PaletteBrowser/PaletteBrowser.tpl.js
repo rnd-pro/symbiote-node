@@ -7,14 +7,13 @@ import { html } from '@symbiotejs/symbiote';
 export let template = html`
   <div class="pal-header">
     <span class="material-symbols-outlined">widgets</span>
-    Components
+    <span ${{ textContent: 'title' }}></span>
   </div>
   <div class="pal-search">
     <input
       ref="palSearch"
       type="text"
-      placeholder="Search components..."
-      ${{ oninput: 'onSearchInput' }}
+      ${{ placeholder: 'searchPlaceholder', oninput: 'onSearchInput' }}
     />
   </div>
   <div

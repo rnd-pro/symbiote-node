@@ -103,6 +103,15 @@ function segmentIntersectsRect(a, b, rect, pad = 0) {
   return false;
 }
 
+function segmentCrossesRectInterior(a, b, rect, inset = 0.5) {
+  return segmentIntersectsRect(a, b, {
+    x: rect.x + inset,
+    y: rect.y + inset,
+    w: rect.w - inset * 2,
+    h: rect.h - inset * 2,
+  });
+}
+
 function sharedOrthogonalLength(a1, a2, b1, b2) {
   if (Math.abs(a1.x - a2.x) < 0.5 && Math.abs(b1.x - b2.x) < 0.5 && Math.abs(a1.x - b1.x) < 0.5) {
     const aMin = Math.min(a1.y, a2.y);
@@ -154,6 +163,7 @@ describe('PCB router', () => {
     });
 
     assert.equal(routed.path, 'M 100 100 H 120 V 126 H 140');
+    assert.equal(routed.strategy, 'compact-elbow');
     assert.equal(countReversals(routed.points), 0, routed.path);
     assert.equal(routeLength(routed.points), 66, routed.path);
   });
@@ -175,10 +185,71 @@ describe('PCB router', () => {
     });
 
     assert.equal(routed.path, 'M 100 100 L 112 106');
+    assert.equal(routed.strategy, 'compact-direct');
     assert.deepEqual(routed.points, [
       { x: 100, y: 100 },
       { x: 112, y: 106 },
     ]);
+  });
+
+  it('uses a direct route when endpoint node bounds overlap', () => {
+    const source = { id: 'source', x: 0, y: 0, w: 100, h: 100 };
+    const target = { id: 'target', x: 80, y: 40, w: 100, h: 100 };
+    const conn = { id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' };
+    const routed = routePcbTrace({
+      start: { x: 100, y: 50 },
+      end: { x: 80, y: 60 },
+      fromRect: source,
+      toRect: target,
+      fromAngle: 0,
+      toAngle: 180,
+      rects: [source, target],
+      connections: [conn],
+      conn,
+    });
+
+    assert.equal(routed.strategy, 'overlap-direct');
+    assert.equal(routed.path, 'M 100 50 L 80 60');
+  });
+
+  it('does not switch to compact fallback while there is still room for PCB routing', () => {
+    const source = { id: 'source', x: 60, y: 80, w: 40, h: 40 };
+    const target = { id: 'target', x: 190, y: 110, w: 40, h: 40 };
+    const conn = { id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' };
+    const routed = routePcbTrace({
+      start: { x: 100, y: 100 },
+      end: { x: 190, y: 130 },
+      fromRect: source,
+      toRect: target,
+      fromAngle: 0,
+      toAngle: 180,
+      rects: [source, target],
+      connections: [conn],
+      conn,
+    });
+
+    assert.equal(routed.strategy, 'pcb-lane');
+    assert.equal(countReversals(routed.points), 0, routed.path);
+  });
+
+  it('keeps moderate short traces in PCB-lane mode instead of compact mode', () => {
+    const source = { id: 'source', x: 60, y: 80, w: 40, h: 40 };
+    const target = { id: 'target', x: 154, y: 108, w: 40, h: 40 };
+    const conn = { id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' };
+    const routed = routePcbTrace({
+      start: { x: 100, y: 100 },
+      end: { x: 154, y: 128 },
+      fromRect: source,
+      toRect: target,
+      fromAngle: 0,
+      toAngle: 180,
+      rects: [source, target],
+      connections: [conn],
+      conn,
+    });
+
+    assert.equal(routed.strategy, 'pcb-lane');
+    assert.equal(countReversals(routed.points), 0, routed.path);
   });
 
   it('routes compact portal-to-card traces without 180-degree folds', () => {
@@ -204,6 +275,113 @@ describe('PCB router', () => {
     assert.equal(countReversals(routed.points), 0, routed.path);
     assert.equal(hasLongDiagonal(pathPoints), false, routed.path);
     assert.ok(routeLength(routed.points) <= 472, routed.path);
+  });
+
+  it('projects off-edge connector stubs outside endpoint bounds before routing', () => {
+    const source = { id: 'source', x: 100, y: 100, w: 100, h: 80 };
+    const target = { id: 'target', x: 420, y: 100, w: 120, h: 80 };
+    const routed = routePcbTrace({
+      start: { x: 150, y: 140 },
+      end: { x: 480, y: 140 },
+      fromRect: source,
+      toRect: target,
+      fromAngle: 0,
+      toAngle: 180,
+      rects: [source, target],
+      connections: [{ id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' }],
+      conn: { id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' },
+      stub: 28,
+    });
+
+    assert.ok(routed.points[1].x >= source.x + source.w + 28, routed.path);
+    assert.ok(routed.points.at(-2).x <= target.x - 28, routed.path);
+    assert.equal(countReversals(routed.points), 0, routed.path);
+  });
+
+  it('moves endpoint stubs to a clean side when the preferred side is blocked', () => {
+    const rotor = { id: 'rotor', x: 258.75, y: 289, w: 94.5, h: 58 };
+    const planner = { id: 'planner', x: 522, y: 74.4, w: 108, h: 58 };
+    const hub = { id: 'hub', x: 396, y: 285, w: 108, h: 66 };
+    const trace = { id: 'trace', x: 423, y: 483.6, w: 108, h: 58 };
+    const conn = { id: 'rotor-planner', from: 'rotor', to: 'planner', out: 'out', in: 'in' };
+    const routed = routePcbTrace({
+      start: { x: 342.4864864864865, y: 289 },
+      end: { x: 539.5135135135135, y: 132.4 },
+      fromRect: rotor,
+      toRect: planner,
+      fromAngle: -37,
+      toAngle: 143,
+      rects: [rotor, planner, hub, trace],
+      connections: [conn],
+      conn,
+      grid: 10,
+      stub: 28,
+      clearance: 34,
+      chamfer: 8,
+    });
+
+    assert.equal(countReversals(routed.points), 0, routed.path);
+    for (const rect of [hub, trace]) {
+      for (let index = 0; index < routed.points.length - 1; index += 1) {
+        assert.equal(segmentIntersectsRect(routed.points[index], routed.points[index + 1], rect, 1), false, routed.path);
+      }
+    }
+  });
+
+  it('does not escape through the endpoint node interior when changing stub side', () => {
+    const source = { id: 'source', x: 0, y: 0, w: 100, h: 100 };
+    const target = { id: 'target', x: 300, y: 0, w: 100, h: 100 };
+    const blocker = { id: 'blocker', x: 120, y: -20, w: 80, h: 80 };
+    const conn = { id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' };
+    const routed = routePcbTrace({
+      start: { x: 50, y: 0 },
+      end: { x: 300, y: 50 },
+      fromRect: source,
+      toRect: target,
+      fromAngle: 0,
+      toAngle: 180,
+      rects: [source, target, blocker],
+      connections: [conn],
+      conn,
+      stub: 28,
+      clearance: 28,
+    });
+
+    assert.equal(countReversals(routed.points), 0, routed.path);
+    for (let index = 0; index < routed.points.length - 1; index += 1) {
+      assert.equal(segmentCrossesRectInterior(routed.points[index], routed.points[index + 1], source), false, routed.path);
+      assert.equal(segmentCrossesRectInterior(routed.points[index], routed.points[index + 1], target), false, routed.path);
+    }
+  });
+
+  it('can compare raw geometry routing before snapping lanes to the grid', () => {
+    const source = { id: 'source', x: 0.3, y: 0.7, w: 100.2, h: 80.2 };
+    const target = { id: 'target', x: 312.6, y: 96.4, w: 100.2, h: 80.2 };
+    const blocker = { id: 'blocker', x: 140.5, y: 35.5, w: 70.2, h: 94.2 };
+    const conn = { id: 'c1', from: 'source', to: 'target', out: 'out', in: 'in' };
+    const common = {
+      start: { x: 100.5, y: 40.8 },
+      end: { x: 312.6, y: 136.5 },
+      fromRect: source,
+      toRect: target,
+      fromAngle: 0,
+      toAngle: 180,
+      rects: [source, target, blocker],
+      connections: [conn],
+      conn,
+      grid: 10,
+      stub: 28,
+      clearance: 34,
+      chamfer: 0,
+    };
+    const raw = routePcbTrace({ ...common, snapToGrid: false });
+    const snapped = routePcbTrace({ ...common, snapToGrid: true });
+
+    assert.notEqual(raw.path, snapped.path);
+    assert.ok(raw.points.some((point) => Math.abs(point.y - 88.65) < 0.01), raw.path);
+    assert.ok(snapped.points.some((point) => Math.abs(point.y - 90) < 0.01), snapped.path);
+    assert.equal(countReversals(raw.points), 0, raw.path);
+    assert.equal(countReversals(snapped.points), 0, snapped.path);
   });
 
   it('keeps vertical feed traces in a clear corridor between cards', () => {

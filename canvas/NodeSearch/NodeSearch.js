@@ -12,12 +12,14 @@ import Symbiote from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template, searchResultTemplate } from './NodeSearch.tpl.js';
 import { styles } from './NodeSearch.css.js';
+import { translate } from '../../locale/index.js';
 
 export class NodeSearch extends Symbiote {
   init$ = {
     query: '',
     results: [],
     isOpen: false,
+    placeholder: translate('nodeSearch.placeholder'),
     onResultClick: (e) => {
       let item = e.target.closest('.search-result');
       if (item?.dataset?.nodeId) {

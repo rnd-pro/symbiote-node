@@ -1,12 +1,13 @@
 import Symbiote from '@symbiotejs/symbiote';
 import template from './LoadingOverlay.tpl.js';
 import css from './LoadingOverlay.css.js';
+import { translate } from '../../locale/index.js';
 
 export class LoadingOverlay extends Symbiote {
   init$ = {
-    label: 'Loading',
+    label: translate('loading.label'),
     pct: 0,
-    phase: 'Initializing...',
+    phase: translate('loading.initializing'),
     sub: '',
     isHidden: false,
   };

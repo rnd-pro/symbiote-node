@@ -63,6 +63,22 @@ describe('SSR-safe import boundary', () => {
     }
   });
 
+  it('locale modules import without DOM globals', async () => {
+    let domGlobals = ['window', 'document', 'HTMLElement', 'customElements', 'CSSStyleSheet'];
+    for (let name of domGlobals) {
+      assert.equal(globalThis[name], undefined, `${name} should not exist before locale import`);
+    }
+
+    let locale = await import(`../locale/index.js?ssr=${Date.now()}`);
+    let uiLocale = await import(`../ui/locale.js?ssr=${Date.now()}`);
+
+    assert.equal(locale.DEFAULT_LOCALE, 'en');
+    assert.equal(typeof uiLocale.detectBrowserLocale, 'function');
+    for (let name of domGlobals) {
+      assert.equal(globalThis[name], undefined, `locale import must not create globalThis.${name}`);
+    }
+  });
+
   it('dialog helpers import without DOM globals', async () => {
     let domGlobals = ['window', 'document', 'HTMLElement', 'customElements', 'CSSStyleSheet'];
     for (let name of domGlobals) {

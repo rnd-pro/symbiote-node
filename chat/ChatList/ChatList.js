@@ -4,14 +4,18 @@ import '../../control/Button/Button.js';
 import '../../display/EmptyState/EmptyState.js';
 import template from './ChatList.tpl.js';
 import css from './ChatList.css.js';
+import { translate } from '../../locale/index.js';
 
 export class ChatList extends Symbiote {
   init$ = {
     filter: 'all',
     chatItems: [],
-    title: 'Chats',
-    newLabel: 'New',
-    emptyMessage: 'No chats yet.',
+    title: translate('chat.list.title'),
+    newLabel: translate('chat.list.new'),
+    emptyMessage: translate('chat.list.empty'),
+    filterAllLabel: translate('chat.list.filter.all'),
+    filterProjectLabel: translate('chat.list.filter.project'),
+    filterActiveLabel: translate('chat.list.filter.active'),
     onFilterClick: (event) => {
       this.setFilter(event.currentTarget?.dataset?.filter || 'all');
     },

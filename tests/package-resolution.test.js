@@ -16,6 +16,7 @@ describe('package exports resolution', () => {
     let ui = await import('symbiote-node/ui');
     let engine = await import('symbiote-node/engine');
     let graph = await import('symbiote-node/graph');
+    let locale = await import('symbiote-node/locale');
     let manifest = await import('symbiote-node/manifest');
     let layout = await import('symbiote-node/layout');
     let xr = await import('symbiote-node/xr');
@@ -25,6 +26,8 @@ describe('package exports resolution', () => {
     assert.equal(typeof root.createForceLayoutPayload, 'function');
     assert.equal(typeof root.createHtmlInCanvasAdapter, 'function');
     assert.equal(typeof root.createWebXRAdapter, 'function');
+    assert.equal(root.DEFAULT_LOCALE, 'en');
+    assert.equal(typeof root.createTranslator, 'function');
     assert.equal(root.applyTheme, undefined, 'DOM theme helpers must live in symbiote-node/ui');
     assert.equal(root.applyPalette, undefined, 'DOM palette helpers must live in symbiote-node/ui');
     assert.equal(root.applySkin, undefined, 'DOM skin helpers must live in symbiote-node/ui');
@@ -57,6 +60,8 @@ describe('package exports resolution', () => {
     assert.equal(typeof ui.uiAlert, 'function');
     assert.equal(typeof ui.uiConfirm, 'function');
     assert.equal(typeof ui.uiPrompt, 'function');
+    assert.equal(typeof ui.detectBrowserLocale, 'function');
+    assert.equal(typeof ui.configureBrowserLocalization, 'function');
     assert.ok('SourceEditor' in ui, 'UI entrypoint must expose SourceEditor binding');
     assert.ok('navigate' in ui, 'UI entrypoint must expose router binding');
     assert.equal(typeof engine.Graph, 'function');
@@ -66,6 +71,9 @@ describe('package exports resolution', () => {
     assert.equal(typeof graph.applyProjectTransaction, 'function');
     assert.equal(typeof graph.updateLayoutNode, 'function');
     assert.equal(typeof graph.createProjectRuntime, 'function');
+    assert.equal(locale.DEFAULT_LOCALE, 'en');
+    assert.deepEqual(locale.SUPPORTED_LOCALES, ['en', 'ru', 'es']);
+    assert.equal(locale.normalizeLocale('es-AR'), 'es');
     assert.equal(typeof root.normalizeGraphModel, 'function');
     assert.equal(typeof manifest.listComponents, 'function');
     assert.equal(typeof layout.createSectionRegistry, 'function');

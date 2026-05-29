@@ -1,12 +1,14 @@
-const DEFAULT_TEXT = {
-  title: 'Network approval',
-  heading: 'Waiting for local approval',
-  message: 'This network browser must be approved from an already authorized local browser.',
-  requestLabel: 'Request',
-  addressLabel: 'Address',
-  waitingStatus: 'Waiting...',
-  approvedStatus: 'Approved. Opening...',
-  rejectedStatus: 'Rejected from the local browser.',
+import { createTranslator, getLocalization } from '../locale/index.js';
+
+const TEXT_KEYS = {
+  title: 'networkApproval.title',
+  heading: 'networkApproval.heading',
+  message: 'networkApproval.message',
+  requestLabel: 'networkApproval.requestLabel',
+  addressLabel: 'networkApproval.addressLabel',
+  waitingStatus: 'networkApproval.waitingStatus',
+  approvedStatus: 'networkApproval.approvedStatus',
+  rejectedStatus: 'networkApproval.rejectedStatus',
 };
 
 function escapeHtml(value) {
@@ -19,8 +21,13 @@ function escapeHtml(value) {
   })[char]);
 }
 
-function serializeText(text = {}) {
-  return { ...DEFAULT_TEXT, ...text };
+function serializeText(text = {}, options = {}) {
+  let locale = options.locale ?? getLocalization().locale;
+  let t = createTranslator({ locale, messages: options.messages });
+  let defaults = Object.fromEntries(
+    Object.entries(TEXT_KEYS).map(([name, key]) => [name, t(key)])
+  );
+  return { ...defaults, ...text };
 }
 
 function scriptJson(value) {
@@ -427,7 +434,7 @@ export function createNetworkApprovalCellBgScript() {
 }
 
 export function renderNetworkApprovalPage(options = {}) {
-  let text = serializeText(options.text);
+  let text = serializeText(options.text, options);
   let requestId = String(options.requestId ?? '');
   let address = String(options.address ?? '');
   let waitEndpoint = String(options.waitEndpoint || '/api/network-auth/wait');

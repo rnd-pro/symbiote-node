@@ -12,6 +12,7 @@ import Symbiote, { html } from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './PaletteBrowser.tpl.js';
 import { styles } from './PaletteBrowser.css.js';
+import { translate } from '../../locale/index.js';
 
 class PalItem extends Symbiote {
   init$ = {
@@ -66,6 +67,8 @@ PalCategory.reg('pal-category');
 export class PaletteBrowser extends Symbiote {
   init$ = {
     categories: [],
+    title: translate('palette.title'),
+    searchPlaceholder: translate('palette.searchPlaceholder'),
   };
 
   /** @type {Array<{ category: string, color: string, items: Array<{ name: string, icon: string, type: string, desc: string, factory: function }> }>} */

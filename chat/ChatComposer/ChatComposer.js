@@ -1,5 +1,6 @@
 import Symbiote, { html } from '@symbiotejs/symbiote';
 import '../../control/Button/Button.js';
+import { translate } from '../../locale/index.js';
 import css from './ChatComposer.css.js';
 
 function emit(el, type, detail = {}) {
@@ -10,7 +11,7 @@ export class ChatComposer extends Symbiote {
   init$ = {
     value: '',
     disabled: false,
-    placeholder: 'Ask anything',
+    placeholder: translate('chat.composer.placeholder'),
     attachedContext: [],
     footerHtml: '',
     isSending: false,

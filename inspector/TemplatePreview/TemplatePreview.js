@@ -12,6 +12,7 @@ import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './TemplatePreview.tpl.js';
 import { styles } from './TemplatePreview.css.js';
 import { extractPlaceholders } from '../../engine/packs/transform/template-builder.handler.js';
+import { translate } from '../../locale/index.js';
 
 const DEFAULT_TEST_DATA = JSON.stringify(
   {
@@ -32,6 +33,10 @@ export class TemplatePreview extends Symbiote {
     placeholderChips: [],
     previewText: '',
     noPlaceholders: true,
+    placeholdersLabel: translate('templatePreview.placeholders'),
+    emptyLabel: translate('templatePreview.empty'),
+    testDataLabel: translate('templatePreview.testData'),
+    previewLabel: translate('templatePreview.preview'),
   };
 
   renderCallback() {

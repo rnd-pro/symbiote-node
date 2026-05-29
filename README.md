@@ -24,6 +24,7 @@ A **visual node graph editor** and **execution engine** built on [Symbiote.js](h
 - [Experimental HTML-in-Canvas Renderer](#experimental-html-in-canvas-renderer)
 - [Experimental WebXR Provider](#experimental-webxr-provider)
 - [Shared UI Styles](#shared-ui-styles)
+- [Localization](#localization)
 - [Execution Engine](#execution-engine)
 - [Node Shapes](#node-shapes)
 - [Theme System](#theme-system)
@@ -565,6 +566,41 @@ if (await uiConfirm('Delete this item?')) {
 }
 ```
 
+### Localization
+
+`symbiote-node/locale` exposes Node-safe localization helpers and built-in catalogs for English, Russian, and Spanish. English is the default fallback for missing or unsupported locales.
+
+```javascript
+import {
+  configureLocalization,
+  createTranslator,
+  normalizeLocale,
+} from 'symbiote-node/locale';
+
+configureLocalization({ locale: 'ru-RU' });
+
+let t = createTranslator({ locale: normalizeLocale('es-AR') });
+let label = t('dialog.cancel'); // Cancelar
+```
+
+The browser UI entrypoint auto-detects the initial locale from `navigator.languages` / `navigator.language` when DOM globals are available. Manual configuration wins over auto-detection:
+
+```javascript
+import { configureLocalization } from 'symbiote-node/locale';
+import { detectBrowserLocale } from 'symbiote-node/ui';
+
+configureLocalization({
+  locale: detectBrowserLocale(),
+  messages: {
+    es: {
+      'chat.composer.placeholder': 'Escribe una instrucción',
+    },
+  },
+});
+```
+
+Catalogs are flat key/value maps. Built-in components localize only library-owned labels, placeholders, button titles, and status text; host-provided graph labels, chat content, file names, and runtime diagnostics remain unchanged.
+
 ### Execution Engine
 
 Server-side graph runtime with custom handler loading. Graphs serialize to JSON and execute with topological ordering, retry logic, and parallel barriers.
@@ -867,6 +903,7 @@ Use `--json` with `run`, `validate`, `list`, and `inspect` when integrating with
 - `custom-elements.json` — Web Component catalog
 - `manifest/` — components, themes, rules, and graph schema accessors
 - `symbiote-node/graph` — Node-safe `graph-model-v1` normalizers for shared project/workflow/UI graph data
+- `symbiote-node/locale` — Node-safe localization catalogs and helpers for built-in UI copy
 - `symbiote-node/xr` — WebXR capability, spatial layout projection, and XR pointer contracts
 - `schemas/project-package-v1.json` — portable project config contract for graph/layout/theme/packs assembly
 - `schemas/project-transaction-v1.json` — safe mutation contract for agent-built UI and workflow changes
@@ -889,6 +926,7 @@ symbiote-node/
 ├── index.js          — Node-safe public API
 ├── ui/               — browser/UI entrypoint for custom elements
 ├── graph/            — universal graph model normalization
+├── locale/           — Node-safe localization catalogs and helpers
 ├── manifest/         — agent-readable catalogs
 ├── tokens/           — design token JSON
 ├── rules/            — machine-readable rules

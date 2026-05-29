@@ -11,6 +11,7 @@ import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { sidebarTemplate } from './LayoutSidebar.tpl.js';
 import { sidebarStyles } from './LayoutSidebar.css.js';
 import './SidebarSection.js';
+import { translate } from '../../locale/index.js';
 
 const STORAGE_KEY_COLLAPSED = 'sn-sidebar-collapsed';
 const STORAGE_KEY_CONFIG = 'sn-sidebar-config';
@@ -34,6 +35,7 @@ export class LayoutSidebar extends Symbiote {
     collapsed: false,
     editMode: false,
     sections: [],
+    resetAllTitle: translate('layout.resetAll'),
 
     onToggle: () => {
       if (this.#isDisabled()) return;

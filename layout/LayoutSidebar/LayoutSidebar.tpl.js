@@ -11,8 +11,7 @@ export let sidebarTemplate = html`
     </button>
     <button
       class="sb-header-btn sb-reset-btn"
-      ${{ onclick: 'onResetAllLayouts' }}
-      title="Reset all layouts to default"
+      ${{ onclick: 'onResetAllLayouts', title: 'resetAllTitle' }}
     >
       <span class="material-symbols-outlined">restart_alt</span>
     </button>

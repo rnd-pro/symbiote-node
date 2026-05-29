@@ -33,6 +33,10 @@ export {
 } from './themes/Palette.js';
 
 export { MODERN_SKIN, COMPACT_SKIN, ROUNDED_SKIN } from './themes/Skin.js';
+export { CARBON, CARBON_PALETTE } from './themes/carbon.js';
+export { PCB_DARK } from './themes/pcb.js';
+export { EBOOK, EBOOK_PALETTE } from './themes/ebook.js';
+export { NEON_PALETTE } from './themes/neon.js';
 export { GraphHistory } from './engine/History.js';
 export { Readonly } from './plugins/Readonly.js';
 export { History } from './plugins/History.js';

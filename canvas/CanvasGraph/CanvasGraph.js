@@ -183,6 +183,7 @@ export class CanvasGraph extends Symbiote {
     this._prevDragDeltaY = 0;  // Previous frame's focus drag delta Y
     this._visualDragDeltaX = 0;
     this._visualDragDeltaY = 0;
+    this._dragWorldTransform = null;
     this._layoutSnapshot = null;
 
     // Info panel state (typewriter HUD to the right of active node)
@@ -1455,10 +1456,10 @@ export class CanvasGraph extends Symbiote {
     });
   }
 
-  screenToWorld(sx, sy, depth = 0) {
+  screenToWorld(sx, sy, depth = 0, transform = null) {
     const rect = this.canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    const transform = this.getVisualLayerTransform(depth);
+    transform ||= this.getVisualLayerTransform(depth);
     return {
       x: ((sx - rect.left) * dpr - transform.E) / transform.A,
       y: ((sy - rect.top) * dpr - transform.F) / transform.A,
@@ -1554,30 +1555,18 @@ export class CanvasGraph extends Symbiote {
         const sim = this.nodePositions.get(hit.id);
         if (vis && sim) { sim.x = vis.x; sim.y = vis.y; }
 
-        let isNewActivation = false;
-        if (this.activeNode && this.activeNode.id !== hit.id) {
-          isNewActivation = true;
-          if (this.currentGroupId) {
-            // Instant switch inside group
-            this.activeNode = hit;
-            this.dragNode = hit;
-            this.menuAnim = 0;
-            this.updateInteractionDepths();
-          } else {
-            this.nextActiveNode = hit;
-            this.deactivating = true;
-            this.dragNode = hit;
-          }
-        } else {
-          if (!this.activeNode) isNewActivation = true;
-          this.activeNode = hit;
-          this.dragNode = hit;
-          this.deactivating = false;
-          this.updateInteractionDepths();
-        }
+        let isNewActivation = !this.activeNode || this.activeNode.id !== hit.id;
+        this.activeNode = hit;
+        this.nextActiveNode = null;
+        this.deactivating = false;
+        this.dragNode = hit;
+        if (isNewActivation) this.menuAnim = 0;
+        this.updateInteractionDepths();
         this._nodeActivatedOnDown = isNewActivation;
         const pos = this.nodePositions.get(hit.id);
-        const dragWorld = this.screenToWorld(e.clientX, e.clientY, hit.targetDepth ?? 0);
+        const hitDepth = hit.targetDepth ?? 0;
+        this._dragWorldTransform = this.getVisualLayerTransform(hitDepth);
+        const dragWorld = this.screenToWorld(e.clientX, e.clientY, 0, this._dragWorldTransform);
         this.dragOffset.x = dragWorld.x - pos.x;
         this.dragOffset.y = dragWorld.y - pos.y;
         this._dragStartX = e.clientX;
@@ -1602,7 +1591,7 @@ export class CanvasGraph extends Symbiote {
     this.canvas.addEventListener('pointermove', (e) => {
       if (this.dragNode) {
         this._wakeLoop();  // Dragging node — resume rendering
-        const world = this.screenToWorld(e.clientX, e.clientY, this.dragNode.targetDepth ?? 0);
+        const world = this.screenToWorld(e.clientX, e.clientY, 0, this._dragWorldTransform);
         const newX = world.x - this.dragOffset.x;
         const newY = world.y - this.dragOffset.y;
         this.nodePositions.set(this.dragNode.id, { x: newX, y: newY });
@@ -1624,6 +1613,7 @@ export class CanvasGraph extends Symbiote {
         this.worker?.unpin(this.dragNode.id);
         this.dragNode = null;
       }
+      this._dragWorldTransform = null;
       this.isPanning = false;
       this.canvas.style.cursor = 'default';
 
@@ -1633,7 +1623,7 @@ export class CanvasGraph extends Symbiote {
       const wasClick = (dx * dx + dy * dy) < 25;
 
       if (wasClick) {
-        const node = this.hitTestScreen(e.clientX, e.clientY);
+        const node = draggedNode || this.hitTestScreen(e.clientX, e.clientY);
         if (node) {
           if (node.isGroup) {
             const now = Date.now();

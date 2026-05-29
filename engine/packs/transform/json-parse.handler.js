@@ -3,7 +3,7 @@
  *
  * Safely parses JSON input. Returns error instead of throwing.
  *
- * @module agi-graph/packs/transform/json-parse
+ * @module symbiote-node/packs/transform/json-parse
  */
 
 export default {
@@ -13,9 +13,7 @@ export default {
 
   driver: {
     description: 'Parse JSON string to object',
-    inputs: [
-      { name: 'input', type: 'string' },
-    ],
+    inputs: [{ name: 'input', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
@@ -33,7 +31,7 @@ export default {
 
     execute: async (inputs) => {
       try {
-        const result = JSON.parse(inputs.input);
+        let result = JSON.parse(inputs.input);
         return { result, error: null };
       } catch (err) {
         return { result: null, error: err.message };

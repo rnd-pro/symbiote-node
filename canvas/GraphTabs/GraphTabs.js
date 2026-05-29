@@ -12,6 +12,7 @@ import Symbiote, { html } from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './GraphTabs.tpl.js';
 import { styles } from './GraphTabs.css.js';
+import { translate } from '../../locale/index.js';
 
 /**
  * @typedef {Object} TabPage
@@ -43,15 +44,16 @@ TabItem.template = html`
   <span
     class="tab-close material-symbols-outlined"
     ${{ onclick: '^onCloseTab', '@hidden': '!showClose' }}
-  >close</span>
+    >close</span
+  >
 `;
 
 TabItem.reg('tab-item');
 
 export class GraphTabs extends Symbiote {
-
   init$ = {
     tabItems: [],
+    newTabTitle: translate('tabs.new'),
   };
 
   renderCallback() {
@@ -72,6 +74,10 @@ export class GraphTabs extends Symbiote {
 
   /** @type {function|null} */
   #onClose = null;
+
+  renderCallback() {
+    ensureMaterialSymbols(['add']);
+  }
 
   /**
    * Set callbacks for tab events
@@ -113,7 +119,7 @@ export class GraphTabs extends Symbiote {
    * @param {string} id
    */
   removeTab(id) {
-    const idx = this.#tabs.findIndex(t => t.id === id);
+    let idx = this.#tabs.findIndex((t) => t.id === id);
     if (idx === -1) return;
     this.#tabs.splice(idx, 1);
     if (this.#activeTabId === id && this.#tabs.length > 0) {
@@ -124,10 +130,14 @@ export class GraphTabs extends Symbiote {
   }
 
   /** @returns {string} */
-  get activeTab() { return this.#activeTabId; }
+  get activeTab() {
+    return this.#activeTabId;
+  }
 
   /** @returns {TabPage[]} */
-  get tabs() { return [...this.#tabs]; }
+  get tabs() {
+    return [...this.#tabs];
+  }
 
   /**
    * Update tab state (for saving before switch)
@@ -135,7 +145,7 @@ export class GraphTabs extends Symbiote {
    * @param {Object} state
    */
   setTabState(id, state) {
-    const tab = this.#tabs.find(t => t.id === id);
+    let tab = this.#tabs.find((t) => t.id === id);
     if (tab) tab.state = state;
   }
 
@@ -145,12 +155,12 @@ export class GraphTabs extends Symbiote {
    * @returns {Object|undefined}
    */
   getTabState(id) {
-    return this.#tabs.find(t => t.id === id)?.state;
+    return this.#tabs.find((t) => t.id === id)?.state;
   }
 
   #syncItems() {
-    const showClose = this.#tabs.length > 1;
-    this.$.tabItems = this.#tabs.map(t => ({
+    let showClose = this.#tabs.length > 1;
+    this.$.tabItems = this.#tabs.map((t) => ({
       id: t.id,
       name: t.name,
       isActive: t.id === this.#activeTabId,
@@ -159,20 +169,20 @@ export class GraphTabs extends Symbiote {
   }
 
   onTabClick(e) {
-    const item = e.target.closest('tab-item');
+    let item = e.target.closest('tab-item');
     if (!item) return;
     this.switchTo(item.$.id);
   }
 
   onCloseTab(e) {
     e.stopPropagation();
-    const item = e.target.closest('tab-item');
+    let item = e.target.closest('tab-item');
     if (item) this.removeTab(item.$.id);
   }
 
   onAddTab() {
     if (this.#onAdd) {
-      const newTab = this.#onAdd();
+      let newTab = this.#onAdd();
       if (newTab) this.addTab(newTab.id, newTab.name, newTab.state);
     }
   }

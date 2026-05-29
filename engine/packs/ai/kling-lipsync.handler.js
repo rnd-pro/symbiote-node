@@ -11,14 +11,21 @@
  *
  * Ported from Mr-Computer/modules/ai-music-video/src/services/kling-lipsync.js
  *
- * @module agi-graph/packs/ai/kling-lipsync
+ * @module symbiote-node/packs/ai/kling-lipsync
  */
 
 import { createHmac } from 'crypto';
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
-import { execSync } from 'child_process';
 import path from 'path';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'ai/kling-lipsync',
@@ -36,21 +43,41 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'lipsync', description: 'Operation: identify-face | lipsync | poll | batch' },
+      operation: {
+        type: 'string',
+        default: 'lipsync',
+        description: 'Operation: identify-face | lipsync | poll | batch',
+      },
       accessKey: { type: 'string', default: '', description: 'Kling API access key' },
       secretKey: { type: 'string', default: '', description: 'Kling API secret key' },
-      baseUrl: { type: 'string', default: 'https://api.klingai.com', description: 'Kling API base URL' },
-      publicBaseUrl: { type: 'string', default: '', description: 'Public URL for file server (ngrok/cloudflared)' },
-      outputDir: { type: 'string', default: '/tmp/kling-lipsync', description: 'Output directory for results' },
-      // For poll operation
+      baseUrl: {
+        type: 'string',
+        default: 'https://api.klingai.com',
+        description: 'Kling API base URL',
+      },
+      publicBaseUrl: {
+        type: 'string',
+        default: '',
+        description: 'Public URL for file server (ngrok/cloudflared)',
+      },
+      outputDir: {
+        type: 'string',
+        default: '/tmp/kling-lipsync',
+        description: 'Output directory for results',
+      },
+
       taskId: { type: 'string', default: '', description: 'Task ID to poll' },
       maxWaitMs: { type: 'int', default: 300000, description: 'Max poll wait time (ms)' },
-      // For lipsync operation
+
       startTime: { type: 'number', default: 0, description: 'Audio start time (seconds)' },
       endTime: { type: 'number', default: 0, description: 'Audio end time (seconds)' },
       segmentId: { type: 'string', default: '', description: 'Segment identifier' },
-      // For batch operation
-      segments: { type: 'any', default: null, description: 'Segments array with start/end/promptId' },
+
+      segments: {
+        type: 'any',
+        default: null,
+        description: 'Segments array with start/end/promptId',
+      },
       videoMap: { type: 'any', default: null, description: 'Map of promptId → videoPath' },
       concurrency: { type: 'int', default: 2, description: 'Max concurrent batch tasks' },
     },
@@ -60,7 +87,7 @@ export default {
     validate: (inputs, params) => {
       if (!params.accessKey || !params.secretKey) return false;
 
-      const op = params.operation;
+      let op = params.operation;
       if (op === 'identify-face' && !inputs.videoUrl) return false;
       if (op === 'poll' && !params.taskId) return false;
       if (op === 'lipsync' && (!inputs.videoUrl || !inputs.audioPath)) return false;
@@ -75,27 +102,30 @@ export default {
 
     execute: async (inputs, params) => {
       try {
-        const op = params.operation;
-        const token = generateJWT(params.accessKey, params.secretKey);
+        let op = params.operation;
+        let token = generateJWT(params.accessKey, params.secretKey);
 
         if (op === 'identify-face') {
-          const data = await identifyFace(inputs.videoUrl, token, params.baseUrl);
+          let data = await identifyFace(inputs.videoUrl, token, params.baseUrl, params.signal);
           return { result: data, error: null };
         }
 
         if (op === 'poll') {
-          const data = await pollTaskCompletion(params.taskId, token, params);
+          let data = await pollTaskCompletion(params.taskId, token, params);
           return { result: data, error: null };
         }
 
         if (op === 'lipsync') {
-          const result = await processSegment(inputs, params);
+          let result = await processSegment(inputs, params);
           return { result, error: null };
         }
 
         if (op === 'batch') {
-          const results = await processBatch(inputs, params);
-          return { result: { processed: results.size, results: Object.fromEntries(results) }, error: null };
+          let results = await processBatch(inputs, params);
+          return {
+            result: { processed: results.size, results: Object.fromEntries(results) },
+            error: null,
+          };
         }
 
         return { result: null, error: `Unknown operation: ${op}` };
@@ -106,7 +136,6 @@ export default {
   },
 };
 
-// --- JWT Authentication ---
 
 /**
  * Generate JWT token for Kling API authentication
@@ -115,49 +144,50 @@ export default {
  * @returns {string}
  */
 function generateJWT(accessKey, secretKey) {
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
+  let header = { alg: 'HS256', typ: 'JWT' };
+  let now = Math.floor(Date.now() / 1000);
+  let payload = {
     iss: accessKey,
     exp: now + 1800,
     nbf: now - 5,
   };
 
-  const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
-  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  let base64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
+  let base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
 
-  const signature = createHmac('sha256', secretKey)
+  let signature = createHmac('sha256', secretKey)
     .update(`${base64Header}.${base64Payload}`)
     .digest('base64url');
 
   return `${base64Header}.${base64Payload}.${signature}`;
 }
 
-// --- API Operations ---
 
 /**
  * Step 1: Identify face in video
  * @param {string} videoUrl
  * @param {string} token
  * @param {string} baseUrl
+ * @param {AbortSignal} [signal]
  * @returns {Promise<Object>}
  */
-async function identifyFace(videoUrl, token, baseUrl) {
-  const response = await fetch(`${baseUrl}/v1/videos/identify-face`, {
+async function identifyFace(videoUrl, token, baseUrl, signal) {
+  let response = await fetch(`${baseUrl}/v1/videos/identify-face`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ video_url: videoUrl }),
+    signal: requestSignal(120000, signal),
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    let errorText = await response.text();
     throw new Error(`Kling identify-face error: ${response.status} - ${errorText}`);
   }
 
-  const result = await response.json();
+  let result = await response.json();
   if (result.code !== 0) {
     throw new Error(`Kling API error: ${result.code} - ${result.message}`);
   }
@@ -174,35 +204,48 @@ async function identifyFace(videoUrl, token, baseUrl) {
  * @param {number} faceStartMs
  * @param {string} token
  * @param {string} baseUrl
+ * @param {AbortSignal} [signal]
  * @returns {Promise<Object>}
  */
-async function createLipsyncTask(sessionId, faceId, soundFile, soundDurationMs, faceStartMs, token, baseUrl) {
-  const response = await fetch(`${baseUrl}/v1/videos/advanced-lip-sync`, {
+async function createLipsyncTask(
+  sessionId,
+  faceId,
+  soundFile,
+  soundDurationMs,
+  faceStartMs,
+  token,
+  baseUrl,
+  signal,
+) {
+  let response = await fetch(`${baseUrl}/v1/videos/advanced-lip-sync`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       session_id: sessionId,
-      face_choose: [{
-        face_id: faceId,
-        sound_file: soundFile,
-        sound_start_time: 0,
-        sound_end_time: soundDurationMs,
-        sound_insert_time: faceStartMs,
-        sound_volume: 1,
-        original_audio_volume: 0,
-      }],
+      face_choose: [
+        {
+          face_id: faceId,
+          sound_file: soundFile,
+          sound_start_time: 0,
+          sound_end_time: soundDurationMs,
+          sound_insert_time: faceStartMs,
+          sound_volume: 1,
+          original_audio_volume: 0,
+        },
+      ],
     }),
+    signal: requestSignal(120000, signal),
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    let errorText = await response.text();
     throw new Error(`Kling advanced-lip-sync error: ${response.status} - ${errorText}`);
   }
 
-  const result = await response.json();
+  let result = await response.json();
   if (result.code !== 0) {
     throw new Error(`Kling API error: ${result.code} - ${result.message}`);
   }
@@ -218,30 +261,31 @@ async function createLipsyncTask(sessionId, faceId, soundFile, soundDurationMs, 
  * @returns {Promise<Object>}
  */
 async function pollTaskCompletion(taskId, token, params) {
-  const startTime = Date.now();
-  const maxWaitMs = params.maxWaitMs;
-  const pollInterval = 5000;
+  let startTime = Date.now();
+  let maxWaitMs = params.maxWaitMs;
+  let pollInterval = 5000;
 
   while (Date.now() - startTime < maxWaitMs) {
-    // Refresh token for each poll
-    const freshToken = generateJWT(params.accessKey, params.secretKey);
 
-    const response = await fetch(`${params.baseUrl}/v1/videos/advanced-lip-sync/${taskId}`, {
+    let freshToken = generateJWT(params.accessKey, params.secretKey);
+
+    let response = await fetch(`${params.baseUrl}/v1/videos/advanced-lip-sync/${taskId}`, {
       method: 'GET',
-      headers: { 'Authorization': `Bearer ${freshToken}` },
+      headers: { Authorization: `Bearer ${freshToken}` },
+      signal: requestSignal(30000, params.signal),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText = await response.text();
       throw new Error(`Kling poll error: ${response.status} - ${errorText}`);
     }
 
-    const result = await response.json();
+    let result = await response.json();
     if (result.code !== 0) {
       throw new Error(`Kling API error: ${result.code} - ${result.message}`);
     }
 
-    const status = result.data?.task_status;
+    let status = result.data?.task_status;
 
     if (status === 'succeed') {
       return result.data;
@@ -250,7 +294,7 @@ async function pollTaskCompletion(taskId, token, params) {
       throw new Error(`Lipsync task failed: ${result.data?.task_status_msg || 'Unknown error'}`);
     }
 
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
+    await new Promise((resolve) => setTimeout(resolve, pollInterval));
   }
 
   throw new Error(`Lipsync task timed out after ${maxWaitMs / 1000}s`);
@@ -260,20 +304,22 @@ async function pollTaskCompletion(taskId, token, params) {
  * Download result video
  * @param {string} videoUrl
  * @param {string} outputPath
+ * @param {AbortSignal} [signal]
  * @returns {Promise<string>}
  */
-async function downloadResult(videoUrl, outputPath) {
-  const response = await fetch(videoUrl);
+async function downloadResult(videoUrl, outputPath, signal) {
+  let response = await fetch(videoUrl, {
+    signal: requestSignal(120000, signal),
+  });
   if (!response.ok) {
     throw new Error(`Failed to download video: ${response.status}`);
   }
 
-  const buffer = await response.arrayBuffer();
+  let buffer = await response.arrayBuffer();
   await writeFile(outputPath, Buffer.from(buffer));
   return outputPath;
 }
 
-// --- Audio Utilities ---
 
 /**
  * Extract audio clip using FFmpeg
@@ -283,14 +329,18 @@ async function downloadResult(videoUrl, outputPath) {
  * @param {string} outputPath
  * @returns {string}
  */
-function extractAudioClip(audioPath, startTime, endTime, outputPath) {
+async function extractAudioClip(audioPath, startTime, endTime, outputPath) {
   if (existsSync(outputPath)) return outputPath;
 
-  const duration = endTime - startTime;
-  const cmd = `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
+  let duration = endTime - startTime;
+  let cmd =
+    `ffmpeg -y -i "${path.resolve(audioPath)}" -ss ${startTime.toFixed(3)} -t ${duration.toFixed(3)} ` +
     `-c:a libmp3lame -q:a 2 "${outputPath}" 2>/dev/null`;
 
-  execSync(cmd, { stdio: 'pipe' });
+  await runCommandWithWatchdog(cmd, {
+    inactivityMs: 120000,
+    timeoutMs: 120000,
+  });
   return outputPath;
 }
 
@@ -300,11 +350,10 @@ function extractAudioClip(audioPath, startTime, endTime, outputPath) {
  * @returns {Promise<string>}
  */
 async function audioToBase64(audioPath) {
-  const buffer = await readFile(path.resolve(audioPath));
+  let buffer = await readFile(path.resolve(audioPath));
   return `data:audio/mpeg;base64,${buffer.toString('base64')}`;
 }
 
-// --- High-level pipeline ---
 
 /**
  * Process single segment: extract audio → identify face → create task → poll → download
@@ -313,39 +362,39 @@ async function audioToBase64(audioPath) {
  * @returns {Promise<Object>}
  */
 async function processSegment(inputs, params) {
-  const { startTime, endTime, segmentId, outputDir, accessKey, secretKey, baseUrl } = params;
+  let { startTime, endTime, segmentId, outputDir, accessKey, secretKey, baseUrl } = params;
 
-  const lipsyncDir = path.join(outputDir, 'lipsync-videos');
-  const clipsDir = path.join(outputDir, 'audio-clips');
+  let lipsyncDir = path.join(outputDir, 'lipsync-videos');
+  let clipsDir = path.join(outputDir, 'audio-clips');
   await mkdir(lipsyncDir, { recursive: true });
   await mkdir(clipsDir, { recursive: true });
 
-  const outputPath = path.join(lipsyncDir, `${segmentId}.mp4`);
+  let outputPath = path.join(lipsyncDir, `${segmentId}.mp4`);
   if (existsSync(outputPath)) {
     return { videoPath: outputPath, cached: true };
   }
 
-  // 1. Extract audio clip
-  const clipPath = path.join(clipsDir, `${segmentId}.mp3`);
-  extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
-  const audioDurationMs = Math.round((endTime - startTime) * 1000);
 
-  // 2. Convert to base64
-  const audioBase64 = await audioToBase64(clipPath);
+  let clipPath = path.join(clipsDir, `${segmentId}.mp3`);
+  await extractAudioClip(inputs.audioPath, startTime, endTime, clipPath);
+  let audioDurationMs = Math.round((endTime - startTime) * 1000);
 
-  // 3. Identify face
+
+  let audioBase64 = await audioToBase64(clipPath);
+
+
   let token = generateJWT(accessKey, secretKey);
-  const faceData = await identifyFace(inputs.videoUrl, token, baseUrl);
+  let faceData = await identifyFace(inputs.videoUrl, token, baseUrl, params.signal);
 
   if (!faceData.face_data || faceData.face_data.length === 0) {
     throw new Error('No face detected in video');
   }
 
-  const face = faceData.face_data[0];
+  let face = faceData.face_data[0];
 
-  // 4. Create task
+
   token = generateJWT(accessKey, secretKey);
-  const task = await createLipsyncTask(
+  let task = await createLipsyncTask(
     faceData.session_id,
     face.face_id,
     audioBase64,
@@ -353,18 +402,19 @@ async function processSegment(inputs, params) {
     face.start_time || 0,
     token,
     baseUrl,
+    params.signal,
   );
 
-  // 5. Poll
-  const result = await pollTaskCompletion(task.task_id, token, params);
 
-  // 6. Download
-  const resultVideoUrl = result.task_result?.videos?.[0]?.url;
+  let result = await pollTaskCompletion(task.task_id, token, params);
+
+
+  let resultVideoUrl = result.task_result?.videos?.[0]?.url;
   if (!resultVideoUrl) {
     throw new Error('No video URL in task result');
   }
 
-  await downloadResult(resultVideoUrl, outputPath);
+  await downloadResult(resultVideoUrl, outputPath, params.signal);
   return { videoPath: outputPath, taskId: task.task_id, cached: false };
 }
 
@@ -375,39 +425,45 @@ async function processSegment(inputs, params) {
  * @returns {Promise<Map>}
  */
 async function processBatch(inputs, params) {
-  const segments = params.segments;
-  const videoMap = params.videoMap || {};
-  const concurrency = params.concurrency;
-  const results = new Map();
+  let segments = params.segments;
+  let videoMap = params.videoMap || {};
+  let concurrency = params.concurrency;
+  let results = new Map();
+  let failures = [];
 
   for (let i = 0; i < segments.length; i += concurrency) {
-    const batch = segments.slice(i, i + concurrency);
+    let batch = segments.slice(i, i + concurrency);
 
-    const batchResults = await Promise.allSettled(
+    let batchResults = await Promise.allSettled(
       batch.map(async (segment) => {
-        const videoUrl = videoMap[segment.promptId];
-        if (!videoUrl) return null;
+        let videoUrl = videoMap[segment.promptId];
+        if (!videoUrl) {
+          throw new Error(`${segment.promptId}: missing videoUrl`);
+        }
 
-        const segParams = {
+        let segParams = {
           ...params,
           segmentId: segment.promptId,
           startTime: segment.start,
           endTime: segment.end,
         };
 
-        const result = await processSegment(
-          { videoUrl, audioPath: inputs.audioPath },
-          segParams,
-        );
+        let result = await processSegment({ videoUrl, audioPath: inputs.audioPath }, segParams);
         return { promptId: segment.promptId, ...result };
-      })
+      }),
     );
 
     for (const result of batchResults) {
       if (result.status === 'fulfilled' && result.value) {
         results.set(result.value.promptId, result.value.videoPath);
+      } else if (result.status === 'rejected') {
+        failures.push(result.reason.message);
       }
     }
+  }
+
+  if (failures.length > 0) {
+    throw new Error(`Kling batch failed for ${failures.length} segment(s): ${failures.join('; ')}`);
   }
 
   return results;

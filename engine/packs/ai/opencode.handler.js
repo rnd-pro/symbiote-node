@@ -11,12 +11,19 @@
  *   POST /session/:id/message → send prompt (fire & forget)
  *   Poll output file → wait for JSON result
  *
- * @module agi-graph/packs/ai/opencode
+ * @module symbiote-node/packs/ai/opencode
  */
 
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'ai/opencode',
@@ -34,9 +41,17 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      model: { type: 'string', default: 'deepseek/deepseek-v3.2', description: 'OpenRouter model ID' },
+      model: {
+        type: 'string',
+        default: 'deepseek/deepseek-v3.2',
+        description: 'OpenRouter model ID',
+      },
       provider: { type: 'string', default: 'openrouter', description: 'Model provider' },
-      opencodeUrl: { type: 'string', default: 'http://127.0.0.1:4096', description: 'OpenCode API URL' },
+      opencodeUrl: {
+        type: 'string',
+        default: 'http://127.0.0.1:4096',
+        description: 'OpenCode API URL',
+      },
       timeout: { type: 'int', default: 300000, description: 'Max wait time (ms)' },
       outputDir: { type: 'string', default: '', description: 'Workspace dir for file exchange' },
     },
@@ -52,60 +67,69 @@ export default {
       `opencode:${params.model}:${inputs.prompt}:${JSON.stringify(inputs.context)}`,
 
     execute: async (inputs, params) => {
-      const { prompt, context } = inputs;
-      const {
-        model,
-        provider,
-        opencodeUrl,
-        timeout,
-        outputDir,
-      } = params;
+      let { prompt, context } = inputs;
+      let { model, provider, opencodeUrl, timeout, outputDir } = params;
 
-      const baseUrl = opencodeUrl || process.env.OPENCODE_URL || 'http://127.0.0.1:4096';
-      const modelConfig = {
+      let baseUrl = opencodeUrl || process.env.OPENCODE_URL || 'http://127.0.0.1:4096';
+      let modelConfig = {
         providerID: provider || process.env.OPENCODE_PROVIDER || 'openrouter',
         modelID: model || process.env.OPENCODE_MODEL || 'deepseek/deepseek-v3.2',
       };
 
-      // Workspace for file-based communication
-      const workspace = outputDir || process.env.OPENCODE_WORKSPACE ||
-        path.join(os.tmpdir(), 'agi-graph-opencode');
+
+      let workspace =
+        outputDir || process.env.OPENCODE_WORKSPACE || path.join(os.tmpdir(), 'symbiote-node-opencode');
       await fs.mkdir(workspace, { recursive: true });
 
-      const taskPath = path.join(workspace, 'task.json');
-      const outputPath = path.join(workspace, 'output.json');
+      let taskPath = path.join(workspace, 'task.json');
+      let outputPath = path.join(workspace, 'output.json');
 
-      // Write task file with context
-      await fs.writeFile(taskPath, JSON.stringify({
-        type: 'agi-graph-ai',
-        prompt,
-        context,
-        timestamp: Date.now(),
-      }, null, 2), 'utf8');
 
-      // Clean previous output
-      try { await fs.unlink(outputPath); } catch { /* ignore */ }
+      await fs.writeFile(
+        taskPath,
+        JSON.stringify(
+          {
+            type: 'symbiote-node-ai',
+            prompt,
+            context,
+            timestamp: Date.now(),
+          },
+          null,
+          2,
+        ),
+        'utf8',
+      );
+
 
       try {
-        // 1. Create session
-        const sessionRes = await fetch(`${baseUrl}/session`, {
+        await fs.unlink(outputPath);
+      } catch (err) {
+        if (err.code !== 'ENOENT') {
+          throw new Error(`Failed to clean previous OpenCode output ${outputPath}: ${err.message}`);
+        }
+      }
+
+      try {
+
+        let sessionRes = await fetch(`${baseUrl}/session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: `agi-graph ${Date.now()}` }),
+          body: JSON.stringify({ title: `symbiote-node ${Date.now()}` }),
+          signal: requestSignal(30000, params.signal),
         });
 
         if (!sessionRes.ok) {
           return { result: null, error: `Session creation failed: ${sessionRes.status}` };
         }
 
-        const session = await sessionRes.json();
+        let session = await sessionRes.json();
 
-        // 2. Build full prompt with workspace instructions
-        const contextBlock = context
+
+        let contextBlock = context
           ? `\n\n## Context\n\`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\``
           : '';
 
-        const fullPrompt = `${prompt}${contextBlock}
+        let fullPrompt = `${prompt}${contextBlock}
 
 ## Workspace: ${workspace}
 
@@ -116,46 +140,69 @@ export default {
 
 Output format: { "result": <your_result> }`;
 
-        // 3. Send message (fire & forget)
-        const msgRes = await fetch(`${baseUrl}/session/${session.id}/message`, {
+
+        let msgRes = await fetch(`${baseUrl}/session/${session.id}/message`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: modelConfig,
             parts: [{ type: 'text', text: fullPrompt }],
           }),
-          signal: AbortSignal.timeout(120000),
+          signal: requestSignal(120000, params.signal),
         });
 
         if (!msgRes.ok) {
           return { result: null, error: `Message send failed: ${msgRes.status}` };
         }
 
-        // 4. Poll for output file
-        const startTime = Date.now();
-        const pollInterval = 3000;
+
+        let startTime = Date.now();
+        let pollInterval = 3000;
 
         while (Date.now() - startTime < timeout) {
-          try {
-            const content = await fs.readFile(outputPath, 'utf8');
-            const parsed = JSON.parse(content);
-
-            if (parsed.result !== undefined) {
-              return { result: parsed.result, error: null };
-            }
-            // If the file exists but has no result key, return entire content
-            if (Object.keys(parsed).length > 0) {
-              return { result: parsed, error: null };
-            }
-          } catch {
-            // File not ready yet
+          if (params.signal?.aborted) {
+            return { result: null, error: 'OpenCode request aborted' };
           }
 
-          await new Promise(resolve => setTimeout(resolve, pollInterval));
+          let content;
+
+          try {
+            content = await fs.readFile(outputPath, 'utf8');
+          } catch (err) {
+            if (err.code !== 'ENOENT') {
+              return {
+                result: null,
+                error: `Failed to read OpenCode output ${outputPath}: ${err.message}`,
+              };
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+            continue;
+          }
+
+          let parsed;
+
+          try {
+            parsed = JSON.parse(content);
+          } catch (err) {
+            return {
+              result: null,
+              error: `Invalid JSON in OpenCode output ${outputPath}: ${err.message}`,
+            };
+          }
+
+          if (parsed.result !== undefined) {
+            return { result: parsed.result, error: null };
+          }
+
+          if (Object.keys(parsed).length > 0) {
+            return { result: parsed, error: null };
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
         }
 
         return { result: null, error: `Timeout after ${timeout}ms waiting for AI response` };
-
       } catch (err) {
         return { result: null, error: err.message };
       }

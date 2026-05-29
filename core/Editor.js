@@ -35,7 +35,6 @@ export class NodeEditor {
     this._listeners = {};
   }
 
-  // --- Event System ---
 
   /**
    * Subscribe to editor event
@@ -58,7 +57,7 @@ export class NodeEditor {
    * @returns {boolean} - false if any listener returned false (cancel)
    */
   emit(event, data) {
-    const handlers = this._listeners[event];
+    let handlers = this._listeners[event];
     if (!handlers) return true;
     for (const handler of handlers) {
       if (handler(data) === false) return false;
@@ -73,7 +72,6 @@ export class NodeEditor {
     this._listeners = {};
   }
 
-  // --- Node CRUD ---
 
   /**
    * Get node by ID
@@ -111,11 +109,11 @@ export class NodeEditor {
    * @returns {boolean}
    */
   removeNode(id) {
-    const node = this.nodes.get(id);
+    let node = this.nodes.get(id);
     if (!node) throw new Error('node not found');
     if (!this.emit('noderemove', node)) return false;
 
-    // Remove all connections to/from this node
+
     for (const [connId, conn] of this.connections) {
       if (conn.from === id || conn.to === id) {
         this.removeConnection(connId);
@@ -127,7 +125,6 @@ export class NodeEditor {
     return true;
   }
 
-  // --- Connection CRUD ---
 
   /**
    * Get connection by ID
@@ -152,7 +149,7 @@ export class NodeEditor {
    * @returns {Connection[]}
    */
   getNodeConnections(nodeId) {
-    return this.getConnections().filter(c => c.from === nodeId || c.to === nodeId);
+    return this.getConnections().filter((c) => c.from === nodeId || c.to === nodeId);
   }
 
   /**
@@ -174,7 +171,7 @@ export class NodeEditor {
    * @returns {boolean}
    */
   removeConnection(id) {
-    const conn = this.connections.get(id);
+    let conn = this.connections.get(id);
     if (!conn) return false;
     if (!this.emit('connectionremove', conn)) return false;
     this.connections.delete(id);
@@ -182,7 +179,6 @@ export class NodeEditor {
     return true;
   }
 
-  // --- Bulk Operations ---
 
   /**
    * Clear all nodes and connections
@@ -200,7 +196,6 @@ export class NodeEditor {
     return true;
   }
 
-  // --- Frame CRUD ---
 
   /**
    * Get frame by ID
@@ -238,7 +233,7 @@ export class NodeEditor {
    * @returns {boolean}
    */
   removeFrame(id) {
-    const frame = this.frames.get(id);
+    let frame = this.frames.get(id);
     if (!frame) return false;
     if (!this.emit('frameremove', frame)) return false;
     this.frames.delete(id);
@@ -246,10 +241,9 @@ export class NodeEditor {
     return true;
   }
 
-  // --- Serialization (agi-graph isomorphic bridge) ---
 
   /**
-   * Serialize editor state to agi-graph workflow JSON format.
+   * Serialize editor state to symbiote-node workflow JSON format.
    * Output is directly compatible with engine/Graph.fromJSON().
    * @param {Object<string, number[]>} [positions] - Node positions {nodeId: [x, y]}
    * @returns {object} Workflow JSON
@@ -258,7 +252,7 @@ export class NodeEditor {
     return {
       version: 1,
       nodes: this.getNodes().map((n) => {
-        const obj = {
+        let obj = {
           id: n.id,
           type: n.type,
           name: n.label,
@@ -269,8 +263,8 @@ export class NodeEditor {
         if (n.icon) obj.icon = n.icon;
         if (n.cacheMode && n.cacheMode !== 'auto') obj.cacheMode = n.cacheMode;
 
-        // Serialize port definitions for round-trip
-        const inputs = Object.entries(n.inputs);
+
+        let inputs = Object.entries(n.inputs);
         if (inputs.length > 0) {
           obj.inputs = inputs.map(([key, inp]) => ({
             name: key,
@@ -278,7 +272,7 @@ export class NodeEditor {
             label: inp.label || '',
           }));
         }
-        const outputs = Object.entries(n.outputs);
+        let outputs = Object.entries(n.outputs);
         if (outputs.length > 0) {
           obj.outputs = outputs.map(([key, out]) => ({
             name: key,
@@ -311,7 +305,7 @@ export class NodeEditor {
   }
 
   /**
-   * Reconstruct editor state from agi-graph workflow JSON.
+   * Reconstruct editor state from symbiote-node workflow JSON.
    * Enables round-trip: Editor → toJSON → fromJSON → Editor.
    * Also accepts output from engine/Graph.toJSON().
    * @param {object} data - Workflow JSON
@@ -319,14 +313,14 @@ export class NodeEditor {
    * @returns {NodeEditor} this
    */
   fromJSON(data, positionsOut) {
-    // Clear existing state (bypass events for bulk load)
+
     this.nodes.clear();
     this.connections.clear();
     this.frames.clear();
 
-    // Restore nodes
-    for (const nd of (data.nodes || [])) {
-      const node = new Node(nd.name || nd.type, {
+
+    for (const nd of data.nodes || []) {
+      let node = new Node(nd.name || nd.type, {
         id: nd.id,
         type: nd.type,
         category: nd.category || 'default',
@@ -336,9 +330,8 @@ export class NodeEditor {
       node.params = { ...nd.params };
       if (nd.cacheMode) node.cacheMode = nd.cacheMode;
 
-      // Auto-create InputControls from params for Inspector display
-      // Merge driver defaults into params (fills missing keys from handler definitions)
-      const driverParams = nd.driver?.params;
+
+      let driverParams = nd.driver?.params;
       if (driverParams && !nd.params) nd.params = {};
       if (driverParams) {
         for (const [key, def] of Object.entries(driverParams)) {
@@ -355,8 +348,8 @@ export class NodeEditor {
           let displayValue = value;
           let controlOptions = [];
 
-          // Use driver metadata for richer control type detection
-          const paramMeta = driverParams?.[key];
+
+          let paramMeta = driverParams?.[key];
           if (paramMeta?.type === 'boolean' || typeof value === 'boolean') {
             controlType = 'boolean';
           } else if (paramMeta?.type === 'number' || typeof value === 'number') {
@@ -368,21 +361,24 @@ export class NodeEditor {
             displayValue = JSON.stringify(value, null, 2);
           }
 
-          // Select type from driver options
+
           if (paramMeta?.options) {
             controlType = 'select';
             controlOptions = paramMeta.options;
           }
 
-          node.addControl(key, new InputControl(controlType, {
-            initial: displayValue,
-            label: paramMeta?.description || key,
-            options: controlOptions,
-          }));
+          node.addControl(
+            key,
+            new InputControl(controlType, {
+              initial: displayValue,
+              label: paramMeta?.description || key,
+              options: controlOptions,
+            })
+          );
         }
       }
 
-      // Restore ports from serialized definitions
+
       if (nd.inputs) {
         for (const inp of nd.inputs) {
           node.addInput(inp.name, new Input(new Socket(inp.type || 'any'), inp.label || ''));
@@ -397,13 +393,13 @@ export class NodeEditor {
       this.nodes.set(node.id, node);
     }
 
-    // Restore connections
-    for (const cd of (data.connections || [])) {
-      const srcNode = this.nodes.get(cd.from);
-      const tgtNode = this.nodes.get(cd.to);
+
+    for (const cd of data.connections || []) {
+      let srcNode = this.nodes.get(cd.from);
+      let tgtNode = this.nodes.get(cd.to);
       if (!srcNode || !tgtNode) continue;
 
-      // Ensure ports exist (auto-create if coming from engine format without port defs)
+
       if (!srcNode.outputs[cd.out]) {
         srcNode.addOutput(cd.out, new Output(new Socket('any'), cd.out));
       }
@@ -411,14 +407,14 @@ export class NodeEditor {
         tgtNode.addInput(cd.in, new Input(new Socket('any'), cd.in));
       }
 
-      const conn = new Connection(srcNode, cd.out, tgtNode, cd.in);
+      let conn = new Connection(srcNode, cd.out, tgtNode, cd.in);
       if (cd.id) conn.id = cd.id;
       this.connections.set(conn.id, conn);
     }
 
-    // Restore frames
-    for (const fd of (data.frames || [])) {
-      const frame = new Frame(fd.label, {
+
+    for (const fd of data.frames || []) {
+      let frame = new Frame(fd.label, {
         id: fd.id,
         x: fd.x,
         y: fd.y,
@@ -429,7 +425,7 @@ export class NodeEditor {
       this.frames.set(frame.id, frame);
     }
 
-    // Extract positions
+
     if (positionsOut && data.ui?.positions) {
       Object.assign(positionsOut, data.ui.positions);
     }
@@ -441,11 +437,13 @@ export class NodeEditor {
    * Convert editor state to an engine Graph instance for server-side execution.
    * The Graph can be passed directly to Executor.run().
    * @param {Object<string, number[]>} [positions] - Node positions
-   * @returns {import('../engine/Graph.js').Graph}
+   * @returns {Promise<import('../engine/Graph.js').Graph>}
    */
   async toGraph(positions = {}) {
-    const { Graph } = await import('../engine/Graph.js');
-    const json = this.toJSON(positions);
+    let { Graph } = await import('../engine/Graph.js');
+    let json = this.toJSON(positions);
     return new Graph(json);
   }
 }
+
+export { NodeEditor as default };

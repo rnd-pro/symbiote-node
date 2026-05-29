@@ -4,7 +4,7 @@
  * Defines socket types for node connections with color coding
  * and compatibility rules. Domain packs register additional types.
  *
- * @module agi-graph/SocketTypes
+ * @module symbiote-node/SocketTypes
  */
 
 /**
@@ -15,7 +15,7 @@
  */
 
 /** @type {Map<string, SocketTypeDef>} */
-const _types = new Map();
+let _types = new Map();
 
 /**
  * Register a socket type
@@ -62,12 +62,12 @@ export function getAllSocketTypes() {
 export function areSocketsCompatible(from, to) {
   if (from === 'any' || to === 'any') return true;
   if (from === to) return true;
-  const fromDef = _types.get(from);
+  let fromDef = _types.get(from);
   if (!fromDef) return false;
   return fromDef.compatible.includes(to);
 }
 
-// Core socket types (always available)
+
 registerSocketTypes({
   any: { color: '#FFFFFF', label: 'Any', compatible: [] },
   float: { color: '#A1A1A1', label: 'Float', compatible: ['float', 'int'] },

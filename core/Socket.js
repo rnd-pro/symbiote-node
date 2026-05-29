@@ -183,3 +183,5 @@ export class InputControl extends Control {
     if (this._onChange) this._onChange(value);
   }
 }
+
+export { Socket as default };

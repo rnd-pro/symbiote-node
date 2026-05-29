@@ -1,3 +1,5 @@
+import { translate } from '../locale/index.js';
+
 /**
  * ViewportActions — context menu, keyboard shortcuts, viewport utilities
  *
@@ -10,7 +12,6 @@
  */
 
 export class ViewportActions {
-
   /** @type {import('../core/Editor.js').NodeEditor} */
   #editor;
 
@@ -69,25 +70,25 @@ export class ViewportActions {
       this.#selector.unselectAll();
     }
 
-    // Copy selected nodes
+
     if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       this.#copySelected();
     }
 
-    // Paste nodes
+
     if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       this.#pasteNodes();
     }
 
-    // Align horizontal
+
     if (e.key === 'h' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
       e.preventDefault();
       this.alignSelectedHorizontal();
     }
 
-    // Align vertical
+
     if (e.key === 'j' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
       e.preventDefault();
       this.alignSelectedVertical();
@@ -137,10 +138,10 @@ export class ViewportActions {
    */
   #toggleNodeState(nodeId, prop, attr, eventName) {
     if (!this.#editor) return;
-    const node = this.#editor.getNode(nodeId);
+    let node = this.#editor.getNode(nodeId);
     if (!node) return;
     node[prop] = !node[prop];
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (el) {
       node[prop] ? el.setAttribute(attr, '') : el.removeAttribute(attr);
     }
@@ -148,10 +149,14 @@ export class ViewportActions {
   }
 
   /** @param {string} nodeId */
-  collapseNode(nodeId) { this.#toggleNodeState(nodeId, 'collapsed', 'data-collapsed', 'nodecollapse'); }
+  collapseNode(nodeId) {
+    this.#toggleNodeState(nodeId, 'collapsed', 'data-collapsed', 'nodecollapse');
+  }
 
   /** @param {string} nodeId */
-  muteNode(nodeId) { this.#toggleNodeState(nodeId, 'muted', 'data-muted', 'nodemute'); }
+  muteNode(nodeId) {
+    this.#toggleNodeState(nodeId, 'muted', 'data-muted', 'nodemute');
+  }
 
   /** Delete a single connection */
   deleteConnection(connId) {
@@ -170,66 +175,83 @@ export class ViewportActions {
     if (this.#readonly) return;
     e.preventDefault();
 
-    const target = e.target.closest('graph-node');
-    const connTarget = e.target.closest('.sn-conn-path');
+    let target = e.target.closest('graph-node');
+    let connTarget = e.target.closest('.sn-conn-path');
     if (!contextMenuEl) return;
 
-    const rect = container.getBoundingClientRect();
-    const menuX = e.clientX - rect.left;
-    const menuY = e.clientY - rect.top;
+    let rect = container.getBoundingClientRect();
+    let menuX = e.clientX - rect.left;
+    let menuY = e.clientY - rect.top;
 
     if (target) {
-      const nodeId = target.getAttribute('node-id');
+      let nodeId = target.getAttribute('node-id');
       contextMenuEl.show(menuX, menuY, [
-        { label: 'Delete Node', icon: 'delete', action: () => this.deleteNode(nodeId) },
-        { label: 'Clone Node', icon: 'content_copy', action: () => this.cloneNode(nodeId) },
-        { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
+        { label: translate('context.deleteNode'), icon: 'delete', action: () => this.deleteNode(nodeId) },
+        { label: translate('context.cloneNode'), icon: 'content_copy', action: () => this.cloneNode(nodeId) },
+        { label: translate('context.selectAll'), icon: 'select_all', action: () => this.selectAll() },
       ]);
     } else if (connTarget) {
-      const connId = connTarget.getAttribute('data-conn-id');
+      let connId = connTarget.getAttribute('data-conn-id');
       contextMenuEl.show(menuX, menuY, [
-        { label: 'Delete Connection', icon: 'link_off', action: () => this.deleteConnection(connId) },
+        {
+          label: translate('context.deleteConnection'),
+          icon: 'link_off',
+          action: () => this.deleteConnection(connId),
+        },
       ]);
     } else {
-      const graphX = (e.clientX - rect.left - transform.panX) / transform.zoom;
-      const graphY = (e.clientY - rect.top - transform.panY) / transform.zoom;
+      let graphX = (e.clientX - rect.left - transform.panX) / transform.zoom;
+      let graphY = (e.clientY - rect.top - transform.panY) / transform.zoom;
       contextMenuEl.show(menuX, menuY, [
-        { label: 'Add Node', icon: 'add_box', action: () => this.#editor?.emit('contextadd', { x: graphX, y: graphY }) },
-        { label: 'Add Comment', icon: 'sticky_note_2', action: () => this.#editor?.emit('contextaddcomment', { x: graphX, y: graphY }) },
-        { label: 'Add Frame', icon: 'dashboard', action: () => this.#editor?.emit('contextaddframe', { x: graphX, y: graphY }) },
-        { label: 'Paste', icon: 'content_paste', action: () => this.#pasteNodes(graphX, graphY) },
-        { label: 'Select All', icon: 'select_all', action: () => this.selectAll() },
-        { label: 'Fit View', icon: 'fit_screen', action: () => this.#canvas?.fitView() },
-        { label: 'Auto Layout', icon: 'auto_fix_high', action: () => this.#editor?.emit('autolayout') },
+        {
+          label: translate('context.addNode'),
+          icon: 'add_box',
+          action: () => this.#editor?.emit('contextadd', { x: graphX, y: graphY }),
+        },
+        {
+          label: translate('context.addComment'),
+          icon: 'sticky_note_2',
+          action: () => this.#editor?.emit('contextaddcomment', { x: graphX, y: graphY }),
+        },
+        {
+          label: translate('context.addFrame'),
+          icon: 'dashboard',
+          action: () => this.#editor?.emit('contextaddframe', { x: graphX, y: graphY }),
+        },
+        { label: translate('context.paste'), icon: 'content_paste', action: () => this.#pasteNodes(graphX, graphY) },
+        { label: translate('context.selectAll'), icon: 'select_all', action: () => this.selectAll() },
+        { label: translate('context.fitView'), icon: 'fit_screen', action: () => this.#canvas?.fitView() },
+        {
+          label: translate('context.autoLayout'),
+          icon: 'auto_fix_high',
+          action: () => this.#editor?.emit('autolayout'),
+        },
       ]);
     }
   }
 
-
-
   /**
    * Highlight sockets compatible with picked socket
    * @param {object} socketData
-   * @param {HTMLElement} nodesLayer
    */
-  highlightCompatibleSockets(socketData, nodesLayer) {
-    const node = this.#editor.getNode(socketData.nodeId);
+  highlightCompatibleSockets(socketData) {
+    let node = this.#editor.getNode(socketData.nodeId);
     if (!node) return;
 
-    const isOutput = socketData.side === 'output';
-    const pickedPort = isOutput ? node.outputs[socketData.key] : node.inputs[socketData.key];
+    let isOutput = socketData.side === 'output';
+    let pickedPort = isOutput ? node.outputs[socketData.key] : node.inputs[socketData.key];
     if (!pickedPort) return;
 
-    const pickedSocket = pickedPort.socket;
+    let pickedSocket = pickedPort.socket;
 
     for (const [nodeId, el] of this.#nodeViews) {
       if (nodeId === socketData.nodeId) continue;
-      const targetNode = this.#editor.getNode(nodeId);
+      let targetNode = this.#editor.getNode(nodeId);
       if (!targetNode) continue;
 
-      const ports = isOutput ? targetNode.inputs : targetNode.outputs;
+      let ports = isOutput ? targetNode.inputs : targetNode.outputs;
       for (const [key, port] of Object.entries(ports)) {
-        const sockets = el.querySelectorAll(`.sn-socket[data-key="${key}"]`);
+        let sockets = el.querySelectorAll(`.sn-socket[data-key="${key}"]`);
         for (const sock of sockets) {
           if (pickedSocket.isCompatibleWith(port.socket)) {
             sock.setAttribute('data-compatible', '');
@@ -239,9 +261,9 @@ export class ViewportActions {
         }
       }
 
-      const sameSidePorts = isOutput ? targetNode.outputs : targetNode.inputs;
+      let sameSidePorts = isOutput ? targetNode.outputs : targetNode.inputs;
       for (const [key] of Object.entries(sameSidePorts)) {
-        const sockets = el.querySelectorAll(`.sn-socket[data-key="${key}"]`);
+        let sockets = el.querySelectorAll(`.sn-socket[data-key="${key}"]`);
         for (const sock of sockets) {
           sock.setAttribute('data-incompatible', '');
         }
@@ -254,7 +276,9 @@ export class ViewportActions {
    * @param {HTMLElement} nodesLayer
    */
   clearSocketHighlights(nodesLayer) {
-    const all = nodesLayer.querySelectorAll('.sn-socket[data-compatible], .sn-socket[data-incompatible]');
+    let all = nodesLayer.querySelectorAll(
+      '.sn-socket[data-compatible], .sn-socket[data-incompatible]'
+    );
     for (const sock of all) {
       sock.removeAttribute('data-compatible');
       sock.removeAttribute('data-incompatible');
@@ -269,13 +293,13 @@ export class ViewportActions {
    * @returns {Set<string>}
    */
   updatePortHints(worldX, worldY, socketData) {
-    const compatibleIds = this.getCompatibleNodeIds(socketData);
+    let compatibleIds = this.getCompatibleNodeIds(socketData);
 
     for (const [nodeId, el] of this.#nodeViews) {
       if (compatibleIds.has(nodeId)) {
-        const nodePos = el._position;
-        const nodeW = el.offsetWidth || 180;
-        const nodeCenterX = nodePos ? nodePos.x + nodeW / 2 : 0;
+        let nodePos = el._position;
+        let nodeW = el.offsetWidth || 180;
+        let nodeCenterX = nodePos ? nodePos.x + nodeW / 2 : 0;
         el.setAttribute('data-port-hint', worldX < nodeCenterX ? 'left' : 'right');
       } else {
         el.removeAttribute('data-port-hint');
@@ -291,22 +315,24 @@ export class ViewportActions {
    * @returns {Set<string>}
    */
   getCompatibleNodeIds(socketData) {
-    const pickedNode = this.#editor.getNode(socketData.nodeId);
+    let pickedNode = this.#editor.getNode(socketData.nodeId);
     if (!pickedNode) return new Set();
 
-    const isOutput = socketData.side === 'output';
-    const pickedPort = isOutput ? pickedNode.outputs[socketData.key] : pickedNode.inputs[socketData.key];
+    let isOutput = socketData.side === 'output';
+    let pickedPort = isOutput
+      ? pickedNode.outputs[socketData.key]
+      : pickedNode.inputs[socketData.key];
     if (!pickedPort) return new Set();
 
-    const pickedSocket = pickedPort.socket;
-    const compatibleIds = new Set();
+    let pickedSocket = pickedPort.socket;
+    let compatibleIds = new Set();
 
     for (const [nodeId] of this.#nodeViews) {
       if (nodeId === socketData.nodeId) continue;
-      const targetNode = this.#editor.getNode(nodeId);
+      let targetNode = this.#editor.getNode(nodeId);
       if (!targetNode) continue;
 
-      const ports = isOutput ? targetNode.inputs : targetNode.outputs;
+      let ports = isOutput ? targetNode.inputs : targetNode.outputs;
       for (const [, port] of Object.entries(ports)) {
         if (pickedSocket.isCompatibleWith(port.socket)) {
           compatibleIds.add(nodeId);
@@ -334,15 +360,16 @@ export class ViewportActions {
    * @param {object} socketData
    */
   handleDropEmpty(x, y, socketData) {
-    const node = this.#editor.getNode(socketData.nodeId);
+    let node = this.#editor.getNode(socketData.nodeId);
     if (!node) return;
 
-    const isOutput = socketData.side === 'output';
-    const port = isOutput ? node.outputs[socketData.key] : node.inputs[socketData.key];
-    const socketType = port?.socket?.type || 'any';
+    let isOutput = socketData.side === 'output';
+    let port = isOutput ? node.outputs[socketData.key] : node.inputs[socketData.key];
+    let socketType = port?.socket?.type || 'any';
 
     this.#editor.emit('dropinempty', {
-      x, y,
+      x,
+      y,
       sourceNodeId: socketData.nodeId,
       sourceKey: socketData.key,
       sourceSide: socketData.side,
@@ -350,25 +377,26 @@ export class ViewportActions {
     });
   }
 
-  // --- Copy/Paste ---
 
   #copySelected() {
-    const selected = this.#selector.getSelectedNodes();
+    let selected = this.#selector.getSelectedNodes();
     if (selected.length === 0) return;
 
-    this.#clipboard = selected.map(nodeId => {
-      const node = this.#editor.getNode(nodeId);
-      const el = this.#nodeViews.get(nodeId);
-      if (!node) return null;
-      return {
-        label: node.label,
-        type: node.type,
-        category: node.category,
-        shape: node.shape,
-        params: { ...node.params },
-        position: el?._position ? { ...el._position } : { x: 0, y: 0 },
-      };
-    }).filter(Boolean);
+    this.#clipboard = selected
+      .map((nodeId) => {
+        let node = this.#editor.getNode(nodeId);
+        let el = this.#nodeViews.get(nodeId);
+        if (!node) return null;
+        return {
+          label: node.label,
+          type: node.type,
+          category: node.category,
+          shape: node.shape,
+          params: { ...node.params },
+          position: el?._position ? { ...el._position } : { x: 0, y: 0 },
+        };
+      })
+      .filter(Boolean);
   }
 
   /**
@@ -379,10 +407,10 @@ export class ViewportActions {
   #pasteNodes(x, y) {
     if (!this.#clipboard || this.#clipboard.length === 0) return;
 
-    const offset = 30;
+    let offset = 30;
     for (const data of this.#clipboard) {
-      const posX = x != null ? x : data.position.x + offset;
-      const posY = y != null ? y : data.position.y + offset;
+      let posX = x != null ? x : data.position.x + offset;
+      let posY = y != null ? y : data.position.y + offset;
       this.#editor.emit('contextclone', {
         label: data.label,
         type: data.type,
@@ -394,22 +422,21 @@ export class ViewportActions {
     }
   }
 
-  // --- Align Tools ---
 
   /** Align selected nodes horizontally (same Y) */
   alignSelectedHorizontal() {
-    const selected = this.#selector.getSelectedNodes();
+    let selected = this.#selector.getSelectedNodes();
     if (selected.length < 2) return;
 
     let totalY = 0;
     for (const nodeId of selected) {
-      const el = this.#nodeViews.get(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       totalY += el?._position?.y || 0;
     }
-    const avgY = totalY / selected.length;
+    let avgY = totalY / selected.length;
 
     for (const nodeId of selected) {
-      const el = this.#nodeViews.get(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       if (el?._position) {
         this.#editor.emit('nodemovetopos', {
           nodeId,
@@ -422,18 +449,18 @@ export class ViewportActions {
 
   /** Align selected nodes vertically (same X) */
   alignSelectedVertical() {
-    const selected = this.#selector.getSelectedNodes();
+    let selected = this.#selector.getSelectedNodes();
     if (selected.length < 2) return;
 
     let totalX = 0;
     for (const nodeId of selected) {
-      const el = this.#nodeViews.get(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       totalX += el?._position?.x || 0;
     }
-    const avgX = totalX / selected.length;
+    let avgX = totalX / selected.length;
 
     for (const nodeId of selected) {
-      const el = this.#nodeViews.get(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       if (el?._position) {
         this.#editor.emit('nodemovetopos', {
           nodeId,

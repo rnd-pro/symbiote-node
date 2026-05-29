@@ -4,18 +4,22 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
-<div class="search-bar" ${{ onkeydown: 'onSearchKeydown' }}>
-  <span class="material-symbols-outlined search-icon">search</span>
-  <input class="search-input" type="text" placeholder="Search nodes..." ${{ oninput: 'onSearchInput' }} />
-  <span class="search-hint">Esc</span>
-</div>
-<div class="search-results" ${{ itemize: 'results', 'item-tag': 'search-result-item' }}></div>
+export let template = html`
+  <div class="search-bar" ${{ onkeydown: 'onSearchKeydown' }}>
+    <span class="material-symbols-outlined search-icon">search</span>
+    <input
+      class="search-input"
+      type="text"
+      ${{ placeholder: 'placeholder', oninput: 'onSearchInput' }}
+    />
+    <span class="search-hint">Esc</span>
+  </div>
+  <div class="search-results" ${{ itemize: 'results', 'item-tag': 'search-result-item' }}></div>
 `;
 
-export const searchResultTemplate = html`
-<div class="search-result" data-node-id="{{id}}" ${{ onclick: '^onResultClick' }}>
-  <span class="search-result-label">{{label}}</span>
-  <span class="search-result-type">{{type}}</span>
-</div>
+export let searchResultTemplate = html`
+  <div class="search-result" ${{ onclick: '^onResultClick', '@data-node-id': 'id' }}>
+    <span class="search-result-label">{{label}}</span>
+    <span class="search-result-type">{{type}}</span>
+  </div>
 `;

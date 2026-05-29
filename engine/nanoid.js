@@ -4,7 +4,7 @@
  * Generates short unique IDs (8 chars) for nodes, workflows, etc.
  * No dependencies. Crypto-based when available, Math.random fallback.
  *
- * @module agi-graph/nanoid
+ * @module symbiote-node/nanoid
  */
 
 const ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
@@ -17,9 +17,10 @@ const ID_LENGTH = 8;
  */
 export function nanoid(length = ID_LENGTH) {
   let id = '';
-  const bytes = typeof globalThis.crypto?.getRandomValues === 'function'
-    ? globalThis.crypto.getRandomValues(new Uint8Array(length))
-    : Array.from({ length }, () => Math.floor(Math.random() * 256));
+  let bytes =
+    typeof globalThis.crypto?.getRandomValues === 'function'
+      ? globalThis.crypto.getRandomValues(new Uint8Array(length))
+      : Array.from({ length }, () => Math.floor(Math.random() * 256));
 
   for (let i = 0; i < length; i++) {
     id += ALPHABET[bytes[i] % ALPHABET.length];

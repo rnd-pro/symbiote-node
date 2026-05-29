@@ -12,14 +12,19 @@ import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './TemplatePreview.tpl.js';
 import { styles } from './TemplatePreview.css.js';
 import { extractPlaceholders } from '../../engine/packs/transform/template-builder.handler.js';
+import { translate } from '../../locale/index.js';
 
-const DEFAULT_TEST_DATA = JSON.stringify({
-  status: 'created',
-  region: 'RU',
-  jobUid: '00c3b879-example',
-  details: 'Test delivery',
-  timestamp: new Date().toISOString(),
-}, null, 2);
+const DEFAULT_TEST_DATA = JSON.stringify(
+  {
+    status: 'created',
+    region: 'RU',
+    jobUid: '00c3b879-example',
+    details: 'Test delivery',
+    timestamp: new Date().toISOString(),
+  },
+  null,
+  2
+);
 
 export class TemplatePreview extends Symbiote {
   init$ = {
@@ -28,14 +33,17 @@ export class TemplatePreview extends Symbiote {
     placeholderChips: [],
     previewText: '',
     noPlaceholders: true,
+    placeholdersLabel: translate('templatePreview.placeholders'),
+    emptyLabel: translate('templatePreview.empty'),
+    testDataLabel: translate('templatePreview.testData'),
+    previewLabel: translate('templatePreview.preview'),
   };
 
   renderCallback() {
     ensureMaterialSymbols(['data_object', 'sell', 'visibility']);
 
-    // Bind textarea to testData
     /** @type {HTMLTextAreaElement|null} */
-    const textarea = this.querySelector('.tpl-test-data');
+    let textarea = this.querySelector('.tpl-test-data');
     if (textarea) {
       textarea.value = this.$.testData;
       textarea.addEventListener('input', () => {
@@ -43,21 +51,22 @@ export class TemplatePreview extends Symbiote {
       });
     }
 
-    // React to template changes
+
     this.sub('template', () => this._updatePreview());
     this.sub('testData', () => this._updatePreview());
   }
 
   /**
    * Extract placeholders, interpolate template, update chips + preview.
+   * @returns {void}
    */
   _updatePreview() {
-    const tpl = this.$.template;
-    const placeholders = extractPlaceholders(tpl);
+    let tpl = this.$.template;
+    let placeholders = extractPlaceholders(tpl);
 
     this.$.noPlaceholders = placeholders.length === 0;
 
-    // Parse test data
+
     let data = {};
     try {
       data = JSON.parse(this.$.testData);
@@ -68,29 +77,29 @@ export class TemplatePreview extends Symbiote {
       return;
     }
 
-    // Build chips with resolved status
-    const resolved = [];
-    const chips = placeholders.map((name) => {
-      const val = this._resolvePath(data, name);
-      const isResolved = val !== undefined;
+
+    let resolved = [];
+    let chips = placeholders.map((name) => {
+      let val = this._resolvePath(data, name);
+      let isResolved = val !== undefined;
       if (isResolved) resolved.push(name);
       return { name };
     });
 
     this.$.placeholderChips = chips;
 
-    // Apply chip colors after itemize renders
+
     requestAnimationFrame(() => this._applyChipColors(resolved));
 
-    // Interpolate
+
     if (!tpl) {
       this.$.previewText = '';
       return;
     }
 
-    const text = tpl.replace(/\{\{?([^{}]+)\}?\}/g, (match, key) => {
-      const trimmed = key.trim();
-      const value = this._resolvePath(data, trimmed);
+    let text = tpl.replace(/\{\{?([^{}]+)\}?\}/g, (match, key) => {
+      let trimmed = key.trim();
+      let value = this._resolvePath(data, trimmed);
       if (value === undefined) return match;
       if (typeof value === 'object') return JSON.stringify(value);
       return String(value);
@@ -105,9 +114,9 @@ export class TemplatePreview extends Symbiote {
    * @param {string[]} resolved - Names of resolved placeholders
    */
   _applyChipColors(resolved) {
-    const chipEls = this.querySelectorAll('.tpl-chip');
+    let chipEls = this.querySelectorAll('.tpl-chip');
     chipEls.forEach((el) => {
-      const name = el.textContent?.trim();
+      let name = el.textContent?.trim();
       if (name && !resolved.includes(name)) {
         el.setAttribute('data-missing', '');
       } else {

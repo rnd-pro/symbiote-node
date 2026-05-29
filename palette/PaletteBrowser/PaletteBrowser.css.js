@@ -4,17 +4,17 @@
  */
 import { css } from '@symbiotejs/symbiote';
 
-export const styles = css`
+export let styles = css`
   palette-browser {
     display: flex;
     flex-direction: column;
     width: 260px;
     height: 100%;
-    background: var(--sn-ctx-bg, #1e1e2e);
-    border-left: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
-    font-family: var(--sn-font, 'Inter', sans-serif);
+    background: var(--sn-ctx-bg);
+    border-left: 1px solid var(--sn-node-border);
+    font-family: var(--sn-font);
     font-size: 13px;
-    color: var(--sn-text, #cdd6f4);
+    color: var(--sn-text);
     overflow: hidden;
     user-select: none;
   }
@@ -25,8 +25,8 @@ export const styles = css`
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--sn-text-dim, #a0a0a0);
-    border-bottom: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
+    color: var(--sn-text-dim);
+    border-bottom: 1px solid var(--sn-node-border);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -38,26 +38,26 @@ export const styles = css`
 
   .pal-search {
     padding: 8px 12px;
-    border-bottom: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.06));
+    border-bottom: 1px solid var(--sn-node-border);
 
     & input {
       width: 100%;
       padding: 6px 10px;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid var(--sn-node-border, rgba(255, 255, 255, 0.08));
+      background: var(--sn-field-control-bg);
+      border: 1px solid var(--sn-node-border);
       border-radius: 4px;
-      color: var(--sn-text, #cdd6f4);
+      color: var(--sn-text);
       font-family: inherit;
       font-size: 12px;
       outline: none;
       transition: border-color 0.2s ease-out;
 
       &:focus {
-        border-color: var(--sn-node-selected, #4a9eff);
+        border-color: var(--sn-node-selected);
       }
 
       &::placeholder {
-        color: var(--sn-text-dim, #a0a0a0);
+        color: var(--sn-text-dim);
       }
     }
   }
@@ -73,7 +73,7 @@ export const styles = css`
       padding: 6px 14px;
       font-size: 11px;
       font-weight: 600;
-      color: var(--sn-text-dim, #a0a0a0);
+      color: var(--sn-text-dim);
       text-transform: uppercase;
       letter-spacing: 0.03em;
       cursor: pointer;
@@ -87,7 +87,7 @@ export const styles = css`
       }
 
       &:hover {
-        color: var(--sn-text, #cdd6f4);
+        color: var(--sn-text);
       }
     }
 
@@ -111,19 +111,19 @@ export const styles = css`
     transition: background 0.15s ease-out;
 
     &:hover {
-      background: var(--sn-ctx-hover, rgba(90, 159, 212, 0.12));
+      background: var(--sn-ctx-hover);
     }
 
     &:active {
       cursor: grabbing;
-      background: var(--sn-ctx-hover, rgba(90, 159, 212, 0.2));
+      background: var(--sn-ctx-hover);
     }
 
     & .pal-item-icon {
       font-size: 16px;
       width: 20px;
       text-align: center;
-      color: var(--item-color, var(--sn-text-dim, #a0a0a0));
+      color: var(--item-color, var(--sn-text-dim));
     }
 
     & .pal-item-label {
@@ -133,7 +133,7 @@ export const styles = css`
 
     & .pal-item-desc {
       font-size: 10px;
-      color: var(--sn-text-dim, #a0a0a0);
+      color: var(--sn-text-dim);
       max-width: 100px;
       overflow: hidden;
       text-overflow: ellipsis;

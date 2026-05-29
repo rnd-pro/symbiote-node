@@ -12,15 +12,16 @@ import Symbiote from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template, searchResultTemplate } from './NodeSearch.tpl.js';
 import { styles } from './NodeSearch.css.js';
+import { translate } from '../../locale/index.js';
 
 export class NodeSearch extends Symbiote {
-
   init$ = {
     query: '',
     results: [],
     isOpen: false,
+    placeholder: translate('nodeSearch.placeholder'),
     onResultClick: (e) => {
-      const item = e.target.closest('.search-result');
+      let item = e.target.closest('.search-result');
       if (item?.dataset?.nodeId) {
         this.#handleResultClick(item.dataset.nodeId);
       }
@@ -48,7 +49,7 @@ export class NodeSearch extends Symbiote {
   open() {
     this.$.isOpen = true;
     requestAnimationFrame(() => {
-      const input = this.querySelector('.search-input');
+      let input = this.querySelector('.search-input');
       if (input) input.focus();
     });
   }
@@ -57,7 +58,7 @@ export class NodeSearch extends Symbiote {
     this.$.isOpen = false;
     this.$.query = '';
     this.$.results = [];
-    const input = this.querySelector('.search-input');
+    let input = this.querySelector('.search-input');
     if (input) input.value = '';
   }
 
@@ -69,18 +70,22 @@ export class NodeSearch extends Symbiote {
 
   #search(query) {
     if (!this.#getNodes) return;
-    const nodes = this.#getNodes();
-    const q = query.toLowerCase();
-    const results = nodes.filter(n =>
-      n.label.toLowerCase().includes(q) ||
-      (n.type && n.type.toLowerCase().includes(q)) ||
-      (n.category && n.category.toLowerCase().includes(q))
-    ).slice(0, 10).map(n => ({
-      id: n.id,
-      label: n.label,
-      type: n.type || 'default',
-      category: n.category || 'default',
-    }));
+    let nodes = this.#getNodes();
+    let q = query.toLowerCase();
+    let results = nodes
+      .filter(
+        (n) =>
+          n.label.toLowerCase().includes(q) ||
+          (n.type && n.type.toLowerCase().includes(q)) ||
+          (n.category && n.category.toLowerCase().includes(q))
+      )
+      .slice(0, 10)
+      .map((n) => ({
+        id: n.id,
+        label: n.label,
+        type: n.type || 'default',
+        category: n.category || 'default',
+      }));
     this.$.results = results;
   }
 
@@ -115,16 +120,16 @@ export class NodeSearch extends Symbiote {
       this.close();
     }
   }
-
-
 }
 
-// Result item for itemize
+
 class SearchResultItem extends Symbiote {
-  id = '';
-  label = '';
-  type = '';
-  category = '';
+  init$ = {
+    id: '',
+    label: '',
+    type: '',
+    category: '',
+  };
 }
 
 SearchResultItem.template = searchResultTemplate;

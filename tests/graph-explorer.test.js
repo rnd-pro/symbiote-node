@@ -1,0 +1,270 @@
+import test, { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+
+import {
+  addGraphDirectoryFrames,
+  buildFlatPathHash,
+  getFileSelectionNodeId,
+  getFlatFocusRestoreKey,
+  getGraphHashNavigationState,
+  getGraphPathStyleDisplay,
+  getNextGraphPathStyle,
+  renderGraphPathStyleButton,
+  renderGraphViewModeButton,
+  resolveFlatHashChange,
+  resolveInitialGraphViewMode,
+  selectGraphLabelMode,
+  setGraphLayerVisible,
+  shouldClearFocusOnSelection,
+  shouldFitForceLayoutInitialTick,
+  shouldRestoreFlatFocus,
+  toggleGraphLayerButtonState,
+} from '../canvas/graph-explorer.js';
+
+describe('graph explorer view helpers', () => {
+  it('resolves initial view mode from query params', () => {
+    assert.equal(resolveInitialGraphViewMode(new URLSearchParams('mode=flat')), 'flat');
+    assert.equal(resolveInitialGraphViewMode(new URLSearchParams('mode=tree')), 'structured');
+    assert.equal(resolveInitialGraphViewMode(new URLSearchParams()), 'structured');
+  });
+
+  it('cycles graph path styles', () => {
+    assert.equal(getNextGraphPathStyle('pcb'), 'bezier');
+    assert.equal(getNextGraphPathStyle('bezier'), 'orthogonal');
+    assert.equal(getNextGraphPathStyle('orthogonal'), 'straight');
+    assert.equal(getNextGraphPathStyle('straight'), 'pcb');
+    assert.equal(getNextGraphPathStyle('unknown'), 'pcb');
+  });
+
+  it('describes graph path style controls', () => {
+    assert.deepEqual(getGraphPathStyleDisplay('pcb'), { icon: 'route', text: 'PCB', active: true });
+    assert.deepEqual(getGraphPathStyleDisplay('bezier'), { icon: 'timeline', text: 'BEZIER', active: false });
+  });
+});
+
+test('graph explorer button render helpers update active state', () => {
+  const attrs = new Set();
+  const icon = { textContent: '', nodeType: 1 };
+  const label = { textContent: ' FLAT', nodeType: 3 };
+  const button = {
+    childNodes: [icon, label],
+    querySelector(selector) {
+      assert.equal(selector, '.material-symbols-outlined');
+      return icon;
+    },
+    setAttribute(name) {
+      attrs.add(name);
+    },
+    removeAttribute(name) {
+      attrs.delete(name);
+    },
+  };
+
+  renderGraphViewModeButton(button, 'structured');
+  assert.equal(icon.textContent, 'grid_view');
+  assert.equal(label.textContent, ' TREE');
+  assert.equal(attrs.has('data-active'), true);
+
+  renderGraphPathStyleButton(button, 'bezier');
+  assert.equal(icon.textContent, 'timeline');
+  assert.equal(label.textContent, ' BEZIER');
+  assert.equal(attrs.has('data-active'), false);
+});
+
+test('addGraphDirectoryFrames creates bounded frames for multi-file directories', () => {
+  class TestFrame {
+    constructor(label, options) {
+      this.label = label;
+      this.options = options;
+    }
+  }
+
+  const frames = [];
+  const editor = {
+    addFrame(frame) {
+      frames.push(frame);
+    },
+  };
+  const fileMap = new Map([
+    ['src/a.js', 'node-a'],
+    ['src/b.js', 'node-b'],
+    ['test/a.test.js', 'node-test'],
+  ]);
+  const dirFiles = new Map([
+    ['src/', ['src/a.js', 'src/b.js']],
+    ['test/', ['test/a.test.js']],
+  ]);
+  const positions = {
+    'node-a': { x: 10, y: 20 },
+    'node-b': { x: 210, y: 120 },
+    'node-test': { x: 500, y: 500 },
+  };
+
+  addGraphDirectoryFrames({
+    editor,
+    fileMap,
+    dirFiles,
+    positions,
+    FrameClass: TestFrame,
+    colors: ['rgba(1, 2, 3, 0.4)'],
+  });
+
+  assert.equal(frames.length, 1);
+  assert.equal(frames[0].label, 'src');
+  assert.deepEqual(frames[0].options, {
+    x: -20,
+    y: -10,
+    width: 380,
+    height: 240,
+    color: 'rgba(1, 2, 3, 0.4)',
+  });
+});
+
+test('setGraphLayerVisible toggles zones and vias', () => {
+  const frames = [{ style: {} }, { style: {} }];
+  const attrs = new Set();
+  const canvas = {
+    querySelectorAll(selector) {
+      assert.equal(selector, 'graph-frame');
+      return frames;
+    },
+    setAttribute(name, value) {
+      attrs.add(`${name}:${value}`);
+    },
+    removeAttribute(name) {
+      for (const attr of [...attrs]) {
+        if (attr.startsWith(`${name}:`)) attrs.delete(attr);
+      }
+    },
+  };
+
+  setGraphLayerVisible(canvas, 'zones', false);
+  assert.deepEqual(frames.map((frame) => frame.style.display), ['none', 'none']);
+
+  setGraphLayerVisible(canvas, 'zones', true);
+  assert.deepEqual(frames.map((frame) => frame.style.display), ['', '']);
+
+  setGraphLayerVisible(canvas, 'vias', false);
+  assert.equal(attrs.has('data-hide-vias:'), true);
+
+  setGraphLayerVisible(canvas, 'vias', true);
+  assert.equal(attrs.has('data-hide-vias:'), false);
+});
+
+test('toggleGraphLayerButtonState flips active and hidden attributes', () => {
+  const attrs = new Set(['data-active']);
+  const button = {
+    hasAttribute(name) {
+      return attrs.has(name);
+    },
+    setAttribute(name) {
+      attrs.add(name);
+    },
+    removeAttribute(name) {
+      attrs.delete(name);
+    },
+  };
+
+  assert.equal(toggleGraphLayerButtonState(button), false);
+  assert.equal(attrs.has('data-active'), false);
+  assert.equal(attrs.has('data-hidden'), true);
+
+  assert.equal(toggleGraphLayerButtonState(button), true);
+  assert.equal(attrs.has('data-active'), true);
+  assert.equal(attrs.has('data-hidden'), false);
+});
+
+test('graph explorer route helpers preserve graph paths and focus state', () => {
+  const params = new URLSearchParams('mode=flat&focus=src/app.js&style=pcb');
+
+  assert.equal(
+    buildFlatPathHash('src/components', params),
+    '#graph/src/components?mode=flat&focus=src%2Fapp.js&style=pcb',
+  );
+  assert.equal(buildFlatPathHash('', params), '#graph?mode=flat&style=pcb');
+  assert.deepEqual(
+    resolveFlatHashChange('#graph/src/components?focus=Button.js&mode=flat'),
+    { path: 'src/components', focus: 'Button.js' },
+  );
+  assert.deepEqual(
+    resolveFlatHashChange('#graph?focus=src%2Fapp.js'),
+    { path: '', focus: 'src/app.js' },
+  );
+  assert.equal(resolveFlatHashChange('#dashboard'), null);
+});
+
+test('graph explorer selection helpers normalize focus restore decisions', () => {
+  const key = getFlatFocusRestoreKey({
+    path: '',
+    focus: 'src/node/mlops/flywheel.js',
+  });
+
+  assert.equal(getFileSelectionNodeId('src/components/'), 'src/components');
+  assert.equal(getFileSelectionNodeId('src/app.js'), 'src/app.js');
+  assert.equal(key, '::src/node/mlops/flywheel.js');
+  assert.equal(shouldRestoreFlatFocus({
+    lastKey: key,
+    path: '',
+    focus: 'src/node/mlops/flywheel.js',
+  }), false);
+  assert.equal(shouldRestoreFlatFocus({
+    lastKey: key,
+    path: 'src/node',
+    focus: 'mlops/flywheel.js',
+  }), true);
+  assert.equal(shouldRestoreFlatFocus({ lastKey: null, path: '', focus: null }), false);
+  assert.equal(shouldClearFocusOnSelection({
+    selectedNodes: [],
+    initialViewRestored: true,
+    hash: '#graph?focus=src/app.js',
+  }), true);
+  assert.deepEqual(getGraphHashNavigationState('#graph/src/components'), {
+    hasPath: true,
+    hasParams: false,
+    shouldRestore: true,
+  });
+  assert.deepEqual(getGraphHashNavigationState('#graph?focus=src/app.js'), {
+    hasPath: false,
+    hasParams: true,
+    shouldRestore: true,
+  });
+  assert.deepEqual(getGraphHashNavigationState('#graph'), {
+    hasPath: false,
+    hasParams: false,
+    shouldRestore: false,
+  });
+  assert.equal(shouldFitForceLayoutInitialTick('#graph'), true);
+  assert.equal(shouldFitForceLayoutInitialTick('#graph?focus=src/app.js'), false);
+});
+
+test('selectGraphLabelMode marks one button active and updates canvas mode', () => {
+  function createButton(mode, active = false) {
+    const attrs = new Set(active ? ['data-active'] : []);
+    return {
+      attrs,
+      getAttribute(name) {
+        return name === 'data-mode' ? mode : null;
+      },
+      setAttribute(name) {
+        attrs.add(name);
+      },
+      removeAttribute(name) {
+        attrs.delete(name);
+      },
+    };
+  }
+
+  const compact = createButton('compact', true);
+  const full = createButton('full');
+  const canvasAttrs = new Map();
+  const canvas = {
+    setAttribute(name, value) {
+      canvasAttrs.set(name, value);
+    },
+  };
+
+  assert.equal(selectGraphLabelMode([compact, full], full, canvas), 'full');
+  assert.equal(compact.attrs.has('data-active'), false);
+  assert.equal(full.attrs.has('data-active'), true);
+  assert.equal(canvasAttrs.get('data-label-mode'), 'full');
+});

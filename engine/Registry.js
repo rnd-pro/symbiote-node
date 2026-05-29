@@ -4,7 +4,7 @@
  * Central registry for node types, drivers, and domain packs.
  * AI agents use this to discover, compose, and validate nodes.
  *
- * @module agi-graph/Registry
+ * @module symbiote-node/Registry
  */
 
 import { areSocketsCompatible, registerSocketTypes } from './SocketTypes.js';
@@ -13,6 +13,7 @@ import { areSocketsCompatible, registerSocketTypes } from './SocketTypes.js';
  * @typedef {object} SocketDef
  * @property {string} name - Socket name
  * @property {string} type - Socket type (must be registered in SocketTypes)
+ * @property {string} [label] - Human-readable socket label
  * @property {boolean} [required] - Whether this input is required
  * @property {string} [description] - Human-readable description for AI
  */
@@ -36,6 +37,7 @@ import { areSocketsCompatible, registerSocketTypes } from './SocketTypes.js';
  * @property {SocketDef[]} outputs - Output socket definitions
  * @property {Record<string, ParamDef>} [params] - Parameter definitions
  * @property {object} [dynamicOutputs] - Dynamic socket pattern definition
+ * @property {object} [testData] - Test payload defaults for dry-run/event simulation
  * @property {object} [constraints] - Requirements (secrets, SSH, etc.)
  */
 
@@ -44,15 +46,25 @@ import { areSocketsCompatible, registerSocketTypes } from './SocketTypes.js';
  * @property {string} type - Unique node type identifier (e.g., 'ai/llm')
  * @property {Driver} driver - Self-describing driver manifest
  * @property {function} [process] - Execution function: (inputs, params) => outputs
+ * @property {object} [lifecycle] - Lifecycle hooks for execution
+ * @property {string} [icon] - Material icon name for UI
+ * @property {string} [category] - Category for UI grouping
+ * @property {string} [shape] - Shape name for UI rendering
+ */
+
+/**
+ * @typedef {object} DriverListEntry
+ * @property {string} type - Unique node type identifier
+ * @property {Driver} driver - Self-describing driver manifest
  * @property {string} [icon] - Material icon name for UI
  * @property {string} [category] - Category for UI grouping
  */
 
 /** @type {Map<string, NodeTypeDef>} */
-const _nodeTypes = new Map();
+let _nodeTypes = new Map();
 
 /** @type {Map<string, object>} */
-const _packs = new Map();
+let _packs = new Map();
 
 /**
  * Register a single node type
@@ -96,10 +108,10 @@ export function getNodeType(type) {
 
 /**
  * List all registered node types
- * @returns {Array<{type: string, driver: Driver}>}
+ * @returns {DriverListEntry[]}
  */
 export function listDrivers() {
-  return [..._nodeTypes.values()].map(def => ({
+  return [..._nodeTypes.values()].map((def) => ({
     type: def.type,
     driver: def.driver,
     icon: def.icon,
@@ -113,7 +125,7 @@ export function listDrivers() {
  * @returns {Array<{type: string, inputSocket: string, driver: Driver}>}
  */
 export function findCompatible(outputType) {
-  const results = [];
+  let results = [];
   for (const [type, def] of _nodeTypes) {
     for (const input of def.driver.inputs) {
       if (areSocketsCompatible(outputType, input.type)) {
@@ -131,8 +143,8 @@ export function findCompatible(outputType) {
  */
 export function findByCapability(capability) {
   return [..._nodeTypes.values()]
-    .filter(def => def.driver.capabilities?.includes(capability))
-    .map(def => ({ type: def.type, driver: def.driver }));
+    .filter((def) => def.driver.capabilities?.includes(capability))
+    .map((def) => ({ type: def.type, driver: def.driver }));
 }
 
 /**
@@ -140,9 +152,9 @@ export function findByCapability(capability) {
  * @returns {Array<{category: string, nodes: Array<{type: string, icon: string, description: string}>}>}
  */
 export function getNodeMenu() {
-  const grouped = {};
+  let grouped = {};
   for (const [type, def] of _nodeTypes) {
-    const cat = def.category || type.split('/')[0];
+    let cat = def.category || type.split('/')[0];
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push({
       type,
@@ -163,7 +175,7 @@ export function registerCustomDrivers(customDrivers) {
       type: cd.type,
       driver: cd.driver,
       category: cd.type.split('/')[0],
-      // Process stored as string in JSON — needs eval (sandboxed in production)
+
       process: cd.process ? new Function('inputs', 'params', cd.process) : null,
     });
   }
@@ -176,14 +188,14 @@ export function registerCustomDrivers(customDrivers) {
  * @returns {{valid: boolean, errors: string[]}}
  */
 export function validateParams(type, params) {
-  const def = _nodeTypes.get(type);
+  let def = _nodeTypes.get(type);
   if (!def) return { valid: false, errors: [`Unknown node type: ${type}`] };
 
-  const validationErrors = [];
-  const schema = def.driver.params || {};
+  let validationErrors = [];
+  let schema = def.driver.params || {};
 
   for (const [key, paramDef] of Object.entries(schema)) {
-    const val = params[key];
+    let val = params[key];
 
     if (paramDef.required && (val === undefined || val === null)) {
       validationErrors.push(`Missing required param: ${key}`);
@@ -193,7 +205,9 @@ export function validateParams(type, params) {
     if (val === undefined) continue;
 
     if (paramDef.enum && !paramDef.enum.includes(val)) {
-      validationErrors.push(`Param "${key}" must be one of: ${paramDef.enum.join(', ')}. Got: ${val}`);
+      validationErrors.push(
+        `Param "${key}" must be one of: ${paramDef.enum.join(', ')}. Got: ${val}`
+      );
     }
 
     if (paramDef.min !== undefined && val < paramDef.min) {
@@ -222,7 +236,7 @@ export function listPacks() {
 export function clearRegistry() {
   _nodeTypes.clear();
   _packs.clear();
-  // Re-register built-in types
+
   _registerBuiltins();
 }
 
@@ -260,5 +274,5 @@ function _registerBuiltins() {
   });
 }
 
-// Register built-ins on module load
+
 _registerBuiltins();

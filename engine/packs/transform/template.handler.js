@@ -24,49 +24,51 @@ export default {
     ],
     params: {
       template: { type: 'textarea', default: '', description: 'Message template ({{var}} syntax)' },
-      replyMarkup: { type: 'textarea', default: '', description: 'Inline keyboard JSON (Telegram reply_markup)' },
+      replyMarkup: {
+        type: 'textarea',
+        default: '',
+        description: 'Inline keyboard JSON (Telegram reply_markup)',
+      },
     },
   },
 
   lifecycle: {
-    // No validate: template comes from params.template or inputs.template
-    // Execute handles both cases
 
-    cacheKey: (inputs) =>
-      `tpl:${inputs.template}:${JSON.stringify(inputs.data)}`,
+
+    cacheKey: (inputs) => `tpl:${inputs.template}:${JSON.stringify(inputs.data)}`,
 
     execute: async (inputs, params) => {
-      const template = params?.template || inputs.template;
-      const { data } = inputs;
+      let template = params?.template || inputs.template;
+      let { data } = inputs;
 
-      const result = template.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
-        const trimmed = key.trim();
-        // Support dot notation: {{user.name}}
-        const value = trimmed.split('.').reduce((obj, k) => {
+      let result = template.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+        let trimmed = key.trim();
+
+        let value = trimmed.split('.').reduce((obj, k) => {
           if (obj === null || obj === undefined) return undefined;
           return obj[k];
         }, data);
 
         if (value === undefined) {
-          console.warn(`[template] ⚠️ Missing variable "${trimmed}" in data keys: [${data ? Object.keys(data).join(', ') : 'NO DATA'}]`);
+          console.log(
+            `🟡 [template] Missing variable "${trimmed}" in data keys: [${data ? Object.keys(data).join(', ') : 'NO DATA'}]`
+          );
           return match;
         }
         if (typeof value === 'object') return JSON.stringify(value);
         return String(value);
       });
 
-      // Output rendered text in both formats:
-      // - result: raw string (for chaining)
-      // - data: full context with text field (for telegram/chat)
-      const outputField = params?.outputField || 'text';
-      const outputData = { ...(typeof data === 'object' ? data : {}), [outputField]: result };
 
-      // Attach inline keyboard if configured
+      let outputField = params?.outputField || 'text';
+      let outputData = { ...(typeof data === 'object' ? data : {}), [outputField]: result };
+
+
       if (params?.replyMarkup) {
         try {
           outputData.reply_markup = JSON.parse(params.replyMarkup);
         } catch (e) {
-          console.warn('[template] ⚠️ Invalid replyMarkup JSON:', e.message);
+          console.log('🟡 [template] Invalid replyMarkup JSON:', e.message);
         }
       }
 

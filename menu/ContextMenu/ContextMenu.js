@@ -7,7 +7,7 @@
  * @module symbiote-node/components/ContextMenu
  */
 
-import Symbiote, { html } from '@symbiotejs/symbiote';
+import Symbiote from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template, ctxItemTemplate } from './ContextMenu.tpl.js';
 import { styles } from './ContextMenu.css.js';
@@ -26,7 +26,6 @@ CtxItem.template = ctxItemTemplate;
 CtxItem.reg('ctx-item');
 
 export class ContextMenu extends Symbiote {
-
   /** @type {Map<string, function>} */
   _actions = new Map();
 
@@ -35,7 +34,7 @@ export class ContextMenu extends Symbiote {
     visible: false,
     onBackdropClick: () => this.hide(),
     onItemClick: (label) => {
-      const action = this._actions.get(label);
+      let action = this._actions.get(label);
       if (action) action();
       this.hide();
     },
@@ -54,7 +53,7 @@ export class ContextMenu extends Symbiote {
       this._actions.set(item.label, item.action);
     }
     this.$.items = items.map((i) => ({ label: i.label, icon: i.icon }));
-    const menu = this.querySelector('.sn-ctx-menu');
+    let menu = this.querySelector('.sn-ctx-menu');
     if (menu) {
       menu.style.left = `${x}px`;
       menu.style.top = `${y}px`;

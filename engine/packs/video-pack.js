@@ -1,10 +1,10 @@
 /**
- * video-pack.js - Video domain pack for agi-graph
+ * video-pack.js - Video domain pack for symbiote-node
  *
  * Registers video-specific node types and socket types.
  * Extracted from symbiote-video/src/graph/NodeTypes.js + NodeProcessors.js.
  *
- * @module agi-graph/packs/video-pack
+ * @module symbiote-node/packs/video-pack
  */
 
 import { registerPack } from '../index.js';
@@ -12,7 +12,7 @@ import { registerPack } from '../index.js';
 /**
  * Video-domain socket types
  */
-const socketTypes = {
+let socketTypes = {
   image: { color: '#C79650', label: 'Image', compatible: ['image'] },
   audio: { color: '#C1990E', label: 'Audio', compatible: ['audio'] },
   timeline: { color: '#5090C7', label: 'Timeline', compatible: ['timeline'] },
@@ -23,8 +23,8 @@ const socketTypes = {
 /**
  * Video node type definitions
  */
-const nodes = [
-  // ─── Source ─────────────────────────────────────────────────────────
+let nodes = [
+
   {
     type: 'source/audio',
     category: 'source',
@@ -107,7 +107,7 @@ const nodes = [
     }),
   },
 
-  // ─── Analysis ──────────────────────────────────────────────────────
+
   {
     type: 'analysis/beat-analyzer',
     category: 'analysis',
@@ -126,7 +126,7 @@ const nodes = [
         strongThreshold: { type: 'float', default: 1.3, min: 0.5, max: 3 },
       },
     },
-    process: (inputs, params) => ({
+    process: () => ({
       skeleton: {
         intensityZones: [],
         fadeZones: [],
@@ -158,7 +158,7 @@ const nodes = [
     },
   },
 
-  // ─── Processing ────────────────────────────────────────────────────
+
   {
     type: 'processing/physics-vfx',
     category: 'processing',
@@ -172,7 +172,11 @@ const nodes = [
       ],
       outputs: [{ name: 'output', type: 'effect' }],
       params: {
-        preset: { type: 'string', default: 'bounceIn', enum: ['bounceIn', 'dropImpact', 'glitch', 'shake', 'zoom', 'rubberBand', 'pulse'] },
+        preset: {
+          type: 'string',
+          default: 'bounceIn',
+          enum: ['bounceIn', 'dropImpact', 'glitch', 'shake', 'zoom', 'rubberBand', 'pulse'],
+        },
         beatSync: { type: 'boolean', default: true },
         intensity: { type: 'float', default: 1.0, min: 0, max: 3 },
       },
@@ -208,14 +212,18 @@ const nodes = [
       ],
       outputs: [{ name: 'output', type: 'image' }],
       params: {
-        type: { type: 'string', default: 'fade', enum: ['fade', 'slide', 'wipe', 'zoom', 'dissolve'] },
+        type: {
+          type: 'string',
+          default: 'fade',
+          enum: ['fade', 'slide', 'wipe', 'zoom', 'dissolve'],
+        },
         duration: { type: 'int', default: 30, min: 1 },
         direction: { type: 'string', default: 'left', enum: ['left', 'right', 'up', 'down'] },
       },
     },
   },
 
-  // ─── Composition ───────────────────────────────────────────────────
+
   {
     type: 'composition/layout',
     category: 'composition',
@@ -248,7 +256,11 @@ const nodes = [
       ],
       outputs: [{ name: 'output', type: 'image' }],
       params: {
-        mode: { type: 'string', default: 'normal', enum: ['normal', 'multiply', 'screen', 'overlay', 'add'] },
+        mode: {
+          type: 'string',
+          default: 'normal',
+          enum: ['normal', 'multiply', 'screen', 'overlay', 'add'],
+        },
         opacity: { type: 'float', default: 1.0, min: 0, max: 1 },
       },
     },
@@ -272,7 +284,7 @@ const nodes = [
     },
   },
 
-  // ─── Output ────────────────────────────────────────────────────────
+
   {
     type: 'output/viewport',
     category: 'output',
@@ -319,5 +331,5 @@ export function registerVideoPack() {
   });
 }
 
-// Auto-register when imported
+
 registerVideoPack();

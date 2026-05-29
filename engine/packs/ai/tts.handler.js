@@ -2,7 +2,7 @@
  * ai/tts — Text-to-Speech via Qwen3-TTS
  *
  * Two modes:
- * - SSH: batch script on remote server (mr-agent.rnd-pro.com)
+ * - SSH: batch script on a configured remote server
  * - HTTP: POST to Qwen3 TTS HTTP endpoint
  *
  * Supports:
@@ -10,18 +10,32 @@
  * - Voice cloning via ref_audio (reference audio sample)
  * - Language: es (Spanish/Rioplatense), ru (Russian), en (English)
  *
- * Config from Mr-Computer/automations/argentine-spanish-bot:
- *   TTS_SERVER_URL: http://localhost:5008
- *   TTS_VENV_PATH: /home/mr-agent/automations/argentine-spanish-bot/venv
- *   Batch script: utils/generate_qwen3tts_batch.py
+ * SSH mode expects TTS_REMOTE_HOST and TTS_REMOTE_PATH, or matching params.
  *
- * @module agi-graph/packs/ai/tts
+ * @module symbiote-node/packs/ai/tts
  */
 
-import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
+
+async function cleanupLocalFile(filePath) {
+  try {
+    await fs.unlink(filePath);
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.warn(`[ai/tts] Failed to remove temp file ${filePath}: ${err.message}`);
+    }
+  }
+}
 
 export default {
   type: 'ai/tts',
@@ -30,9 +44,7 @@ export default {
 
   driver: {
     description: 'Text-to-Speech via Qwen3-TTS (SSH batch or HTTP)',
-    inputs: [
-      { name: 'text', type: 'string' },
-    ],
+    inputs: [{ name: 'text', type: 'string' }],
     outputs: [
       { name: 'audioPath', type: 'string' },
       { name: 'error', type: 'string' },
@@ -41,18 +53,42 @@ export default {
       mode: { type: 'string', default: 'http', description: 'ssh | http' },
       language: { type: 'string', default: 'es', description: 'Language: es, ru, en' },
       speaker: { type: 'string', default: 'vivian', description: 'Built-in Qwen3 speaker ID' },
-      refAudio: { type: 'string', default: '', description: 'Path to voice reference audio (clone mode)' },
-      outputDir: { type: 'string', default: '', description: 'Output directory for generated audio' },
+      refAudio: {
+        type: 'string',
+        default: '',
+        description: 'Path to voice reference audio (clone mode)',
+      },
+      outputDir: {
+        type: 'string',
+        default: '',
+        description: 'Output directory for generated audio',
+      },
       outputFormat: { type: 'string', default: 'wav', description: 'wav | mp3' },
       exaggeration: { type: 'number', default: 0, description: 'Voice exaggeration (0-1)' },
       cfg: { type: 'number', default: 0.1, description: 'Classifier-free guidance (0-1)' },
-      // SSH params
-      remoteHost: { type: 'string', default: 'mr-agent@mr-agent.rnd-pro.com', description: 'SSH host' },
-      remotePath: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot', description: 'Remote project path' },
-      remoteVenv: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot/venv', description: 'Remote Python venv path' },
+
+      remoteHost: {
+        type: 'string',
+        default: '',
+        description: 'SSH host',
+      },
+      remotePath: {
+        type: 'string',
+        default: '',
+        description: 'Remote project path',
+      },
+      remoteVenv: {
+        type: 'string',
+        default: '',
+        description: 'Remote Python venv path',
+      },
       device: { type: 'string', default: 'cuda', description: 'cuda | cpu' },
-      // HTTP params
-      endpoint: { type: 'string', default: 'http://localhost:5008', description: 'TTS HTTP endpoint' },
+
+      endpoint: {
+        type: 'string',
+        default: 'http://localhost:5008',
+        description: 'TTS HTTP endpoint',
+      },
       timeout: { type: 'int', default: 120000, description: 'Max wait time (ms)' },
     },
   },
@@ -67,8 +103,8 @@ export default {
       `tts:${params.mode}:${params.speaker}:${params.language}:${inputs.text}`,
 
     execute: async (inputs, params) => {
-      const { text } = inputs;
-      const mode = params.mode || 'http';
+      let { text } = inputs;
+      let mode = params.mode || 'http';
 
       if (mode === 'ssh') {
         return executeSSH(text, params);
@@ -83,8 +119,16 @@ export default {
  * @type {Set<string>}
  */
 const SPEAKERS = new Set([
-  'aiden', 'dylan', 'eric', 'ono_anna', 'ryan',
-  'serena', 'sohee', 'uncle_fu', 'vivian', 'chelsie',
+  'aiden',
+  'dylan',
+  'eric',
+  'ono_anna',
+  'ryan',
+  'serena',
+  'sohee',
+  'uncle_fu',
+  'vivian',
+  'chelsie',
 ]);
 
 /**
@@ -94,80 +138,87 @@ const SPEAKERS = new Set([
  * @returns {Promise<Object>}
  */
 async function executeSSH(text, params) {
-  const host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  const remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
-  const venv = params.remoteVenv || process.env.TTS_VENV_PATH || `${remotePath}/venv`;
-  const device = params.device || process.env.PODCAST_TTS_DEVICE || 'cuda';
+  let host = params.remoteHost || process.env.TTS_REMOTE_HOST || '';
+  let remotePath = params.remotePath || process.env.TTS_REMOTE_PATH || '';
+  let venv = params.remoteVenv || process.env.TTS_REMOTE_VENV || `${remotePath}/venv`;
+  let device = params.device || process.env.PODCAST_TTS_DEVICE || 'cuda';
 
-  const outDir = params.outputDir || path.join(os.tmpdir(), 'agi-graph-tts');
-  const taskId = `tts_${Date.now()}`;
-  const localWav = path.join(outDir, `${taskId}.wav`);
-  const remoteTmpDir = '/tmp/agi-graph-tts';
+  let outDir = params.outputDir || path.join(os.tmpdir(), 'symbiote-node-tts');
+  let taskId = `tts_${Date.now()}`;
+  let localWav = path.join(outDir, `${taskId}.wav`);
+  let remoteTmpDir = '/tmp/symbiote-node-tts';
 
   try {
+    if (!host || !remotePath || !venv) {
+      throw new Error('TTS SSH mode requires remoteHost, remotePath, and remoteVenv configuration');
+    }
     await fs.mkdir(outDir, { recursive: true });
 
-    // Build batch task
-    const batchTask = [{
-      id: taskId,
-      text,
-      lang: params.language || 'es',
-      prompt: params.refAudio || null,
-      out: `${remoteTmpDir}/${taskId}.wav`,
-      exaggeration: params.exaggeration ?? 0,
-      cfg: params.cfg ?? 0.1,
-    }];
 
-    // If using built-in speaker (no refAudio), add speaker param
+    let batchTask = [
+      {
+        id: taskId,
+        text,
+        lang: params.language || 'es',
+        prompt: params.refAudio || null,
+        out: `${remoteTmpDir}/${taskId}.wav`,
+        exaggeration: params.exaggeration ?? 0,
+        cfg: params.cfg ?? 0.1,
+      },
+    ];
+
+
     if (!params.refAudio && SPEAKERS.has(params.speaker)) {
       batchTask[0].speaker = params.speaker;
     }
 
-    // Write local batch file
-    const batchFile = path.join(outDir, `${taskId}_batch.json`);
+
+    let batchFile = path.join(outDir, `${taskId}_batch.json`);
     await fs.writeFile(batchFile, JSON.stringify(batchTask, null, 2));
 
-    // Ensure remote dir + upload batch
-    execSync(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
-      encoding: 'utf-8', stdio: 'pipe', timeout: 10000,
+
+    await runCommandWithWatchdog(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
+      inactivityMs: 10000,
+      timeoutMs: 10000,
     });
 
-    const remoteBatch = `${remoteTmpDir}/${taskId}_batch.json`;
-    execSync(`scp "${batchFile}" "${host}:${remoteBatch}"`, {
-      encoding: 'utf-8', stdio: 'pipe', timeout: 30000,
+    let remoteBatch = `${remoteTmpDir}/${taskId}_batch.json`;
+    await runCommandWithWatchdog(`scp "${batchFile}" "${host}:${remoteBatch}"`, {
+      inactivityMs: 30000,
+      timeoutMs: 30000,
     });
 
     try {
-      // Run batch script
-      const pythonCmd = `${venv}/bin/python`;
-      const scriptPath = `${remotePath}/utils/generate_qwen3tts_batch.py`;
-      const cmd = `source "${venv}/bin/activate" && "${pythonCmd}" "${scriptPath}" --batch "${remoteBatch}" --device "${device}"`;
 
-      execSync(`ssh ${host} '${cmd}'`, {
-        encoding: 'utf-8',
+      let pythonCmd = `${venv}/bin/python`;
+      let scriptPath = `${remotePath}/utils/generate_qwen3tts_batch.py`;
+      let cmd = `source "${venv}/bin/activate" && "${pythonCmd}" "${scriptPath}" --batch "${remoteBatch}" --device "${device}"`;
+
+      await runCommandWithWatchdog(`ssh ${host} '${cmd}'`, {
         maxBuffer: 50 * 1024 * 1024,
-        timeout: params.timeout || 120000,
+        inactivityMs: params.timeout || 120000,
+        timeoutMs: params.timeout || 120000,
       });
 
-      // Download result
-      const remoteOut = `${remoteTmpDir}/${taskId}.wav`;
-      execSync(`scp "${host}:${remoteOut}" "${localWav}"`, {
-        encoding: 'utf-8', stdio: 'pipe', timeout: 30000,
+
+      let remoteOut = `${remoteTmpDir}/${taskId}.wav`;
+      await runCommandWithWatchdog(`scp "${host}:${remoteOut}" "${localWav}"`, {
+        inactivityMs: 30000,
+        timeoutMs: 30000,
       });
 
-      // Cleanup batch + remote output
-      await fs.unlink(batchFile).catch(() => { });
-      execSync(`ssh ${host} "rm -f ${remoteBatch} ${remoteOut}"`, {
-        encoding: 'utf-8', stdio: 'pipe', timeout: 5000,
-      }).toString();
+
+      await cleanupLocalFile(batchFile);
+      await runCommandWithWatchdog(`ssh ${host} "rm -f ${remoteBatch} ${remoteOut}"`, {
+        inactivityMs: 5000,
+        timeoutMs: 5000,
+      });
 
       return { audioPath: localWav, error: null };
-
     } catch (err) {
-      await fs.unlink(batchFile).catch(() => { });
+      await cleanupLocalFile(batchFile);
       return { audioPath: null, error: err.message };
     }
-
   } catch (err) {
     return { audioPath: null, error: err.message };
   }
@@ -180,15 +231,15 @@ async function executeSSH(text, params) {
  * @returns {Promise<Object>}
  */
 async function executeHTTP(text, params) {
-  const endpoint = params.endpoint || process.env.TTS_SERVER_URL || 'http://localhost:5008';
-  const outDir = params.outputDir || path.join(os.tmpdir(), 'agi-graph-tts');
-  const taskId = `tts_${Date.now()}`;
-  const outputPath = path.join(outDir, `${taskId}.wav`);
+  let endpoint = params.endpoint || process.env.TTS_SERVER_URL || 'http://localhost:5008';
+  let outDir = params.outputDir || path.join(os.tmpdir(), 'symbiote-node-tts');
+  let taskId = `tts_${Date.now()}`;
+  let outputPath = path.join(outDir, `${taskId}.wav`);
 
   try {
     await fs.mkdir(outDir, { recursive: true });
 
-    const body = {
+    let body = {
       text,
       language: params.language || 'es',
       speaker: params.speaker || 'vivian',
@@ -196,45 +247,44 @@ async function executeHTTP(text, params) {
       cfg: params.cfg ?? 0.1,
     };
 
-    // Add ref_audio for voice cloning
+
     if (params.refAudio) {
-      const refBuffer = await fs.readFile(params.refAudio);
+      let refBuffer = await fs.readFile(params.refAudio);
       body.ref_audio = refBuffer.toString('base64');
     }
 
-    const response = await fetch(`${endpoint}/synthesize`, {
+    let response = await fetch(`${endpoint}/synthesize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(params.timeout || 120000),
+      signal: requestSignal(params.timeout || 120000, params.signal),
     });
 
     if (!response.ok) {
       return { audioPath: null, error: `TTS API error: ${response.status}` };
     }
 
-    // Response is audio binary
-    const contentType = response.headers.get('content-type') || '';
+
+    let contentType = response.headers.get('content-type') || '';
 
     if (contentType.includes('audio') || contentType.includes('octet-stream')) {
-      const buffer = Buffer.from(await response.arrayBuffer());
+      let buffer = Buffer.from(await response.arrayBuffer());
       await fs.writeFile(outputPath, buffer);
       return { audioPath: outputPath, error: null };
     }
 
-    // JSON response with file path
-    const result = await response.json();
+
+    let result = await response.json();
     if (result.audio_path) {
       return { audioPath: result.audio_path, error: null };
     }
     if (result.audio) {
-      const buffer = Buffer.from(result.audio, 'base64');
+      let buffer = Buffer.from(result.audio, 'base64');
       await fs.writeFile(outputPath, buffer);
       return { audioPath: outputPath, error: null };
     }
 
     return { audioPath: null, error: 'Unexpected TTS response format' };
-
   } catch (err) {
     return { audioPath: null, error: err.message };
   }

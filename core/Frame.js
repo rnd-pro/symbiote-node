@@ -29,3 +29,5 @@ export class Frame {
     this.height = options.height || 300;
   }
 }
+
+export { Frame as default };

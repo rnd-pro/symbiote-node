@@ -10,16 +10,24 @@ import Symbiote from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { sidebarTemplate } from './LayoutSidebar.tpl.js';
 import { sidebarStyles } from './LayoutSidebar.css.js';
-import { navigate } from '../LayoutRouter/LayoutRouter.js';
 import './SidebarSection.js';
+import { translate } from '../../locale/index.js';
 
 const STORAGE_KEY_COLLAPSED = 'sn-sidebar-collapsed';
 const STORAGE_KEY_CONFIG = 'sn-sidebar-config';
 const STORAGE_KEY_WIDTH = 'sn-sidebar-width';
-const SIDEBAR_ICONS = ['chevron_left', 'tune'];
+const SIDEBAR_ICONS = ['chevron_left', 'restart_alt', 'tune'];
 
 export class LayoutSidebar extends Symbiote {
   static isoMode = true;
+
+  /**
+   * When true (default), sidebar subscribes to ROUTER/panel PubSub
+   * to auto-highlight active section. Set to false for multi-workspace
+   * scenarios where the host manages active section programmatically.
+   * @type {boolean}
+   */
+  routerSync = true;
 
   init$ = {
     '@disabled': false,
@@ -27,6 +35,7 @@ export class LayoutSidebar extends Symbiote {
     collapsed: false,
     editMode: false,
     sections: [],
+    resetAllTitle: translate('layout.resetAll'),
 
     onToggle: () => {
       if (this.#isDisabled()) return;
@@ -36,6 +45,30 @@ export class LayoutSidebar extends Symbiote {
     onToggleEditMode: () => {
       if (this.#isDisabled()) return;
       this.$.editMode = !this.$.editMode;
+    },
+
+    onResetAllLayouts: () => {
+
+      this.resetConfig();
+
+
+      if (typeof localStorage !== 'undefined') {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          let key = localStorage.key(i);
+          if (key && key.startsWith('pg-layout-v2-')) {
+            localStorage.removeItem(key);
+          }
+        }
+        localStorage.removeItem(STORAGE_KEY_WIDTH);
+      }
+
+
+      this.#clearSidebarWidth();
+
+
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     },
   };
 
@@ -49,7 +82,6 @@ export class LayoutSidebar extends Symbiote {
     this.sub('@disabled', () => this.#syncDisabled());
     this.sub('@sidebar-disabled', () => this.#syncDisabled());
 
-    // Reflect attributes
     this.sub('collapsed', (val) => {
       this.toggleAttribute('collapsed', val);
     });
@@ -57,54 +89,51 @@ export class LayoutSidebar extends Symbiote {
       this.toggleAttribute('edit-mode', val);
     });
 
-    // Restore collapsed state (default: collapsed)
+
     if (typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem(STORAGE_KEY_COLLAPSED);
+      let stored = localStorage.getItem(STORAGE_KEY_COLLAPSED);
       if (stored === null || stored === 'true') {
         this.$.collapsed = true;
       }
 
-      // Restore saved width
-      const savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
-      if (savedWidth) this.style.width = savedWidth + 'px';
+
+      let savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
+      if (savedWidth) this.#setSidebarWidth(savedWidth);
     }
 
-    // Persist collapsed state
+
     this.sub('collapsed', (val) => {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(STORAGE_KEY_COLLAPSED, String(val));
-        // Reset inline width when collapsing (CSS handles 48px)
+
         if (val) {
-          this.style.width = '';
-          this.style.minWidth = '';
+          this.#clearSidebarWidth();
         } else {
-          // Restore saved width when expanding
-          const w = localStorage.getItem(STORAGE_KEY_WIDTH);
+
+          let w = localStorage.getItem(STORAGE_KEY_WIDTH);
           if (w) {
-            this.style.width = w + 'px';
-            this.style.minWidth = w + 'px';
+            this.#setSidebarWidth(w);
           }
         }
       }
     });
 
-    // Resize drag handle
-    const handle = this.querySelector('.sb-resize-handle');
+
+    let handle = this.querySelector('.sb-resize-handle');
     if (handle) {
       let startX = 0;
       let startW = 0;
 
-      const onMove = (e) => {
-        const newWidth = Math.max(120, Math.min(600, startW + (e.clientX - startX)));
-        this.style.width = newWidth + 'px';
-        this.style.minWidth = newWidth + 'px';
-        this.style.transition = 'none';
+      let onMove = (e) => {
+        let newWidth = Math.max(120, Math.min(600, startW + (e.clientX - startX)));
+        this.#setSidebarWidth(newWidth);
+        this.#setResizeActive(true);
       };
 
-      const onUp = () => {
+      let onUp = () => {
         handle.classList.remove('dragging');
-        this.style.transition = '';
-        const w = this.offsetWidth;
+        this.#setResizeActive(false);
+        let w = this.offsetWidth;
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem(STORAGE_KEY_WIDTH, w);
         }
@@ -130,16 +159,18 @@ export class LayoutSidebar extends Symbiote {
   }
 
   #isDisabled() {
-    return this.hasAttribute('disabled')
-      || this.hasAttribute('sidebar-disabled')
-      || this.$['@disabled'] === true
-      || this.$['@disabled'] === 'true'
-      || this.$['@sidebar-disabled'] === true
-      || this.$['@sidebar-disabled'] === 'true';
+    return (
+      this.hasAttribute('disabled') ||
+      this.hasAttribute('sidebar-disabled') ||
+      this.$['@disabled'] === true ||
+      this.$['@disabled'] === 'true' ||
+      this.$['@sidebar-disabled'] === true ||
+      this.$['@sidebar-disabled'] === 'true'
+    );
   }
 
   #syncDisabled() {
-    const disabled = this.#isDisabled();
+    let disabled = this.#isDisabled();
     this.toggleAttribute('data-disabled', disabled);
     if (disabled) {
       this.setAttribute('aria-hidden', 'true');
@@ -156,34 +187,49 @@ export class LayoutSidebar extends Symbiote {
   /**
    * Configure sidebar sections
    * @param {Array<{id: string, icon: string, label: string}>} items
+   * @returns {void}
    */
   setSections(items) {
     this.#allSections = items;
     ensureMaterialSymbols(items.map((item) => item.icon));
 
-    // Load saved config (order + visibility)
-    const savedConfig = this.#loadConfig();
+
+    let savedConfig = this.#loadConfig();
     let ordered = items;
 
     if (savedConfig) {
-      // Reorder based on saved order
-      const orderMap = new Map(savedConfig.map((c, i) => [c.id, i]));
+
+      let orderMap = new Map(savedConfig.map((c, i) => [c.id, i]));
       ordered = [...items].sort((a, b) => {
-        const ai = orderMap.get(a.id) ?? 999;
-        const bi = orderMap.get(b.id) ?? 999;
+        let ai = orderMap.get(a.id) ?? 999;
+        let bi = orderMap.get(b.id) ?? 999;
         return ai - bi;
       });
     }
 
     this.#buildSections(ordered, savedConfig);
 
-    // Subscribe to route changes to update active section
-    this.sub('ROUTER/panel', (panel) => {
-      this.$.sections = this.$.sections.map((s) => ({
-        ...s,
-        isActive: s.sectionId === panel,
-      }));
-    });
+
+    if (this.routerSync) {
+      this.sub('ROUTER/panel', (panel) => {
+        this.$.sections = this.$.sections.map((s) => ({
+          ...s,
+          isActive: s.sectionId === panel,
+        }));
+      });
+    }
+  }
+
+  /**
+   * Programmatically set the active section (highlight).
+   * Use in multi-workspace scenarios where routerSync is disabled.
+   * @param {string} sectionId — section ID to mark active
+   */
+  setActiveSection(sectionId) {
+    this.$.sections = this.$.sections.map((s) => ({
+      ...s,
+      isActive: s.sectionId === sectionId,
+    }));
   }
 
   /**
@@ -192,9 +238,7 @@ export class LayoutSidebar extends Symbiote {
    * @param {Array<{id: string, visible: boolean}>|null} config
    */
   #buildSections(items, config) {
-    const visibilityMap = config
-      ? new Map(config.map((c) => [c.id, c.visible]))
-      : null;
+    let visibilityMap = config ? new Map(config.map((c) => [c.id, c.visible])) : null;
 
     this.$.sections = items.map((item) => ({
       sectionId: item.id,
@@ -203,13 +247,14 @@ export class LayoutSidebar extends Symbiote {
       isActive: false,
       isVisible: visibilityMap ? (visibilityMap.get(item.id) ?? true) : true,
       isExpanded: false,
-      subPanels: [],
+      subPanels: item.subPanels || [],
     }));
   }
 
   /**
    * Toggle visibility of a section
    * @param {string} sectionId
+   * @returns {void}
    */
   toggleVisibility(sectionId) {
     this.$.sections = this.$.sections.map((s) => {
@@ -225,8 +270,8 @@ export class LayoutSidebar extends Symbiote {
    * @param {number} toIndex
    */
   moveSection(fromIndex, toIndex) {
-    const arr = [...this.$.sections];
-    const [moved] = arr.splice(fromIndex, 1);
+    let arr = [...this.$.sections];
+    let [moved] = arr.splice(fromIndex, 1);
     arr.splice(toIndex, 0, moved);
     this.$.sections = arr;
     this.#saveConfig();
@@ -246,7 +291,7 @@ export class LayoutSidebar extends Symbiote {
    * Save current section order and visibility
    */
   #saveConfig() {
-    const config = this.$.sections.map((s) => ({
+    let config = this.$.sections.map((s) => ({
       id: s.sectionId,
       visible: s.isVisible,
     }));
@@ -262,7 +307,7 @@ export class LayoutSidebar extends Symbiote {
   #loadConfig() {
     try {
       if (typeof localStorage !== 'undefined') {
-        const raw = localStorage.getItem(STORAGE_KEY_CONFIG);
+        let raw = localStorage.getItem(STORAGE_KEY_CONFIG);
         return raw ? JSON.parse(raw) : null;
       }
     } catch {
@@ -275,6 +320,7 @@ export class LayoutSidebar extends Symbiote {
    * Update sub-panel list for a section
    * @param {string} sectionId
    * @param {Array<{title: string, icon: string}>} panels
+   * @returns {void}
    */
   updateSubPanels(sectionId, panels) {
     this.$.sections = this.$.sections.map((s) => {
@@ -288,11 +334,32 @@ export class LayoutSidebar extends Symbiote {
    * @param {string[]} disabledIds - Section IDs to disable
    */
   setDisabledSections(disabledIds) {
-    const disabledSet = new Set(disabledIds);
+    let disabledSet = new Set(disabledIds);
     this.$.sections = this.$.sections.map((s) => ({
       ...s,
       isDisabled: disabledSet.has(s.sectionId),
     }));
+  }
+
+  #setSidebarWidth(width) {
+    let style = this.style;
+    style.setProperty('width', `${width}px`);
+    style.setProperty('min-width', `${width}px`);
+  }
+
+  #clearSidebarWidth() {
+    let style = this.style;
+    style.removeProperty('width');
+    style.removeProperty('min-width');
+  }
+
+  #setResizeActive(active) {
+    let style = this.style;
+    if (active) {
+      style.setProperty('transition', 'none');
+    } else {
+      style.removeProperty('transition');
+    }
   }
 }
 

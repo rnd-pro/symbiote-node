@@ -1,3 +1,4 @@
+/* global document */
 /**
  * ConnectionRenderer — SVG connection path manager
  *
@@ -12,7 +13,6 @@ import { getShape } from '../shapes/index.js';
 import { routePcbTrace } from './PcbRouter.js';
 
 export class ConnectionRenderer {
-
   /** @type {Map<string, import('../core/Connection.js').Connection>} */
   #connectionData = new Map();
 
@@ -43,10 +43,12 @@ export class ConnectionRenderer {
   /**
    * @param {object} config
    * @param {SVGElement} config.svgLayer
+   * @param {SVGElement} [config.dotLayer]
    * @param {Map<string, HTMLElement>} config.nodeViews
    * @param {import('../core/Editor.js').NodeEditor} config.editor
    * @param {function} config.onConnectionClick - (connId, event)
    * @param {function} config.getZoom - Returns current zoom level
+   * @param {function} [config.onDotDrag] - Callback for dot dragging
    */
   constructor({ svgLayer, dotLayer, nodeViews, editor, onConnectionClick, getZoom, onDotDrag }) {
     this.#svgLayer = svgLayer;
@@ -110,10 +112,10 @@ export class ConnectionRenderer {
    */
   add(conn) {
     this.#connectionData.set(conn.id, conn);
-    // Remove free dots for now-connected ports
+
     this.removeFreeDot(conn.from, conn.out, 'output');
     this.removeFreeDot(conn.to, conn.in, 'input');
-    // Full re-render for affected nodes (slot pool needs full context)
+
     this.#fullRerenderForNodes(new Set([conn.from, conn.to]));
   }
 
@@ -145,8 +147,8 @@ export class ConnectionRenderer {
    * @param {Set<string>} nodeIds
    */
   #fullRerenderForNodes(nodeIds) {
-    const allNodes = new Set(nodeIds);
-    const conns = [];
+    let allNodes = new Set(nodeIds);
+    let conns = [];
     for (const [, conn] of this.#connectionData) {
       if (nodeIds.has(conn.from) || nodeIds.has(conn.to)) {
         allNodes.add(conn.from);
@@ -155,7 +157,7 @@ export class ConnectionRenderer {
       }
     }
     for (const nid of allNodes) {
-      const el = this.#nodeViews.get(nid);
+      let el = this.#nodeViews.get(nid);
       if (el) {
         el._usedCoords = [];
         el._slotCache = new Map();
@@ -177,26 +179,28 @@ export class ConnectionRenderer {
    * @param {import('../core/Connection.js').Connection} conn
    */
   remove(conn) {
-    const fromId = conn.from;
-    const toId = conn.to;
+    let fromId = conn.from;
+    let toId = conn.to;
     this.#connectionData.delete(conn.id);
-    const path = this.#svgLayer.querySelector(`[data-conn-id="${conn.id}"]`);
+    let path = this.#svgLayer.querySelector(`[data-conn-id="${conn.id}"]`);
     if (path) {
-      // Fade out using existing CSS opacity transition
+
       path.style.opacity = '0';
       path.addEventListener('transitionend', () => path.remove(), { once: true });
-      // Fallback removal if transition doesn't fire
-      setTimeout(() => { if (path.parentNode) path.remove(); }, 200);
+
+      setTimeout(() => {
+        if (path.parentNode) path.remove();
+      }, 200);
     }
-    // Remove endpoint dots and arrow
+
     for (const end of ['start', 'end']) {
-      const dot = this.#dotLayer.querySelector(`[data-conn-dot="${conn.id}-${end}"]`);
+      let dot = this.#dotLayer.querySelector(`[data-conn-dot="${conn.id}-${end}"]`);
       if (dot) dot.remove();
     }
-    const arrow = this.#svgLayer.querySelector(`[data-conn-arrow="${conn.id}"]`);
+    let arrow = this.#svgLayer.querySelector(`[data-conn-arrow="${conn.id}"]`);
     if (arrow) arrow.remove();
 
-    // Re-render free dots for freed ports
+
     this.renderFreeDots(fromId);
     this.renderFreeDots(toId);
   }
@@ -206,15 +210,15 @@ export class ConnectionRenderer {
    * @param {Set<string>} compatibleNodeIds - set of node IDs that have compatible ports
    */
   highlightDotsForNodes(compatibleNodeIds) {
-    // Highlight connected dots
-    const connDots = this.#dotLayer.querySelectorAll('.sn-conn-dot');
+
+    let connDots = this.#dotLayer.querySelectorAll('.sn-conn-dot');
     for (const dot of connDots) {
-      const dotId = dot.getAttribute('data-conn-dot') || '';
-      const connId = dotId.replace(/-(?:start|end)$/, '');
-      const conn = this.#connectionData.get(connId);
+      let dotId = dot.getAttribute('data-conn-dot') || '';
+      let connId = dotId.replace(/-(?:start|end)$/, '');
+      let conn = this.#connectionData.get(connId);
       if (!conn) continue;
-      const end = dotId.endsWith('-start') ? 'start' : 'end';
-      const nodeId = end === 'start' ? conn.from : conn.to;
+      let end = dotId.endsWith('-start') ? 'start' : 'end';
+      let nodeId = end === 'start' ? conn.from : conn.to;
       if (compatibleNodeIds.has(nodeId)) {
         dot.classList.add('sn-dot-hint');
       } else {
@@ -222,10 +226,10 @@ export class ConnectionRenderer {
       }
     }
 
-    // Highlight free dots
-    const freeDots = this.#dotLayer.querySelectorAll('.sn-free-dot');
+
+    let freeDots = this.#dotLayer.querySelectorAll('.sn-free-dot');
     for (const dot of freeDots) {
-      const nodeId = dot.getAttribute('data-node-id');
+      let nodeId = dot.getAttribute('data-node-id');
       if (compatibleNodeIds.has(nodeId)) {
         dot.classList.add('sn-dot-hint');
       } else {
@@ -238,7 +242,7 @@ export class ConnectionRenderer {
    * Clear all dot highlights
    */
   clearDotHighlights() {
-    const dots = this.#dotLayer.querySelectorAll('.sn-dot-hint');
+    let dots = this.#dotLayer.querySelectorAll('.sn-dot-hint');
     for (const dot of dots) {
       dot.classList.remove('sn-dot-hint');
     }
@@ -249,20 +253,19 @@ export class ConnectionRenderer {
    * @param {string} nodeId
    */
   updateForNode(nodeId) {
-    // Only clear and recalculate the DRAGGED node.
-    // Non-dragged nodes use cached slot assignments (no jitter).
-    const draggedEl = this.#nodeViews.get(nodeId);
+
+
+    let draggedEl = this.#nodeViews.get(nodeId);
     if (draggedEl) {
       draggedEl._usedCoords = [];
       draggedEl._slotCache = new Map();
     }
 
-    // Collect touched connections for re-render
-    const touchedConns = [];
+
+    let touchedConns = [];
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId || conn.to === nodeId) {
         touchedConns.push(conn);
-
       }
     }
 
@@ -277,62 +280,62 @@ export class ConnectionRenderer {
     }
   }
 
-  static _refreshCycleCount = 0;
-  static _lastRefreshTime = 0;
-
   /**
    * Clear all caches and re-render every connection + free dots.
    * Call after initial node positioning to let SVG connectors settle.
    */
   refreshAll() {
-    const t0 = performance.now();
-    ConnectionRenderer._refreshCycleCount = (ConnectionRenderer._refreshCycleCount || 0) + 1;
-    
     this.#clearAllSlots();
 
-    // Clear stale free dots from previous render
-    const staleDots = this.#dotLayer.querySelectorAll('.sn-free-dot');
+
+    let staleDots = this.#dotLayer.querySelectorAll('.sn-free-dot');
     for (const dot of staleDots) dot.remove();
 
-    // Detach layers from layout tree to prevent O(N²) thrashing during Read/Write mix
-    const originalSvgDisplay = this.#svgLayer.style.display;
-    const originalDotDisplay = this.#dotLayer.style.display;
+
+    let originalSvgDisplay = this.#svgLayer.style.display;
+    let originalDotDisplay = this.#dotLayer.style.display;
     this.#svgLayer.style.display = 'none';
     this.#dotLayer.style.display = 'none';
 
-    // Pre-cache node rects for routing (prevents O(N^2) Layout Thrashing)
-    this._nodeRectCache = this.#buildNodeRectCache();
 
-    // ─── Three-Pass Pipeline: Side-Based Pin Assignment ───
-    // Pass 1: Assign sides and distribute pins
-    // Pass 2: Render connections (pins from _slotCache)
-    // Pass 3: Render free dots on remaining edges
+    this._nodeRectCache = new Map();
+    for (const [nid, el] of this.#nodeViews) {
+      if (el) {
+        this._nodeRectCache.set(nid, {
+          id: nid,
+          x: el._position?.x || 0,
+          y: el._position?.y || 0,
+          w: el.offsetWidth || 180,
+          h: el.offsetHeight || 100,
+        });
+      }
+    }
 
-    const conns = Array.from(this.#connectionData.values());
 
-    // ─── Pass 1: Side-Based Pin Assignment ───
-    // Group all connection endpoints by node → then by side
+    let conns = Array.from(this.#connectionData.values());
+
+
     /** @type {Map<string, Array<{portKey: string, portSide: string, targetPos: {x:number, y:number}}>>} */
-    const nodeJobs = new Map();
+    let nodeJobs = new Map();
 
     for (const conn of conns) {
-      const fromEl = this.#nodeViews.get(conn.from);
-      const toEl = this.#nodeViews.get(conn.to);
+      let fromEl = this.#nodeViews.get(conn.from);
+      let toEl = this.#nodeViews.get(conn.to);
       if (!fromEl || !toEl) continue;
 
-      const fromPos = fromEl._position;
-      const toPos = toEl._position;
+      let fromPos = fromEl._position;
+      let toPos = toEl._position;
       if (!fromPos || !toPos) continue;
       const toSize = this.#getNodeSize(toEl, 180, 100);
       const fromSize = this.#getNodeSize(fromEl, 180, 100);
 
-      const toCenter = {
-        x: toPos.x + toSize.width / 2,
-        y: toPos.y + toSize.height / 2,
+      let toCenter = {
+        x: toPos.x + (toEl._cachedW || 180) / 2,
+        y: toPos.y + (toEl._cachedH || 100) / 2,
       };
-      const fromCenter = {
-        x: fromPos.x + fromSize.width / 2,
-        y: fromPos.y + fromSize.height / 2,
+      let fromCenter = {
+        x: fromPos.x + (fromEl._cachedW || 180) / 2,
+        y: fromPos.y + (fromEl._cachedH || 100) / 2,
       };
 
       if (!nodeJobs.has(conn.from)) nodeJobs.set(conn.from, []);
@@ -342,29 +345,29 @@ export class ConnectionRenderer {
       nodeJobs.get(conn.to).push({ portKey: conn.in, portSide: 'input', targetPos: fromCenter });
     }
 
-    // For each node: determine side per connection, group by side, distribute pins
+
     for (const [nodeId, jobs] of nodeJobs) {
-      const el = this.#nodeViews.get(nodeId);
+      let el = this.#nodeViews.get(nodeId);
       if (!el?._position) continue;
 
-      const shape = getShape(el.getAttribute('node-shape'));
+      let shape = getShape(el.getAttribute('node-shape'));
       if (!shape?.getSidePosition) continue;
 
-      const size = this.#getNodeSize(el, 180, 100);
-      const cx = el._position.x + size.width / 2;
-      const cy = el._position.y + size.height / 2;
+      let size = { width: el._cachedW || 180, height: el._cachedH || 100 };
+      let cx = el._position.x + size.width / 2;
+      let cy = el._position.y + size.height / 2;
 
       if (!el._slotCache) el._slotCache = new Map();
 
-      // Step 1: Determine side for each connection
-      /** @type {Map<string, Array<{portKey: string, portSide: string, angle: number}>>} */
-      const sideBuckets = new Map();
-      for (const job of jobs) {
-        const dx = job.targetPos.x - cx;
-        const dy = job.targetPos.y - cy;
-        const angle = Math.atan2(dy, dx);
 
-        // Determine side from angle quadrant
+      /** @type {Map<string, Array<{portKey: string, portSide: string, angle: number}>>} */
+      let sideBuckets = new Map();
+      for (const job of jobs) {
+        let dx = job.targetPos.x - cx;
+        let dy = job.targetPos.y - cy;
+        let angle = Math.atan2(dy, dx);
+
+
         let nodeSide;
         if (Math.abs(dx) > Math.abs(dy)) {
           nodeSide = dx > 0 ? 'right' : 'left';
@@ -376,97 +379,46 @@ export class ConnectionRenderer {
         sideBuckets.get(nodeSide).push({ portKey: job.portKey, portSide: job.portSide, angle });
       }
 
-      // Step 2: Within each side, sort by perpendicular angle and distribute
+
       for (const [nodeSide, bucket] of sideBuckets) {
-        // Sort by perpendicular component for natural spacing
-        // For left/right sides: sort by Y (angle's vertical component)
-        // For top/bottom sides: sort by X (angle's horizontal component)
+
+
         if (nodeSide === 'left' || nodeSide === 'right') {
           bucket.sort((a, b) => Math.sin(a.angle) - Math.sin(b.angle));
         } else {
           bucket.sort((a, b) => Math.cos(a.angle) - Math.cos(b.angle));
         }
 
-        // Distribute pins evenly along the side edge
-        const total = bucket.length;
-        bucket.forEach((item, index) => {
-          const t = total === 1 ? 0.5 : index / (total - 1);
-          const pos = shape.getSidePosition(nodeSide, t, size);
-          const cacheKey = `${item.portKey}:${item.portSide}`;
-          el._slotCache.set(cacheKey, { x: pos.x, y: pos.y, angle: pos.angle });
 
-          if (ConnectionRenderer.debug) {
-            const label = el._nodeData?.label || nodeId;
-            console.log(`[PIN] ${label} | ${item.portSide}:${item.portKey} → side=${nodeSide} t=${t.toFixed(2)} pos=(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}) angle=${pos.angle}°`);
-          }
+        let total = bucket.length;
+        bucket.forEach((item, index) => {
+          let t = total === 1 ? 0.5 : index / (total - 1);
+          let pos = shape.getSidePosition(nodeSide, t, size);
+          let cacheKey = `${item.portKey}:${item.portSide}`;
+          el._slotCache.set(cacheKey, { x: pos.x, y: pos.y, angle: pos.angle });
         });
       }
     }
 
-    // ─── Pass 2: Render connections (pins pre-assigned from _slotCache) ───
+
     for (const conn of conns) {
       this.#render(conn);
     }
 
-    // ─── Pass 3: Render free dots for SVG nodes ───
+
     for (const [nodeId, el] of this.#nodeViews) {
       if (el.getAttribute('data-svg-shape')) {
         this.renderFreeDots(nodeId);
       }
     }
 
-    // ─── Final Debug Pass: Inter-Trace Overlaps ───
-    if (ConnectionRenderer.debug && this._allSegments) {
-      let overlaps = 0;
-      for (let i = 0; i < this._allSegments.length; i++) {
-        for (let j = i + 1; j < this._allSegments.length; j++) {
-          const s1 = this._allSegments[i];
-          const s2 = this._allSegments[j];
-          if (s1.connId === s2.connId) continue;
-          
-          // Check if both are horizontal
-          if (s1.p1.y === s1.p2.y && s2.p1.y === s2.p2.y && s1.p1.y === s2.p1.y) {
-            const minX1 = Math.min(s1.p1.x, s1.p2.x), maxX1 = Math.max(s1.p1.x, s1.p2.x);
-            const minX2 = Math.min(s2.p1.x, s2.p2.x), maxX2 = Math.max(s2.p1.x, s2.p2.x);
-            if (Math.max(minX1, minX2) + 5 < Math.min(maxX1, maxX2)) {
-              console.warn(`[PCB DEBUG] Trace Overlap (Horizontal) Y=${s1.p1.y}: conn[${s1.connId}] overlaps conn[${s2.connId}]`);
-              overlaps++;
-            }
-          }
-          // Check if both are vertical
-          if (s1.p1.x === s1.p2.x && s2.p1.x === s2.p2.x && s1.p1.x === s2.p1.x) {
-            const minY1 = Math.min(s1.p1.y, s1.p2.y), maxY1 = Math.max(s1.p1.y, s1.p2.y);
-            const minY2 = Math.min(s2.p1.y, s2.p2.y), maxY2 = Math.max(s2.p1.y, s2.p2.y);
-            if (Math.max(minY1, minY2) + 5 < Math.min(maxY1, maxY2)) {
-              console.warn(`[PCB DEBUG] Trace Overlap (Vertical) X=${s1.p1.x}: conn[${s1.connId}] overlaps conn[${s2.connId}]`);
-              overlaps++;
-            }
-          }
-        }
-      }
-      if (overlaps > 0) console.warn(`[PCB DEBUG] Found ${overlaps} inter-trace overlaps.`);
-    }
     this._allSegments = null;
     this._nodeRectCache = null;
 
-    // Restore layers
+
     this.#svgLayer.style.display = originalSvgDisplay;
     this.#dotLayer.style.display = originalDotDisplay;
 
-    // ─── Performance Monitoring ───
-    if (ConnectionRenderer.debug) {
-      const t1 = performance.now();
-      const mem = (performance?.memory?.usedJSHeapSize) 
-        ? (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2) + 'MB' 
-        : 'N/A';
-      console.log(`[PCB PERF] refreshAll cycle #${ConnectionRenderer._refreshCycleCount} took ${(t1 - t0).toFixed(2)}ms | Mem: ${mem}`);
-      
-      const dt = t0 - (ConnectionRenderer._lastRefreshTime || 0);
-      if (ConnectionRenderer._lastRefreshTime > 0 && dt < 16) {
-        console.warn(`[PCB PERF] High refresh rate detected! dt=${dt.toFixed(2)}ms (possible rendering loop or layout oscillation)`);
-      }
-      ConnectionRenderer._lastRefreshTime = t0;
-    }
   }
 
   /**
@@ -475,7 +427,7 @@ export class ConnectionRenderer {
    * @param {boolean} active
    */
   setFlowing(connId, active) {
-    const path = this.#svgLayer.querySelector(`[data-conn-id="${connId}"]`);
+    let path = this.#svgLayer.querySelector(`[data-conn-id="${connId}"]`);
     if (!path) return;
     if (active) {
       path.setAttribute('data-flowing', '');
@@ -506,9 +458,10 @@ export class ConnectionRenderer {
     }
   }
 
-
   /** @returns {'bezier'|'orthogonal'|'straight'} */
-  get pathStyle() { return this.#pathStyle; }
+  get pathStyle() {
+    return this.#pathStyle;
+  }
 
   /**
    * Get socket offset relative to graph-node.
@@ -522,136 +475,133 @@ export class ConnectionRenderer {
    * @returns {{ x: number, y: number }}
    */
   getSocketOffset(nodeEl, portKey, side, targetPos) {
-    // SVG shapes: compute edge position mathematically
-    const shape = getShape(nodeEl.getAttribute('node-shape'));
-    const nodeData = nodeEl._nodeData;
-    if (shape && shape.pathData && nodeData) {
-      const size = this.#getNodeSize(nodeEl, 180, 100);
 
-      // Dynamic mode — side-based pin placement
+    let shape = getShape(nodeEl.getAttribute('node-shape'));
+    let nodeData = nodeEl._nodeData;
+    if (shape && shape.pathData && nodeData) {
+      let size = { width: nodeEl._cachedW || 180, height: nodeEl._cachedH || 100 };
+
+
       if (targetPos && shape.getSidePosition) {
-        // Check cache first (set by refreshAll two-pass pipeline)
+
         if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
-        const cacheKey = `${portKey}:${side}`;
+        let cacheKey = `${portKey}:${side}`;
         if (nodeEl._slotCache.has(cacheKey)) {
           return nodeEl._slotCache.get(cacheKey);
         }
 
-        // Fallback: immediate side-based calculation (for single-connection render)
-        const nodePos = nodeEl._position;
-        const cx = nodePos.x + size.width / 2;
-        const cy = nodePos.y + size.height / 2;
-        const dx = targetPos.x - cx;
-        const dy = targetPos.y - cy;
 
-        // Determine side from angle to target
-        const nodeSide = Math.abs(dx) > Math.abs(dy)
-          ? (dx > 0 ? 'right' : 'left')
-          : (dy > 0 ? 'bottom' : 'top');
+        let nodePos = nodeEl._position;
+        let cx = nodePos.x + size.width / 2;
+        let cy = nodePos.y + size.height / 2;
+        let dx = targetPos.x - cx;
+        let dy = targetPos.y - cy;
 
-        const pos = shape.getSidePosition(nodeSide, 0.5, size);
-        const result = { x: pos.x, y: pos.y, angle: pos.angle };
+
+        let nodeSide =
+          Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'bottom' : 'top';
+
+        let pos = shape.getSidePosition(nodeSide, 0.5, size);
+        let result = { x: pos.x, y: pos.y, angle: pos.angle };
         nodeEl._slotCache.set(cacheKey, result);
         return result;
       }
 
-      // Also support getEdgePoint fallback with smart routing
+
       if (targetPos && shape.getEdgePoint) {
-        const ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
-        const keys = ports ? Object.keys(ports) : [portKey];
-        const index = keys.indexOf(portKey);
-        const total = keys.length;
+        let ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
+        let keys = ports ? Object.keys(ports) : [portKey];
+        let index = keys.indexOf(portKey);
+        let total = keys.length;
 
-        const nodePos = nodeEl._position;
-        const cx = nodePos.x + size.width / 2;
-        const cy = nodePos.y + size.height / 2;
-        const baseAngle = Math.atan2(targetPos.y - cy, targetPos.x - cx);
+        let nodePos = nodeEl._position;
+        let cx = nodePos.x + size.width / 2;
+        let cy = nodePos.y + size.height / 2;
+        let baseAngle = Math.atan2(targetPos.y - cy, targetPos.x - cx);
 
-        // 1. Separate input/output zones: gap between types
-        const sideGap = Math.PI / 6; // 30° gap = one full slot between input/output
-        const adjustedBase = baseAngle + (side === 'output' ? -sideGap : sideGap);
 
-        // 2. Anti-crossing: reverse port order based on perpendicular direction
-        const dx = targetPos.x - cx;
-        const dy = targetPos.y - cy;
-        const shouldReverse = (side === 'output') ? (dy < 0) : (dy > 0);
-        const effectiveIndex = shouldReverse ? (total - 1 - index) : index;
+        let sideGap = Math.PI / 6;
+        let adjustedBase = baseAngle + (side === 'output' ? -sideGap : sideGap);
 
-        // 3. Spread ports around adjusted base angle
+
+        let dy = targetPos.y - cy;
+        let shouldReverse = side === 'output' ? dy < 0 : dy > 0;
+        let effectiveIndex = shouldReverse ? total - 1 - index : index;
+
+
         let angle = adjustedBase;
         if (total > 1) {
-          const segment = (2 * Math.PI) / (total * 2);
-          const offset = (effectiveIndex - (total - 1) / 2) * segment;
+          let segment = (2 * Math.PI) / (total * 2);
+          let offset = (effectiveIndex - (total - 1) / 2) * segment;
           angle = adjustedBase + offset;
         }
 
-        // 4. Quantize to 15° grid for stable discrete movement
-        const step = Math.PI / 12; // 15° grid
+
+        let step = Math.PI / 12;
         angle = Math.round(angle / step) * step;
 
-        // Check cache first
+
         if (!nodeEl._slotCache) nodeEl._slotCache = new Map();
-        const cacheKey = `${portKey}:${side}`;
+        let cacheKey = `${portKey}:${side}`;
         if (nodeEl._slotCache.has(cacheKey)) {
           return nodeEl._slotCache.get(cacheKey);
         }
 
-        // 5. Collision avoidance by PIXEL COORDINATES
+
         if (!nodeEl._usedCoords) nodeEl._usedCoords = [];
         const MIN_PIX = 5;
         let nudged = angle;
         let attempts = 0;
         while (attempts < 24) {
-          const testPos = shape.getEdgePoint(nudged, size);
-          const tooClose = nodeEl._usedCoords.some(
-            c => Math.abs(testPos.x - c.x) < MIN_PIX && Math.abs(testPos.y - c.y) < MIN_PIX
+          let testPos = shape.getEdgePoint(nudged, size);
+          let tooClose = nodeEl._usedCoords.some(
+            (c) => Math.abs(testPos.x - c.x) < MIN_PIX && Math.abs(testPos.y - c.y) < MIN_PIX
           );
           if (!tooClose) break;
           nudged += step;
           attempts++;
         }
 
-        const pos = shape.getEdgePoint(nudged, size);
+        let pos = shape.getEdgePoint(nudged, size);
         nodeEl._usedCoords.push({ x: pos.x, y: pos.y });
-        const result = { x: pos.x, y: pos.y, angle: pos.angle };
+        let result = { x: pos.x, y: pos.y, angle: pos.angle };
         nodeEl._slotCache.set(cacheKey, result);
         return result;
       }
-      // Fixed mode: distribute ports at preset angles
-      const ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
+
+      let ports = side === 'output' ? nodeData.outputs : nodeData.inputs;
       if (ports) {
-        const keys = Object.keys(ports);
-        const index = keys.indexOf(portKey);
-        const total = keys.length;
+        let keys = Object.keys(ports);
+        let index = keys.indexOf(portKey);
+        let total = keys.length;
         if (index >= 0) {
-          const pos = shape.getSocketPosition(side, index, total, size);
+          let pos = shape.getSocketPosition(side, index, total, size);
           return { x: pos.x, y: pos.y };
         }
       }
     }
 
-    // Fast path: if node is culled, skip forced layout resolution
+
     if (nodeEl.style.contentVisibility === 'hidden') {
       return {
-        x: side === 'output' ? (nodeEl._cachedW || 180) : 0,
+        x: side === 'output' ? nodeEl._cachedW || 180 : 0,
         y: (nodeEl._cachedH || 100) / 2,
       };
     }
 
-    // Standard shapes: read from DOM socket elements
-    const container = side === 'output'
-      ? nodeEl.querySelector('.outputs')
-      : nodeEl.querySelector('.inputs');
+
+    let container =
+      side === 'output' ? nodeEl.querySelector('.outputs') : nodeEl.querySelector('.inputs');
 
     if (container) {
-      const portItems = container.querySelectorAll('port-item');
+      let portItems = container.querySelectorAll('port-item');
       for (const portItem of portItems) {
         if (portItem.$.key === portKey) {
-          const socket = portItem.querySelector('.sn-socket');
+          let socket = portItem.querySelector('.sn-socket');
           if (socket) {
-            const nodeRect = nodeEl.getBoundingClientRect();
-            const socketRect = socket.getBoundingClientRect();
-            const z = this.#getZoom();
+            let nodeRect = nodeEl.getBoundingClientRect();
+            let socketRect = socket.getBoundingClientRect();
+            let z = this.#getZoom();
             return {
               x: (socketRect.left - nodeRect.left + socketRect.width / 2) / z,
               y: (socketRect.top - nodeRect.top + socketRect.height / 2) / z,
@@ -662,7 +612,7 @@ export class ConnectionRenderer {
     }
 
     return {
-      x: side === 'output' ? (nodeEl._cachedW || nodeEl.offsetWidth || 180) : 0,
+      x: side === 'output' ? nodeEl._cachedW || nodeEl.offsetWidth || 180 : 0,
       y: (nodeEl._cachedH || nodeEl.offsetHeight || 100) / 2,
     };
   }
@@ -670,206 +620,209 @@ export class ConnectionRenderer {
   /**
    * Render a single connection SVG path with tangent-aware Bézier and gradient coloring
    * @param {import('../core/Connection.js').Connection} conn
+   * @returns {void}
    */
-  #render(conn, draggedNodeId = null) {
-    const fromEl = this.#nodeViews.get(conn.from);
-    const toEl = this.#nodeViews.get(conn.to);
+  #render(conn) {
+    let fromEl = this.#nodeViews.get(conn.from);
+    let toEl = this.#nodeViews.get(conn.to);
     if (!fromEl || !toEl) return;
 
-    const fromPos = fromEl._position;
-    const toPos = toEl._position;
+    let fromPos = fromEl._position;
+    let toPos = toEl._position;
 
-    // Compute centers for dynamic edge positioning on SVG shapes
-    const fromSizeForRender = this.#getNodeSize(fromEl, 180, 100);
-    const toSizeForRender = this.#getNodeSize(toEl, 180, 100);
-    const fromW = fromSizeForRender.width;
-    const fromH = fromSizeForRender.height;
-    const toW = toSizeForRender.width;
-    const toH = toSizeForRender.height;
-    const fromCenter = {
+
+    let fromW = fromEl._cachedW || fromEl.offsetWidth || 180;
+    let fromH = fromEl._cachedH || fromEl.offsetHeight || 100;
+    let toW = toEl._cachedW || toEl.offsetWidth || 180;
+    let toH = toEl._cachedH || toEl.offsetHeight || 100;
+    let fromCenter = {
       x: fromPos.x + fromW / 2,
       y: fromPos.y + fromH / 2,
     };
-    const toCenter = {
+    let toCenter = {
       x: toPos.x + toW / 2,
       y: toPos.y + toH / 2,
     };
 
-    // Always recalculate both sides (slot pool makes this cheap and deterministic)
-    const fromOffset = this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
-    const toOffset = this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
 
-    const startX = fromPos.x + fromOffset.x;
-    const startY = fromPos.y + fromOffset.y;
-    const endX = toPos.x + toOffset.x;
-    const endY = toPos.y + toOffset.y;
+    let fromOffset = this.getSocketOffset(fromEl, conn.out, 'output', toCenter);
+    let toOffset = this.getSocketOffset(toEl, conn.in, 'input', fromCenter);
 
-    // Tangent-aware Bézier using shape angles
-    const fromNode = this.#editor.getNode(conn.from);
-    const toNode = this.#editor.getNode(conn.to);
-    const fromShape = getShape(fromNode?.shape);
-    const toShape = getShape(toNode?.shape);
+    let startX = fromPos.x + fromOffset.x;
+    let startY = fromPos.y + fromOffset.y;
+    let endX = toPos.x + toOffset.x;
+    let endY = toPos.y + toOffset.y;
 
-    const fromSize = { width: fromW, height: fromH };
-    const toSize = { width: toW, height: toH };
 
-    // Generate path based on style
+    let fromNode = this.#editor.getNode(conn.from);
+    let toNode = this.#editor.getNode(conn.to);
+    let fromShape = getShape(fromNode?.shape);
+    let toShape = getShape(toNode?.shape);
+
+    let fromSize = { width: fromW, height: fromH };
+    let toSize = { width: toW, height: toH };
+
+
     let d;
     if (this.#pathStyle === 'straight') {
       d = `M ${startX} ${startY} L ${endX} ${endY}`;
     } else if (this.#pathStyle === 'orthogonal') {
-      const connKeys = Array.from(this.#connectionData.keys());
-      const connIndex = connKeys.indexOf(conn.id);
-      const traceOffset = (connIndex > -1 ? connIndex % 10 : 0) * 4;
+      let connKeys = Array.from(this.#connectionData.keys());
+      let connIndex = connKeys.indexOf(conn.id);
+      let traceOffset = (connIndex > -1 ? connIndex % 10 : 0) * 4;
 
-      const fromAngle = fromOffset.angle !== undefined ? fromOffset.angle : 0;
-      const toAngle = toOffset.angle !== undefined ? toOffset.angle : 180;
+      let fromAngle = fromOffset.angle !== undefined ? fromOffset.angle : 0;
+      let toAngle = toOffset.angle !== undefined ? toOffset.angle : 180;
 
-      const stubLen = 20;
-      const getDxDy = (deg) => ({
-        dx: Math.round(Math.cos(deg * Math.PI / 180)),
-        dy: Math.round(Math.sin(deg * Math.PI / 180))
+      let stubLen = 20;
+      let getDxDy = (deg) => ({
+        dx: Math.round(Math.cos((deg * Math.PI) / 180)),
+        dy: Math.round(Math.sin((deg * Math.PI) / 180)),
       });
 
-      const fDir = getDxDy(fromAngle);
-      const tDir = getDxDy(toAngle);
+      let fDir = getDxDy(fromAngle);
+      let tDir = getDxDy(toAngle);
 
-      const p1x = startX + fDir.dx * stubLen;
-      const p1y = startY + fDir.dy * stubLen;
-      const p2x = endX + tDir.dx * stubLen;
-      const p2y = endY + tDir.dy * stubLen;
+      let p1x = startX + fDir.dx * stubLen;
+      let p1y = startY + fDir.dy * stubLen;
+      let p2x = endX + tDir.dx * stubLen;
+      let p2y = endY + tDir.dy * stubLen;
 
-      const fromH = fromEl._cachedH || 60;
-      const toH = toEl._cachedH || 60;
+      let fromH = fromEl._cachedH || 60;
+      let toH = toEl._cachedH || 60;
 
-      let pts = [{x: startX, y: startY}, {x: p1x, y: p1y}];
+      let pts = [
+        { x: startX, y: startY },
+        { x: p1x, y: p1y },
+      ];
 
       if (endX < startX) {
-          const bottomY = Math.max(fromPos.y + fromH, toPos.y + toH) + 30 + traceOffset;
-          pts.push({x: p1x, y: bottomY});
-          pts.push({x: p2x, y: bottomY});
+        let bottomY = Math.max(fromPos.y + fromH, toPos.y + toH) + 30 + traceOffset;
+        pts.push({ x: p1x, y: bottomY });
+        pts.push({ x: p2x, y: bottomY });
       } else {
-          const maxH = Math.max(fromH, toH);
-          if (Math.abs(p1y - p2y) < maxH) {
-              let nodeBetween = false;
-              for (const [, node] of this.#nodeViews) {
-                  if (!node._position) continue;
-                  const nx = node._position.x;
-                  const ny = node._position.y;
-                  const nw = node._cachedW || 180;
-                  const nh = node._cachedH || 60;
-                  if (nx > p1x && nx + nw < p2x) {
-                      if (Math.min(p1y, p2y) <= ny + nh && Math.max(p1y, p2y) >= ny) {
-                          nodeBetween = true; break;
-                      }
-                  }
+        let maxH = Math.max(fromH, toH);
+        if (Math.abs(p1y - p2y) < maxH) {
+          let nodeBetween = false;
+          for (const [, node] of this.#nodeViews) {
+            if (!node._position) continue;
+            let nx = node._position.x;
+            let ny = node._position.y;
+            let nw = node._cachedW || 180;
+            let nh = node._cachedH || 60;
+            if (nx > p1x && nx + nw < p2x) {
+              if (Math.min(p1y, p2y) <= ny + nh && Math.max(p1y, p2y) >= ny) {
+                nodeBetween = true;
+                break;
               }
-              
-              if (nodeBetween) {
-                  const detourY = Math.min(fromPos.y, toPos.y) - 30 - traceOffset;
-                  pts.push({x: p1x, y: detourY});
-                  pts.push({x: p2x, y: detourY});
-              } else {
-                  const midX = (p1x + p2x) / 2 + traceOffset;
-                  pts.push({x: midX, y: p1y});
-                  pts.push({x: midX, y: p2y});
-              }
-          } else {
-              let midX = (p1x + p2x) / 2 + traceOffset;
-              let obstacleNode = null;
-              const minY = Math.min(p1y, p2y);
-              const maxY = Math.max(p1y, p2y);
-              
-              for (const [, node] of this.#nodeViews) {
-                  if (!node._position) continue;
-                  const nx = node._position.x;
-                  const ny = node._position.y;
-                  const nw = node._cachedW || 180;
-                  const nh = node._cachedH || 60;
-                  if (midX >= nx && midX <= nx + nw) {
-                      if (ny <= maxY && ny + nh >= minY) {
-                          obstacleNode = {x: nx, w: nw};
-                          break;
-                      }
-                  }
-              }
-              
-              if (obstacleNode) {
-                  const leftDist = Math.abs(midX - obstacleNode.x);
-                  const rightDist = Math.abs(midX - (obstacleNode.x + obstacleNode.w));
-                  if (leftDist < rightDist) {
-                      midX = obstacleNode.x - 30 - traceOffset;
-                  } else {
-                      midX = obstacleNode.x + obstacleNode.w + 30 + traceOffset;
-                  }
-              }
-              
-              pts.push({x: midX, y: p1y});
-              pts.push({x: midX, y: p2y});
+            }
           }
+
+          if (nodeBetween) {
+            let detourY = Math.min(fromPos.y, toPos.y) - 30 - traceOffset;
+            pts.push({ x: p1x, y: detourY });
+            pts.push({ x: p2x, y: detourY });
+          } else {
+            let midX = (p1x + p2x) / 2 + traceOffset;
+            pts.push({ x: midX, y: p1y });
+            pts.push({ x: midX, y: p2y });
+          }
+        } else {
+          let midX = (p1x + p2x) / 2 + traceOffset;
+          let obstacleNode = null;
+          let minY = Math.min(p1y, p2y);
+          let maxY = Math.max(p1y, p2y);
+
+          for (const [, node] of this.#nodeViews) {
+            if (!node._position) continue;
+            let nx = node._position.x;
+            let ny = node._position.y;
+            let nw = node._cachedW || 180;
+            let nh = node._cachedH || 60;
+            if (midX >= nx && midX <= nx + nw) {
+              if (ny <= maxY && ny + nh >= minY) {
+                obstacleNode = { x: nx, w: nw };
+                break;
+              }
+            }
+          }
+
+          if (obstacleNode) {
+            let leftDist = Math.abs(midX - obstacleNode.x);
+            let rightDist = Math.abs(midX - (obstacleNode.x + obstacleNode.w));
+            if (leftDist < rightDist) {
+              midX = obstacleNode.x - 30 - traceOffset;
+            } else {
+              midX = obstacleNode.x + obstacleNode.w + 30 + traceOffset;
+            }
+          }
+
+          pts.push({ x: midX, y: p1y });
+          pts.push({ x: midX, y: p2y });
+        }
       }
 
-      pts.push({x: p2x, y: p2y});
-      pts.push({x: endX, y: endY});
+      pts.push({ x: p2x, y: p2y });
+      pts.push({ x: endX, y: endY });
 
       let path = `M ${pts[0].x} ${pts[0].y}`;
       for (let i = 1; i < pts.length; i++) {
-          const prev = pts[i-1];
-          const curr = pts[i];
-          if (curr.x === prev.x && curr.y === prev.y) continue;
-          if (curr.x !== prev.x && curr.y !== prev.y) {
-              path += ` H ${curr.x} V ${curr.y}`;
-          } else if (curr.x !== prev.x) {
-              path += ` H ${curr.x}`;
-          } else if (curr.y !== prev.y) {
-              path += ` V ${curr.y}`;
-          }
+        let prev = pts[i - 1];
+        let curr = pts[i];
+        if (curr.x === prev.x && curr.y === prev.y) continue;
+        if (curr.x !== prev.x && curr.y !== prev.y) {
+          path += ` H ${curr.x} V ${curr.y}`;
+        } else if (curr.x !== prev.x) {
+          path += ` H ${curr.x}`;
+        } else if (curr.y !== prev.y) {
+          path += ` V ${curr.y}`;
+        }
       }
       d = path;
     } else if (this.#pathStyle === 'pcb') {
-      const routed = routePcbTrace({
+      let routed = routePcbTrace({
         start: { x: startX, y: startY },
         end: { x: endX, y: endY },
         fromRect: { id: conn.from, x: fromPos.x, y: fromPos.y, w: fromW, h: fromH },
         toRect: { id: conn.to, x: toPos.x, y: toPos.y, w: toW, h: toH },
         fromAngle: fromOffset.angle ?? 0,
         toAngle: toOffset.angle ?? 180,
-        rects: this.#nodeRectsForRouting(),
+        rects: this._nodeRectCache ? [...this._nodeRectCache.values()] : [],
         connections: [...this.#connectionData.values()],
         conn,
       });
       d = routed.path;
     } else {
-      // Tangent direction: use dynamic edge angle if available, else fixed socket angle
+
       let fromAngleDeg, toAngleDeg;
 
       if (fromOffset.angle !== undefined) {
         fromAngleDeg = fromOffset.angle;
       } else {
-        const fromPortIndex = fromNode ? Object.keys(fromNode.outputs).indexOf(conn.out) : 0;
-        const fromPortTotal = fromNode ? Object.keys(fromNode.outputs).length : 1;
-        const pos = fromShape?.getSocketPosition?.('output', fromPortIndex, fromPortTotal, fromSize);
+        let fromPortIndex = fromNode ? Object.keys(fromNode.outputs).indexOf(conn.out) : 0;
+        let fromPortTotal = fromNode ? Object.keys(fromNode.outputs).length : 1;
+        let pos = fromShape?.getSocketPosition?.('output', fromPortIndex, fromPortTotal, fromSize);
         fromAngleDeg = pos?.angle ?? 0;
       }
 
       if (toOffset.angle !== undefined) {
         toAngleDeg = toOffset.angle;
       } else {
-        const toPortIndex = toNode ? Object.keys(toNode.inputs).indexOf(conn.in) : 0;
-        const toPortTotal = toNode ? Object.keys(toNode.inputs).length : 1;
-        const pos = toShape?.getSocketPosition?.('input', toPortIndex, toPortTotal, toSize);
+        let toPortIndex = toNode ? Object.keys(toNode.inputs).indexOf(conn.in) : 0;
+        let toPortTotal = toNode ? Object.keys(toNode.inputs).length : 1;
+        let pos = toShape?.getSocketPosition?.('input', toPortIndex, toPortTotal, toSize);
         toAngleDeg = pos?.angle ?? 180;
       }
 
-      const dist = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-      const cpLen = Math.max(50, dist * 0.4);
-      const fromRad = (fromAngleDeg * Math.PI) / 180;
-      const toRad = (toAngleDeg * Math.PI) / 180;
+      let dist = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
+      let cpLen = Math.max(50, dist * 0.4);
+      let fromRad = (fromAngleDeg * Math.PI) / 180;
+      let toRad = (toAngleDeg * Math.PI) / 180;
 
-      const cp1x = startX + Math.cos(fromRad) * cpLen;
-      const cp1y = startY + Math.sin(fromRad) * cpLen;
-      const cp2x = endX + Math.cos(toRad) * cpLen;
-      const cp2y = endY + Math.sin(toRad) * cpLen;
+      let cp1x = startX + Math.cos(fromRad) * cpLen;
+      let cp1y = startY + Math.sin(fromRad) * cpLen;
+      let cp2x = endX + Math.cos(toRad) * cpLen;
+      let cp2y = endY + Math.sin(toRad) * cpLen;
 
       d = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
     }
@@ -887,13 +840,21 @@ export class ConnectionRenderer {
     }
     path.setAttribute('d', d);
 
-    // Wire type styling — thicker for exec, normal for data
-    const fromSocketName = fromNode?.outputs[conn.out]?.socket?.name || 'data';
-    if (fromSocketName === 'exec' || fromSocketName === 'execution' || fromSocketName === 'trigger') {
+
+    let fromSocketName = fromNode?.outputs[conn.out]?.socket?.name || 'data';
+    if (
+      fromSocketName === 'exec' ||
+      fromSocketName === 'execution' ||
+      fromSocketName === 'trigger'
+    ) {
       path.setAttribute('data-wire-type', 'exec');
       path.style.strokeWidth = '3';
       path.style.strokeDasharray = '8 4';
-    } else if (fromSocketName === 'array' || fromSocketName === 'object' || fromSocketName === 'json') {
+    } else if (
+      fromSocketName === 'array' ||
+      fromSocketName === 'object' ||
+      fromSocketName === 'json'
+    ) {
       path.setAttribute('data-wire-type', 'data-heavy');
       path.style.strokeWidth = '2.5';
       path.style.strokeDasharray = '';
@@ -903,18 +864,18 @@ export class ConnectionRenderer {
       path.style.strokeDasharray = '';
     }
 
-    // Gradient connection coloring
+
     this.#applyGradient(path, conn, fromNode, toNode, startX, startY, endX, endY);
 
-    // Determine socket type for visual dot styling
-    const outSocketName = fromNode?.outputs?.[conn.out]?.socket?.name || 'data';
-    const inSocketName = toNode?.inputs?.[conn.in]?.socket?.name || outSocketName;
 
-    // Endpoint dots with side and type coloring
+    let outSocketName = fromNode?.outputs?.[conn.out]?.socket?.name || 'data';
+    let inSocketName = toNode?.inputs?.[conn.in]?.socket?.name || outSocketName;
+
+
     this.#updateDot(conn.id, 'start', startX, startY, 'output', outSocketName);
     this.#updateDot(conn.id, 'end', endX, endY, 'input', inSocketName);
 
-    // Direction arrow at wire midpoint
+
     this.#updateArrow(conn.id, d);
   }
 
@@ -928,7 +889,7 @@ export class ConnectionRenderer {
    * @param {string} socketType
    */
   #updateDot(connId, end, x, y, side = 'output', socketType = 'data') {
-    const dotId = `${connId}-${end}`;
+    let dotId = `${connId}-${end}`;
     let dot = this.#dotLayer.querySelector(`[data-conn-dot="${dotId}"]`);
     if (!dot) {
       dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -939,14 +900,12 @@ export class ConnectionRenderer {
     dot.setAttribute('cx', x);
     dot.setAttribute('cy', y);
 
-    // Dots are hidden by default (CSS). Only show for SVG nodes.
-    // Runs on every update to handle timing — NodeViewManager may set
-    // data-svg-shape after initial connection render
+
     if (!dot.hasAttribute('data-svg-wired')) {
-      const conn = this.#connectionData.get(connId);
+      let conn = this.#connectionData.get(connId);
       if (conn) {
-        const nodeId = end === 'start' ? conn.from : conn.to;
-        const nodeEl = this.#nodeViews.get(nodeId);
+        let nodeId = end === 'start' ? conn.from : conn.to;
+        let nodeEl = this.#nodeViews.get(nodeId);
         if (nodeEl?.hasAttribute('data-svg-shape')) {
           dot.setAttribute('data-svg-wired', '');
           dot.style.display = '';
@@ -956,11 +915,12 @@ export class ConnectionRenderer {
             dot.addEventListener('pointerdown', (e) => {
               e.stopPropagation();
               e.preventDefault();
-              const dotX = parseFloat(dot.getAttribute('cx')) || 0;
-              const dotY = parseFloat(dot.getAttribute('cy')) || 0;
-              const socketData = end === 'start'
-                ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
-                : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
+              let dotX = parseFloat(dot.getAttribute('cx')) || 0;
+              let dotY = parseFloat(dot.getAttribute('cy')) || 0;
+              let socketData =
+                end === 'start'
+                  ? { nodeId: conn.from, key: conn.out, side: 'output', worldX: dotX, worldY: dotY }
+                  : { nodeId: conn.to, key: conn.in, side: 'input', worldX: dotX, worldY: dotY };
               this.#onDotDrag(socketData);
             });
           }
@@ -968,14 +928,14 @@ export class ConnectionRenderer {
       }
     }
 
-    // Classify socket type
+
     let typeClass = 'sn-dot-data';
     if (socketType === 'exec' || socketType === 'execution' || socketType === 'trigger') {
       typeClass = 'sn-dot-exec';
     } else if (socketType === 'ctrl' || socketType === 'control' || socketType === 'signal') {
       typeClass = 'sn-dot-ctrl';
     }
-    const sideClass = side === 'input' ? 'sn-dot-input' : 'sn-dot-output';
+    let sideClass = side === 'input' ? 'sn-dot-input' : 'sn-dot-output';
     dot.setAttribute('class', `sn-conn-dot ${sideClass} ${typeClass}`);
   }
 
@@ -985,28 +945,28 @@ export class ConnectionRenderer {
    * @param {string} pathD - SVG path d attribute
    */
   #updateArrow(connId, pathD) {
-    // Universal midpoint calculation using SVG path API (works for all path styles)
-    const tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+    let tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     tempPath.setAttribute('d', pathD);
 
-    // Need to briefly attach to DOM for getPointAtLength to work
+
     this.#svgLayer.appendChild(tempPath);
-    const totalLen = tempPath.getTotalLength();
+    let totalLen = tempPath.getTotalLength();
     if (totalLen < 1) {
       tempPath.remove();
       return;
     }
 
-    // Midpoint at 50% of path length
-    const mid = tempPath.getPointAtLength(totalLen * 0.5);
 
-    // Tangent: sample two close points (0.5% before/after midpoint)
-    const delta = Math.max(0.5, totalLen * 0.005);
-    const p1 = tempPath.getPointAtLength(Math.max(0, totalLen * 0.5 - delta));
-    const p2 = tempPath.getPointAtLength(Math.min(totalLen, totalLen * 0.5 + delta));
+    let mid = tempPath.getPointAtLength(totalLen * 0.5);
+
+
+    let delta = Math.max(0.5, totalLen * 0.005);
+    let p1 = tempPath.getPointAtLength(Math.max(0, totalLen * 0.5 - delta));
+    let p2 = tempPath.getPointAtLength(Math.min(totalLen, totalLen * 0.5 + delta));
     tempPath.remove();
 
-    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+    let angle = (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180) / Math.PI;
 
     let arrow = this.#svgLayer.querySelector(`[data-conn-arrow="${connId}"]`);
     if (!arrow) {
@@ -1031,11 +991,11 @@ export class ConnectionRenderer {
    * @param {number} endY
    */
   #applyGradient(path, conn, fromNode, toNode, startX, startY, endX, endY) {
-    const fromColor = fromNode?.outputs[conn.out]?.socket?.color;
-    const toColor = toNode?.inputs[conn.in]?.socket?.color;
+    let fromColor = fromNode?.outputs[conn.out]?.socket?.color;
+    let toColor = toNode?.inputs[conn.in]?.socket?.color;
 
     if (fromColor && toColor && fromColor !== toColor) {
-      const gradId = `grad-${conn.id}`;
+      let gradId = `grad-${conn.id}`;
       let defs = this.#svgLayer.querySelector('defs');
       if (!defs) {
         defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -1045,9 +1005,9 @@ export class ConnectionRenderer {
       if (!grad) {
         grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
         grad.setAttribute('id', gradId);
-        const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        let stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
         stop1.setAttribute('offset', '0%');
-        const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        let stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
         stop2.setAttribute('offset', '100%');
         grad.appendChild(stop1);
         grad.appendChild(stop2);
@@ -1071,74 +1031,72 @@ export class ConnectionRenderer {
    * @param {string} nodeId
    */
   renderFreeDots(nodeId) {
-    const nodeEl = this.#nodeViews.get(nodeId);
-    const node = this.#editor.getNode(nodeId);
+    let nodeEl = this.#nodeViews.get(nodeId);
+    let node = this.#editor.getNode(nodeId);
     if (!nodeEl || !node) return;
 
-    const shapeName = nodeEl.getAttribute('data-svg-shape') || nodeEl.getAttribute('node-shape');
-    const shape = getShape(shapeName);
+    let shapeName = nodeEl.getAttribute('data-svg-shape') || nodeEl.getAttribute('node-shape');
+    let shape = getShape(shapeName);
     if (!shape?.pathData || !shape.getEdgePoint) return;
 
-    const size = { width: nodeEl.offsetWidth || 100, height: nodeEl.offsetHeight || 100 };
-    const pos = nodeEl._position;
+    let size = { width: nodeEl.offsetWidth || 100, height: nodeEl.offsetHeight || 100 };
+    let pos = nodeEl._position;
     if (!pos) return;
 
-    // Collect already-connected port keys
-    const connectedPorts = new Set();
+
+    let connectedPorts = new Set();
     for (const [, conn] of this.#connectionData) {
       if (conn.from === nodeId) connectedPorts.add(`output:${conn.out}`);
       if (conn.to === nodeId) connectedPorts.add(`input:${conn.in}`);
     }
 
-    // Ensure collision tracking exists
+
     if (!nodeEl._usedCoords) nodeEl._usedCoords = [];
     const MIN_PIX = 12;
-    const step = Math.PI / 12; // 15° grid
+    let step = Math.PI / 12;
 
-    // Place free dots using edge-point system (same as connections)
-    const placeDot = (key, side, baseAngle, portData) => {
-      // Find a free position using collision avoidance
+
+    let placeDot = (key, side, baseAngle, portData) => {
+
       let angle = Math.round(baseAngle / step) * step;
       let nudged = angle;
       let attempts = 0;
 
       while (attempts < 24) {
-        const testPos = shape.getEdgePoint(nudged, size);
-        const tooClose = nodeEl._usedCoords.some(
-          c => Math.abs(testPos.x - c.x) < MIN_PIX && Math.abs(testPos.y - c.y) < MIN_PIX
+        let testPos = shape.getEdgePoint(nudged, size);
+        let tooClose = nodeEl._usedCoords.some(
+          (c) => Math.abs(testPos.x - c.x) < MIN_PIX && Math.abs(testPos.y - c.y) < MIN_PIX
         );
         if (!tooClose) break;
         attempts++;
-        const offset = Math.ceil(attempts / 2) * step;
-        const dir = (attempts % 2 === 1) ? 1 : -1;
+        let offset = Math.ceil(attempts / 2) * step;
+        let dir = attempts % 2 === 1 ? 1 : -1;
         nudged = angle + dir * offset;
       }
 
-      const ep = shape.getEdgePoint(nudged, size);
+      let ep = shape.getEdgePoint(nudged, size);
       nodeEl._usedCoords.push({ x: ep.x, y: ep.y });
 
       this.#createFreeDot(nodeId, key, side, pos.x + ep.x, pos.y + ep.y, portData);
     };
 
-    // Render dots for unconnected inputs (left side baseline angle = π)
-    const inputKeys = Object.keys(node.inputs);
+
+    let inputKeys = Object.keys(node.inputs);
     inputKeys.forEach((key, i) => {
       if (connectedPorts.has(`input:${key}`)) return;
-      const spread = Math.PI * 0.4;
-      const baseAngle = Math.PI + (inputKeys.length > 1
-        ? (i / (inputKeys.length - 1) - 0.5) * spread
-        : 0);
+      let spread = Math.PI * 0.4;
+      let baseAngle =
+        Math.PI + (inputKeys.length > 1 ? (i / (inputKeys.length - 1) - 0.5) * spread : 0);
       placeDot(key, 'input', baseAngle, node.inputs[key]);
     });
 
-    // Render dots for unconnected outputs (right side baseline angle = 0)
-    const outputKeys = Object.keys(node.outputs);
+
+    let outputKeys = Object.keys(node.outputs);
     outputKeys.forEach((key, i) => {
       if (connectedPorts.has(`output:${key}`)) return;
-      const spread = Math.PI * 0.4;
-      const baseAngle = 0 + (outputKeys.length > 1
-        ? (i / (outputKeys.length - 1) - 0.5) * spread
-        : 0);
+      let spread = Math.PI * 0.4;
+      let baseAngle =
+        0 + (outputKeys.length > 1 ? (i / (outputKeys.length - 1) - 0.5) * spread : 0);
       placeDot(key, 'output', baseAngle, node.outputs[key]);
     });
   }
@@ -1153,11 +1111,11 @@ export class ConnectionRenderer {
    * @param {object} portData - Input/Output instance
    */
   #createFreeDot(nodeId, key, side, wx, wy, portData) {
-    const dotId = `free-${nodeId}-${side}-${key}`;
-    // Skip if already exists
+    let dotId = `free-${nodeId}-${side}-${key}`;
+
     if (this.#dotLayer.querySelector(`[data-free-dot="${dotId}"]`)) return;
 
-    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    let dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     dot.setAttribute('data-free-dot', dotId);
     dot.setAttribute('data-node-id', nodeId);
     dot.setAttribute('data-port-key', key);
@@ -1168,14 +1126,14 @@ export class ConnectionRenderer {
     dot.style.pointerEvents = 'auto';
     dot.style.cursor = 'crosshair';
 
-    const socketName = portData?.socket?.name || 'data';
+    let socketName = portData?.socket?.name || 'data';
     let typeClass = 'sn-dot-data';
     if (socketName === 'exec' || socketName === 'execution' || socketName === 'trigger') {
       typeClass = 'sn-dot-exec';
     } else if (socketName === 'ctrl' || socketName === 'control' || socketName === 'signal') {
       typeClass = 'sn-dot-ctrl';
     }
-    const sideClass = side === 'input' ? 'sn-dot-input' : 'sn-dot-output';
+    let sideClass = side === 'input' ? 'sn-dot-input' : 'sn-dot-output';
     dot.setAttribute('class', `sn-free-dot ${sideClass} ${typeClass}`);
 
     if (this.#onDotDrag) {
@@ -1202,8 +1160,8 @@ export class ConnectionRenderer {
    * @param {'input'|'output'} side
    */
   removeFreeDot(nodeId, key, side) {
-    const dotId = `free-${nodeId}-${side}-${key}`;
-    const dot = this.#dotLayer.querySelector(`[data-free-dot="${dotId}"]`);
+    let dotId = `free-${nodeId}-${side}-${key}`;
+    let dot = this.#dotLayer.querySelector(`[data-free-dot="${dotId}"]`);
     if (dot) dot.remove();
   }
 
@@ -1212,33 +1170,33 @@ export class ConnectionRenderer {
    * @param {string} nodeId
    */
   refreshFreeDots(nodeId) {
-    const dots = this.#dotLayer.querySelectorAll(`[data-node-id="${nodeId}"][data-free-dot]`);
+    let dots = this.#dotLayer.querySelectorAll(`[data-node-id="${nodeId}"][data-free-dot]`);
     if (!dots.length) {
-      // No dots yet — initial render (position was likely missing at shape setup time)
+
       this.renderFreeDots(nodeId);
       return;
     }
 
-    const nodeEl = this.#nodeViews.get(nodeId);
-    const node = this.#editor.getNode(nodeId);
+    let nodeEl = this.#nodeViews.get(nodeId);
+    let node = this.#editor.getNode(nodeId);
     if (!nodeEl || !node) return;
 
-    const shapeName = nodeEl.getAttribute('data-svg-shape') || nodeEl.getAttribute('node-shape');
-    const shape = getShape(shapeName);
+    let shapeName = nodeEl.getAttribute('data-svg-shape') || nodeEl.getAttribute('node-shape');
+    let shape = getShape(shapeName);
     if (!shape?.pathData) return;
 
-    const size = { width: nodeEl.offsetWidth || 100, height: nodeEl.offsetHeight || 100 };
-    const pos = nodeEl._position;
+    let size = { width: nodeEl.offsetWidth || 100, height: nodeEl.offsetHeight || 100 };
+    let pos = nodeEl._position;
     if (!pos) return;
 
     for (const dot of dots) {
-      const key = dot.getAttribute('data-port-key');
-      const side = dot.getAttribute('data-port-side');
-      const ports = side === 'output' ? node.outputs : node.inputs;
-      const keys = Object.keys(ports);
-      const index = keys.indexOf(key);
+      let key = dot.getAttribute('data-port-key');
+      let side = dot.getAttribute('data-port-side');
+      let ports = side === 'output' ? node.outputs : node.inputs;
+      let keys = Object.keys(ports);
+      let index = keys.indexOf(key);
       if (index < 0) continue;
-      const sp = shape.getSocketPosition(side, index, keys.length, size);
+      let sp = shape.getSocketPosition(side, index, keys.length, size);
       dot.setAttribute('cx', pos.x + sp.x);
       dot.setAttribute('cy', pos.y + sp.y);
     }
@@ -1256,12 +1214,12 @@ export class ConnectionRenderer {
     let bestDist = radius;
     let best = null;
 
-    // Search free dots
-    const freeDots = this.#dotLayer.querySelectorAll('[data-free-dot]');
+
+    let freeDots = this.#dotLayer.querySelectorAll('[data-free-dot]');
     for (const dot of freeDots) {
-      const cx = parseFloat(dot.getAttribute('cx')) || 0;
-      const cy = parseFloat(dot.getAttribute('cy')) || 0;
-      const dist = Math.hypot(cx - wx, cy - wy);
+      let cx = parseFloat(dot.getAttribute('cx')) || 0;
+      let cy = parseFloat(dot.getAttribute('cy')) || 0;
+      let dist = Math.hypot(cx - wx, cy - wy);
       if (dist < bestDist) {
         bestDist = dist;
         best = {
@@ -1272,19 +1230,19 @@ export class ConnectionRenderer {
       }
     }
 
-    // Search connected SVG dots
-    const wiredDots = this.#dotLayer.querySelectorAll('[data-svg-wired=""]');
+
+    let wiredDots = this.#dotLayer.querySelectorAll('[data-svg-wired=""]');
     for (const dot of wiredDots) {
-      const cx = parseFloat(dot.getAttribute('cx')) || 0;
-      const cy = parseFloat(dot.getAttribute('cy')) || 0;
-      const dist = Math.hypot(cx - wx, cy - wy);
+      let cx = parseFloat(dot.getAttribute('cx')) || 0;
+      let cy = parseFloat(dot.getAttribute('cy')) || 0;
+      let dist = Math.hypot(cx - wx, cy - wy);
       if (dist < bestDist) {
         bestDist = dist;
-        const connDotId = dot.getAttribute('data-conn-dot');
-        // Parse connDotId: "connId-start" or "connId-end"
-        const isStart = connDotId.endsWith('-start');
-        const connId = connDotId.replace(/-(?:start|end)$/, '');
-        const conn = this.#connectionData.get(connId);
+        let connDotId = dot.getAttribute('data-conn-dot');
+
+        let isStart = connDotId.endsWith('-start');
+        let connId = connDotId.replace(/-(?:start|end)$/, '');
+        let conn = this.#connectionData.get(connId);
         if (conn) {
           best = {
             nodeId: isStart ? conn.from : conn.to,

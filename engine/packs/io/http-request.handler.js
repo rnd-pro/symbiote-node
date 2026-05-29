@@ -4,8 +4,19 @@
  * Performs HTTP requests using native fetch API.
  * Supports GET, POST, PUT, DELETE with configurable headers and timeout.
  *
- * @module agi-graph/packs/io/http-request
+ * @module symbiote-node/packs/io/http-request
  */
+
+/**
+ * Build an abort signal for request timeout handling.
+ * @returns {AbortSignal}
+ */
+function requestSignal(timeout, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeout);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'io/http-request',
@@ -41,14 +52,14 @@ export default {
       `http:${params.method}:${inputs.url}:${JSON.stringify(inputs.body)}`,
 
     execute: async (inputs, params) => {
-      const { url, body } = inputs;
-      const { method, headers, timeout, responseType } = params;
+      let { url, body } = inputs;
+      let { method, headers, timeout, responseType } = params;
 
       try {
-        const fetchOptions = {
+        let fetchOptions = {
           method: method || 'GET',
           headers: { ...headers },
-          signal: AbortSignal.timeout(timeout),
+          signal: requestSignal(timeout, params.signal),
         };
 
         if (body && method !== 'GET' && method !== 'HEAD') {
@@ -61,10 +72,10 @@ export default {
           }
         }
 
-        const res = await fetch(url, fetchOptions);
+        let res = await fetch(url, fetchOptions);
 
         let response;
-        const contentType = res.headers.get('content-type') || '';
+        let contentType = res.headers.get('content-type') || '';
 
         if (responseType === 'json' || (responseType === 'auto' && contentType.includes('json'))) {
           response = await res.json();
@@ -73,7 +84,6 @@ export default {
         }
 
         return { response, status: res.status, error: null };
-
       } catch (err) {
         return { response: null, status: 0, error: err.message };
       }

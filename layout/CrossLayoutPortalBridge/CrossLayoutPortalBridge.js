@@ -19,7 +19,8 @@ export class CrossLayoutPortalBridge extends HTMLElement {
     this.#root = this.attachShadow({ mode: 'open' });
     this.#root.innerHTML = `
       <style>
-        :host {
+        :host,
+        cross-layout-portal-bridge {
           position: fixed;
           inset: 0;
           z-index: var(--sn-portal-bridge-z, 12);
@@ -228,6 +229,10 @@ export class CrossLayoutPortalBridge extends HTMLElement {
   }
 }
 
-if (!customElements.get('cross-layout-portal-bridge')) {
-  customElements.define('cross-layout-portal-bridge', CrossLayoutPortalBridge);
-}
+CrossLayoutPortalBridge.reg = (tagName = 'cross-layout-portal-bridge') => {
+  if (!customElements.get(tagName)) {
+    customElements.define(tagName, CrossLayoutPortalBridge);
+  }
+};
+
+CrossLayoutPortalBridge.reg('cross-layout-portal-bridge');

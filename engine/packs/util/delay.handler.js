@@ -4,7 +4,7 @@
  * Waits for specified milliseconds, then passes input value through.
  * Useful for rate limiting, animation timing, and API cooldowns.
  *
- * @module agi-graph/packs/util/delay
+ * @module symbiote-node/packs/util/delay
  */
 
 export default {
@@ -14,12 +14,8 @@ export default {
 
   driver: {
     description: 'Pause execution for N milliseconds, pass value through',
-    inputs: [
-      { name: 'value', type: 'any' },
-    ],
-    outputs: [
-      { name: 'value', type: 'any' },
-    ],
+    inputs: [{ name: 'value', type: 'any' }],
+    outputs: [{ name: 'value', type: 'any' }],
     params: {
       ms: { type: 'int', default: 1000, description: 'Delay in milliseconds' },
     },
@@ -28,11 +24,11 @@ export default {
   lifecycle: {
     validate: () => true,
 
-    // Never cache delays
+
     cacheKey: null,
 
     execute: async (inputs, params) => {
-      await new Promise(resolve => setTimeout(resolve, params.ms || 1000));
+      await new Promise((resolve) => setTimeout(resolve, params.ms || 1000));
       return { value: inputs.value };
     },
   },

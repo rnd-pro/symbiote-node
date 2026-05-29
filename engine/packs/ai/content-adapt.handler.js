@@ -7,14 +7,21 @@
  *
  * Ported from Mr-Computer/automations/argentine-spanish-bot/src/services/contentAdaptationService.js
  *
- * @module agi-graph/packs/ai/content-adapt
+ * @module symbiote-node/packs/ai/content-adapt
  */
 
 /**
  * Simple in-memory cache
  * @type {Map<string, {data: any, timestamp: number}>}
  */
-const cache = new Map();
+let cache = new Map();
+
+function requestSignal(params, fallbackMs = 120000) {
+  let timeoutSignal = AbortSignal.timeout(params.timeout || fallbackMs);
+  return params.signal && AbortSignal.any
+    ? AbortSignal.any([params.signal, timeoutSignal])
+    : timeoutSignal;
+}
 
 /**
  * Simple hash for caching
@@ -24,7 +31,7 @@ const cache = new Map();
 function hashStr(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = (hash << 5) - hash + str.charCodeAt(i);
     hash |= 0;
   }
   return Math.abs(hash).toString(36);
@@ -39,7 +46,7 @@ function hashStr(str) {
  * @returns {string}
  */
 function createAdaptationPrompt(content, contentType, targetLevel, options) {
-  const typeLabels = {
+  let typeLabels = {
     news: 'a news article',
     trending: 'a trending topic',
     general: 'educational content',
@@ -76,12 +83,14 @@ function createAdaptationPrompt(content, contentType, targetLevel, options) {
  * @returns {Object}
  */
 function parseAiResponse(responseText) {
-  // Try to extract JSON from response
-  const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+
+  let jsonMatch = responseText.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]);
-    } catch { /* fallback */ }
+    } catch {
+
+    }
   }
   return { adaptedContent: responseText, vocabulary: [], grammarNotes: [] };
 }
@@ -92,17 +101,16 @@ function parseAiResponse(responseText) {
  * @returns {number}
  */
 function calculateComplexity(content) {
-  const words = content.split(/\s+/);
-  const avgWordLength = words.reduce((sum, w) => sum + w.length, 0) / words.length;
-  const sentenceCount = content.split(/[.!?]+/).filter(Boolean).length;
-  const avgSentenceLength = words.length / sentenceCount;
+  let words = content.split(/\s+/);
+  let avgWordLength = words.reduce((sum, w) => sum + w.length, 0) / words.length;
+  let sentenceCount = content.split(/[.!?]+/).filter(Boolean).length;
+  let avgSentenceLength = words.length / sentenceCount;
 
-  // Simple score 0-1 based on word and sentence length
-  const score = Math.min(1, (avgWordLength / 10 + avgSentenceLength / 30) / 2);
+
+  let score = Math.min(1, (avgWordLength / 10 + avgSentenceLength / 30) / 2);
   return Math.round(score * 100) / 100;
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'ai/content-adapt',
@@ -110,27 +118,46 @@ export default {
   icon: 'auto_fix_high',
 
   driver: {
-    description: 'AI-powered content adaptation to target language levels with vocabulary extraction',
-    inputs: [
-      { name: 'content', type: 'string' },
-    ],
+    description:
+      'AI-powered content adaptation to target language levels with vocabulary extraction',
+    inputs: [{ name: 'content', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'adapt', description: 'Operation: adapt | adapt-news | adapt-trending' },
-      apiKey: { type: 'string', default: null, description: 'OpenRouter API key (or OPENROUTER_API_KEY env)' },
-      model: { type: 'string', default: 'anthropic/claude-sonnet-4', description: 'AI model to use' },
-      targetLevel: { type: 'string', default: 'A1', description: 'Target language level (A1, A2, B1, B2)' },
-      // Content metadata
+      operation: {
+        type: 'string',
+        default: 'adapt',
+        description: 'Operation: adapt | adapt-news | adapt-trending',
+      },
+      apiKey: {
+        type: 'string',
+        default: null,
+        description: 'OpenRouter API key (or OPENROUTER_API_KEY env)',
+      },
+      model: {
+        type: 'string',
+        default: 'anthropic/claude-sonnet-4',
+        description: 'AI model to use',
+      },
+      targetLevel: {
+        type: 'string',
+        default: 'A1',
+        description: 'Target language level (A1, A2, B1, B2)',
+      },
+
       title: { type: 'string', default: null, description: 'Content title (for news/trending)' },
       sourceUrl: { type: 'string', default: null, description: 'Source URL' },
-      // Options
-      includeVocabulary: { type: 'boolean', default: true, description: 'Include vocabulary extraction' },
+
+      includeVocabulary: {
+        type: 'boolean',
+        default: true,
+        description: 'Include vocabulary extraction',
+      },
       includeGrammarNotes: { type: 'boolean', default: true, description: 'Include grammar notes' },
       includeLesson: { type: 'boolean', default: true, description: 'Include micro-lesson' },
-      // Rate limiting
+
       maxRetries: { type: 'int', default: 3, description: 'Maximum retry attempts' },
     },
   },
@@ -138,7 +165,7 @@ export default {
   lifecycle: {
     validate: (inputs, params) => {
       if (typeof inputs.content !== 'string' || inputs.content.length === 0) return false;
-      const apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
+      let apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
       if (!apiKey) return false;
       return true;
     },
@@ -148,66 +175,68 @@ export default {
     },
 
     execute: async (inputs, params) => {
-      const { content } = inputs;
-      const { operation, model, targetLevel, maxRetries } = params;
-      const apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
+      let { content } = inputs;
+      let { operation, model, targetLevel, maxRetries } = params;
+      let apiKey = params.apiKey || process.env.OPENROUTER_API_KEY;
 
       try {
-        // Check cache
-        const cacheKey = `${operation}:${hashStr(content.slice(0, 200))}`;
-        const cached = cache.get(cacheKey);
+
+        let cacheKey = `${operation}:${hashStr(content.slice(0, 200))}`;
+        let cached = cache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < 3600000) {
           return { result: { ...cached.data, cached: true } };
         }
 
-        // Determine content type
-        const contentType = operation === 'adapt-news' ? 'news'
-          : operation === 'adapt-trending' ? 'trending'
-            : 'general';
 
-        const fullContent = params.title
-          ? `Title: ${params.title}\n\n${content}`
-          : content;
+        let contentType =
+          operation === 'adapt-news'
+            ? 'news'
+            : operation === 'adapt-trending'
+              ? 'trending'
+              : 'general';
 
-        const prompt = createAdaptationPrompt(fullContent, contentType, targetLevel, {
+        let fullContent = params.title ? `Title: ${params.title}\n\n${content}` : content;
+
+        let prompt = createAdaptationPrompt(fullContent, contentType, targetLevel, {
           includeVocabulary: params.includeVocabulary,
           includeGrammarNotes: params.includeGrammarNotes,
           includeLesson: params.includeLesson,
         });
 
-        // Make API request with retry
+
         let lastError;
         for (let attempt = 0; attempt < maxRetries; attempt++) {
           try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
+                Authorization: `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
                 model,
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0.7,
               }),
+              signal: requestSignal(params),
             });
 
             if (!response.ok) {
               lastError = `API error: HTTP ${response.status}`;
               if (attempt < maxRetries - 1) {
-                await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
                 continue;
               }
               return { error: lastError };
             }
 
-            const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || '';
+            let data = await response.json();
+            let aiResponse = data.choices?.[0]?.message?.content || '';
 
-            const parsed = parseAiResponse(aiResponse);
-            const complexity = calculateComplexity(content);
+            let parsed = parseAiResponse(aiResponse);
+            let complexity = calculateComplexity(content);
 
-            const result = {
+            let result = {
               original: content,
               adapted: parsed,
               contentType,
@@ -217,14 +246,14 @@ export default {
               sourceUrl: params.sourceUrl,
             };
 
-            // Update cache
+
             cache.set(cacheKey, { data: result, timestamp: Date.now() });
 
             return { result };
           } catch (err) {
             lastError = err.message;
             if (attempt < maxRetries - 1) {
-              await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
             }
           }
         }

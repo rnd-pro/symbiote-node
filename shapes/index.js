@@ -12,9 +12,9 @@ import { CommentShape } from './CommentShape.js';
 import { SVGShape, createSVGShape, SVG_PRESETS } from './SVGShape.js';
 
 /** @type {Map<string, NodeShape>} */
-const registry = new Map();
+let registry = new Map();
 
-// Register built-in shapes
+
 const RECT = new RectShape();
 const PILL = new PillShape();
 const CIRCLE = new CircleShape();
@@ -27,7 +27,7 @@ registry.set('circle', CIRCLE);
 registry.set('diamond', DIAMOND);
 registry.set('comment', COMMENT);
 
-// Register SVG preset shapes
+
 for (const [name, pathData] of Object.entries(SVG_PRESETS)) {
   registry.set(name, createSVGShape(name, pathData));
 }
@@ -50,4 +50,14 @@ export function registerShape(name, shape) {
   registry.set(name, shape);
 }
 
-export { NodeShape, RectShape, PillShape, CircleShape, DiamondShape, CommentShape, SVGShape, createSVGShape, SVG_PRESETS };
+export {
+  NodeShape,
+  RectShape,
+  PillShape,
+  CircleShape,
+  DiamondShape,
+  CommentShape,
+  SVGShape,
+  createSVGShape,
+  SVG_PRESETS,
+};

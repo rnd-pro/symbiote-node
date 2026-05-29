@@ -5,17 +5,21 @@
  * - SSH: uploads audio to remote server via scp, runs Whisper via SSH
  * - HTTP: sends audio to a Whisper HTTP endpoint (e.g., faster-whisper-server)
  *
- * SSH remote config from Mr-Computer/modules/ai-music-video/whisper-ssh.js:
- *   Host: mr-agent@mr-agent.rnd-pro.com
- *   Venv: /home/mr-agent/automations/argentine-spanish-bot/venv
- *   Script: utils/whisper-word-timing.py
+ * SSH mode expects WHISPER_REMOTE_HOST and WHISPER_REMOTE_PATH, or matching params.
  *
- * @module agi-graph/packs/ai/whisper
+ * @module symbiote-node/packs/ai/whisper
  */
 
-import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'ai/whisper',
@@ -24,9 +28,7 @@ export default {
 
   driver: {
     description: 'Audio transcription with word-level timestamps (SSH or HTTP mode)',
-    inputs: [
-      { name: 'audioPath', type: 'string' },
-    ],
+    inputs: [{ name: 'audioPath', type: 'string' }],
     outputs: [
       { name: 'text', type: 'string' },
       { name: 'words', type: 'any' },
@@ -36,14 +38,34 @@ export default {
     params: {
       mode: { type: 'string', default: 'ssh', description: 'ssh | http' },
       language: { type: 'string', default: 'es', description: 'Language code' },
-      model: { type: 'string', default: 'medium', description: 'Whisper model: tiny, base, small, medium, large-v3' },
+      model: {
+        type: 'string',
+        default: 'medium',
+        description: 'Whisper model: tiny, base, small, medium, large-v3',
+      },
       device: { type: 'string', default: 'cuda', description: 'cuda | cpu' },
-      // SSH params
-      remoteHost: { type: 'string', default: 'mr-agent@mr-agent.rnd-pro.com', description: 'SSH host' },
-      remotePath: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot', description: 'Remote project path' },
-      remoteVenv: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot/venv', description: 'Remote Python venv' },
-      // HTTP params
-      endpoint: { type: 'string', default: 'http://localhost:5001', description: 'Whisper HTTP endpoint' },
+
+      remoteHost: {
+        type: 'string',
+        default: '',
+        description: 'SSH host',
+      },
+      remotePath: {
+        type: 'string',
+        default: '',
+        description: 'Remote project path',
+      },
+      remoteVenv: {
+        type: 'string',
+        default: '',
+        description: 'Remote Python venv',
+      },
+
+      endpoint: {
+        type: 'string',
+        default: 'http://localhost:5001',
+        description: 'Whisper HTTP endpoint',
+      },
       timeout: { type: 'int', default: 300000, description: 'Max wait time (ms)' },
     },
   },
@@ -54,12 +76,11 @@ export default {
       return true;
     },
 
-    cacheKey: (inputs, params) =>
-      `whisper:${params.mode}:${params.model}:${inputs.audioPath}`,
+    cacheKey: (inputs, params) => `whisper:${params.mode}:${params.model}:${inputs.audioPath}`,
 
     execute: async (inputs, params) => {
-      const { audioPath } = inputs;
-      const mode = params.mode || process.env.WHISPER_MODE || 'ssh';
+      let { audioPath } = inputs;
+      let mode = params.mode || process.env.WHISPER_MODE || 'ssh';
 
       if (mode === 'http') {
         return executeHTTP(audioPath, params);
@@ -76,68 +97,66 @@ export default {
  * @returns {Promise<Object>} Result with text, words, duration
  */
 async function executeSSH(audioPath, params) {
-  const host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  const remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
-  const venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
-  const model = params.model || process.env.WHISPER_MODEL || 'medium';
-  const device = params.device || process.env.WHISPER_DEVICE || 'cuda';
-  const language = params.language || 'es';
-  const remoteTmpDir = '/tmp/agi-graph-whisper';
+  let host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || '';
+  let remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '';
+  let venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
+  let model = params.model || process.env.WHISPER_MODEL || 'medium';
+  let device = params.device || process.env.WHISPER_DEVICE || 'cuda';
+  let language = params.language || 'es';
+  let remoteTmpDir = '/tmp/symbiote-node-whisper';
 
   try {
-    // Verify file exists
+    if (!host || !remotePath || !venv) {
+      throw new Error('Whisper SSH mode requires remoteHost, remotePath, and remoteVenv configuration');
+    }
+
     await fs.access(audioPath);
 
-    const filename = path.basename(audioPath);
-    const remoteAudioPath = `${remoteTmpDir}/${filename}`;
+    let filename = path.basename(audioPath);
+    let remoteAudioPath = `${remoteTmpDir}/${filename}`;
 
-    // Ensure remote dir
-    execSync(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      timeout: 10000,
+
+    await runCommandWithWatchdog(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
+      inactivityMs: 10000,
+      timeoutMs: 10000,
     });
 
-    // Upload audio
-    execSync(`scp "${audioPath}" "${host}:${remoteAudioPath}"`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      timeout: 60000,
+
+    await runCommandWithWatchdog(`scp "${audioPath}" "${host}:${remoteAudioPath}"`, {
+      inactivityMs: 60000,
+      timeoutMs: 60000,
     });
 
     try {
-      // Run Whisper
-      const pythonCmd = `${venv}/bin/python3`;
-      const whisperScript = `${remotePath}/utils/whisper-word-timing.py`;
 
-      const cmd = `"${pythonCmd}" "${whisperScript}" "${remoteAudioPath}" "${language}" --model "${model}" --device "${device}"`;
-      const fullCmd = `ssh ${host} '${cmd}'`;
+      let pythonCmd = `${venv}/bin/python3`;
+      let whisperScript = `${remotePath}/utils/whisper-word-timing.py`;
 
-      const output = execSync(fullCmd, {
-        encoding: 'utf-8',
+      let cmd = `"${pythonCmd}" "${whisperScript}" "${remoteAudioPath}" "${language}" --model "${model}" --device "${device}"`;
+      let fullCmd = `ssh ${host} '${cmd}'`;
+
+      let output = await runCommandWithWatchdog(fullCmd, {
         maxBuffer: 50 * 1024 * 1024,
-        timeout: params.timeout || 300000,
+        inactivityMs: params.timeout || 300000,
+        timeoutMs: params.timeout || 300000,
       });
 
-      const words = JSON.parse(output);
-      const text = words.map(w => w.word).join(' ');
-      const duration = words.length > 0
-        ? words[words.length - 1].end
-        : 0;
+      let words = JSON.parse(output);
+      let text = words.map((w) => w.word).join(' ');
+      let duration = words.length > 0 ? words[words.length - 1].end : 0;
 
       return { text, words, duration, error: null };
-
     } finally {
-      // Cleanup remote file
-      try {
-        execSync(`ssh ${host} "rm -f ${remoteAudioPath}"`, {
-          encoding: 'utf-8',
-          stdio: 'pipe',
-          timeout: 5000,
-        });
-      } catch { /* ignore */ }
-    }
 
+      try {
+        await runCommandWithWatchdog(`ssh ${host} "rm -f ${remoteAudioPath}"`, {
+          inactivityMs: 5000,
+          timeoutMs: 5000,
+        });
+      } catch (cleanupError) {
+        console.warn(`Failed to cleanup remote Whisper audio ${remoteAudioPath}: ${cleanupError.message}`);
+      }
+    }
   } catch (err) {
     return { text: null, words: null, duration: 0, error: err.message };
   }
@@ -150,14 +169,14 @@ async function executeSSH(audioPath, params) {
  * @returns {Promise<Object>} Result with text, words, duration
  */
 async function executeHTTP(audioPath, params) {
-  const endpoint = params.endpoint || process.env.WHISPER_ENDPOINT || 'http://localhost:5001';
-  const language = params.language || 'es';
+  let endpoint = params.endpoint || process.env.WHISPER_ENDPOINT || 'http://localhost:5001';
+  let language = params.language || 'es';
 
   try {
-    const audioBuffer = await fs.readFile(audioPath);
-    const blob = new Blob([audioBuffer], { type: 'audio/wav' });
+    let audioBuffer = await fs.readFile(audioPath);
+    let blob = new Blob([audioBuffer], { type: 'audio/wav' });
 
-    const formData = new FormData();
+    let formData = new FormData();
     formData.append('file', blob, path.basename(audioPath));
     formData.append('language', language);
     formData.append('word_timestamps', 'true');
@@ -166,25 +185,27 @@ async function executeHTTP(audioPath, params) {
       formData.append('model', params.model);
     }
 
-    const response = await fetch(`${endpoint}/transcribe`, {
+    let response = await fetch(`${endpoint}/transcribe`, {
       method: 'POST',
       body: formData,
-      signal: AbortSignal.timeout(params.timeout || 300000),
+      signal: requestSignal(params.timeout || 300000, params.signal),
     });
 
     if (!response.ok) {
-      return { text: null, words: null, duration: 0, error: `Whisper API error: ${response.status}` };
+      return {
+        text: null,
+        words: null,
+        duration: 0,
+        error: `Whisper API error: ${response.status}`,
+      };
     }
 
-    const result = await response.json();
-    const words = result.words || [];
-    const text = result.text || words.map(w => w.word).join(' ');
-    const duration = words.length > 0
-      ? words[words.length - 1].end
-      : 0;
+    let result = await response.json();
+    let words = result.words || [];
+    let text = result.text || words.map((w) => w.word).join(' ');
+    let duration = words.length > 0 ? words[words.length - 1].end : 0;
 
     return { text, words, duration, error: null };
-
   } catch (err) {
     return { text: null, words: null, duration: 0, error: err.message };
   }

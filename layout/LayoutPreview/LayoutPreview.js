@@ -11,16 +11,16 @@ export class LayoutPreview extends Symbiote {
   static isoMode = true;
 
   init$ = {
-    // Preview type: 'split-h' | 'split-v' | 'join' | null
+
     previewType: null,
 
-    // Target panel rect for positioning
+
     targetRect: null,
 
-    // Preview visibility
+
     visible: false,
 
-    // Computed styles
+
     overlayStyle: '',
     lineStyle: '',
   };
@@ -37,17 +37,17 @@ export class LayoutPreview extends Symbiote {
 
   /**
    * Show split preview
-   * @param {'split-h' | 'split-v'} direction 
-   * @param {DOMRect} panelRect 
-   * @param {number} [ratio=0.5] 
+   * @param {'split-h' | 'split-v'} direction
+   * @param {DOMRect} panelRect
+   * @param {number} [ratio=0.5]
    */
   showSplit(direction, panelRect, ratio = 0.5) {
     this.$.previewType = direction;
     this.$.visible = true;
 
     if (direction === 'split-h') {
-      // Horizontal split - vertical line
-      const x = panelRect.left + panelRect.width * ratio;
+
+      let x = panelRect.left + panelRect.width * ratio;
       this.$.lineStyle = `
         left: ${x}px;
         top: ${panelRect.top}px;
@@ -56,8 +56,8 @@ export class LayoutPreview extends Symbiote {
       `;
       this.$.overlayStyle = '';
     } else {
-      // Vertical split - horizontal line
-      const y = panelRect.top + panelRect.height * ratio;
+
+      let y = panelRect.top + panelRect.height * ratio;
       this.$.lineStyle = `
         left: ${panelRect.left}px;
         top: ${y}px;

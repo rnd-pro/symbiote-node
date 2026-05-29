@@ -14,7 +14,6 @@
  * @module symbiote-node/core/GraphMermaid
  */
 
-// --- Shape mapping ---
 
 const SHAPE_TO_MERMAID = {
   circle: (id, label) => `${id}((${label}))`,
@@ -37,7 +36,6 @@ const MERMAID_SHAPE_PATTERNS = [
   { re: /^(\w+)\[(.+?)\]$/, shape: 'rect' },
 ];
 
-// --- Mermaid Arrow patterns ---
 
 /**
  * Arrow patterns with optional label.
@@ -45,11 +43,11 @@ const MERMAID_SHAPE_PATTERNS = [
  * @type {Array<{re: RegExp}>}
  */
 const ARROW_PATTERNS = [
-  // nodeA -->|label| nodeB
+
   /^(.+?)\s*-->\|([^|]*)\|\s*(.+)$/,
-  // nodeA -- label --> nodeB
+
   /^(.+?)\s*--\s+(.+?)\s+-->\s*(.+)$/,
-  // nodeA --> nodeB (no label)
+
   /^(.+?)\s*-->\s*(.+)$/,
 ];
 
@@ -60,12 +58,12 @@ const ARROW_PATTERNS = [
  * @returns {{ id: string, label: string|null, shape: string|null }}
  */
 function parseNodeRef(raw) {
-  const trimmed = raw.trim();
+  let trimmed = raw.trim();
   for (const { re, shape } of MERMAID_SHAPE_PATTERNS) {
-    const m = trimmed.match(re);
+    let m = trimmed.match(re);
     if (m) return { id: m[1], label: m[2], shape };
   }
-  // Plain id reference
+
   return { id: trimmed, label: null, shape: null };
 }
 
@@ -78,37 +76,29 @@ function parseNodeRef(raw) {
  * @returns {string}
  */
 export function editorToMermaid(editor, options = {}) {
-  const { direction = 'LR' } = options;
-  const lines = [];
+  let { direction = 'LR' } = options;
+  let lines = [];
 
   lines.push(`graph ${direction}`);
 
-  // Collect which nodes belong to which frame (by spatial containment)
-  const frames = editor.getFrames();
-  const nodeToFrame = new Map();
 
-  // We don't have positions in editor, so we rely on frame data
-  // Frames are matched by checking if any connection links nodes in the frame
-  // For simplicity, use frame label as subgraph name
+  let frames = editor.getFrames();
+  let nodeToFrame = new Map();
 
-  // Build node declarations grouped by frame
-  const framedNodes = new Map(); // frameId -> [node]
-  const freeNodes = [];
 
-  // If frames exist, check node positions (stored in frame data)
-  // Since we don't have positions here, we serialize frames
-  // and let the user define membership via subgraph
+  let framedNodes = new Map();
+  let freeNodes = [];
 
-  // Collect all nodes
-  const allNodes = editor.getNodes();
-  const allConnections = editor.getConnections();
 
-  // Render nodes inside subgraphs (frames)
+  let allNodes = editor.getNodes();
+  let allConnections = editor.getConnections();
+
+
   if (frames.length) {
-    // Frames without spatial data — output as subgraphs with all nodes listed
-    // In practice, frame membership is defined externally
+
+
     for (const frame of frames) {
-      const nodeIds = frame._nodeIds || [];
+      let nodeIds = frame._nodeIds || [];
       if (nodeIds.length) {
         for (const nid of nodeIds) {
           nodeToFrame.set(nid, frame);
@@ -117,10 +107,10 @@ export function editorToMermaid(editor, options = {}) {
     }
   }
 
-  // Separate framed vs free nodes
+
   for (const node of allNodes) {
     if (nodeToFrame.has(node.id)) {
-      const frame = nodeToFrame.get(node.id);
+      let frame = nodeToFrame.get(node.id);
       if (!framedNodes.has(frame.id)) framedNodes.set(frame.id, []);
       framedNodes.get(frame.id).push(node);
     } else {
@@ -128,21 +118,20 @@ export function editorToMermaid(editor, options = {}) {
     }
   }
 
-  // Render free nodes first
+
   for (const node of freeNodes) {
     lines.push('  ' + nodeToMermaid(node));
   }
 
-  // If no frame membership data, put all nodes as free and create
-  // empty subgraphs as comments
+
   if (framedNodes.size === 0 && frames.length > 0) {
-    // Output all nodes first
+
     if (freeNodes.length === 0) {
       for (const node of allNodes) {
         lines.push('  ' + nodeToMermaid(node));
       }
     }
-    // Frames as subgraphs with node references
+
     for (const frame of frames) {
       lines.push('');
       lines.push(`  subgraph ${sanitizeId(frame.label)}["${frame.label}"]`);
@@ -150,9 +139,9 @@ export function editorToMermaid(editor, options = {}) {
       lines.push('  end');
     }
   } else {
-    // Render subgraphs with their nodes
+
     for (const [frameId, nodes] of framedNodes) {
-      const frame = frames.find(f => f.id === frameId);
+      let frame = frames.find((f) => f.id === frameId);
       if (!frame) continue;
       lines.push('');
       lines.push(`  subgraph ${sanitizeId(frame.label)}["${frame.label}"]`);
@@ -164,10 +153,10 @@ export function editorToMermaid(editor, options = {}) {
     }
   }
 
-  // Render connections
+
   lines.push('');
   for (const conn of allConnections) {
-    const label = conn.out === 'exec' ? '' : conn.out;
+    let label = conn.out === 'exec' ? '' : conn.out;
     if (label) {
       lines.push(`  ${conn.from} -->|${label}| ${conn.to}`);
     } else {
@@ -184,7 +173,7 @@ export function editorToMermaid(editor, options = {}) {
  * @returns {string}
  */
 function nodeToMermaid(node) {
-  const shapeFn = SHAPE_TO_MERMAID[node.shape] || SHAPE_TO_MERMAID.rect;
+  let shapeFn = SHAPE_TO_MERMAID[node.shape] || SHAPE_TO_MERMAID.rect;
   return shapeFn(node.id, node.label);
 }
 
@@ -205,10 +194,10 @@ function sanitizeId(str) {
  * @returns {{ nodes: Array, connections: Array, frames: Array, direction: string }}
  */
 export function mermaidToGraph(text) {
-  const nodes = new Map(); // id -> { id, name, shape, category }
-  const connections = [];
-  const frames = [];
-  const frameStack = []; // for nested subgraphs
+  let nodes = new Map();
+  let connections = [];
+  let frames = [];
+  let frameStack = [];
 
   let direction = 'LR';
 
@@ -226,16 +215,16 @@ export function mermaidToGraph(text) {
         category: 'default',
       });
     } else if (ref.label && !nodes.get(ref.id).name) {
-      // Update label if first seen was bare reference
-      const existing = nodes.get(ref.id);
+
+      let existing = nodes.get(ref.id);
       if (existing.name === existing.id) {
         existing.name = ref.label;
       }
       if (ref.shape) existing.shape = ref.shape;
     }
-    // Track frame membership
+
     if (frameStack.length > 0) {
-      const currentFrame = frameStack[frameStack.length - 1];
+      let currentFrame = frameStack[frameStack.length - 1];
       if (!currentFrame._nodeIds) currentFrame._nodeIds = [];
       if (!currentFrame._nodeIds.includes(ref.id)) {
         currentFrame._nodeIds.push(ref.id);
@@ -244,31 +233,33 @@ export function mermaidToGraph(text) {
   }
 
   for (const rawLine of text.split('\n')) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('%%')) continue; // skip empty and comments
+    let line = rawLine.trim();
+    if (!line || line.startsWith('%%')) continue;
 
-    // Graph direction
-    const dirMatch = line.match(/^graph\s+(LR|RL|TB|BT|TD)\s*$/);
+
+    let dirMatch = line.match(/^graph\s+(LR|RL|TB|BT|TD)\s*$/);
     if (dirMatch) {
       direction = dirMatch[1] === 'TD' ? 'TB' : dirMatch[1];
       continue;
     }
 
-    // Flowchart direction (alias)
-    const flowMatch = line.match(/^flowchart\s+(LR|RL|TB|BT|TD)\s*$/);
+
+    let flowMatch = line.match(/^flowchart\s+(LR|RL|TB|BT|TD)\s*$/);
     if (flowMatch) {
       direction = flowMatch[1] === 'TD' ? 'TB' : flowMatch[1];
       continue;
     }
 
-    // Subgraph start
-    const subMatch = line.match(/^subgraph\s+(\w+)(?:\["(.+?)"\])?\s*$/);
+
+    let subMatch = line.match(/^subgraph\s+(\w+)(?:\["(.+?)"\])?\s*$/);
     if (subMatch) {
-      const frame = {
+      let frame = {
         label: subMatch[2] || subMatch[1],
         color: '#4a9eff',
-        x: 0, y: 0,
-        width: 400, height: 300,
+        x: 0,
+        y: 0,
+        width: 400,
+        height: 300,
         _nodeIds: [],
       };
       frameStack.push(frame);
@@ -276,26 +267,26 @@ export function mermaidToGraph(text) {
       continue;
     }
 
-    // Subgraph end
+
     if (line === 'end') {
       frameStack.pop();
       continue;
     }
 
-    // Direction inside subgraph
+
     if (line.match(/^direction\s+(LR|RL|TB|BT|TD)$/)) continue;
 
-    // Try arrow patterns (connection lines)
+
     let matched = false;
     for (const pattern of ARROW_PATTERNS) {
-      const m = line.match(pattern);
+      let m = line.match(pattern);
       if (m) {
         matched = true;
         if (m.length === 4) {
-          // With label: source, label, target
-          const source = parseNodeRef(m[1]);
-          const label = m[2].trim();
-          const target = parseNodeRef(m[3]);
+
+          let source = parseNodeRef(m[1]);
+          let label = m[2].trim();
+          let target = parseNodeRef(m[3]);
           registerNode(source);
           registerNode(target);
           connections.push({
@@ -305,9 +296,9 @@ export function mermaidToGraph(text) {
             in: 'exec',
           });
         } else if (m.length === 3) {
-          // No label: source, target
-          const source = parseNodeRef(m[1]);
-          const target = parseNodeRef(m[2]);
+
+          let source = parseNodeRef(m[1]);
+          let target = parseNodeRef(m[2]);
           registerNode(source);
           registerNode(target);
           connections.push({
@@ -321,13 +312,18 @@ export function mermaidToGraph(text) {
       }
     }
 
-    // If not a connection, try as standalone node declaration
+
     if (!matched) {
-      // Handle "nodeA & nodeB & nodeC" syntax
-      const parts = line.split(/\s*&\s*/);
+
+      let parts = line.split(/\s*&\s*/);
       for (const part of parts) {
-        const ref = parseNodeRef(part.trim());
-        if (ref.id && ref.id !== 'end' && !ref.id.startsWith('style') && !ref.id.startsWith('class')) {
+        let ref = parseNodeRef(part.trim());
+        if (
+          ref.id &&
+          ref.id !== 'end' &&
+          !ref.id.startsWith('style') &&
+          !ref.id.startsWith('class')
+        ) {
           registerNode(ref);
         }
       }
@@ -337,12 +333,16 @@ export function mermaidToGraph(text) {
   return {
     nodes: [...nodes.values()],
     connections,
-    frames: frames.map(f => ({
+    frames: frames.map((f) => ({
       label: f.label,
       color: f.color,
-      x: f.x, y: f.y,
-      width: f.width, height: f.height,
+      x: f.x,
+      y: f.y,
+      width: f.width,
+      height: f.height,
     })),
     direction,
   };
 }
+
+export { editorToMermaid as default };

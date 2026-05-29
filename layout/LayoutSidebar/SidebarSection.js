@@ -9,12 +9,14 @@
  */
 import Symbiote, { html } from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
+import { sidebarSectionTemplate } from './SidebarSection.tpl.js';
+import { styles } from './SidebarSection.css.js';
 import { navigate } from '../LayoutRouter/LayoutRouter.js';
 
 const SIDEBAR_SECTION_ICONS = ['chevron_right', 'close', 'drag_indicator', 'visibility', 'visibility_off'];
 
 export class SidebarSection extends Symbiote {
-  isoMode = true;
+  static isoMode = true;
 
   init$ = {
     sectionId: '',
@@ -41,13 +43,13 @@ export class SidebarSection extends Symbiote {
 
     onToggleVisibility: (e) => {
       e.stopPropagation();
-      const sidebar = this.closest('layout-sidebar');
+      let sidebar = this.closest('layout-sidebar');
       if (sidebar) sidebar.toggleVisibility(this.$.sectionId);
     },
   };
 
   renderCallback() {
-    ensureMaterialSymbols([...SIDEBAR_SECTION_ICONS, this.$.icon]);
+    ensureMaterialSymbols(['close', 'drag_indicator', 'expand_more', 'visibility', 'visibility_off', this.$.icon]);
     this.sub('icon', (icon) => ensureMaterialSymbols([icon]));
 
     this.sub('isActive', (val) => {
@@ -61,6 +63,7 @@ export class SidebarSection extends Symbiote {
     this.sub('isVisible', (val) => {
       this.toggleAttribute('data-hidden', !val);
       this.$.eyeIcon = val ? 'visibility' : 'visibility_off';
+      ensureMaterialSymbols([this.$.eyeIcon]);
     });
 
     this.sub('isDisabled', (val) => {
@@ -68,25 +71,24 @@ export class SidebarSection extends Symbiote {
     });
 
     this.sub('subPanels', (panels) => {
-      const has = panels && panels.length > 0;
-      ensureMaterialSymbols((panels || []).map((panel) => panel.icon));
+      let has = panels && panels.length > 0;
       this.$.hasSubPanels = has;
       this.toggleAttribute('data-has-sub', has);
-      // Collapse if no sub-panels
+
       if (!has) this.$.isExpanded = false;
     });
 
-    // Drag support
+
     this.setAttribute('draggable', 'true');
 
     this.addEventListener('dragstart', (e) => {
-      const sidebar = this.closest('layout-sidebar');
+      let sidebar = this.closest('layout-sidebar');
       if (!sidebar?.hasAttribute('edit-mode')) {
         e.preventDefault();
         return;
       }
-      const sections = Array.from(this.parentElement.children);
-      const idx = sections.indexOf(this);
+      let sections = Array.from(this.parentElement.children);
+      let idx = sections.indexOf(this);
       e.dataTransfer.setData('text/plain', String(idx));
       e.dataTransfer.effectAllowed = 'move';
       this.setAttribute('data-dragging', '');
@@ -97,7 +99,7 @@ export class SidebarSection extends Symbiote {
     });
 
     this.addEventListener('dragover', (e) => {
-      const sidebar = this.closest('layout-sidebar');
+      let sidebar = this.closest('layout-sidebar');
       if (!sidebar?.hasAttribute('edit-mode')) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
@@ -111,12 +113,12 @@ export class SidebarSection extends Symbiote {
     this.addEventListener('drop', (e) => {
       e.preventDefault();
       this.removeAttribute('data-dragover');
-      const sidebar = this.closest('layout-sidebar');
+      let sidebar = this.closest('layout-sidebar');
       if (!sidebar?.hasAttribute('edit-mode')) return;
 
-      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-      const sections = Array.from(this.parentElement.children);
-      const toIdx = sections.indexOf(this);
+      let fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      let sections = Array.from(this.parentElement.children);
+      let toIdx = sections.indexOf(this);
       if (fromIdx !== toIdx) {
         sidebar.moveSection(fromIdx, toIdx);
       }
@@ -124,21 +126,8 @@ export class SidebarSection extends Symbiote {
   }
 }
 
-SidebarSection.template = html`
-<div class="sec-drag-handle">
-  <span class="material-symbols-outlined">drag_indicator</span>
-</div>
-<div class="sec-item" ${{ onclick: 'onSectionClick' }}>
-  <span class="material-symbols-outlined sec-icon" ${{ textContent: 'icon' }}></span>
-  <span class="sec-label" ${{ textContent: 'label' }}></span>
-  <span class="material-symbols-outlined sec-expand" ${{ onclick: 'onExpandToggle' }}>chevron_right</span>
-</div>
-<button class="sec-eye" ${{ onclick: 'onToggleVisibility' }}>
-  <span class="material-symbols-outlined" ${{ textContent: 'eyeIcon' }}></span>
-</button>
-<div class="sec-sub-panels" itemize="subPanels" item-tag="sidebar-sub-item"></div>
-`;
-
+SidebarSection.template = sidebarSectionTemplate;
+SidebarSection.rootStyles = styles;
 SidebarSection.reg('sidebar-section');
 
 /**
@@ -146,7 +135,7 @@ SidebarSection.reg('sidebar-section');
  * Shows close button for non-master panels (isMaster=false)
  */
 export class SidebarSubItem extends Symbiote {
-  isoMode = true;
+  static isoMode = true;
 
   init$ = {
     title: '',
@@ -156,16 +145,18 @@ export class SidebarSubItem extends Symbiote {
 
     onClose: (e) => {
       e.stopPropagation();
-      const panelId = this.$.panelId;
+      let panelId = this.$.panelId;
       if (!panelId) return;
 
-      // Find the panel-layout and call joinPanels
-      const sidebar = this.closest('layout-sidebar');
+
+      let sidebar = this.closest('layout-sidebar');
       if (sidebar) {
-        sidebar.dispatchEvent(new CustomEvent('panel-close', {
-          bubbles: true,
-          detail: { panelId },
-        }));
+        sidebar.dispatchEvent(
+          new CustomEvent('panel-close', {
+            bubbles: true,
+            detail: { panelId },
+          })
+        );
       }
     },
   };
@@ -181,13 +172,13 @@ export class SidebarSubItem extends Symbiote {
 }
 
 SidebarSubItem.template = html`
-<div class="sub-panel-item">
-  <span class="material-symbols-outlined" ${{ textContent: 'icon' }}></span>
-  <span ${{ textContent: 'title' }}></span>
-  <button class="sub-panel-close" ${{ onclick: 'onClose' }}>
-    <span class="material-symbols-outlined">close</span>
-  </button>
-</div>
+  <div class="sub-panel-item">
+    <span class="material-symbols-outlined" ${{ textContent: 'icon' }}></span>
+    <span ${{ textContent: 'title' }}></span>
+    <button class="sub-panel-close" ${{ onclick: 'onClose' }}>
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
 `;
 
 SidebarSubItem.reg('sidebar-sub-item');

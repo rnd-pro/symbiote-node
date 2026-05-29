@@ -7,15 +7,21 @@
  *
  * Ported from Mr-Computer/automations/argentine-spanish-bot/src/services/news-accumulator.js
  *
- * @module agi-graph/packs/data/news-accumulate
+ * @module symbiote-node/packs/data/news-accumulate
  */
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
-// Non-local patterns to filter out
+
 const NON_LOCAL_PATTERNS = ['en eeuu', 'desde estados unidos'];
-const HOROSCOPE_PATTERNS = ['horóscopo', 'horoscopo', 'astrolog', 'signo del zodiaco', 'signo del zodíaco'];
+const HOROSCOPE_PATTERNS = [
+  'horóscopo',
+  'horoscopo',
+  'astrolog',
+  'signo del zodiaco',
+  'signo del zodíaco',
+];
 
 /**
  * Simple hash for news dedup
@@ -25,8 +31,8 @@ const HOROSCOPE_PATTERNS = ['horóscopo', 'horoscopo', 'astrolog', 'signo del zo
 function hashString(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    const chr = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
+    let chr = str.charCodeAt(i);
+    hash = (hash << 5) - hash + chr;
     hash |= 0;
   }
   return Math.abs(hash).toString(36);
@@ -38,8 +44,8 @@ function hashString(str) {
  * @returns {string}
  */
 function generateId(item) {
-  const source = item.link || item.url || '';
-  const title = item.title || '';
+  let source = item.link || item.url || '';
+  let title = item.title || '';
   return hashString(`${title}:${source}`);
 }
 
@@ -69,9 +75,9 @@ function standardizeItem(item) {
  * @returns {Array}
  */
 function filterArgentinaOnly(items) {
-  return items.filter(item => {
-    const text = `${item.title} ${item.description}`.toLowerCase();
-    return !NON_LOCAL_PATTERNS.some(p => text.includes(p));
+  return items.filter((item) => {
+    let text = `${item.title} ${item.description}`.toLowerCase();
+    return !NON_LOCAL_PATTERNS.some((p) => text.includes(p));
   });
 }
 
@@ -81,9 +87,9 @@ function filterArgentinaOnly(items) {
  * @returns {Array}
  */
 function filterOutHoroscopes(items) {
-  return items.filter(item => {
-    const text = `${item.title} ${item.description}`.toLowerCase();
-    return !HOROSCOPE_PATTERNS.some(p => text.includes(p));
+  return items.filter((item) => {
+    let text = `${item.title} ${item.description}`.toLowerCase();
+    return !HOROSCOPE_PATTERNS.some((p) => text.includes(p));
   });
 }
 
@@ -94,7 +100,7 @@ function filterOutHoroscopes(items) {
  */
 async function loadStore(storePath) {
   try {
-    const data = await readFile(storePath, 'utf-8');
+    let data = await readFile(storePath, 'utf-8');
     return JSON.parse(data);
   } catch {
     return {
@@ -116,7 +122,6 @@ async function saveStore(storePath, data) {
   await writeFile(storePath, JSON.stringify(data, null, 2));
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'data/news-accumulate',
@@ -125,25 +130,35 @@ export default {
 
   driver: {
     description: 'Collect and store news with dedup, filtering, periods, and category stats',
-    inputs: [
-      { name: 'storePath', type: 'string' },
-    ],
+    inputs: [{ name: 'storePath', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'get', description: 'Operation: add | get | mark-processed | new-period | stats' },
-      // add
+      operation: {
+        type: 'string',
+        default: 'get',
+        description: 'Operation: add | get | mark-processed | new-period | stats',
+      },
+
       newsItem: { type: 'any', default: null, description: 'News item to add' },
       newsItems: { type: 'any', default: null, description: 'Array of news items to add (batch)' },
-      // get filters
+
       categories: { type: 'any', default: null, description: 'Filter by categories array' },
       since: { type: 'string', default: null, description: 'Get news since ISO date' },
-      filterLocal: { type: 'boolean', default: false, description: 'Filter out non-local (international) news' },
-      filterHoroscopes: { type: 'boolean', default: true, description: 'Filter out horoscope content' },
+      filterLocal: {
+        type: 'boolean',
+        default: false,
+        description: 'Filter out non-local (international) news',
+      },
+      filterHoroscopes: {
+        type: 'boolean',
+        default: true,
+        description: 'Filter out horoscope content',
+      },
       maxItems: { type: 'int', default: 100, description: 'Maximum items to return' },
-      // mark-processed
+
       newsIds: { type: 'any', default: null, description: 'Array of news IDs to mark processed' },
     },
   },
@@ -153,18 +168,18 @@ export default {
       return typeof inputs.storePath === 'string' && inputs.storePath.length > 0;
     },
 
-    cacheKey: () => null, // mutable state
+    cacheKey: () => null,
 
     execute: async (inputs, params) => {
-      const { storePath } = inputs;
-      const { operation } = params;
+      let { storePath } = inputs;
+      let { operation } = params;
 
       try {
-        const store = await loadStore(storePath);
+        let store = await loadStore(storePath);
 
-        switch (operation) {
-          case 'add': {
-            const itemsToAdd = params.newsItems
+        let opMap = {
+          add: async () => {
+            let itemsToAdd = params.newsItems
               ? params.newsItems
               : params.newsItem
                 ? [params.newsItem]
@@ -172,56 +187,60 @@ export default {
 
             if (itemsToAdd.length === 0) return { error: 'No items to add' };
 
-            const existingIds = new Set(store.news.map(n => n.id));
+            let existingIds = new Set(store.news.map((n) => n.id));
             let added = 0;
 
             for (const raw of itemsToAdd) {
-              const item = standardizeItem(raw);
+              let item = standardizeItem(raw);
               if (existingIds.has(item.id)) continue;
 
               store.news.push(item);
               existingIds.add(item.id);
               added++;
 
-              // Update category counts
-              const catId = typeof item.category === 'object' ? item.category.id : item.category;
+
+              let catId = typeof item.category === 'object' ? item.category.id : item.category;
               store.categoryCounts[catId] = (store.categoryCounts[catId] || 0) + 1;
             }
 
             await saveStore(storePath, store);
-            return { result: { added, total: store.news.length, duplicatesSkipped: itemsToAdd.length - added } };
-          }
+            return {
+              result: {
+                added,
+                total: store.news.length,
+                duplicatesSkipped: itemsToAdd.length - added,
+              },
+            };
+          },
+          get: () => {
+            let items = store.news.filter((n) => !n.processed);
 
-          case 'get': {
-            let items = store.news.filter(n => !n.processed);
 
-            // Date filter
             if (params.since) {
-              const sinceDate = new Date(params.since);
-              items = items.filter(n => new Date(n.addedAt) >= sinceDate);
+              let sinceDate = new Date(params.since);
+              items = items.filter((n) => new Date(n.addedAt) >= sinceDate);
             }
 
-            // Category filter
+
             if (Array.isArray(params.categories) && params.categories.length > 0) {
-              items = items.filter(n => {
-                const catId = typeof n.category === 'object' ? n.category.id : n.category;
+              items = items.filter((n) => {
+                let catId = typeof n.category === 'object' ? n.category.id : n.category;
                 return params.categories.includes(catId);
               });
             }
 
-            // Content filters
+
             if (params.filterLocal) items = filterArgentinaOnly(items);
             if (params.filterHoroscopes) items = filterOutHoroscopes(items);
 
             items = items.slice(0, params.maxItems);
 
             return { result: { items, count: items.length } };
-          }
-
-          case 'mark-processed': {
+          },
+          'mark-processed': async () => {
             if (!Array.isArray(params.newsIds)) return { error: 'newsIds array is required' };
 
-            const idsSet = new Set(params.newsIds);
+            let idsSet = new Set(params.newsIds);
             let marked = 0;
 
             for (const item of store.news) {
@@ -235,10 +254,9 @@ export default {
             store.processedIds.push(...params.newsIds);
             await saveStore(storePath, store);
             return { result: { marked, total: params.newsIds.length } };
-          }
-
-          case 'new-period': {
-            const archived = {
+          },
+          'new-period': async () => {
+            let archived = {
               periodStart: store.periodStart,
               periodEnd: new Date().toISOString(),
               itemCount: store.news.length,
@@ -252,12 +270,11 @@ export default {
 
             await saveStore(storePath, store);
             return { result: { archived, message: 'New period started' } };
-          }
-
-          case 'stats': {
-            const total = store.news.length;
-            const processed = store.news.filter(n => n.processed).length;
-            const unprocessed = total - processed;
+          },
+          stats: () => {
+            let total = store.news.length;
+            let processed = store.news.filter((n) => n.processed).length;
+            let unprocessed = total - processed;
 
             return {
               result: {
@@ -268,10 +285,13 @@ export default {
                 categoryCounts: store.categoryCounts,
               },
             };
-          }
+          },
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return await opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `news-accumulate ${operation} failed: ${err.message}` };

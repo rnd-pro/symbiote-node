@@ -53,8 +53,8 @@ export class PortalManager {
    */
   removeNode(nodeId) {
     for (const [, ch] of this.#channels) {
-      ch.senders = ch.senders.filter(s => s.nodeId !== nodeId);
-      ch.receivers = ch.receivers.filter(r => r.nodeId !== nodeId);
+      ch.senders = ch.senders.filter((s) => s.nodeId !== nodeId);
+      ch.receivers = ch.receivers.filter((r) => r.nodeId !== nodeId);
     }
   }
 
@@ -63,7 +63,7 @@ export class PortalManager {
    * @returns {Array<{ from: string, out: string, to: string, in: string, channel: string }>}
    */
   getConnections() {
-    const result = [];
+    let result = [];
     for (const [channel, ch] of this.#channels) {
       for (const sender of ch.senders) {
         for (const receiver of ch.receivers) {
@@ -102,3 +102,5 @@ export class PortalManager {
     this.#channels.clear();
   }
 }
+
+export { PortalManager as default };

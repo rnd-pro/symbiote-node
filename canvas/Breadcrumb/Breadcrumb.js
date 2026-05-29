@@ -42,12 +42,11 @@ BreadcrumbItem.template = html`
 BreadcrumbItem.reg('breadcrumb-item');
 
 export class Breadcrumb extends Symbiote {
-
   init$ = {
     crumbs: [],
     isVisible: false,
     onCrumbClick: (e) => {
-      const item = e.target.closest('breadcrumb-item');
+      let item = e.target.closest('breadcrumb-item');
       if (!item || item.$.isActive) return;
       if (this.#onNavigate) this.#onNavigate(item.$.level);
     },
@@ -84,7 +83,6 @@ export class Breadcrumb extends Symbiote {
       isFirst: i === 0,
     }));
   }
-
 
   renderCallback() {
     this.sub('isVisible', (val) => {

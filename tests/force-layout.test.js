@@ -23,7 +23,17 @@ const WORKER_PATH = path.join(__dirname, '..', 'canvas', 'ForceWorker.js');
 const NODE_W = 260;
 const NODE_H = 40;
 
-// ---- Helpers ----
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+let rand = mulberry32(42);
+
 
 /**
  * Run ForceWorker on a graph and return final positions.
@@ -32,16 +42,16 @@ const NODE_H = 40;
  * @returns {Promise<{positions: object, iterations: number}>}
  */
 function runLayout(data, timeout = 30000) {
-  // Ensure worker uses the same dimensions as the test validation
+
   data.options = {
     nodeWidth: NODE_W,
     nodeHeight: NODE_H,
-    ...(data.options || {})
+    ...(data.options || {}),
   };
 
   return new Promise((resolve, reject) => {
-    // ForceWorker uses importScripts/self.onmessage — it's a browser Worker.
-    // For Node.js testing, we wrap it: eval the source with a shim.
+
+
     const workerCode = `
       import { parentPort } from 'node:worker_threads';
       import { readFileSync } from 'node:fs';
@@ -96,7 +106,8 @@ function detectOverlaps(positions, w = NODE_W, h = NODE_H) {
   const pairs = [];
   for (let i = 0; i < ids.length; i++) {
     for (let j = i + 1; j < ids.length; j++) {
-      const a = positions[ids[i]], b = positions[ids[j]];
+      const a = positions[ids[i]],
+        b = positions[ids[j]];
       const overlapX = w - Math.abs(a.x - b.x);
       const overlapY = h - Math.abs(a.y - b.y);
       if (overlapX > 0 && overlapY > 0) {
@@ -116,7 +127,8 @@ function detectOverlaps(positions, w = NODE_W, h = NODE_H) {
 function edgeDistances(positions, edges) {
   const distances = [];
   for (const e of edges) {
-    const a = positions[e.from], b = positions[e.to];
+    const a = positions[e.from],
+      b = positions[e.to];
     if (!a || !b) continue;
     distances.push(Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2));
   }
@@ -139,18 +151,23 @@ function edgeDistances(positions, edges) {
  */
 function detectOutliers(positions, threshold = 5) {
   const ids = Object.keys(positions);
-  let cx = 0, cy = 0;
-  for (const id of ids) { cx += positions[id].x; cy += positions[id].y; }
-  cx /= ids.length; cy /= ids.length;
+  let cx = 0,
+    cy = 0;
+  for (const id of ids) {
+    cx += positions[id].x;
+    cy += positions[id].y;
+  }
+  cx /= ids.length;
+  cy /= ids.length;
 
-  const dists = ids.map(id => ({
+  const dists = ids.map((id) => ({
     id,
     dist: Math.sqrt((positions[id].x - cx) ** 2 + (positions[id].y - cy) ** 2),
   }));
   dists.sort((a, b) => a.dist - b.dist);
   const median = dists[Math.floor(dists.length / 2)]?.dist || 1;
 
-  const outliers = dists.filter(d => d.dist > median * threshold).map(d => d.id);
+  const outliers = dists.filter((d) => d.dist > median * threshold).map((d) => d.id);
   return { outliers, centroid: { x: Math.round(cx), y: Math.round(cy) } };
 }
 
@@ -160,7 +177,10 @@ function detectOutliers(positions, threshold = 5) {
  * @returns {{ width: number, height: number, area: number }}
  */
 function boundingBox(positions) {
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
   for (const p of Object.values(positions)) {
     if (p.x < minX) minX = p.x;
     if (p.y < minY) minY = p.y;
@@ -172,7 +192,6 @@ function boundingBox(positions) {
   return { width, height, area: width * height };
 }
 
-// ---- Graph generators ----
 
 function makeChainGraph(n) {
   const nodes = Array.from({ length: n }, (_, i) => ({ id: `n${i}`, x: i * 100, y: 0 }));
@@ -214,11 +233,11 @@ function makeClusterGraph(clusterCount, nodesPerCluster) {
     groups[groupId] = [];
     for (let i = 0; i < nodesPerCluster; i++) {
       const id = `c${c}_n${i}`;
-      nodes.push({ id, x: c * 800 + i * 100, y: Math.random() * 200, group: groupId });
+      nodes.push({ id, x: c * 800 + i * 100, y: rand() * 200, group: groupId });
       groups[groupId].push(id);
       if (i > 0) edges.push({ from: `c${c}_n${i - 1}`, to: id });
     }
-    // Inter-cluster edges
+
     if (c > 0) edges.push({ from: `c${c - 1}_n0`, to: `c${c}_n0` });
   }
   return { nodes, edges, groups };
@@ -227,13 +246,13 @@ function makeClusterGraph(clusterCount, nodesPerCluster) {
 function makeRandomGraph(n, edgeDensity = 0.02) {
   const nodes = Array.from({ length: n }, (_, i) => ({
     id: `n${i}`,
-    x: (Math.random() - 0.5) * n * 50,
-    y: (Math.random() - 0.5) * n * 50,
+    x: (rand() - 0.5) * n * 50,
+    y: (rand() - 0.5) * n * 50,
   }));
   const edges = [];
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
-      if (Math.random() < edgeDensity) {
+      if (rand() < edgeDensity) {
         edges.push({ from: `n${i}`, to: `n${j}` });
       }
     }
@@ -241,7 +260,6 @@ function makeRandomGraph(n, edgeDensity = 0.02) {
   return { nodes, edges };
 }
 
-// ---- Tests ----
 
 describe('Force layout — chain graph (20 nodes)', () => {
   let result;
@@ -255,7 +273,13 @@ describe('Force layout — chain graph (20 nodes)', () => {
 
   it('has zero overlaps', () => {
     const { count, pairs } = detectOverlaps(result.positions);
-    if (count > 0) console.log(`  Overlapping pairs: ${pairs.slice(0, 5).map(p => p.join('↔')).join(', ')}`);
+    if (count > 0)
+      console.log(
+        `  Overlapping pairs: ${pairs
+          .slice(0, 5)
+          .map((p) => p.join('↔'))
+          .join(', ')}`
+      );
     assert.equal(count, 0, `Expected 0 overlaps, found ${count}`);
   });
 
@@ -267,9 +291,14 @@ describe('Force layout — chain graph (20 nodes)', () => {
   it('edge distances are reasonable', () => {
     const graph = makeChainGraph(20);
     const stats = edgeDistances(result.positions, graph.edges);
-    console.log(`  Edge dist: min=${stats.min.toFixed(0)} max=${stats.max.toFixed(0)} median=${stats.median.toFixed(0)} mean=${stats.mean.toFixed(0)}`);
-    // Max edge distance should not be more than 10× min
-    assert.ok(stats.max / Math.max(stats.min, 1) < 10, `Max/min ratio too high: ${(stats.max / stats.min).toFixed(1)}`);
+    console.log(
+      `  Edge dist: min=${stats.min.toFixed(0)} max=${stats.max.toFixed(0)} median=${stats.median.toFixed(0)} mean=${stats.mean.toFixed(0)}`
+    );
+
+    assert.ok(
+      stats.max / Math.max(stats.min, 1) < 10,
+      `Max/min ratio too high: ${(stats.max / stats.min).toFixed(1)}`
+    );
   });
 });
 
@@ -279,7 +308,9 @@ describe('Force layout — grid graph (5×5)', () => {
   it('converges', async () => {
     const graph = makeGridGraph(5, 5);
     result = await runLayout({ ...graph, groups: {}, options: {} });
-    console.log(`  Iterations: ${result.iterations}, BBox: ${JSON.stringify(boundingBox(result.positions))}`);
+    console.log(
+      `  Iterations: ${result.iterations}, BBox: ${JSON.stringify(boundingBox(result.positions))}`
+    );
   });
 
   it('has zero overlaps', () => {
@@ -289,7 +320,7 @@ describe('Force layout — grid graph (5×5)', () => {
 
   it('bounding box is compact', () => {
     const bbox = boundingBox(result.positions);
-    const maxArea = 25 * NODE_W * NODE_H * 20; // 20× theoretical minimum
+    const maxArea = 25 * NODE_W * NODE_H * 20;
     assert.ok(bbox.area < maxArea, `BBox area ${bbox.area} exceeds ${maxArea}`);
   });
 });
@@ -323,12 +354,20 @@ describe('Force layout — clustered graph (5 clusters × 10 nodes)', () => {
   it('converges', async () => {
     graph = makeClusterGraph(5, 10);
     result = await runLayout({ ...graph, options: {} });
-    console.log(`  Iterations: ${result.iterations}, Nodes: ${graph.nodes.length}, Edges: ${graph.edges.length}`);
+    console.log(
+      `  Iterations: ${result.iterations}, Nodes: ${graph.nodes.length}, Edges: ${graph.edges.length}`
+    );
   });
 
   it('has zero overlaps', () => {
     const { count, pairs } = detectOverlaps(result.positions);
-    if (count > 0) console.log(`  Overlapping: ${pairs.slice(0, 5).map(p => p.join('↔')).join(', ')}`);
+    if (count > 0)
+      console.log(
+        `  Overlapping: ${pairs
+          .slice(0, 5)
+          .map((p) => p.join('↔'))
+          .join(', ')}`
+      );
     assert.equal(count, 0, `Expected 0 overlaps, found ${count}`);
   });
 
@@ -338,25 +377,34 @@ describe('Force layout — clustered graph (5 clusters × 10 nodes)', () => {
   });
 
   it('intra-cluster distances < inter-cluster distances', () => {
-    // Compute avg distance within first cluster vs avg distance between cluster 0 and cluster 4
+
     const c0 = graph.groups['group0'];
     const c4 = graph.groups['group4'];
-    let intra = 0, inter = 0, ic = 0, ec = 0;
+    let intra = 0,
+      inter = 0,
+      ic = 0,
+      ec = 0;
     for (let i = 0; i < c0.length; i++) {
       for (let j = i + 1; j < c0.length; j++) {
-        const a = result.positions[c0[i]], b = result.positions[c0[j]];
+        const a = result.positions[c0[i]],
+          b = result.positions[c0[j]];
         intra += Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
         ic++;
       }
       for (let j = 0; j < c4.length; j++) {
-        const a = result.positions[c0[i]], b = result.positions[c4[j]];
+        const a = result.positions[c0[i]],
+          b = result.positions[c4[j]];
         inter += Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
         ec++;
       }
     }
-    intra /= ic; inter /= ec;
+    intra /= ic;
+    inter /= ec;
     console.log(`  Intra-cluster avg: ${intra.toFixed(0)}, Inter-cluster avg: ${inter.toFixed(0)}`);
-    assert.ok(intra < inter, `Intra-cluster (${intra.toFixed(0)}) should be < inter-cluster (${inter.toFixed(0)})`);
+    assert.ok(
+      intra < inter,
+      `Intra-cluster (${intra.toFixed(0)}) should be < inter-cluster (${inter.toFixed(0)})`
+    );
   });
 });
 
@@ -368,7 +416,9 @@ describe('Force layout — large random graph (200 nodes)', () => {
     const start = Date.now();
     result = await runLayout({ ...graph, groups: {}, options: {} }, 30000);
     const elapsed = Date.now() - start;
-    console.log(`  Converged in ${elapsed}ms, ${result.iterations} iterations, ${graph.edges.length} edges`);
+    console.log(
+      `  Converged in ${elapsed}ms, ${result.iterations} iterations, ${graph.edges.length} edges`
+    );
     assert.ok(elapsed < 30000, `Took too long: ${elapsed}ms`);
   });
 
@@ -400,25 +450,30 @@ describe('Layout quality metrics (diagnostics)', () => {
     console.log('\n  ╔══════════════════════════════════════════╗');
     console.log('  ║  FORCE LAYOUT QUALITY REPORT             ║');
     console.log('  ╠══════════════════════════════════════════╣');
-    console.log(`  ║  Nodes: ${graph.nodes.length.toString().padStart(6)}  Edges: ${graph.edges.length.toString().padStart(6)}       ║`);
-    console.log(`  ║  Time: ${elapsed.toString().padStart(5)}ms  Iters: ${result.iterations.toString().padStart(5)}       ║`);
+    console.log(
+      `  ║  Nodes: ${graph.nodes.length.toString().padStart(6)}  Edges: ${graph.edges.length.toString().padStart(6)}       ║`
+    );
+    console.log(
+      `  ║  Time: ${elapsed.toString().padStart(5)}ms  Iters: ${result.iterations.toString().padStart(5)}       ║`
+    );
     console.log('  ╠══════════════════════════════════════════╣');
     console.log(`  ║  Overlaps:     ${overlaps.count.toString().padStart(6)}                  ║`);
-    console.log(`  ║  Outliers:     ${outlierCheck.outliers.length.toString().padStart(6)} (5× median)       ║`);
+    console.log(
+      `  ║  Outliers:     ${outlierCheck.outliers.length.toString().padStart(6)} (5× median)       ║`
+    );
     console.log(`  ║  Edge min:     ${edgeStats.min.toFixed(0).padStart(6)}px                ║`);
     console.log(`  ║  Edge max:     ${edgeStats.max.toFixed(0).padStart(6)}px                ║`);
     console.log(`  ║  Edge median:  ${edgeStats.median.toFixed(0).padStart(6)}px                ║`);
     console.log(`  ║  Edge mean:    ${edgeStats.mean.toFixed(0).padStart(6)}px                ║`);
-    console.log(`  ║  BBox:   ${bbox.width.toFixed(0).padStart(5)} × ${bbox.height.toFixed(0).padStart(5)}px            ║`);
+    console.log(
+      `  ║  BBox:   ${bbox.width.toFixed(0).padStart(5)} × ${bbox.height.toFixed(0).padStart(5)}px            ║`
+    );
     console.log('  ╚══════════════════════════════════════════╝\n');
 
-    assert.ok(true); // Diagnostic — always passes
+    assert.ok(true);
   });
 });
 
-// =====================================================================
-// EDGE CASES
-// =====================================================================
 
 describe('Edge case — single node', () => {
   it('converges without error', async () => {
@@ -438,7 +493,10 @@ describe('Edge case — two nodes, one edge', () => {
 
   it('converges', async () => {
     result = await runLayout({
-      nodes: [{ id: 'a', x: 0, y: 0 }, { id: 'b', x: 100, y: 0 }],
+      nodes: [
+        { id: 'a', x: 0, y: 0 },
+        { id: 'b', x: 100, y: 0 },
+      ],
       edges: [{ from: 'a', to: 'b' }],
       groups: {},
       options: {},
@@ -452,7 +510,8 @@ describe('Edge case — two nodes, one edge', () => {
   });
 
   it('nodes are within link distance', () => {
-    const a = result.positions['a'], b = result.positions['b'];
+    const a = result.positions['a'],
+      b = result.positions['b'];
     const dist = Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
     console.log(`  Distance: ${dist.toFixed(0)}px`);
     assert.ok(dist < 500, `Nodes too far apart: ${dist.toFixed(0)}`);
@@ -463,7 +522,7 @@ describe('Edge case — disconnected components (3 isolated cliques)', () => {
   let result;
   const graph = { nodes: [], edges: [] };
 
-  // 3 triangles with no inter-connections
+
   for (let c = 0; c < 3; c++) {
     const ids = [`t${c}_0`, `t${c}_1`, `t${c}_2`];
     ids.forEach((id, i) => graph.nodes.push({ id, x: c * 500 + i * 100, y: 0 }));
@@ -482,18 +541,24 @@ describe('Edge case — disconnected components (3 isolated cliques)', () => {
   });
 
   it('components are visually separate', () => {
-    // Centroid of each triangle should be distinct
+
     const centroids = [];
     for (let c = 0; c < 3; c++) {
       const ids = [`t${c}_0`, `t${c}_1`, `t${c}_2`];
-      let cx = 0, cy = 0;
-      ids.forEach(id => { cx += result.positions[id].x; cy += result.positions[id].y; });
+      let cx = 0,
+        cy = 0;
+      ids.forEach((id) => {
+        cx += result.positions[id].x;
+        cy += result.positions[id].y;
+      });
       centroids.push({ x: cx / 3, y: cy / 3 });
     }
-    // Pairwise distance between component centroids
+
     for (let i = 0; i < centroids.length; i++) {
       for (let j = i + 1; j < centroids.length; j++) {
-        const dist = Math.sqrt((centroids[i].x - centroids[j].x) ** 2 + (centroids[i].y - centroids[j].y) ** 2);
+        const dist = Math.sqrt(
+          (centroids[i].x - centroids[j].x) ** 2 + (centroids[i].y - centroids[j].y) ** 2
+        );
         console.log(`  Component ${i}↔${j} centroid distance: ${dist.toFixed(0)}`);
         assert.ok(dist > 50, `Components ${i} and ${j} too close: ${dist.toFixed(0)}`);
       }
@@ -509,7 +574,7 @@ describe('Edge case — all nodes at origin (coincident)', () => {
     const edges = Array.from({ length: 14 }, (_, i) => ({ from: `n${i}`, to: `n${i + 1}` }));
     result = await runLayout({ nodes, edges, groups: {}, options: {} });
 
-    // No NaN positions
+
     for (const [id, pos] of Object.entries(result.positions)) {
       assert.ok(!isNaN(pos.x) && !isNaN(pos.y), `NaN position for ${id}: (${pos.x}, ${pos.y})`);
     }
@@ -533,7 +598,7 @@ describe('Edge case — binary tree (depth 6, 63 nodes)', () => {
   let result;
   const graph = { nodes: [], edges: [] };
 
-  // Build complete binary tree
+
   for (let i = 0; i < 63; i++) {
     graph.nodes.push({ id: `n${i}`, x: (i % 8) * 300, y: Math.floor(i / 8) * 100 });
     if (i > 0) {
@@ -564,17 +629,21 @@ describe('Edge case — binary tree (depth 6, 63 nodes)', () => {
 describe('Edge case — self-loops and duplicate edges (malformed data)', () => {
   it('handles self-loops gracefully', async () => {
     const result = await runLayout({
-      nodes: [{ id: 'a', x: 0, y: 0 }, { id: 'b', x: 100, y: 0 }, { id: 'c', x: 200, y: 0 }],
+      nodes: [
+        { id: 'a', x: 0, y: 0 },
+        { id: 'b', x: 100, y: 0 },
+        { id: 'c', x: 200, y: 0 },
+      ],
       edges: [
         { from: 'a', to: 'b' },
-        { from: 'a', to: 'a' },   // self-loop
+        { from: 'a', to: 'a' },
         { from: 'b', to: 'c' },
-        { from: 'b', to: 'c' },   // duplicate
+        { from: 'b', to: 'c' },
       ],
       groups: {},
       options: {},
     });
-    // Should not crash, all positions valid
+
     for (const [id, pos] of Object.entries(result.positions)) {
       assert.ok(!isNaN(pos.x) && !isNaN(pos.y), `NaN for ${id}`);
     }
@@ -583,11 +652,14 @@ describe('Edge case — self-loops and duplicate edges (malformed data)', () => 
 
   it('handles edges referencing non-existent nodes', async () => {
     const result = await runLayout({
-      nodes: [{ id: 'a', x: 0, y: 0 }, { id: 'b', x: 100, y: 0 }],
+      nodes: [
+        { id: 'a', x: 0, y: 0 },
+        { id: 'b', x: 100, y: 0 },
+      ],
       edges: [
         { from: 'a', to: 'b' },
-        { from: 'a', to: 'ghost' },  // ghost node
-        { from: 'phantom', to: 'b' }, // phantom node
+        { from: 'a', to: 'ghost' },
+        { from: 'phantom', to: 'b' },
       ],
       groups: {},
       options: {},
@@ -615,7 +687,9 @@ describe('Edge case — deep chain (100 nodes)', () => {
   it('chain is roughly linear (aspect ratio > 2)', () => {
     const bbox = boundingBox(result.positions);
     const aspect = Math.max(bbox.width, bbox.height) / Math.min(bbox.width, bbox.height);
-    console.log(`  BBox: ${bbox.width.toFixed(0)} × ${bbox.height.toFixed(0)}, aspect: ${aspect.toFixed(1)}`);
+    console.log(
+      `  BBox: ${bbox.width.toFixed(0)} × ${bbox.height.toFixed(0)}, aspect: ${aspect.toFixed(1)}`
+    );
     assert.ok(aspect > 1.5, `Chain should be elongated, aspect ratio only ${aspect.toFixed(1)}`);
   });
 });
@@ -626,7 +700,9 @@ describe('Edge case — dense graph (50 nodes, ~15% edge density)', () => {
   it('converges', async () => {
     graph = makeRandomGraph(50, 0.15);
     result = await runLayout({ ...graph, groups: {}, options: {} });
-    console.log(`  Edges: ${graph.edges.length} (density ${(graph.edges.length / (50*49/2) * 100).toFixed(1)}%)`);
+    console.log(
+      `  Edges: ${graph.edges.length} (density ${((graph.edges.length / ((50 * 49) / 2)) * 100).toFixed(1)}%)`
+    );
   });
 
   it('has zero overlaps', () => {
@@ -640,20 +716,25 @@ describe('Stress test — 500 nodes (simulated dep-graph scale)', () => {
   let result, graph;
 
   it('converges within 30s', async () => {
-    // Simulate dependency graph: sparse, with directory groups
+
     graph = { nodes: [], edges: [], groups: {} };
     const dirs = ['src', 'lib', 'utils', 'core', 'api', 'db', 'views', 'tests'];
     for (let i = 0; i < 500; i++) {
       const dir = dirs[i % dirs.length];
       const id = `${dir}/file${Math.floor(i / dirs.length)}.js`;
-      graph.nodes.push({ id, x: (Math.random() - 0.5) * 5000, y: (Math.random() - 0.5) * 5000, group: dir });
+      graph.nodes.push({
+        id,
+        x: (rand() - 0.5) * 5000,
+        y: (rand() - 0.5) * 5000,
+        group: dir,
+      });
       if (!graph.groups[dir]) graph.groups[dir] = [];
       graph.groups[dir].push(id);
     }
-    // Sparse edges (~3 per node on average)
+
     for (let i = 0; i < 500; i++) {
       for (let k = 0; k < 3; k++) {
-        const j = Math.floor(Math.random() * 500);
+        const j = Math.floor(rand() * 500);
         if (i !== j) graph.edges.push({ from: graph.nodes[i].id, to: graph.nodes[j].id });
       }
     }
@@ -661,7 +742,9 @@ describe('Stress test — 500 nodes (simulated dep-graph scale)', () => {
     const start = Date.now();
     result = await runLayout({ ...graph, options: {} }, 30000);
     const elapsed = Date.now() - start;
-    console.log(`  500 nodes, ${graph.edges.length} edges → ${elapsed}ms, ${result.iterations} iters`);
+    console.log(
+      `  500 nodes, ${graph.edges.length} edges → ${elapsed}ms, ${result.iterations} iters`
+    );
     assert.ok(elapsed < 30000, `Timeout: ${elapsed}ms`);
   });
 
@@ -677,4 +760,3 @@ describe('Stress test — 500 nodes (simulated dep-graph scale)', () => {
     }
   });
 });
-

@@ -16,47 +16,72 @@ import { styles } from './AiChat.css.js';
 const RESPONSES = [
   {
     triggers: ['hello', 'hi', 'hey', 'привет'],
-    response: 'Hello! I can help you understand this workflow. Try asking about specific nodes, the data flow, or error handling.',
+    response:
+      'Hello! I can help you understand this workflow. Try asking about specific nodes, the data flow, or error handling.',
   },
   {
     triggers: ['trigger', 'start', 'begin'],
-    response: 'The <code>Trigger</code> node initiates the pipeline. It fires on a schedule or webhook event, then passes control to <code>Auth Guard</code> for token validation before any API calls are made.',
+    response:
+      'The <code>Trigger</code> node initiates the pipeline. It fires on a schedule or webhook event, then passes control to <code>Auth Guard</code> for token validation before any API calls are made.',
   },
   {
     triggers: ['auth', 'guard', 'security', 'token'],
-    response: 'The <code>Auth Guard</code> validates JWT tokens and checks rate limits. If authentication fails, the flow short-circuits — no downstream nodes execute. It supports OAuth 2.0 and API key strategies.',
+    response:
+      'The <code>Auth Guard</code> validates JWT tokens and checks rate limits. If authentication fails, the flow short-circuits — no downstream nodes execute. It supports OAuth 2.0 and API key strategies.',
   },
   {
     triggers: ['gateway', 'api', 'route'],
-    response: 'The <code>API Gateway</code> handles request routing, load balancing, and protocol translation. It normalizes responses from multiple upstream services into a unified schema before passing data downstream.',
+    response:
+      'The <code>API Gateway</code> handles request routing, load balancing, and protocol translation. It normalizes responses from multiple upstream services into a unified schema before passing data downstream.',
   },
   {
     triggers: ['ai', 'agent', 'llm', 'gpt', 'prompt'],
-    response: 'The <code>AI Agent</code> node uses GPT-4o for content enrichment. It processes prompts with context from upstream nodes, caches responses (847 tokens avg), and supports streaming output to connected nodes.',
+    response:
+      'The <code>AI Agent</code> node uses GPT-4o for content enrichment. It processes prompts with context from upstream nodes, caches responses (847 tokens avg), and supports streaming output to connected nodes.',
   },
   {
     triggers: ['error', 'filter', 'missing'],
-    response: 'The <code>Filter</code> node currently shows an error: "Missing required condition". This means its validation rule is not configured. You can fix this by setting a condition expression in the node properties.',
+    response:
+      'The <code>Filter</code> node currently shows an error: "Missing required condition". This means its validation rule is not configured. You can fix this by setting a condition expression in the node properties.',
   },
   {
     triggers: ['subgraph', 'enrichment', 'data enrichment', 'inner'],
-    response: 'The <code>Data Enrichment</code> is a subgraph containing 3 inner nodes: Parse → Validate → Enrich. During flow execution, you can see each inner node light up sequentially in the preview canvas.',
+    response:
+      'The <code>Data Enrichment</code> is a subgraph containing 3 inner nodes: Parse → Validate → Enrich. During flow execution, you can see each inner node light up sequentially in the preview canvas.',
   },
   {
     triggers: ['flow', 'play', 'run', 'simulate'],
-    response: 'Click <code>▶ Play</code> to start the flow simulation. Nodes light up in topological order — processing (blue pulse) → completed (green). The Event Log below tracks every state transition in real-time.',
+    response:
+      'Click <code>▶ Play</code> to start the flow simulation. Nodes light up in topological order — processing (blue pulse) → completed (green). The Event Log below tracks every state transition in real-time.',
   },
   {
     triggers: ['health', 'monitor', 'status'],
-    response: 'The <code>Health</code> node is a star-shaped SVG node that monitors system metrics. It connects to the Trigger for periodic health checks and reports status, latency, and error rates.',
+    response:
+      'The <code>Health</code> node is a star-shaped SVG node that monitors system metrics. It connects to the Trigger for periodic health checks and reports status, latency, and error rates.',
   },
   {
     triggers: ['debug', 'log', 'output'],
-    response: 'The <code>Debug Log</code> node captures all output from upstream nodes. Its preview shows the latest result as formatted JSON. It connects to <code>Merge</code> for aggregated pipeline output.',
+    response:
+      'The <code>Debug Log</code> node captures all output from upstream nodes. Its preview shows the latest result as formatted JSON. It connects to <code>Merge</code> for aggregated pipeline output.',
   },
 ];
 
-const FALLBACK = 'I can help with this workflow! Try asking about specific nodes like "AI Agent", "Auth Guard", or "Filter error". You can also ask about the flow simulation or subgraph previews.';
+const FALLBACK =
+  'I can help with this workflow! Try asking about specific nodes like "AI Agent", "Auth Guard", or "Filter error". You can also ask about the flow simulation or subgraph previews.';
+
+function appendCodeMarkup(parent, message) {
+  let parts = String(message).split(/(<code>.*?<\/code>)/g);
+  for (let part of parts) {
+    let codeMatch = part.match(/^<code>(.*)<\/code>$/);
+    if (codeMatch) {
+      let code = document.createElement('code');
+      code.textContent = codeMatch[1];
+      parent.appendChild(code);
+    } else if (part) {
+      parent.append(part);
+    }
+  }
+}
 
 export class AiChat extends Symbiote {
   init$ = {
@@ -71,11 +96,12 @@ export class AiChat extends Symbiote {
   };
 
   renderCallback() {
-    ensureMaterialSymbols(['send']);
 
-    // Welcome message
     setTimeout(() => {
-      this._addBubble('ai', 'Welcome! I\'m your AI assistant for this workflow. Ask me about any node, connection, or how the data flows through this pipeline.');
+      this._addBubble(
+        'ai',
+        "Welcome! I'm your AI assistant for this workflow. Ask me about any node, connection, or how the data flows through this pipeline."
+      );
     }, 500);
   }
 
@@ -88,10 +114,10 @@ export class AiChat extends Symbiote {
     input.value = '';
     this._addBubble('user', text);
 
-    // Show typing indicator
+
     const typing = this._addTyping();
 
-    // Simulate thinking delay
+
     const delay = 600 + Math.random() * 800;
     setTimeout(() => {
       typing.remove();
@@ -119,13 +145,18 @@ export class AiChat extends Symbiote {
    * Add a chat bubble
    * @param {'user'|'ai'} role
    * @param {string} html
+   * @returns {HTMLElement}
    */
   _addBubble(role, html) {
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble';
     bubble.setAttribute('data-role', role);
     if (role === 'ai') {
-      bubble.innerHTML = `<span class="ai-prefix">✦ Assistant</span>${html}`;
+      let prefix = document.createElement('span');
+      prefix.className = 'ai-prefix';
+      prefix.textContent = '✦ Assistant';
+      bubble.appendChild(prefix);
+      appendCodeMarkup(bubble, html);
     } else {
       bubble.textContent = html;
     }
@@ -136,12 +167,21 @@ export class AiChat extends Symbiote {
     return bubble;
   }
 
-  /** Add typing indicator */
+  /**
+   * Add typing indicator.
+   * @returns {HTMLElement}
+   */
   _addTyping() {
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble';
     bubble.setAttribute('data-role', 'ai');
-    bubble.innerHTML = '<span class="ai-prefix">✦ Assistant</span><div class="typing-dots"><span></span><span></span><span></span></div>';
+    let prefix = document.createElement('span');
+    prefix.className = 'ai-prefix';
+    prefix.textContent = '✦ Assistant';
+    let dots = document.createElement('div');
+    dots.className = 'typing-dots';
+    dots.append(document.createElement('span'), document.createElement('span'), document.createElement('span'));
+    bubble.append(prefix, dots);
     this.ref.messages.appendChild(bubble);
     requestAnimationFrame(() => {
       this.ref.messages.scrollTop = this.ref.messages.scrollHeight;

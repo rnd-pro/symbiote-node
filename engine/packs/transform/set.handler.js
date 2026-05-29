@@ -18,35 +18,35 @@ export default {
 
   driver: {
     description: 'Set or map fields on the data object',
-    inputs: [
-      { name: 'data', type: 'any' },
-    ],
-    outputs: [
-      { name: 'data', type: 'any' },
-    ],
+    inputs: [{ name: 'data', type: 'any' }],
+    outputs: [{ name: 'data', type: 'any' }],
     params: {
-      fields: { type: 'object', default: {}, description: 'Map of fieldName → value or ={{expression}}' },
+      fields: {
+        type: 'object',
+        default: {},
+        description: 'Map of fieldName → value or ={{expression}}',
+      },
       keepOriginal: { type: 'boolean', default: true, description: 'Keep original input fields' },
     },
   },
 
   lifecycle: {
     execute: async (inputs, params) => {
-      const inputData = inputs.data || {};
-      const base = params.keepOriginal ? { ...inputData } : {};
+      let inputData = inputs.data || {};
+      let base = params.keepOriginal ? { ...inputData } : {};
 
       for (const [key, rawValue] of Object.entries(params.fields || {})) {
         if (typeof rawValue === 'string' && rawValue.startsWith('={{') && rawValue.endsWith('}}')) {
-          // Expression: resolve from input data
-          const expr = rawValue.slice(3, -2).trim();
-          // Simple dot-path resolution
-          const value = expr.split('.').reduce((obj, k) => {
+
+          let expr = rawValue.slice(3, -2).trim();
+
+          let value = expr.split('.').reduce((obj, k) => {
             if (obj === null || obj === undefined) return undefined;
             return obj[k];
           }, inputData);
           base[key] = value;
         } else {
-          // Static value
+
           base[key] = rawValue;
         }
       }

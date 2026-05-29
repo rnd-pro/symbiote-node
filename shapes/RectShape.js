@@ -25,9 +25,9 @@ export class RectShape extends NodeShape {
   }
 
   getSocketPosition(side, index, total, { width, height }) {
-    const bodyHeight = height - this.#headerHeight;
-    const spacing = bodyHeight / (total + 1);
-    const y = this.#headerHeight + spacing * (index + 1);
+    let bodyHeight = height - this.#headerHeight;
+    let spacing = bodyHeight / (total + 1);
+    let y = this.#headerHeight + spacing * (index + 1);
 
     return {
       x: side === 'input' ? 0 : width,
@@ -49,21 +49,33 @@ export class RectShape extends NodeShape {
   getSidePosition(side, t, size) {
     const NORMALS = { top: -90, right: 0, bottom: 90, left: 180 };
     const MARGIN = 0.2;
-    const effectiveT = MARGIN + t * (1 - 2 * MARGIN);
+    let effectiveT = MARGIN + t * (1 - 2 * MARGIN);
 
     let x, y;
     switch (side) {
-      case 'top':    x = size.width * effectiveT; y = 0; break;
-      case 'right':  x = size.width; y = size.height * effectiveT; break;
-      case 'bottom': x = size.width * effectiveT; y = size.height; break;
-      case 'left':   x = 0; y = size.height * effectiveT; break;
+      case 'top':
+        x = size.width * effectiveT;
+        y = 0;
+        break;
+      case 'right':
+        x = size.width;
+        y = size.height * effectiveT;
+        break;
+      case 'bottom':
+        x = size.width * effectiveT;
+        y = size.height;
+        break;
+      case 'left':
+        x = 0;
+        y = size.height * effectiveT;
+        break;
     }
 
     return { x, y, angle: NORMALS[side] };
   }
 
   getBorderRadius() {
-    return 'var(--sn-node-radius, 10px)';
+    return 'var(--sn-node-radius)';
   }
 
   getMinSize() {

@@ -4,7 +4,7 @@
  * If input has an error, re-invokes the action up to maxRetries times.
  * Passes through successful results immediately.
  *
- * @module agi-graph/packs/flow/retry
+ * @module symbiote-node/packs/flow/retry
  */
 
 export default {
@@ -30,22 +30,22 @@ export default {
 
   lifecycle: {
     execute: async (inputs, params) => {
-      // If no error, pass through the action result
+
       if (inputs.error == null && inputs.action != null) {
         return { result: inputs.action, error: null };
       }
 
-      // If error but no actionFn to retry, propagate error
+
       if (inputs.action?._retryFn) {
-        const { maxRetries, delay } = params;
+        let { maxRetries, delay } = params;
         let lastError = inputs.error;
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           if (delay > 0 && attempt > 1) {
-            await new Promise(r => setTimeout(r, delay));
+            await new Promise((r) => setTimeout(r, delay));
           }
           try {
-            const result = await inputs.action._retryFn();
+            let result = await inputs.action._retryFn();
             return { result, error: null };
           } catch (err) {
             lastError = err.message;
@@ -55,7 +55,7 @@ export default {
         return { result: null, error: `Failed after ${maxRetries} retries: ${lastError}` };
       }
 
-      // No retry function available, pass through with error
+
       return {
         result: inputs.action,
         error: inputs.error ? String(inputs.error) : null,

@@ -1,3 +1,4 @@
+/* eslint-env browser */
 /**
  * NodeViewManager — creates/destroys graph-node elements with group drag
  *
@@ -14,8 +15,11 @@ import { animateOut } from '@symbiotejs/symbiote';
 import { getShape } from '../shapes/index.js';
 import { ensureMaterialSymbols } from '../icons/MaterialSymbols.js';
 
-export class NodeViewManager {
+function readCssToken(source, token) {
+  return getComputedStyle(source).getPropertyValue(token).trim();
+}
 
+export class NodeViewManager {
   /** @type {Map<string, HTMLElement>} */
   #nodeViews;
 
@@ -74,7 +78,19 @@ export class NodeViewManager {
    * @param {HTMLElement} config.nodesLayer
    * @param {Object} config.canvas - NodeCanvas reference for socket registration
    */
-  constructor({ nodeViews, editor, selector, snapGrid, getZoom, setNodePosition, animateNodeToPosition, onNodeClick, nodesLayer, canvas, onSvgShapeReady }) {
+  constructor({
+    nodeViews,
+    editor,
+    selector,
+    snapGrid,
+    getZoom,
+    setNodePosition,
+    animateNodeToPosition,
+    onNodeClick,
+    nodesLayer,
+    canvas,
+    onSvgShapeReady,
+  }) {
     this.#nodeViews = nodeViews;
     this.#editor = editor;
     this.#selector = selector;
@@ -117,21 +133,21 @@ export class NodeViewManager {
   addViews(nodes) {
     if (!nodes || nodes.length === 0) return;
 
-    const fragment = document.createDocumentFragment();
-    
-    // 1. Create all elements and bind them (no DOM append yet)
+    let fragment = document.createDocumentFragment();
+
+
     for (const node of nodes) {
-      const el = this.#createNodeElement(node);
+      let el = this.#createNodeElement(node);
       fragment.appendChild(el);
       this.#nodeViews.set(node.id, el);
     }
 
-    // 2. Single batch insert into live DOM
+
     this.#nodesLayer.appendChild(fragment);
 
-    // 3. Post-processing (SVG injection, preview canvas) requires elements to be in DOM
+
     for (const node of nodes) {
-      const el = this.#nodeViews.get(node.id);
+      let el = this.#nodeViews.get(node.id);
       if (el) this.#postProcessNodeView(node, el);
     }
   }
@@ -141,7 +157,7 @@ export class NodeViewManager {
    * @param {import('../core/Node.js').Node} node
    */
   addView(node) {
-    const el = this.#createNodeElement(node);
+    let el = this.#createNodeElement(node);
     this.#nodesLayer.appendChild(el);
     this.#nodeViews.set(node.id, el);
     this.#postProcessNodeView(node, el);
@@ -155,7 +171,7 @@ export class NodeViewManager {
    * @returns {HTMLElement}
    */
   #createNodeElement(node) {
-    const el = document.createElement('graph-node');
+    let el = document.createElement('graph-node');
     el.style.position = 'absolute';
     el.style.transform = 'translate(0px, 0px)';
     el._position = { x: 0, y: 0 };
@@ -169,7 +185,7 @@ export class NodeViewManager {
     el.toggleAttribute('data-readonly-node-dragging', this.#readonlyNodeDragging);
     el._canvas = this.#canvas;
 
-    const drag = new Drag();
+    let drag = new Drag();
     let dragStart = null;
 
     drag.initialize(
@@ -181,16 +197,16 @@ export class NodeViewManager {
       {
         shouldStart: (e) => {
           if (this.#readonly && !this.#readonlyNodeDragging) return false;
-          // SVG shapes: only start drag if click is inside the SVG path
-          const svgPath = el.querySelector('svg > path');
-          if (!svgPath) return true; // not an SVG shape node
-          const svg = svgPath.ownerSVGElement;
-          const rect = svg.getBoundingClientRect();
-          const vb = svg.viewBox.baseVal;
-          // Convert page coords to SVG viewBox coords
-          const sx = (e.clientX - rect.left) / rect.width * vb.width + vb.x;
-          const sy = (e.clientY - rect.top) / rect.height * vb.height + vb.y;
-          const pt = new DOMPoint(sx, sy);
+
+          let svgPath = el.querySelector('svg > path');
+          if (!svgPath) return true;
+          let svg = svgPath.ownerSVGElement;
+          let rect = svg.getBoundingClientRect();
+          let vb = svg.viewBox.baseVal;
+
+          let sx = ((e.clientX - rect.left) / rect.width) * vb.width + vb.x;
+          let sy = ((e.clientY - rect.top) / rect.height) * vb.height + vb.y;
+          let pt = new DOMPoint(sx, sy);
           return svgPath.isPointInFill(pt);
         },
         onStart: (e) => {
@@ -211,7 +227,7 @@ export class NodeViewManager {
       }
     );
     el._drag = drag;
-    
+
     return el;
   }
 
@@ -222,20 +238,20 @@ export class NodeViewManager {
    * @param {HTMLElement} el
    */
   #postProcessNodeView(node, el) {
-    // Apply shape visuals: SVG background layer instead of clip-path
-    // Clip-path clips content (labels, ports). SVG bg preserves them.
-    const shape = getShape(node.shape);
+
+
+    let shape = getShape(node.shape);
     if (shape && shape.pathData) {
-      // Set explicit element dimensions to match SVG viewBox aspect ratio
-      // This ensures correct proportions and reliable offsetWidth/Height
-      const vb = shape.viewBox.split(' ').map(Number);
-      const vbW = vb[2];
-      const vbH = vb[3];
-      const params = node.params || {};
-      const baseSize = Number(params.size || params.shapeSize) || 120;
-      const aspect = vbW / vbH;
-      const nodeW = Number(params.width) || (aspect >= 1 ? baseSize : Math.round(baseSize * aspect));
-      const nodeH = Number(params.height) || (aspect >= 1 ? Math.round(baseSize / aspect) : baseSize);
+
+
+      let vb = shape.viewBox.split(' ').map(Number);
+      let vbW = vb[2];
+      let vbH = vb[3];
+      let params = node.params || {};
+      let baseSize = Number(params.size || params.shapeSize) || 120;
+      let aspect = vbW / vbH;
+      let nodeW = Number(params.width) || (aspect >= 1 ? baseSize : Math.round(baseSize * aspect));
+      let nodeH = Number(params.height) || (aspect >= 1 ? Math.round(baseSize / aspect) : baseSize);
       el.style.width = nodeW + 'px';
       el.style.height = nodeH + 'px';
       el.style.minWidth = nodeW + 'px';
@@ -244,66 +260,53 @@ export class NodeViewManager {
 
     requestAnimationFrame(() => {
       if (shape && shape.pathData) {
-        const size = { width: el.offsetWidth, height: el.offsetHeight };
-
-        // 1. Inject SVG background — element is properly proportioned
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.classList.add('sn-node-shape-svg');
         svg.setAttribute('viewBox', shape.viewBox);
         svg.setAttribute('preserveAspectRatio', 'none');
-        svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible;';
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', shape.pathData);
-        path.setAttribute('fill', `var(--sn-shape-${shape.name}-fill, var(--sn-shape-fill, var(--sn-node-bg, #16213e)))`);
-        path.setAttribute('stroke', `var(--sn-shape-${shape.name}-stroke, var(--sn-shape-stroke, var(--sn-node-border, #2a2a4a)))`);
+        path.setAttribute(
+          'fill',
+          `var(--sn-shape-${shape.name}-fill, var(--sn-shape-fill, var(--sn-node-bg)))`
+        );
+        path.setAttribute(
+          'stroke',
+          `var(--sn-shape-${shape.name}-stroke, var(--sn-shape-stroke, var(--sn-node-border)))`
+        );
         path.setAttribute('stroke-width', 'var(--sn-shape-stroke-width, 0.4)');
         path.setAttribute('stroke-linejoin', 'round');
         svg.appendChild(path);
         el.prepend(svg);
         el.setAttribute('data-svg-shape', shape.name);
 
-        // Make node background transparent — SVG provides the shape
-        el.style.background = 'transparent';
-        el.style.border = 'none';
-        el.style.boxShadow = 'none';
-        el.style.borderRadius = '0';
-        el.style.overflow = 'visible';
 
-        // Elevate content above SVG layer
-        for (const child of el.children) {
-          if (child !== svg) child.style.position = 'relative';
-        }
-
-        // Watermark icon — large pale category icon centered inside shape
-        const iconEl = el.querySelector('.sn-node-icon');
+        let iconEl = el.querySelector('.sn-node-icon');
         if (iconEl) {
-          const watermark = document.createElement('span');
+          let watermark = document.createElement('span');
           watermark.className = 'sn-shape-watermark material-symbols-outlined';
           watermark.textContent = iconEl.textContent;
           ensureMaterialSymbols([iconEl.textContent]);
           el.appendChild(watermark);
         }
 
-        // Notify canvas to render free dots for this SVG node
+
         if (this.#onSvgShapeReady) this.#onSvgShapeReady(node.id);
-
-
       } else if (shape) {
-        // Standard shapes: apply border-radius
-        const size = { width: el.offsetWidth || 180, height: el.offsetHeight || 60 };
-        const radius = shape.getBorderRadius(size);
-        if (radius && radius !== 'var(--sn-node-radius, 10px)') {
+
+        let size = { width: el.offsetWidth || 180, height: el.offsetHeight || 60 };
+        let radius = shape.getBorderRadius(size);
+        if (radius && radius !== 'var(--sn-node-radius)') {
           el.style.borderRadius = radius;
         }
       }
     });
 
-    // Subgraph preview canvas — inject DOM element synchronously so
-    // measureNodeSizes() includes the 80px canvas in offsetHeight.
-    // Only the drawing is deferred to rAF (needs inner editor data).
+
     if (node._isSubgraph) {
-      const body = el.querySelector('.sn-node-body');
+      let body = el.querySelector('.sn-node-body');
       if (body) {
-        const canvas = document.createElement('canvas');
+        let canvas = document.createElement('canvas');
         canvas.className = 'sn-subgraph-preview';
         canvas.width = 200;
         canvas.height = 80;
@@ -321,7 +324,7 @@ export class NodeViewManager {
    * @param {import('../core/Node.js').Node} node
    */
   removeView(node) {
-    const el = this.#nodeViews.get(node.id);
+    let el = this.#nodeViews.get(node.id);
     if (!el) return;
     if (el._previewRaf) clearTimeout(el._previewRaf);
     el._previewRaf = null;
@@ -338,11 +341,11 @@ export class NodeViewManager {
    * @returns {{ x: number, y: number, w: number, h: number } | null}
    */
   removeViewInstant(nodeId) {
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (!el) return null;
-    const pos = el._position || { x: 0, y: 0 };
-    const w = el._cachedW || el.offsetWidth || 180;
-    const h = el._cachedH || el.offsetHeight || 60;
+    let pos = el._position || { x: 0, y: 0 };
+    let w = el._cachedW || el.offsetWidth || 180;
+    let h = el._cachedH || el.offsetHeight || 60;
     if (el._previewRaf) clearTimeout(el._previewRaf);
     if (el._drag) el._drag.destroy();
     el.remove();
@@ -351,14 +354,10 @@ export class NodeViewManager {
     return { x: pos.x, y: pos.y, w, h };
   }
 
-  // --- Private helpers ---
-
-
-
 
   #autoSelectOnDragStart(nodeId, e) {
     if (!this.#selector.isNodeSelected(nodeId)) {
-      const accumulate = e.ctrlKey || e.metaKey;
+      let accumulate = e.ctrlKey || e.metaKey;
       this.#selector.selectNode(nodeId, accumulate);
     }
     this.#bringToFront(nodeId);
@@ -369,7 +368,7 @@ export class NodeViewManager {
    * @param {string} nodeId
    */
   #bringToFront(nodeId) {
-    const el = this.#nodeViews.get(nodeId);
+    let el = this.#nodeViews.get(nodeId);
     if (el) {
       el.style.zIndex = ++this.#zCounter;
     }
@@ -392,9 +391,9 @@ export class NodeViewManager {
   }
 
   #captureDragStartPositions() {
-    const selected = this.#selector.getSelectedNodes();
+    let selected = this.#selector.getSelectedNodes();
     for (const id of selected) {
-      const nodeEl = this.#nodeViews.get(id);
+      let nodeEl = this.#nodeViews.get(id);
       if (nodeEl) nodeEl._dragStartPos = { ...nodeEl._position };
     }
   }
@@ -404,24 +403,24 @@ export class NodeViewManager {
     let finalY = y;
 
     if (this.#snapEnabled && this.#snapGrid.isDynamic) {
-      const snapped = this.#snapGrid.snap(x, y);
+      let snapped = this.#snapGrid.snap(x, y);
       finalX = snapped.x;
       finalY = snapped.y;
     }
 
-    const prev = el._dragStartPos || el._position;
-    const dx = finalX - prev.x;
-    const dy = finalY - prev.y;
+    let prev = el._dragStartPos || el._position;
+    let dx = finalX - prev.x;
+    let dy = finalY - prev.y;
 
-    const selected = this.#selector.getSelectedNodes();
+    let selected = this.#selector.getSelectedNodes();
     if (selected.size > 1 && selected.has(nodeId)) {
       for (const id of selected) {
-        const nodeEl = this.#nodeViews.get(id);
+        let nodeEl = this.#nodeViews.get(id);
         if (!nodeEl?._dragStartPos) continue;
         let nx = nodeEl._dragStartPos.x + dx;
         let ny = nodeEl._dragStartPos.y + dy;
         if (this.#snapEnabled && this.#snapGrid.isDynamic) {
-          const snapped = this.#snapGrid.snap(nx, ny);
+          let snapped = this.#snapGrid.snap(nx, ny);
           nx = snapped.x;
           ny = snapped.y;
         }
@@ -435,27 +434,27 @@ export class NodeViewManager {
   }
 
   #handleDrop(nodeId, el, e, dragStart) {
-    // Static snap on drop
+
     if (this.#snapEnabled && !this.#snapGrid.isDynamic) {
-      const selected = this.#selector.getSelectedNodes();
-      const targets = selected.size > 0 && selected.has(nodeId) ? selected : new Set([nodeId]);
+      let selected = this.#selector.getSelectedNodes();
+      let targets = selected.size > 0 && selected.has(nodeId) ? selected : new Set([nodeId]);
       for (const id of targets) {
-        const nodeEl = this.#nodeViews.get(id);
+        let nodeEl = this.#nodeViews.get(id);
         if (!nodeEl) continue;
-        const snapped = this.#snapGrid.snap(nodeEl._position.x, nodeEl._position.y);
+        let snapped = this.#snapGrid.snap(nodeEl._position.x, nodeEl._position.y);
         this.#animateNodeToPosition(id, snapped.x, snapped.y);
       }
     }
 
-    // Clean up start positions
+
     for (const [, nodeEl] of this.#nodeViews) {
       delete nodeEl._dragStartPos;
     }
 
-    // Remove lift effect
+
     this.#removeLift(el);
 
-    // Click vs drag detection
+
     if (dragStart && e && Selector.isTwitch(dragStart, { x: e.pageX, y: e.pageY })) {
       this.#onNodeClick(nodeId, e);
     }
@@ -470,34 +469,48 @@ export class NodeViewManager {
    * @param {HTMLCanvasElement} canvas - pre-created canvas element (already in DOM)
    */
   #initSubgraphPreview(el, node, canvas) {
-    const ctx = canvas.getContext('2d');
+    let ctx = canvas.getContext('2d');
 
-    const drawPreview = () => {
+    let drawPreview = () => {
       if (!el.isConnected) return;
 
-      const w = canvas.width;
-      const h = canvas.height;
+      let w = canvas.width;
+      let h = canvas.height;
       ctx.clearRect(0, 0, w, h);
+      let previewColors = {
+        connection: readCssToken(el, '--sn-subgraph-preview-connection'),
+        completedConnection: readCssToken(el, '--sn-subgraph-preview-completed-connection'),
+        processingFill: readCssToken(el, '--sn-subgraph-preview-processing-fill'),
+        processingStroke: readCssToken(el, '--sn-subgraph-preview-processing-stroke'),
+        processingGlow: readCssToken(el, '--sn-subgraph-preview-processing-glow'),
+        completedFill: readCssToken(el, '--sn-subgraph-preview-completed-fill'),
+        completedStroke: readCssToken(el, '--sn-subgraph-preview-completed-stroke'),
+        idleFill: readCssToken(el, '--sn-subgraph-preview-idle-fill'),
+        idleStroke: readCssToken(el, '--sn-subgraph-preview-idle-stroke'),
+      };
 
-      const innerEditor = node.innerEditor;
+      let innerEditor = node.innerEditor;
       if (!innerEditor) return;
 
-      const nodes = innerEditor.getNodes();
+      let nodes = innerEditor.getNodes();
       if (nodes.length === 0) return;
 
-      // Get positions (from saved or auto-grid)
-      const positions = node.innerPositions;
-      const nodeRects = [];
+
+      let positions = node.innerPositions;
+      let nodeRects = [];
 
       for (const n of nodes) {
-        const pos = positions[n.id];
-        const x = pos ? pos.x : 0;
-        const y = pos ? pos.y : 0;
+        let pos = positions[n.id];
+        let x = pos ? pos.x : 0;
+        let y = pos ? pos.y : 0;
         nodeRects.push({ x, y, w: 160, h: 60, id: n.id });
       }
 
-      // Calculate bounds
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
       for (const r of nodeRects) {
         minX = Math.min(minX, r.x);
         minY = Math.min(minY, r.y);
@@ -505,37 +518,39 @@ export class NodeViewManager {
         maxY = Math.max(maxY, r.y + r.h);
       }
 
-      const pad = 30;
-      minX -= pad; minY -= pad;
-      maxX += pad; maxY += pad;
+      let pad = 30;
+      minX -= pad;
+      minY -= pad;
+      maxX += pad;
+      maxY += pad;
 
-      const graphW = maxX - minX;
-      const graphH = maxY - minY;
-      const scale = Math.min(w / graphW, h / graphH);
-      const offsetX = (w - graphW * scale) / 2;
-      const offsetY = (h - graphH * scale) / 2;
+      let graphW = maxX - minX;
+      let graphH = maxY - minY;
+      let scale = Math.min(w / graphW, h / graphH);
+      let offsetX = (w - graphW * scale) / 2;
+      let offsetY = (h - graphH * scale) / 2;
 
-      // Flow state map: nodeId -> 'processing' | 'completed'
-      const states = el._innerFlowStates || {};
 
-      // Draw connections as lines
-      const conns = innerEditor.getConnections();
+      let states = el._innerFlowStates || {};
+
+
+      let conns = innerEditor.getConnections();
       for (const conn of conns) {
-        const src = nodeRects.find(r => r.id === conn.from);
-        const tgt = nodeRects.find(r => r.id === conn.to);
+        let src = nodeRects.find((r) => r.id === conn.from);
+        let tgt = nodeRects.find((r) => r.id === conn.to);
         if (src && tgt) {
-          const sx = (src.x + src.w - minX) * scale + offsetX;
-          const sy = (src.y + src.h / 2 - minY) * scale + offsetY;
-          const tx = (tgt.x - minX) * scale + offsetX;
-          const ty = (tgt.y + tgt.h / 2 - minY) * scale + offsetY;
+          let sx = (src.x + src.w - minX) * scale + offsetX;
+          let sy = (src.y + src.h / 2 - minY) * scale + offsetY;
+          let tx = (tgt.x - minX) * scale + offsetX;
+          let ty = (tgt.y + tgt.h / 2 - minY) * scale + offsetY;
 
-          // Flowing connection: source completed
-          const srcState = states[conn.from];
+
+          let srcState = states[conn.from];
           if (srcState === 'completed') {
-            ctx.strokeStyle = 'rgba(92, 216, 122, 0.5)';
+            ctx.strokeStyle = previewColors.completedConnection;
             ctx.lineWidth = 2;
           } else {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.strokeStyle = previewColors.connection;
             ctx.lineWidth = 1;
           }
 
@@ -546,16 +561,16 @@ export class NodeViewManager {
         }
       }
 
-      // Draw node rectangles with flow state
-      for (const r of nodeRects) {
-        const rx = (r.x - minX) * scale + offsetX;
-        const ry = (r.y - minY) * scale + offsetY;
-        const rw = r.w * scale;
-        const rh = r.h * scale;
-        const state = states[r.id];
-        const radius = 4;
 
-        // Rounded rect helper
+      for (const r of nodeRects) {
+        let rx = (r.x - minX) * scale + offsetX;
+        let ry = (r.y - minY) * scale + offsetY;
+        let rw = r.w * scale;
+        let rh = r.h * scale;
+        let state = states[r.id];
+        let radius = 4;
+
+
         ctx.beginPath();
         ctx.moveTo(rx + radius, ry);
         ctx.lineTo(rx + rw - radius, ry);
@@ -569,36 +584,36 @@ export class NodeViewManager {
         ctx.closePath();
 
         if (state === 'processing') {
-          ctx.fillStyle = 'rgba(74, 158, 255, 0.25)';
+          ctx.fillStyle = previewColors.processingFill;
           ctx.fill();
-          ctx.strokeStyle = 'rgba(74, 158, 255, 0.8)';
+          ctx.strokeStyle = previewColors.processingStroke;
           ctx.lineWidth = 1.5;
           ctx.stroke();
-          // Glow effect
-          ctx.shadowColor = 'rgba(74, 158, 255, 0.6)';
+
+          ctx.shadowColor = previewColors.processingGlow;
           ctx.shadowBlur = 8;
           ctx.stroke();
           ctx.shadowBlur = 0;
         } else if (state === 'completed') {
-          ctx.fillStyle = 'rgba(92, 216, 122, 0.2)';
+          ctx.fillStyle = previewColors.completedFill;
           ctx.fill();
-          ctx.strokeStyle = 'rgba(92, 216, 122, 0.7)';
+          ctx.strokeStyle = previewColors.completedStroke;
           ctx.lineWidth = 1;
           ctx.stroke();
         } else {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+          ctx.fillStyle = previewColors.idleFill;
           ctx.fill();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.strokeStyle = previewColors.idleStroke;
           ctx.lineWidth = 0.5;
           ctx.stroke();
         }
       }
     };
 
-    // Expose redraw for external triggering (FlowSimulator)
+
     el._redrawPreview = drawPreview;
 
-    // Draw once. Re-draw on demand via el._redrawPreview().
+
     drawPreview();
   }
 }

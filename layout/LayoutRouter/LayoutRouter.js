@@ -16,19 +16,22 @@
  *
  * @module symbiote-node/layout/LayoutRouter
  */
-import { PubSub } from '@symbiotejs/symbiote';
+import { PubSub } from '@symbiotejs/symbiote/core/PubSub.js';
 
 const CTX = 'ROUTER';
 
 /** @type {Set<string>} Keys that persist across section switches */
 const _globalKeys = new Set();
 
-const routerCtx = PubSub.registerCtx({
-  panel: 'default',
-  subpath: '',
-  query: '',
-  globalParams: {},
-}, CTX);
+const routerCtx = PubSub.registerCtx(
+  {
+    panel: 'default',
+    subpath: '',
+    query: '',
+    globalParams: {},
+  },
+  CTX
+);
 
 /**
  * Parse query string into object
@@ -41,7 +44,9 @@ export function parseQuery(str) {
   for (const pair of str.split('&')) {
     const eqIdx = pair.indexOf('=');
     if (eqIdx >= 0) {
-      result[decodeURIComponent(pair.substring(0, eqIdx))] = decodeURIComponent(pair.substring(eqIdx + 1));
+      result[decodeURIComponent(pair.substring(0, eqIdx))] = decodeURIComponent(
+        pair.substring(eqIdx + 1)
+      );
     }
   }
   return result;
@@ -83,7 +88,7 @@ export function buildHash(panel, subpath, params) {
  */
 export function navigate(panel, subpath = '', params = {}) {
   if (typeof location === 'undefined') return;
-  // Carry global params from current URL into new route
+
   const currentQuery = parseQuery(routerCtx.read('query'));
   const merged = {};
   for (const key of _globalKeys) {
@@ -91,7 +96,7 @@ export function navigate(panel, subpath = '', params = {}) {
       merged[key] = currentQuery[key];
     }
   }
-  // Apply explicit params (can override or null-out globals)
+
   for (const [k, v] of Object.entries(params)) {
     if (v != null && v !== '') {
       merged[k] = v;
@@ -100,7 +105,7 @@ export function navigate(panel, subpath = '', params = {}) {
     }
   }
   const hash = buildHash(panel, subpath, merged);
-  // Use pushState instead of location.hash to ensure clean URL
+
   history.pushState(null, '', location.pathname + '#' + hash);
   syncFromHash();
   if (typeof window !== 'undefined') {
@@ -151,7 +156,7 @@ function syncFromHash() {
   routerCtx.pub('subpath', subpath);
   routerCtx.pub('query', queryPart);
 
-  // Extract and publish global params
+
   if (_globalKeys.size > 0) {
     const allParams = parseQuery(queryPart);
     const globals = {};
@@ -193,7 +198,7 @@ export function setDefaultPanel(panel) {
  */
 export function registerGlobalParam(...keys) {
   keys.forEach((k) => _globalKeys.add(k));
-  // Re-sync to publish initial global params from current URL
+
   if (typeof location !== 'undefined') {
     const allParams = parseQuery(routerCtx.read('query'));
     const globals = {};
@@ -215,8 +220,55 @@ export function setGlobalParam(key, value) {
   updateParams({ [key]: value });
 }
 
-// Initial sync + listen to hashchange (browser-only)
+
 if (typeof location !== 'undefined' && typeof window !== 'undefined') {
   syncFromHash();
   window.addEventListener('hashchange', syncFromHash);
 }
+
+/**
+ * Generic search parameters builder
+ */
+export function getGraphSearchString(locationObj = typeof window !== 'undefined' ? window.location : {}) {
+  if (!locationObj || !locationObj.hash) return ''
+  const params = new URLSearchParams(locationObj.search || '')
+  const hashQuery = locationObj.hash.includes('?') ? locationObj.hash.split('?')[1] : ''
+  const hashParams = new URLSearchParams(hashQuery)
+  for (let [key, value] of hashParams) {
+    params.set(key, value)
+  }
+  return params.toString()
+}
+
+export function getGraphUrlParams(locationObj = typeof window !== 'undefined' ? window.location : {}) {
+  return new URLSearchParams(getGraphSearchString(locationObj))
+}
+
+export function parseGraphHash(hash = typeof window !== 'undefined' ? window.location.hash : '') {
+  if (!hash) return { path: '', params: new URLSearchParams() }
+  const [hashBase, queryStr] = hash.replace('#', '').split('?')
+  const hashParams = hashBase.split('/')
+  if (hashParams[0] === 'graph') hashParams.shift()
+  return {
+    path: hashParams.join('/'),
+    params: new URLSearchParams(queryStr || ''),
+  }
+}
+
+export function updateHashParam(key, value, locationObj = typeof window !== 'undefined' ? window.location : {}, historyObj = typeof history !== 'undefined' ? history : {}) {
+  if (!locationObj || !locationObj.hash) return
+  const [basePath, queryStr] = locationObj.hash.split('?')
+  const params = new URLSearchParams(queryStr || '')
+  if (value === null || value === undefined) {
+    params.delete(key)
+  } else {
+    params.set(key, value)
+  }
+  const newQuery = params.toString()
+  const newHash = newQuery ? `${basePath}?${newQuery}` : basePath
+  if (locationObj.hash === newHash) return
+  if (historyObj && typeof historyObj.replaceState === 'function') {
+    historyObj.replaceState(null, '', newHash)
+  }
+}
+

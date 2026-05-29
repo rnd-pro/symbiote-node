@@ -54,8 +54,8 @@ export class Zoom {
 
   #getRect() {
     if (this.getTransform) {
-      const c = this.#container.getBoundingClientRect();
-      const t = this.getTransform();
+      let c = this.#container.getBoundingClientRect();
+      let t = this.getTransform();
       return { left: c.left + t.x, top: c.top + t.y };
     }
     return this.#content.getBoundingClientRect();
@@ -66,22 +66,22 @@ export class Zoom {
       return;
     }
     e.preventDefault();
-    const rect = this.#getRect();
-    // Normalize delta: trackpads send small frequent deltas, mice send large ones
-    const absDelta = Math.min(Math.abs(e.deltaY), 10) / 10;
-    const sign = e.deltaY < 0 ? 1 : -1;
-    const delta = sign * this.intensity * absDelta;
-    const ox = (rect.left - e.clientX) * delta;
-    const oy = (rect.top - e.clientY) * delta;
+    let rect = this.#getRect();
+
+    let absDelta = Math.min(Math.abs(e.deltaY), 10) / 10;
+    let sign = e.deltaY < 0 ? 1 : -1;
+    let delta = sign * this.intensity * absDelta;
+    let ox = (rect.left - e.clientX) * delta;
+    let oy = (rect.top - e.clientY) * delta;
     this.#onZoom(delta, ox, oy, 'wheel');
   };
 
   #dblclick = (e) => {
     e.preventDefault();
-    const rect = this.#getRect();
-    const delta = 4 * this.intensity;
-    const ox = (rect.left - e.clientX) * delta;
-    const oy = (rect.top - e.clientY) * delta;
+    let rect = this.#getRect();
+    let delta = 4 * this.intensity;
+    let ox = (rect.left - e.clientX) * delta;
+    let oy = (rect.top - e.clientY) * delta;
     this.#onZoom(delta, ox, oy, 'dblclick');
   };
 
@@ -90,36 +90,27 @@ export class Zoom {
   };
 
   #move = (e) => {
-    this.#pointers = this.#pointers.map(p =>
-      p.pointerId === e.pointerId ? e : p
-    );
+    this.#pointers = this.#pointers.map((p) => (p.pointerId === e.pointerId ? e : p));
     if (this.#pointers.length < 2) return;
 
-    const [p1, p2] = this.#pointers;
-    const distance = Math.sqrt(
-      (p1.clientX - p2.clientX) ** 2 + (p1.clientY - p2.clientY) ** 2
-    );
-    const cx = (p1.clientX + p2.clientX) / 2;
-    const cy = (p1.clientY + p2.clientY) / 2;
+    let [p1, p2] = this.#pointers;
+    let distance = Math.sqrt((p1.clientX - p2.clientX) ** 2 + (p1.clientY - p2.clientY) ** 2);
+    let cx = (p1.clientX + p2.clientX) / 2;
+    let cy = (p1.clientY + p2.clientY) / 2;
 
     if (this.#previous && this.#previous.distance > 0) {
-      const rect = this.#getRect();
-      const delta = distance / this.#previous.distance - 1;
-      const ox = (rect.left - cx) * delta;
-      const oy = (rect.top - cy) * delta;
-      this.#onZoom(
-        delta,
-        ox - (this.#previous.cx - cx),
-        oy - (this.#previous.cy - cy),
-        'touch'
-      );
+      let rect = this.#getRect();
+      let delta = distance / this.#previous.distance - 1;
+      let ox = (rect.left - cx) * delta;
+      let oy = (rect.top - cy) * delta;
+      this.#onZoom(delta, ox - (this.#previous.cx - cx), oy - (this.#previous.cy - cy), 'touch');
     }
     this.#previous = { cx, cy, distance };
   };
 
   #up = (e) => {
     this.#previous = null;
-    this.#pointers = this.#pointers.filter(p => p.pointerId !== e.pointerId);
+    this.#pointers = this.#pointers.filter((p) => p.pointerId !== e.pointerId);
   };
 
   /**
@@ -141,3 +132,5 @@ export class Zoom {
     window.removeEventListener('pointercancel', this.#up);
   }
 }
+
+export { Zoom as default };

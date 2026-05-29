@@ -9,7 +9,6 @@
  */
 
 export class Readonly {
-
   /** @type {boolean} */
   #enabled = false;
 
@@ -57,3 +56,5 @@ export class Readonly {
     return this.#enabled;
   }
 }
+
+export { Readonly as default };

@@ -8,20 +8,21 @@
  * - Quiet zones (silence detection)
  * - Strong onsets (transient detection)
  *
- * Uses Python librosa library on remote server via SSH.
- * Based on Mr-Computer/modules/ai-music-video beat-detector-ssh.js
+ * Uses Python librosa library on a configured remote server via SSH.
  *
- * Remote: mr-agent@mr-agent.rnd-pro.com
- * Script: beat-detection.py (uploaded automatically)
- * Venv:   /home/mr-agent/automations/argentine-spanish-bot/venv
- *
- * @module agi-graph/packs/ai/beat-detect
+ * @module symbiote-node/packs/ai/beat-detect
  */
 
-import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
-import os from 'os';
+import { runCommandWithWatchdog } from './run-command-watchdog.js';
+
+function requestSignal(timeoutMs, parentSignal) {
+  let timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parentSignal && AbortSignal.any
+    ? AbortSignal.any([parentSignal, timeoutSignal])
+    : timeoutSignal;
+}
 
 export default {
   type: 'ai/beat-detect',
@@ -30,9 +31,7 @@ export default {
 
   driver: {
     description: 'Audio beat detection via librosa — beats, tempo, peaks, energy',
-    inputs: [
-      { name: 'audioPath', type: 'string' },
-    ],
+    inputs: [{ name: 'audioPath', type: 'string' }],
     outputs: [
       { name: 'beats', type: 'any' },
       { name: 'tempo', type: 'number' },
@@ -48,13 +47,33 @@ export default {
       peaksPerSecond: { type: 'int', default: 10, description: 'Waveform peaks resolution' },
       sampleRate: { type: 'int', default: 22050, description: 'Audio sample rate for analysis' },
       hopLength: { type: 'int', default: 512, description: 'Hop length for beat tracking' },
-      // SSH params
-      remoteHost: { type: 'string', default: 'mr-agent@mr-agent.rnd-pro.com', description: 'SSH host' },
-      remotePath: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot', description: 'Remote project path' },
-      remoteVenv: { type: 'string', default: '/home/mr-agent/automations/argentine-spanish-bot/venv', description: 'Remote Python venv' },
-      scriptPath: { type: 'string', default: '', description: 'Local path to beat-detection.py (auto-resolved)' },
-      // HTTP params
-      endpoint: { type: 'string', default: 'http://localhost:5009', description: 'Beat detection HTTP endpoint' },
+
+      remoteHost: {
+        type: 'string',
+        default: '',
+        description: 'SSH host',
+      },
+      remotePath: {
+        type: 'string',
+        default: '',
+        description: 'Remote project path',
+      },
+      remoteVenv: {
+        type: 'string',
+        default: '',
+        description: 'Remote Python venv',
+      },
+      scriptPath: {
+        type: 'string',
+        default: '',
+        description: 'Local path to beat-detection.py (auto-resolved)',
+      },
+
+      endpoint: {
+        type: 'string',
+        default: 'http://localhost:5009',
+        description: 'Beat detection HTTP endpoint',
+      },
       timeout: { type: 'int', default: 180000, description: 'Max wait time (ms)' },
     },
   },
@@ -69,8 +88,8 @@ export default {
       `beat:${params.mode}:${inputs.audioPath}:${params.peaksPerSecond}:${params.sampleRate}`,
 
     execute: async (inputs, params) => {
-      const { audioPath } = inputs;
-      const mode = params.mode || 'ssh';
+      let { audioPath } = inputs;
+      let mode = params.mode || 'ssh';
 
       if (mode === 'http') {
         return executeHTTP(audioPath, params);
@@ -82,8 +101,14 @@ export default {
 
 /** @type {Object} Empty result template */
 const EMPTY = {
-  beats: null, tempo: 0, peaks: null, energy: null,
-  quietZones: null, strongOnsets: null, duration: 0, error: null,
+  beats: null,
+  tempo: 0,
+  peaks: null,
+  energy: null,
+  quietZones: null,
+  strongOnsets: null,
+  duration: 0,
+  error: null,
 };
 
 /**
@@ -93,59 +118,66 @@ const EMPTY = {
  * @returns {Promise<Object>}
  */
 async function executeSSH(audioPath, params) {
-  const host = params.remoteHost || process.env.WHISPER_REMOTE_HOST || 'mr-agent@mr-agent.rnd-pro.com';
-  const remotePath = params.remotePath || process.env.WHISPER_REMOTE_PATH || '/home/mr-agent/automations/argentine-spanish-bot';
-  const venv = params.remoteVenv || process.env.WHISPER_REMOTE_VENV || `${remotePath}/venv`;
-  const sr = params.sampleRate || parseInt(process.env.BEAT_SAMPLE_RATE, 10) || 22050;
-  const hop = params.hopLength || parseInt(process.env.BEAT_HOP_LENGTH, 10) || 512;
-  const pps = params.peaksPerSecond || 10;
-  const remoteTmpDir = '/tmp/agi-graph-beat';
+  let host = params.remoteHost || process.env.BEAT_REMOTE_HOST || '';
+  let remotePath = params.remotePath || process.env.BEAT_REMOTE_PATH || '';
+  let venv = params.remoteVenv || process.env.BEAT_REMOTE_VENV || `${remotePath}/venv`;
+  let sr = params.sampleRate || parseInt(process.env.BEAT_SAMPLE_RATE, 10) || 22050;
+  let hop = params.hopLength || parseInt(process.env.BEAT_HOP_LENGTH, 10) || 512;
+  let pps = params.peaksPerSecond || 10;
+  let remoteTmpDir = '/tmp/symbiote-node-beat';
 
   try {
-    // Verify local file exists
+    if (!host || !remotePath || !venv) {
+      throw new Error('Beat detection SSH mode requires remoteHost, remotePath, and remoteVenv configuration');
+    }
+
     await fs.access(audioPath);
 
-    const filename = path.basename(audioPath);
-    const remoteAudio = `${remoteTmpDir}/${filename}`;
+    let filename = path.basename(audioPath);
+    let remoteAudio = `${remoteTmpDir}/${filename}`;
 
-    // Setup remote directory
-    execSync(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
-      encoding: 'utf-8', stdio: 'pipe', timeout: 10000,
+
+    await runCommandWithWatchdog(`ssh ${host} "mkdir -p ${remoteTmpDir}"`, {
+      inactivityMs: 10000,
+      timeoutMs: 10000,
     });
 
-    // Upload audio
-    execSync(`scp "${audioPath}" "${host}:${remoteAudio}"`, {
-      encoding: 'utf-8', stdio: 'pipe', timeout: 60000,
+
+    await runCommandWithWatchdog(`scp "${audioPath}" "${host}:${remoteAudio}"`, {
+      inactivityMs: 60000,
+      timeoutMs: 60000,
     });
 
-    // Upload or locate beat detection script
+
     let remoteScript = `${remoteTmpDir}/beat-detection.py`;
-    const localScript = params.scriptPath
-      || path.join(process.cwd(), 'utils/beat-detection.py');
+    let localScript = params.scriptPath || path.join(process.cwd(), 'utils/beat-detection.py');
 
     try {
       await fs.access(localScript);
-      execSync(`scp "${localScript}" "${host}:${remoteScript}"`, {
-        encoding: 'utf-8', stdio: 'pipe', timeout: 10000,
+      await runCommandWithWatchdog(`scp "${localScript}" "${host}:${remoteScript}"`, {
+        inactivityMs: 10000,
+        timeoutMs: 10000,
       });
-    } catch {
-      // Script might already be on remote, try using module path
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw new Error(`Failed to upload beat detection script: ${error.message}`);
+      }
       remoteScript = `${remotePath}/utils/beat-detection.py`;
     }
 
     try {
-      // Run beat detection
-      const pythonCmd = `${venv}/bin/python3`;
-      const cmd = `"${pythonCmd}" "${remoteScript}" "${remoteAudio}" --sr ${sr} --hop ${hop} --pps ${pps}`;
-      const fullCmd = `ssh ${host} '${cmd}'`;
 
-      const output = execSync(fullCmd, {
-        encoding: 'utf-8',
+      let pythonCmd = `${venv}/bin/python3`;
+      let cmd = `"${pythonCmd}" "${remoteScript}" "${remoteAudio}" --sr ${sr} --hop ${hop} --pps ${pps}`;
+      let fullCmd = `ssh ${host} '${cmd}'`;
+
+      let output = await runCommandWithWatchdog(fullCmd, {
         maxBuffer: 50 * 1024 * 1024,
-        timeout: params.timeout || 180000,
+        inactivityMs: params.timeout || 180000,
+        timeoutMs: params.timeout || 180000,
       });
 
-      const result = JSON.parse(output);
+      let result = JSON.parse(output);
 
       return {
         beats: result.beats,
@@ -158,10 +190,11 @@ async function executeSSH(audioPath, params) {
         error: null,
       };
     } finally {
-      // Cleanup remote audio
-      execSync(`ssh ${host} "rm -f ${remoteAudio}"`, {
-        encoding: 'utf-8', stdio: 'pipe', timeout: 5000,
-      }).toString();
+
+      await runCommandWithWatchdog(`ssh ${host} "rm -f ${remoteAudio}"`, {
+        inactivityMs: 5000,
+        timeoutMs: 5000,
+      });
     }
   } catch (err) {
     return { ...EMPTY, error: err.message };
@@ -175,29 +208,29 @@ async function executeSSH(audioPath, params) {
  * @returns {Promise<Object>}
  */
 async function executeHTTP(audioPath, params) {
-  const endpoint = params.endpoint || 'http://localhost:5009';
+  let endpoint = params.endpoint || 'http://localhost:5009';
 
   try {
-    const audioBuffer = await fs.readFile(audioPath);
-    const blob = new Blob([audioBuffer], { type: 'audio/wav' });
+    let audioBuffer = await fs.readFile(audioPath);
+    let blob = new Blob([audioBuffer], { type: 'audio/wav' });
 
-    const formData = new FormData();
+    let formData = new FormData();
     formData.append('file', blob, path.basename(audioPath));
     formData.append('sample_rate', String(params.sampleRate || 22050));
     formData.append('hop_length', String(params.hopLength || 512));
     formData.append('peaks_per_second', String(params.peaksPerSecond || 10));
 
-    const response = await fetch(`${endpoint}/analyze`, {
+    let response = await fetch(`${endpoint}/analyze`, {
       method: 'POST',
       body: formData,
-      signal: AbortSignal.timeout(params.timeout || 180000),
+      signal: requestSignal(params.timeout || 180000, params.signal),
     });
 
     if (!response.ok) {
       return { ...EMPTY, error: `Beat API error: ${response.status}` };
     }
 
-    const result = await response.json();
+    let result = await response.json();
 
     return {
       beats: result.beats,

@@ -12,6 +12,7 @@ import Symbiote, { html } from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template } from './PaletteBrowser.tpl.js';
 import { styles } from './PaletteBrowser.css.js';
+import { translate } from '../../locale/index.js';
 
 class PalItem extends Symbiote {
   init$ = {
@@ -64,9 +65,10 @@ PalCategory.template = html`
 PalCategory.reg('pal-category');
 
 export class PaletteBrowser extends Symbiote {
-
   init$ = {
     categories: [],
+    title: translate('palette.title'),
+    searchPlaceholder: translate('palette.searchPlaceholder'),
   };
 
   renderCallback() {
@@ -81,6 +83,10 @@ export class PaletteBrowser extends Symbiote {
 
   /** @type {Map<string, function>} */
   #factoryMap = new Map();
+
+  renderCallback() {
+    ensureMaterialSymbols(['widgets']);
+  }
 
   /**
    * Register palette categories and items
@@ -100,19 +106,23 @@ export class PaletteBrowser extends Symbiote {
   }
 
   #syncList(filter = '') {
-    const lowerFilter = filter.toLowerCase();
+    let lowerFilter = filter.toLowerCase();
     this.#factoryMap.clear();
     ensureMaterialSymbols(this.#rawCategories.flatMap((cat) => cat.items.map((it) => it.icon)));
 
     this.$.categories = this.#rawCategories
-      .map(cat => {
-        const filtered = lowerFilter
-          ? cat.items.filter(it => it.name.toLowerCase().includes(lowerFilter) || it.desc.toLowerCase().includes(lowerFilter))
+      .map((cat) => {
+        let filtered = lowerFilter
+          ? cat.items.filter(
+              (it) =>
+                it.name.toLowerCase().includes(lowerFilter) ||
+                it.desc.toLowerCase().includes(lowerFilter)
+            )
           : cat.items;
 
         if (filtered.length === 0) return null;
 
-        const catItems = filtered.map(it => {
+        let catItems = filtered.map((it) => {
           this.#factoryMap.set(it.name, it.factory);
           return {
             name: it.name,
@@ -133,10 +143,10 @@ export class PaletteBrowser extends Symbiote {
   }
 
   onItemClick(e) {
-    const item = e.target.closest('pal-item');
+    let item = e.target.closest('pal-item');
     if (!item) return;
-    const name = item.$.name;
-    const factory = this.#factoryMap.get(name);
+    let name = item.$.name;
+    let factory = this.#factoryMap.get(name);
     if (this.#onSelect && factory) this.#onSelect(factory, name);
   }
 }

@@ -4,7 +4,7 @@
  * Waits for all non-null inputs and merges them into a single object.
  * Acts as a synchronization point for parallel branches.
  *
- * @module agi-graph/packs/flow/wait-all
+ * @module symbiote-node/packs/flow/wait-all
  */
 
 export default {
@@ -19,15 +19,13 @@ export default {
       { name: 'b', type: 'any' },
       { name: 'c', type: 'any' },
     ],
-    outputs: [
-      { name: 'output', type: 'object' },
-    ],
+    outputs: [{ name: 'output', type: 'object' }],
     params: {},
   },
 
   lifecycle: {
     execute: (inputs) => {
-      const output = {};
+      let output = {};
       for (const [key, val] of Object.entries(inputs)) {
         if (val != null) {
           output[key] = val;

@@ -4,26 +4,26 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
-<div class="toolbar" ${{ onclick: 'onBtnClick' }}>
-  <button class="tb-btn tb-btn--enter" data-action="enter" title="Enter Subgraph" hidden>
-    <span class="material-symbols-outlined tb-icon">login</span>
-  </button>
-  <button class="tb-btn" data-action="explore" title="Explore connections">
-    <span class="material-symbols-outlined tb-icon">hub</span>
-  </button>
-  <button class="tb-btn" data-action="view-code" title="View Code">
-    <span class="material-symbols-outlined tb-icon">code</span>
-  </button>
-  <button class="tb-btn" data-action="duplicate" title="Duplicate">
-    <span class="material-symbols-outlined tb-icon">content_copy</span>
-  </button>
+export let template = html`
+  <div class="toolbar" ${{ onclick: 'onBtnClick' }}>
+    <sn-button class="tb-btn tb-btn--enter" variant="icon" data-action="enter" ${{ title: 'enterSubgraphTitle' }} hidden>
+      <span class="material-symbols-outlined tb-icon">login</span>
+    </sn-button>
+    <sn-button class="tb-btn" variant="icon" data-action="explore" ${{ title: 'exploreConnectionsTitle' }}>
+      <span class="material-symbols-outlined tb-icon">hub</span>
+    </sn-button>
+    <sn-button class="tb-btn" variant="icon" data-action="view-code" ${{ title: 'viewCodeTitle' }}>
+      <span class="material-symbols-outlined tb-icon">code</span>
+    </sn-button>
+    <sn-button class="tb-btn" variant="icon" data-action="duplicate" ${{ title: 'duplicateTitle' }}>
+      <span class="material-symbols-outlined tb-icon">content_copy</span>
+    </sn-button>
 
-  <button class="tb-btn" data-action="mute" title="Mute">
-    <span class="material-symbols-outlined tb-icon">visibility_off</span>
-  </button>
-  <button class="tb-btn tb-btn--danger" data-action="delete" title="Delete">
-    <span class="material-symbols-outlined tb-icon">delete</span>
-  </button>
-</div>
+    <sn-button class="tb-btn" variant="icon" data-action="mute" ${{ title: 'muteTitle' }}>
+      <span class="material-symbols-outlined tb-icon">visibility_off</span>
+    </sn-button>
+    <sn-button class="tb-btn tb-btn--danger" variant="icon" data-action="delete" ${{ title: 'deleteTitle' }}>
+      <span class="material-symbols-outlined tb-icon">delete</span>
+    </sn-button>
+  </div>
 `;

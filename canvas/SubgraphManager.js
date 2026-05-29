@@ -34,13 +34,15 @@ export class SubgraphManager {
    */
   initialize(canvas, rootEditor) {
     this.#canvas = canvas;
-    this.#stack = [{
-      editor: rootEditor,
-      positions: {},
-      transform: { panX: 0, panY: 0, zoom: 1 },
-      label: 'Root',
-      subgraphNodeId: null,
-    }];
+    this.#stack = [
+      {
+        editor: rootEditor,
+        positions: {},
+        transform: { panX: 0, panY: 0, zoom: 1 },
+        label: 'Root',
+        subgraphNodeId: null,
+      },
+    ];
   }
 
   /**
@@ -58,12 +60,12 @@ export class SubgraphManager {
   drillDown(subgraphNode) {
     if (!subgraphNode?._isSubgraph || !this.#canvas) return;
 
-    // Save current state
-    const current = this.#stack[this.#stack.length - 1];
+
+    let current = this.#stack[this.#stack.length - 1];
     current.positions = this.#capturePositions(current.editor, current.positions);
     current.transform = this.#captureTransform();
 
-    // Push inner editor
+
     this.#stack.push({
       editor: subgraphNode.getInnerEditor(),
       positions: subgraphNode.innerPositions,
@@ -72,7 +74,7 @@ export class SubgraphManager {
       subgraphNodeId: subgraphNode.id,
     });
 
-    // Switch canvas to inner editor
+
     this.#applyLevel(this.#stack.length - 1);
     this.#notifyNavigate();
   }
@@ -85,12 +87,12 @@ export class SubgraphManager {
     if (level === undefined) level = this.#stack.length - 2;
     if (level < 0 || level >= this.#stack.length || !this.#canvas) return;
 
-    // Save state of levels being popped (persist inner positions)
+
     for (let i = this.#stack.length - 1; i > level; i--) {
-      const entry = this.#stack[i];
-      const parentEntry = this.#stack[i - 1];
+      let entry = this.#stack[i];
+      let parentEntry = this.#stack[i - 1];
       if (entry.subgraphNodeId) {
-        const subNode = parentEntry.editor.getNode(entry.subgraphNodeId);
+        let subNode = parentEntry.editor.getNode(entry.subgraphNodeId);
         if (subNode?._isSubgraph) {
           subNode.setInnerPositions(this.#capturePositions(entry.editor, entry.positions));
           subNode.setInnerTransform(entry.transform);
@@ -98,15 +100,15 @@ export class SubgraphManager {
       }
     }
 
-    // Save current deep level positions before truncating
-    const currentEntry = this.#stack[this.#stack.length - 1];
+
+    let currentEntry = this.#stack[this.#stack.length - 1];
     currentEntry.positions = this.#capturePositions(currentEntry.editor, currentEntry.positions);
     currentEntry.transform = this.#captureTransform();
 
-    // Truncate stack
+
     this.#stack.length = level + 1;
 
-    // Switch canvas
+
     this.#applyLevel(level);
     this.#notifyNavigate();
   }
@@ -143,18 +145,18 @@ export class SubgraphManager {
    * @param {number} level
    */
   #applyLevel(level) {
-    const entry = this.#stack[level];
+    let entry = this.#stack[level];
     if (!entry || !this.#canvas) return;
 
-    // Rebind editor
+
     this.#canvas.setEditor(entry.editor);
 
-    // Restore positions
+
     for (const [nodeId, pos] of Object.entries(entry.positions)) {
       this.#canvas.setNodePosition(nodeId, pos.x, pos.y);
     }
 
-    // Restore transform
+
     this.#canvas.$.panX = entry.transform.panX;
     this.#canvas.$.panY = entry.transform.panY;
     this.#canvas.$.zoom = entry.transform.zoom;
@@ -169,10 +171,10 @@ export class SubgraphManager {
    * @returns {Object<string, { x: number, y: number }>}
    */
   #capturePositions(editor, fallback = {}) {
-    const positions = { ...fallback };
+    let positions = { ...fallback };
     if (!this.#canvas) return positions;
     for (const node of editor.getNodes()) {
-      const el = this.#canvas.getNodeView?.(node.id);
+      let el = this.#canvas.getNodeView?.(node.id);
       if (el?._position) {
         positions[node.id] = { ...el._position };
       }

@@ -12,7 +12,6 @@
 const TWITCH_THRESHOLD = 4;
 
 export class Selector {
-
   /** @type {Set<string>} */
   #selectedNodes = new Set();
 
@@ -119,8 +118,8 @@ export class Selector {
    * @returns {boolean}
    */
   static isTwitch(start, end) {
-    const dx = Math.abs(end.x - start.x);
-    const dy = Math.abs(end.y - start.y);
+    let dx = Math.abs(end.x - start.x);
+    let dy = Math.abs(end.y - start.y);
     return dx < TWITCH_THRESHOLD && dy < TWITCH_THRESHOLD;
   }
 
@@ -130,3 +129,5 @@ export class Selector {
     }
   }
 }
+
+export { Selector as default };

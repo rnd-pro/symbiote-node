@@ -5,13 +5,13 @@
  *
  * @module symbiote-node */
 
-// Core
+
 export { Graph } from './Graph.js';
 export { Executor } from './Executor.js';
-export { History } from './History.js';
+export { GraphHistory } from './History.js';
 export { nanoid } from './nanoid.js';
 
-// Registry (AI discovery)
+
 export {
   registerNodeType,
   registerPack,
@@ -26,7 +26,7 @@ export {
   clearRegistry,
 } from './Registry.js';
 
-// Socket types
+
 export {
   registerSocketType,
   registerSocketTypes,
@@ -35,22 +35,17 @@ export {
   areSocketsCompatible,
 } from './SocketTypes.js';
 
-// Persistence
-export {
-  serialize,
-  deserialize,
-  saveToFile,
-  loadFromFile,
-} from './Persistence.js';
 
-// Lifecycle
+export { serialize, deserialize, saveToFile, loadFromFile } from './Persistence.js';
+
+
 export { runLifecycle } from './Lifecycle.js';
 
-// Handler loader (Node.js only)
+
 export { loadHandlers, watchHandlers } from './HandlerLoader.js';
 
-// Agent UI commands
+
 export * as AgentUI from './AgentUICommands.js';
 
-// Graph server — import directly: import { createServer } from 'symbiote-node/engine/GraphServer.js'
-// Not re-exported here because it requires 'ws' package (optional peer dependency)
+export { FocusController } from './FocusController.js';
+

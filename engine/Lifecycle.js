@@ -4,7 +4,7 @@
  * Every node can define lifecycle hooks: validate, cacheKey, execute, postProcess.
  * The lifecycle runner orchestrates these steps with cache awareness.
  *
- * @module agi-graph/Lifecycle
+ * @module symbiote-node/Lifecycle
  */
 
 /**
@@ -55,29 +55,37 @@ function defaultCacheKey(inputs, params) {
  * @param {object} inputs - Resolved inputs from upstream
  * @param {object} params - Node parameters
  * @param {CacheState} cacheState - Cache state for this node
+ * @param {Object} [executionContext]
+ * @param {AbortSignal} [executionContext.signal]
+ * @param {number} [executionContext.deadline]
  * @returns {Promise<LifecycleResult>}
  */
-export async function runLifecycle(hooks, inputs, params, cacheState) {
-  const { mode = 'auto', store, nodeId } = cacheState;
+export async function runLifecycle(hooks, inputs, params, cacheState, executionContext = {}) {
+  let { mode = 'auto', store, nodeId } = cacheState;
 
-  // Step 1: Validate
+
   if (hooks.validate) {
     try {
-      const valid = hooks.validate(inputs);
+      let valid = hooks.validate(inputs);
       if (valid === false) {
         return { outputs: null, cached: false, error: 'Validation failed', cacheHash: null };
       }
     } catch (err) {
-      return { outputs: null, cached: false, error: `Validation error: ${err.message}`, cacheHash: null };
+      return {
+        outputs: null,
+        cached: false,
+        error: `Validation error: ${err.message}`,
+        cacheHash: null,
+      };
     }
   }
 
-  // Step 2: Compute cache key
-  const cacheKeyFn = hooks.cacheKey || defaultCacheKey;
-  const cacheHash = cacheKeyFn(inputs, params);
 
-  // Step 3: Check cache based on mode
-  const cached = store.get(nodeId);
+  let cacheKeyFn = hooks.cacheKey || defaultCacheKey;
+  let cacheHash = cacheKeyFn(inputs, params);
+
+
+  let cached = store.get(nodeId);
 
   if (mode === 'freeze' && cached) {
     return { outputs: cached.outputs, cached: true, error: null, cacheHash: cached.key };
@@ -87,31 +95,34 @@ export async function runLifecycle(hooks, inputs, params, cacheState) {
     return { outputs: cached.outputs, cached: true, error: null, cacheHash };
   }
 
-  // mode === 'force' → skip cache check entirely
 
-  // Step 4: Execute
-  const executeFn = hooks.execute;
+  let executeFn = hooks.execute;
   if (!executeFn) {
     return { outputs: null, cached: false, error: 'No execute hook defined', cacheHash };
   }
 
   let outputs;
   try {
-    outputs = await executeFn(inputs, params);
+    outputs = await executeFn(inputs, { ...params, ...executionContext });
   } catch (err) {
     return { outputs: null, cached: false, error: `Execution error: ${err.message}`, cacheHash };
   }
 
-  // Step 5: PostProcess
+
   if (hooks.postProcess) {
     try {
       outputs = hooks.postProcess(outputs);
     } catch (err) {
-      return { outputs: null, cached: false, error: `PostProcess error: ${err.message}`, cacheHash };
+      return {
+        outputs: null,
+        cached: false,
+        error: `PostProcess error: ${err.message}`,
+        cacheHash,
+      };
     }
   }
 
-  // Step 6: Store in cache
+
   store.set(nodeId, { key: cacheHash, outputs });
 
   return { outputs, cached: false, error: null, cacheHash };

@@ -13,7 +13,7 @@
  * Simplified port of TimelineGenerator from
  * Mr-Computer/modules/ai-music-video/src/services/timeline-generator.js
  *
- * @module agi-graph/packs/transform/timeline-build
+ * @module symbiote-node/packs/transform/timeline-build
  */
 
 export default {
@@ -33,9 +33,21 @@ export default {
       { name: 'error', type: 'string' },
     ],
     params: {
-      minSegmentDuration: { type: 'number', default: 1.8, description: 'Min segment duration (seconds)' },
-      maxSegmentDuration: { type: 'number', default: 5.0, description: 'Max segment duration (seconds)' },
-      shortMergeThreshold: { type: 'number', default: 1.2, description: 'Merge lyrics segments shorter than this' },
+      minSegmentDuration: {
+        type: 'number',
+        default: 1.8,
+        description: 'Min segment duration (seconds)',
+      },
+      maxSegmentDuration: {
+        type: 'number',
+        default: 5.0,
+        description: 'Max segment duration (seconds)',
+      },
+      shortMergeThreshold: {
+        type: 'number',
+        default: 1.2,
+        description: 'Merge lyrics segments shorter than this',
+      },
       gapType: { type: 'string', default: 'beat', description: 'Type label for gap-fill segments' },
     },
   },
@@ -47,45 +59,45 @@ export default {
     },
 
     cacheKey: (inputs, params) => {
-      const wd = inputs.whisperData;
-      const bd = inputs.beatData;
+      let wd = inputs.whisperData;
+      let bd = inputs.beatData;
       return `timeline:${wd.duration || 0}:${bd?.tempo || 0}:${params.minSegmentDuration}`;
     },
 
     execute: async (inputs, params) => {
       try {
-        const { whisperData, beatData } = inputs;
-        const words = whisperData.words || [];
-        const duration = whisperData.duration || beatData?.duration || 0;
-        const beats = beatData?.beats || [];
+        let { whisperData, beatData } = inputs;
+        let words = whisperData.words || [];
+        let duration = whisperData.duration || beatData?.duration || 0;
+        let beats = beatData?.beats || [];
 
         if (words.length === 0) {
           return { segments: null, stats: null, error: 'No whisper words provided' };
         }
 
-        // Step 1: Build phrases from words
+
         let segments = buildPhrases(words);
 
-        // Step 2: Fill gaps with beat-snapped segments
+
         segments = fillGaps(segments, beats, duration, params);
 
-        // Step 3: Remove overlaps
+
         segments = removeOverlaps(segments);
 
-        // Step 4: Merge short segments
+
         segments = mergeShort(segments, params.shortMergeThreshold || 1.2);
 
-        // Step 5: Enforce min duration
+
         segments = enforceMinDuration(segments, params.minSegmentDuration || 1.8);
 
-        // Step 6: Cap max duration
+
         segments = capMaxDuration(segments, params.maxSegmentDuration || 5.0);
 
-        // Sort final
+
         segments.sort((a, b) => a.start - b.start);
 
-        // Stats
-        const stats = calculateStats(segments, duration);
+
+        let stats = calculateStats(segments, duration);
 
         return { segments, stats, error: null };
       } catch (err) {
@@ -101,7 +113,7 @@ export default {
  * @returns {Array<{start: number, end: number, text: string, type: string, wordCount: number}>}
  */
 function buildPhrases(words) {
-  const phrases = [];
+  let phrases = [];
   let current = null;
 
   for (const w of words) {
@@ -117,10 +129,10 @@ function buildPhrases(words) {
       current.words.push(w.word);
     }
 
-    // Split on sentence endings, commas, or long pauses
-    const endsWithPunct = /[.!?;]$/.test(w.word);
-    const nextWord = words[words.indexOf(w) + 1];
-    const hasGap = nextWord && (nextWord.start - w.end > 0.8);
+
+    let endsWithPunct = /[.!?;]$/.test(w.word);
+    let nextWord = words[words.indexOf(w) + 1];
+    let hasGap = nextWord && nextWord.start - w.end > 0.8;
 
     if (endsWithPunct || hasGap || current.words.length >= 12) {
       phrases.push({
@@ -134,7 +146,7 @@ function buildPhrases(words) {
     }
   }
 
-  // Close last phrase
+
   if (current && current.words.length > 0) {
     phrases.push({
       start: current.start,
@@ -161,7 +173,7 @@ function snapToBeat(time, beats) {
   let minDist = Math.abs(beats[0] - time);
 
   for (const beat of beats) {
-    const dist = Math.abs(beat - time);
+    let dist = Math.abs(beat - time);
     if (dist < minDist) {
       minDist = dist;
       closest = beat;
@@ -169,7 +181,7 @@ function snapToBeat(time, beats) {
     if (beat > time + minDist) break;
   }
 
-  // Only snap if within 0.3s of a beat
+
   return minDist < 0.3 ? closest : time;
 }
 
@@ -184,10 +196,10 @@ function snapToBeat(time, beats) {
 function fillGaps(segments, beats, duration, params) {
   if (segments.length === 0) return segments;
 
-  const result = [];
-  const gapType = params.gapType || 'beat';
+  let result = [];
+  let gapType = params.gapType || 'beat';
 
-  // Gap at start?
+
   if (segments[0].start > 0.1) {
     result.push({
       start: 0,
@@ -201,12 +213,12 @@ function fillGaps(segments, beats, duration, params) {
   for (let i = 0; i < segments.length; i++) {
     result.push(segments[i]);
 
-    // Gap to next segment?
-    const next = segments[i + 1];
+
+    let next = segments[i + 1];
     if (next) {
-      const gapStart = segments[i].end;
-      const gapEnd = next.start;
-      const gapSize = gapEnd - gapStart;
+      let gapStart = segments[i].end;
+      let gapEnd = next.start;
+      let gapSize = gapEnd - gapStart;
 
       if (gapSize > 0.2) {
         result.push({
@@ -220,8 +232,8 @@ function fillGaps(segments, beats, duration, params) {
     }
   }
 
-  // Gap at end?
-  const lastEnd = segments[segments.length - 1].end;
+
+  let lastEnd = segments[segments.length - 1].end;
   if (duration > 0 && duration - lastEnd > 0.2) {
     result.push({
       start: snapToBeat(lastEnd, beats),
@@ -246,25 +258,25 @@ function removeOverlaps(segments) {
   segments.sort((a, b) => a.start - b.start);
 
   for (let i = 1; i < segments.length; i++) {
-    const prev = segments[i - 1];
-    const curr = segments[i];
+    let prev = segments[i - 1];
+    let curr = segments[i];
 
     if (curr.start < prev.end) {
-      // Overlap: trim the gap segment, or split at midpoint
+
       if (prev.type !== 'lyrics' && curr.type === 'lyrics') {
         prev.end = curr.start;
       } else if (prev.type === 'lyrics' && curr.type !== 'lyrics') {
         curr.start = prev.end;
       } else {
-        const mid = (prev.end + curr.start) / 2;
+        let mid = (prev.end + curr.start) / 2;
         prev.end = mid;
         curr.start = mid;
       }
     }
   }
 
-  // Remove zero/negative duration segments
-  return segments.filter(s => s.end - s.start > 0.05);
+
+  return segments.filter((s) => s.end - s.start > 0.05);
 }
 
 /**
@@ -276,14 +288,14 @@ function removeOverlaps(segments) {
 function mergeShort(segments, threshold) {
   if (segments.length < 2) return segments;
 
-  const result = [segments[0]];
+  let result = [segments[0]];
 
   for (let i = 1; i < segments.length; i++) {
-    const curr = segments[i];
-    const prev = result[result.length - 1];
-    const currDuration = curr.end - curr.start;
+    let curr = segments[i];
+    let prev = result[result.length - 1];
+    let currDuration = curr.end - curr.start;
 
-    // Merge short lyrics into previous
+
     if (curr.type === 'lyrics' && currDuration < threshold && prev.type === 'lyrics') {
       prev.end = curr.end;
       prev.text = prev.text + ' ' + curr.text;
@@ -305,14 +317,14 @@ function mergeShort(segments, threshold) {
 function enforceMinDuration(segments, minDuration) {
   if (segments.length < 2) return segments;
 
-  const result = [segments[0]];
+  let result = [segments[0]];
 
   for (let i = 1; i < segments.length; i++) {
-    const prev = result[result.length - 1];
-    const prevDuration = prev.end - prev.start;
+    let prev = result[result.length - 1];
+    let prevDuration = prev.end - prev.start;
 
     if (prevDuration < minDuration) {
-      // Extend previous to absorb current
+
       prev.end = segments[i].end;
       if (segments[i].text) {
         prev.text = (prev.text ? prev.text + ' ' : '') + segments[i].text;
@@ -333,19 +345,19 @@ function enforceMinDuration(segments, minDuration) {
  * @returns {Array}
  */
 function capMaxDuration(segments, maxDuration) {
-  const result = [];
+  let result = [];
 
   for (const seg of segments) {
-    const duration = seg.end - seg.start;
+    let duration = seg.end - seg.start;
 
     if (duration <= maxDuration) {
       result.push(seg);
       continue;
     }
 
-    // Split evenly
-    const parts = Math.ceil(duration / maxDuration);
-    const partDuration = duration / parts;
+
+    let parts = Math.ceil(duration / maxDuration);
+    let partDuration = duration / parts;
 
     for (let i = 0; i < parts; i++) {
       result.push({
@@ -369,22 +381,19 @@ function capMaxDuration(segments, maxDuration) {
  * @returns {Object}
  */
 function calculateStats(segments, audioDuration) {
-  const totalSegments = segments.length;
-  const lyricsSegments = segments.filter(s => s.type === 'lyrics').length;
-  const gapSegments = totalSegments - lyricsSegments;
+  let totalSegments = segments.length;
+  let lyricsSegments = segments.filter((s) => s.type === 'lyrics').length;
+  let gapSegments = totalSegments - lyricsSegments;
 
-  const coveredDuration = segments.reduce((sum, s) => sum + (s.end - s.start), 0);
-  const lyricsDuration = segments
-    .filter(s => s.type === 'lyrics')
+  let coveredDuration = segments.reduce((sum, s) => sum + (s.end - s.start), 0);
+  let lyricsDuration = segments
+    .filter((s) => s.type === 'lyrics')
     .reduce((sum, s) => sum + (s.end - s.start), 0);
 
-  const coverage = audioDuration > 0
-    ? Math.round((coveredDuration / audioDuration) * 100)
-    : 0;
+  let coverage = audioDuration > 0 ? Math.round((coveredDuration / audioDuration) * 100) : 0;
 
-  const avgDuration = totalSegments > 0
-    ? Math.round((coveredDuration / totalSegments) * 100) / 100
-    : 0;
+  let avgDuration =
+    totalSegments > 0 ? Math.round((coveredDuration / totalSegments) * 100) / 100 : 0;
 
   return {
     totalSegments,

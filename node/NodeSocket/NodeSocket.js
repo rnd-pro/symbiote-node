@@ -9,9 +9,9 @@
 
 import Symbiote from '@symbiotejs/symbiote';
 import { template } from './NodeSocket.tpl.js';
+import { styles } from './NodeSocket.css.js';
 
 export class NodeSocket extends Symbiote {
-
   renderCallback() {
     this.sub('@data-socket-color', (val) => {
       if (val) {
@@ -22,4 +22,5 @@ export class NodeSocket extends Symbiote {
 }
 
 NodeSocket.template = template;
+NodeSocket.rootStyles = styles;
 NodeSocket.reg('node-socket');

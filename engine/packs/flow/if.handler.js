@@ -4,7 +4,7 @@
  * Routes data to 'true' or 'false' output based on condition.
  * Condition can be a boolean input or a simple expression string.
  *
- * @module agi-graph/packs/flow/if
+ * @module symbiote-node/packs/flow/if
  */
 
 /**
@@ -17,41 +17,45 @@
 function evaluateCondition(value, expression) {
   if (typeof expression === 'boolean') return expression;
   if (typeof expression === 'string') {
-    const trimmed = expression.trim();
+    let trimmed = expression.trim();
 
-    // Direct boolean strings
+
     if (trimmed === 'true') return true;
     if (trimmed === 'false') return false;
 
-    // Null checks
+
     if (trimmed === 'data != null' || trimmed === 'data !== null') return value != null;
     if (trimmed === 'data == null' || trimmed === 'data === null') return value == null;
 
-    // Comparison operators
-    const match = trimmed.match(/^(.+?)\s*(===|!==|==|!=|>=|<=|>|<)\s*(.+)$/);
+
+    let match = trimmed.match(/^(.+?)\s*(===|!==|==|!=|>=|<=|>|<)\s*(.+)$/);
     if (match) {
       let [, left, op, right] = match;
       left = left.trim();
       right = right.trim();
 
-      // Resolve left side
-      const leftVal = left === 'data' || left === 'value' ? value : parseValueLiteral(left);
-      const rightVal = parseValueLiteral(right);
 
-      switch (op) {
-        case '===': return leftVal === rightVal;
-        case '!==': return leftVal !== rightVal;
-        case '==': return leftVal == rightVal;
-        case '!=': return leftVal != rightVal;
-        case '>': return leftVal > rightVal;
-        case '<': return leftVal < rightVal;
-        case '>=': return leftVal >= rightVal;
-        case '<=': return leftVal <= rightVal;
+      let leftVal = left === 'data' || left === 'value' ? value : parseValueLiteral(left);
+      let rightVal = parseValueLiteral(right);
+
+      let opMap = {
+        '===': () => leftVal === rightVal,
+        '!==': () => leftVal !== rightVal,
+        '==': () => leftVal == rightVal,
+        '!=': () => leftVal != rightVal,
+        '>': () => leftVal > rightVal,
+        '<': () => leftVal < rightVal,
+        '>=': () => leftVal >= rightVal,
+        '<=': () => leftVal <= rightVal,
+      };
+
+      if (opMap[op]) {
+        return opMap[op]();
       }
     }
   }
 
-  // Fallback: truthy check
+
   return !!value;
 }
 
@@ -67,7 +71,7 @@ function parseValueLiteral(str) {
   if (str === 'false') return false;
   if (str.startsWith("'") && str.endsWith("'")) return str.slice(1, -1);
   if (str.startsWith('"') && str.endsWith('"')) return str.slice(1, -1);
-  const num = Number(str);
+  let num = Number(str);
   if (!isNaN(num)) return num;
   return str;
 }
@@ -88,20 +92,22 @@ export default {
       { name: 'false', type: 'any' },
     ],
     params: {
-      expression: { type: 'string', default: '', description: 'Condition expression (optional, overrides condition input)' },
+      expression: {
+        type: 'string',
+        default: '',
+        description: 'Condition expression (optional, overrides condition input)',
+      },
     },
   },
 
   lifecycle: {
     validate: (inputs) => inputs.data !== undefined,
     execute: (inputs, params) => {
-      const condValue = params.expression
+      let condValue = params.expression
         ? evaluateCondition(inputs.data, params.expression)
         : !!inputs.condition;
 
-      return condValue
-        ? { true: inputs.data, false: null }
-        : { true: null, false: inputs.data };
+      return condValue ? { true: inputs.data, false: null } : { true: null, false: inputs.data };
     },
   },
 };

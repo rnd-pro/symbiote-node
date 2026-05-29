@@ -19,6 +19,8 @@ import { areSocketsCompatible } from './SocketTypes.js';
  * @property {'auto'|'freeze'|'force'} [cacheMode='auto'] - Cache behavior mode
  * @property {object} [_output] - Cached execution output
  * @property {object} [_meta] - Metadata (variant flags, etc.)
+ * @property {object} [driver] - Inline custom driver definition
+ * @property {object} [subgraph] - Inline compound sub-graph definition
  */
 
 /**
@@ -32,7 +34,6 @@ import { areSocketsCompatible } from './SocketTypes.js';
  */
 
 export class Graph {
-
   /**
    * @param {object} [data] - Optional workflow JSON to load
    */
@@ -75,11 +76,11 @@ export class Graph {
    * @returns {string} Node ID
    */
   addNode(type, params = {}, options = {}) {
-    const id = options.id || `nd_${nanoid()}`;
+    let id = options.id || `nd_${nanoid()}`;
 
-    const typeDef = getNodeType(type);
+    let typeDef = getNodeType(type);
 
-    // Merge defaults from driver
+
     let mergedParams = { ...params };
     if (typeDef?.driver?.params) {
       for (const [key, paramDef] of Object.entries(typeDef.driver.params)) {
@@ -90,7 +91,7 @@ export class Graph {
     }
 
     /** @type {GraphNode} */
-    const node = {
+    let node = {
       id,
       type,
       name: options.name || typeDef?.driver?.description?.slice(0, 30) || type,
@@ -115,7 +116,7 @@ export class Graph {
   removeNode(id) {
     if (!this.nodes.has(id)) return false;
     this.nodes.delete(id);
-    this.connections = this.connections.filter(c => c.from !== id && c.to !== id);
+    this.connections = this.connections.filter((c) => c.from !== id && c.to !== id);
     delete this.ui.positions[id];
     return true;
   }
@@ -135,21 +136,23 @@ export class Graph {
     if (!this.nodes.has(fromNode)) throw new Error(`Source node "${fromNode}" not found`);
     if (!this.nodes.has(toNode)) throw new Error(`Target node "${toNode}" not found`);
 
-    // Validate socket compatibility if drivers available
-    const fromType = getNodeType(this.nodes.get(fromNode).type);
-    const toType = getNodeType(this.nodes.get(toNode).type);
+
+    let fromType = getNodeType(this.nodes.get(fromNode).type);
+    let toType = getNodeType(this.nodes.get(toNode).type);
 
     if (fromType?.driver?.outputs && toType?.driver?.inputs) {
-      const outDef = fromType.driver.outputs.find(o => o.name === fromSocket);
-      const inDef = toType.driver.inputs.find(i => i.name === toSocket);
+      let outDef = fromType.driver.outputs.find((o) => o.name === fromSocket);
+      let inDef = toType.driver.inputs.find((i) => i.name === toSocket);
 
       if (outDef && inDef && !areSocketsCompatible(outDef.type, inDef.type)) {
-        throw new Error(`Socket type mismatch: ${outDef.type} → ${inDef.type} (${fromNode}.${fromSocket} → ${toNode}.${toSocket})`);
+        throw new Error(
+          `Socket type mismatch: ${outDef.type} → ${inDef.type} (${fromNode}.${fromSocket} → ${toNode}.${toSocket})`
+        );
       }
     }
 
     /** @type {Connection} */
-    const conn = {
+    let conn = {
       from: fromNode,
       out: fromSocket,
       to: toNode,
@@ -172,9 +175,8 @@ export class Graph {
    * @returns {boolean}
    */
   disconnect(fromNode, fromSocket, toNode, toSocket) {
-    const idx = this.connections.findIndex(c =>
-      c.from === fromNode && c.out === fromSocket &&
-      c.to === toNode && c.in === toSocket
+    let idx = this.connections.findIndex(
+      (c) => c.from === fromNode && c.out === fromSocket && c.to === toNode && c.in === toSocket
     );
     if (idx === -1) return false;
     this.connections.splice(idx, 1);
@@ -197,7 +199,7 @@ export class Graph {
    * @returns {GraphNode}
    */
   updateParams(id, params) {
-    const node = this.nodes.get(id);
+    let node = this.nodes.get(id);
     if (!node) throw new Error(`Node "${id}" not found`);
     node.params = { ...node.params, ...params };
     return node;
@@ -209,7 +211,7 @@ export class Graph {
    * @param {'auto'|'freeze'|'force'} mode
    */
   setCacheMode(id, mode) {
-    const node = this.nodes.get(id);
+    let node = this.nodes.get(id);
     if (!node) throw new Error(`Node "${id}" not found`);
     if (!['auto', 'freeze', 'force'].includes(mode)) {
       throw new Error(`Invalid cache mode: ${mode}. Must be auto, freeze, or force`);
@@ -222,12 +224,12 @@ export class Graph {
    * @returns {GraphNode[]}
    */
   getOrphans() {
-    const connected = new Set();
+    let connected = new Set();
     for (const c of this.connections) {
       connected.add(c.from);
       connected.add(c.to);
     }
-    return [...this.nodes.values()].filter(n => !connected.has(n.id));
+    return [...this.nodes.values()].filter((n) => !connected.has(n.id));
   }
 
   /**
@@ -240,8 +242,8 @@ export class Graph {
       id: this.id,
       name: this.name,
       execution: this.execution,
-      nodes: [...this.nodes.values()].map(n => {
-        const obj = { id: n.id, type: n.type, name: n.name, params: n.params };
+      nodes: [...this.nodes.values()].map((n) => {
+        let obj = { id: n.id, type: n.type, name: n.name, params: n.params };
         if (n.cacheMode && n.cacheMode !== 'auto') obj.cacheMode = n.cacheMode;
         if (n._output) obj._output = n._output;
         if (n._meta) obj._meta = n._meta;
@@ -266,15 +268,21 @@ export class Graph {
     this.execution = data.execution || { mode: 'sync', cache: true };
     this.ui = data.ui || { positions: {}, zoom: 1.0, pan: [0, 0] };
 
-    // Register custom drivers if present
+
     if (data.customDrivers) {
       registerCustomDrivers(data.customDrivers);
     }
 
-    // Load nodes
+
     this.nodes.clear();
-    for (const n of (data.nodes || [])) {
-      const node = { id: n.id, type: n.type, name: n.name, params: n.params || {}, cacheMode: n.cacheMode || 'auto' };
+    for (const n of data.nodes || []) {
+      let node = {
+        id: n.id,
+        type: n.type,
+        name: n.name,
+        params: n.params || {},
+        cacheMode: n.cacheMode || 'auto',
+      };
       if (n._output) node._output = n._output;
       if (n._meta) node._meta = n._meta;
       if (n.driver) node.driver = n.driver;
@@ -282,14 +290,15 @@ export class Graph {
       this.nodes.set(n.id, node);
     }
 
-    // Load connections (handle both {out, in} and {fromSocket, toSocket} DB formats)
-    this.connections = (data.connections || []).map(c => {
-      const conn = {
+
+    this.connections = (data.connections || []).map((c) => {
+      let conn = {
         from: c.from,
         out: c.out || c.fromSocket,
         to: c.to,
         in: c.in || c.toSocket,
-      };      if (c.type) conn.type = c.type;
+      };
+      if (c.type) conn.type = c.type;
       if (c.label) conn.label = c.label;
       return conn;
     });
@@ -302,7 +311,7 @@ export class Graph {
    * @returns {object}
    */
   stats() {
-    const types = new Set();
+    let types = new Set();
     for (const n of this.nodes.values()) types.add(n.type);
     return {
       totalNodes: this.nodes.size,

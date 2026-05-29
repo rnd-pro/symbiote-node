@@ -20,7 +20,7 @@ const CATEGORY_ICONS = {
   instance: 'memory',
   control: 'tune',
   data: 'database',
-  // Codebase-specific
+
   directory: 'folder',
   file: 'description',
   function: 'functions',
@@ -61,14 +61,14 @@ export class GraphNode extends Symbiote {
       ensureMaterialSymbols([this.$.nodeIcon]);
     });
 
-    // Populate ports from node data
+
     if (this._nodeData) {
       this.#populateFromNodeData(this._nodeData);
     }
   }
 
   #syncMedia() {
-    const src = this.$.mediaSrc;
+    let src = this.$.mediaSrc;
     if (src && this.ref.mediaImage) {
       this.ref.mediaImage.src = src;
       this.ref.mediaImage.alt = this.$.mediaAlt || '';
@@ -78,7 +78,7 @@ export class GraphNode extends Symbiote {
   }
 
   #syncLink() {
-    const href = this.$.href;
+    let href = this.$.href;
     if (!this.ref.contentLink) return;
     if (!href) {
       this.ref.contentLink.removeAttribute('href');
@@ -102,7 +102,7 @@ export class GraphNode extends Symbiote {
    * @param {import('../core/Node.js').Node} node
    */
   #populateFromNodeData(node) {
-    const params = node.params || {};
+    let params = node.params || {};
     this.set$({
       nodeIcon: node.icon || CATEGORY_ICONS[node.category] || CATEGORY_ICONS.default,
       mediaSrc: params.media || params.image || params.avatar || '',
@@ -113,13 +113,13 @@ export class GraphNode extends Symbiote {
       hasItems: Array.isArray(params.items) && params.items.length > 0,
       itemsList: Array.isArray(params.items)
         ? params.items.map((item) => ({
-          href: item.href || '#',
-          target: item.external ? '_blank' : '',
-          rel: item.external ? 'noopener noreferrer' : '',
-          kicker: item.kicker || '',
-          title: item.title || '',
-          summary: item.summary || '',
-        }))
+            href: item.href || '#',
+            target: item.external ? '_blank' : '',
+            rel: item.external ? 'noopener noreferrer' : '',
+            kicker: item.kicker || '',
+            title: item.title || '',
+            summary: item.summary || '',
+          }))
         : [],
       inputPorts: Object.entries(node.inputs).map(([key, input]) => ({
         key,

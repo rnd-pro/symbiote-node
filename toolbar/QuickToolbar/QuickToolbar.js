@@ -10,8 +10,10 @@
 
 import Symbiote from '@symbiotejs/symbiote';
 import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
+import '../../control/Button/Button.js';
 import { template } from './QuickToolbar.tpl.js';
 import { styles } from './QuickToolbar.css.js';
+import { translate } from '../../locale/index.js';
 
 /**
  * @typedef {object} ToolbarAction
@@ -22,22 +24,28 @@ import { styles } from './QuickToolbar.css.js';
 
 /** @type {ToolbarAction[]} */
 const ACTIONS = [
-  { id: 'duplicate', icon: 'content_copy', label: 'Duplicate' },
-  { id: 'mute', icon: 'visibility_off', label: 'Mute' },
-  { id: 'delete', icon: 'delete', label: 'Delete' },
+  { id: 'duplicate', icon: 'content_copy', label: translate('toolbar.duplicate') },
+  { id: 'mute', icon: 'visibility_off', label: translate('toolbar.mute') },
+  { id: 'delete', icon: 'delete', label: translate('toolbar.delete') },
 ];
+const ICONS = ['content_copy', 'delete', 'visibility', 'visibility_off'];
 
 const ICONS = ['code', 'content_copy', 'delete', 'hub', 'login', 'visibility', 'visibility_off'];
 
 export class QuickToolbar extends Symbiote {
-
   init$ = {
     items: ACTIONS,
     visible: false,
+    enterSubgraphTitle: translate('toolbar.enterSubgraph'),
+    exploreConnectionsTitle: translate('toolbar.exploreConnections'),
+    viewCodeTitle: translate('toolbar.viewCode'),
+    duplicateTitle: translate('toolbar.duplicate'),
+    muteTitle: translate('toolbar.mute'),
+    deleteTitle: translate('toolbar.delete'),
     onBtnClick: (/** @type {Event} */ e) => {
-      const btn = e.target.closest('[data-action]');
+      let btn = e.target.closest('[data-action]');
       if (!btn) return;
-      const action = btn.getAttribute('data-action');
+      let action = btn.getAttribute('data-action');
       if (this._onAction) this._onAction(action, this._nodeId);
     },
   };
@@ -66,11 +74,11 @@ export class QuickToolbar extends Symbiote {
 
     this.#positionAtNode(nodeEl);
 
-    // Update collapse icon based on current state
+
     this.#updateIcons(nodeEl);
 
-    // Show/hide enter button for subgraph nodes
-    const enterBtn = this.querySelector('[data-action="enter"]');
+
+    let enterBtn = this.querySelector('[data-action="enter"]');
     if (enterBtn) {
       enterBtn.hidden = nodeEl.getAttribute('node-type') !== 'subgraph';
     }
@@ -105,11 +113,11 @@ export class QuickToolbar extends Symbiote {
    * @param {HTMLElement} nodeEl
    */
   #positionAtNode(nodeEl) {
-    const w = nodeEl.offsetWidth || nodeEl._cachedW || 180;
-    const pos = nodeEl._position || { x: 0, y: 0 };
+    let w = nodeEl.offsetWidth || nodeEl._cachedW || 180;
+    let pos = nodeEl._position || { x: 0, y: 0 };
 
-    const x = pos.x + w / 2;
-    const y = pos.y - QuickToolbar.OFFSET_Y;
+    let x = pos.x + w / 2;
+    let y = pos.y - QuickToolbar.OFFSET_Y;
 
     this.style.transform = `translate(${x}px, ${y}px)`;
   }
@@ -119,9 +127,9 @@ export class QuickToolbar extends Symbiote {
    * @param {HTMLElement} nodeEl
    */
   #updateIcons(nodeEl) {
-    const isMuted = nodeEl.hasAttribute('data-muted');
+    let isMuted = nodeEl.hasAttribute('data-muted');
 
-    const muteBtn = this.querySelector('[data-action="mute"] .tb-icon');
+    let muteBtn = this.querySelector('[data-action="mute"] .tb-icon');
 
     if (muteBtn) muteBtn.textContent = isMuted ? 'visibility' : 'visibility_off';
   }

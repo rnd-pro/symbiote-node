@@ -4,6 +4,4 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
-<canvas width="200" height="140"></canvas>
-`;
+export let template = html` <canvas width="200" height="140"></canvas> `;

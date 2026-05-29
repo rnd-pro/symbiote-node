@@ -12,6 +12,17 @@ import { ensureMaterialSymbols } from '../../icons/MaterialSymbols.js';
 import { template, inspPortItemTemplate, inspCtrlItemTemplate } from './InspectorPanel.tpl.js';
 import { styles } from './InspectorPanel.css.js';
 import '../TemplatePreview/TemplatePreview.js';
+import { translate } from '../../locale/index.js';
+
+const INSPECTOR_ICONS = [
+  'account_tree',
+  'input',
+  'login',
+  'output',
+  'play_arrow',
+  'touch_app',
+  'tune',
+];
 
 const INSPECTOR_ICONS = [
   'account_tree',
@@ -38,13 +49,26 @@ export class InspectorPanel extends Symbiote {
     isSubgraph: false,
     isTemplateBuilder: false,
     innerNodeCount: 0,
+    emptyLabel: translate('inspector.empty'),
+    labelLabel: translate('inspector.label'),
+    typeLabel: translate('inspector.type'),
+    categoryLabel: translate('inspector.category'),
+    inputsLabel: translate('inspector.inputs'),
+    outputsLabel: translate('inspector.outputs'),
+    controlsLabel: translate('inspector.controls'),
+    fireLabel: translate('inspector.fire'),
+    subgraphLabel: translate('inspector.subgraph'),
+    innerNodesLabel: translate('inspector.innerNodes'),
+    enterSubgraphLabel: translate('inspector.enterSubgraph'),
     onFire: () => {
       if (this._currentNodeId) {
-        this.dispatchEvent(new CustomEvent('node-fire', {
-          detail: { nodeId: this._currentNodeId },
-          bubbles: true,
-          composed: true,
-        }));
+        this.dispatchEvent(
+          new CustomEvent('node-fire', {
+            detail: { nodeId: this._currentNodeId },
+            bubbles: true,
+            composed: true,
+          })
+        );
       }
     },
     onEnterSubgraph: () => {
@@ -70,19 +94,19 @@ export class InspectorPanel extends Symbiote {
       return;
     }
 
-    const inputs = Object.entries(node.inputs).map(([key, port]) => ({
+    let inputs = Object.entries(node.inputs).map(([key, port]) => ({
       key,
       label: port.label || key,
       socketType: port.socket?.name || 'any',
     }));
 
-    const outputs = Object.entries(node.outputs).map(([key, port]) => ({
+    let outputs = Object.entries(node.outputs).map(([key, port]) => ({
       key,
       label: port.label || key,
       socketType: port.socket?.name || 'any',
     }));
 
-    const controls = Object.entries(node.controls).map(([key, ctrl]) => ({
+    let controls = Object.entries(node.controls).map(([key, ctrl]) => ({
       key,
       label: ctrl.label || key,
       value: ctrl.value ?? '',
@@ -90,7 +114,7 @@ export class InspectorPanel extends Symbiote {
       options: (ctrl.options || []).join(','),
     }));
 
-    const isSubgraph = !!node._isSubgraph;
+    let isSubgraph = !!node._isSubgraph;
     let innerNodeCount = 0;
     if (isSubgraph && node.innerEditor) {
       innerNodeCount = node.innerEditor.getNodes().length;
@@ -98,11 +122,13 @@ export class InspectorPanel extends Symbiote {
 
     this._currentNodeId = node.id;
 
-    // Check if node is fireable (inject or trigger with testData)
-    const driver = node.driver || node._driver;
-    const isFireable = !!(driver?.fireable) ||
+
+    let driver = node.driver || node._driver;
+    let isFireable =
+      !!driver?.fireable ||
       node.type === 'debug/inject' ||
-      (node.category === 'trigger' || node.category === 'queue');
+      node.category === 'trigger' ||
+      node.category === 'queue';
 
     this.set$({
       nodeLabel: node.label,
@@ -116,15 +142,16 @@ export class InspectorPanel extends Symbiote {
       visible: true,
       isFireable,
       isSubgraph,
-      isTemplateBuilder: node.type === 'transform/template-builder' || node.type === 'transform/template',
+      isTemplateBuilder:
+        node.type === 'transform/template-builder' || node.type === 'transform/template',
       innerNodeCount,
     });
 
-    // Populate template-preview with current template value
+
     if (node.type === 'transform/template-builder' || node.type === 'transform/template') {
       requestAnimationFrame(() => {
         /** @type {*} */
-        const preview = this.querySelector('template-preview');
+        let preview = this.querySelector('template-preview');
         if (preview && node.params?.template) {
           preview.$.template = node.params.template;
         }
@@ -158,23 +185,23 @@ export class InspectorPanel extends Symbiote {
       this.toggleAttribute('hidden', !val);
     });
 
-    // Listen for control value changes from InspCtrlItem
+
     this.addEventListener('ctrl-change', (/** @type {CustomEvent} */ e) => {
-      const { key, value } = e.detail;
+      let { key, value } = e.detail;
       if (this._currentNodeId && this._canvas) {
-        const editor = this._canvas._editor;
+        let editor = this._canvas._editor;
         if (editor) {
-          const node = editor.getNode(this._currentNodeId);
+          let node = editor.getNode(this._currentNodeId);
           if (node && node.controls[key]) {
             node.controls[key].setValue(value);
           }
-          // Also update params for serialization
+
           if (node && node.params) {
             node.params[key] = value;
           }
-          // Update template-preview when template field changes
+
           if (key === 'template') {
-            const preview = this.querySelector('template-preview');
+            let preview = this.querySelector('template-preview');
             if (preview) preview.$.template = value;
           }
         }
@@ -183,25 +210,25 @@ export class InspectorPanel extends Symbiote {
 
     this.sub('hasSelection', (val) => {
       /** @type {HTMLElement} */
-      const empty = this.querySelector('.insp-empty');
+      let empty = this.querySelector('.insp-empty');
       /** @type {HTMLElement} */
-      const content = this.querySelector('.insp-content');
+      let content = this.querySelector('.insp-content');
       if (empty) empty.hidden = val;
       if (content) content.hidden = !val;
     });
 
     this.sub('isSubgraph', (val) => {
       /** @type {HTMLElement} */
-      const sgSection = this.querySelector('.insp-subgraph');
+      let sgSection = this.querySelector('.insp-subgraph');
       if (sgSection) sgSection.hidden = !val;
     });
 
-    // Resize drag handle
-    const STORAGE_KEY = 'sn-inspector-width';
-    const handle = this.querySelector('.insp-resize-handle');
 
-    // Restore saved width
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const STORAGE_KEY = 'sn-inspector-width';
+    let handle = this.querySelector('.insp-resize-handle');
+
+
+    let saved = localStorage.getItem(STORAGE_KEY);
     if (saved) this.style.width = saved + 'px';
 
     if (handle) {
@@ -209,13 +236,13 @@ export class InspectorPanel extends Symbiote {
       let startW = 0;
 
       /** @param {PointerEvent} e */
-      const onMove = (e) => {
-        const delta = startX - e.clientX;
-        const newWidth = Math.max(200, Math.min(600, startW + delta));
+      let onMove = (e) => {
+        let delta = startX - e.clientX;
+        let newWidth = Math.max(200, Math.min(600, startW + delta));
         this.style.width = newWidth + 'px';
       };
 
-      const onUp = () => {
+      let onUp = () => {
         handle.classList.remove('dragging');
         localStorage.setItem(STORAGE_KEY, String(this.offsetWidth));
         document.removeEventListener('pointermove', onMove);
@@ -235,7 +262,7 @@ export class InspectorPanel extends Symbiote {
   }
 }
 
-// Port item for itemize
+
 class InspPortItem extends Symbiote {
   init$ = {
     key: '',
@@ -247,7 +274,7 @@ class InspPortItem extends Symbiote {
 InspPortItem.template = inspPortItemTemplate;
 InspPortItem.reg('insp-port-item');
 
-// Control item for itemize — renders editable form controls
+
 class InspCtrlItem extends Symbiote {
   init$ = {
     key: '',
@@ -259,7 +286,7 @@ class InspCtrlItem extends Symbiote {
 
   renderCallback() {
     /** @type {HTMLElement} */
-    const container = this.querySelector('.insp-ctrl-input');
+    let container = this.querySelector('.insp-ctrl-input');
     if (!container) return;
 
     this.sub('type', (type) => {
@@ -273,10 +300,10 @@ class InspCtrlItem extends Symbiote {
    * @param {string} type
    */
   _renderControl(container, type) {
-    container.innerHTML = '';
+    container.replaceChildren();
 
     if (type === 'textarea') {
-      const el = document.createElement('textarea');
+      let el = document.createElement('textarea');
       el.className = 'insp-ctrl-textarea';
       el.value = this.$.value || '';
       el.rows = 6;
@@ -284,25 +311,29 @@ class InspCtrlItem extends Symbiote {
       el.addEventListener('input', () => this._emitChange(el.value));
       container.appendChild(el);
     } else if (type === 'boolean') {
-      const label = document.createElement('label');
+      let label = document.createElement('label');
       label.className = 'insp-ctrl-toggle';
-      const el = document.createElement('input');
+      let el = document.createElement('input');
       el.type = 'checkbox';
       el.checked = this.$.value === true || this.$.value === 'true';
       el.addEventListener('change', () => this._emitChange(el.checked));
-      const slider = document.createElement('span');
+      let slider = document.createElement('span');
       slider.className = 'insp-ctrl-slider';
       label.appendChild(el);
       label.appendChild(slider);
       container.appendChild(label);
     } else if (type === 'select') {
-      const el = document.createElement('select');
+      let el = document.createElement('select');
       el.className = 'insp-ctrl-select';
-      const opts = typeof this.$.options === 'string'
-        ? this.$.options.split(',').map((s) => s.trim()).filter(Boolean)
-        : [];
+      let opts =
+        typeof this.$.options === 'string'
+          ? this.$.options
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [];
       for (const opt of opts) {
-        const option = document.createElement('option');
+        let option = document.createElement('option');
         option.value = opt;
         option.textContent = opt;
         if (opt === String(this.$.value)) option.selected = true;
@@ -311,8 +342,8 @@ class InspCtrlItem extends Symbiote {
       el.addEventListener('change', () => this._emitChange(el.value));
       container.appendChild(el);
     } else {
-      // text / number
-      const el = document.createElement('input');
+
+      let el = document.createElement('input');
       el.className = 'insp-ctrl-input-el';
       el.type = type === 'number' ? 'number' : 'text';
       el.value = this.$.value ?? '';
@@ -330,10 +361,12 @@ class InspCtrlItem extends Symbiote {
    */
   _emitChange(value) {
     this.$.value = value;
-    this.dispatchEvent(new CustomEvent('ctrl-change', {
-      bubbles: true,
-      detail: { key: this.$.key, value },
-    }));
+    this.dispatchEvent(
+      new CustomEvent('ctrl-change', {
+        bubbles: true,
+        detail: { key: this.$.key, value },
+      })
+    );
   }
 }
 

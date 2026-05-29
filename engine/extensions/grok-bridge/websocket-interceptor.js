@@ -3,6 +3,7 @@
  * Injects into page context to access Grok's WebSocket connections
  * Can send commands and receive results via the existing WS connection
  */
+/* global window */
 
 (function () {
   'use strict';
@@ -13,29 +14,29 @@
 
   console.log('[WS-Injector] Initializing...');
 
-  // Store reference to active WebSocket connections
-  const activeConnections = new Map();
 
-  // Store original WebSocket
-  const OriginalWebSocket = window.WebSocket;
-  const messages = [];
+  let activeConnections = new Map();
+
+
+  let OriginalWebSocket = window.WebSocket;
+  let messages = [];
 
   /**
    * Report message to extension
    */
   function report(dir, url, data) {
-    const msg = {
+    let msg = {
       timestamp: Date.now(),
       direction: dir,
       url,
       data: typeof data === 'string' ? data : '[Binary]',
-      dataType: typeof data
+      dataType: typeof data,
     };
     messages.push(msg);
     if (messages.length > 100) messages.shift();
 
-    const icon = dir === 'send' ? '↑' : '↓';
-    const preview = typeof data === 'string' ? data.substring(0, 80) : '[binary]';
+    let icon = dir === 'send' ? '↑' : '↓';
+    let preview = typeof data === 'string' ? data.substring(0, 80) : '[binary]';
     console.log(`[WS] ${icon} ${url.substring(0, 50)}`, preview);
 
     window.dispatchEvent(new CustomEvent('grok-ws-message', { detail: msg }));
@@ -47,13 +48,11 @@
   window.WebSocket = function (url, protocols) {
     console.log('[WS-Injector] New connection:', url);
 
-    const ws = protocols
-      ? new OriginalWebSocket(url, protocols)
-      : new OriginalWebSocket(url);
+    let ws = protocols ? new OriginalWebSocket(url, protocols) : new OriginalWebSocket(url);
 
-    // Store connection if it's the imagine endpoint
+
     if (url.includes('/ws/imagine/')) {
-      const connId = Date.now().toString();
+      let connId = Date.now().toString();
       activeConnections.set(connId, { ws, url, createdAt: Date.now() });
       console.log(`[WS-Injector] Stored imagine connection: ${connId}`);
 
@@ -63,14 +62,14 @@
       });
     }
 
-    // Intercept send
-    const origSend = ws.send.bind(ws);
+
+    let origSend = ws.send.bind(ws);
     ws.send = function (data) {
       report('send', url, data);
       return origSend(data);
     };
 
-    // Intercept receive
+
     ws.addEventListener('message', function (e) {
       report('receive', url, e.data);
     });
@@ -78,7 +77,7 @@
     return ws;
   };
 
-  // Copy static properties
+
   window.WebSocket.prototype = OriginalWebSocket.prototype;
   window.WebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
   window.WebSocket.OPEN = OriginalWebSocket.OPEN;
@@ -103,13 +102,13 @@
    * Get active WebSocket connections
    */
   window.getGrokWebSocketConnections = function () {
-    const result = [];
+    let result = [];
     activeConnections.forEach((conn, id) => {
       result.push({
         id,
         url: conn.url,
         readyState: conn.ws.readyState,
-        createdAt: conn.createdAt
+        createdAt: conn.createdAt,
       });
     });
     return result;
@@ -122,7 +121,7 @@
    */
   window.ensureImagineWebSocket = function () {
     return new Promise((resolve, reject) => {
-      // Check for existing connection
+
       let existingWs = null;
       activeConnections.forEach((conn) => {
         if (conn.url.includes('/ws/imagine/listen') && conn.ws.readyState === 1) {
@@ -138,8 +137,8 @@
 
       console.log('[WS-Injector] Creating new WebSocket connection...');
 
-      // Create new WebSocket - this will be intercepted and stored
-      const ws = new WebSocket('wss://grok.com/ws/imagine/listen');
+
+      let ws = new WebSocket('wss://grok.com/ws/imagine/listen');
 
       ws.onopen = () => {
         console.log('[WS-Injector] New WebSocket connection opened');
@@ -151,7 +150,7 @@
         reject(new Error('Failed to create WebSocket connection'));
       };
 
-      // Timeout after 10 seconds
+
       setTimeout(() => {
         if (ws.readyState !== 1) {
           ws.close();
@@ -169,7 +168,7 @@
    */
   window.sendGrokImagineMessage = function (message, ourRequestId) {
     return new Promise((resolve, reject) => {
-      // Find active imagine connection
+
       let imagineWs = null;
       activeConnections.forEach((conn) => {
         if (conn.url.includes('/ws/imagine/listen') && conn.ws.readyState === 1) {
@@ -184,26 +183,25 @@
 
       console.log(`[WS-Injector] Sending message, waiting for completed response`);
 
-      // Set up response listener
-      const timeout = setTimeout(() => {
+
+      let timeout = setTimeout(() => {
         imagineWs.removeEventListener('message', handler);
         reject(new Error('Timeout waiting for response (60s)'));
       }, 60000);
 
-      const results = [];
-      const imageBlobs = []; // Preview images
+      let results = [];
       let finalResult = null;
 
       function handler(event) {
         try {
-          const data = JSON.parse(event.data);
+          let data = JSON.parse(event.data);
 
-          // Track json completed responses (for metadata)
+
           if (data.type === 'json') {
             results.push(data);
           }
 
-          // Final HQ image comes as type:image with url and percentage_complete:100
+
           if (data.type === 'image' && data.url && data.percentage_complete === 100) {
             if (!finalResult) {
               finalResult = data;
@@ -215,18 +213,20 @@
                 ourRequestId,
                 results,
                 lastResult: data,
-                finalUrl: data.url
+                finalUrl: data.url,
               });
             }
           }
-        } catch (e) {
-          // Ignore parse errors for binary data
+        } catch (parseError) {
+          if (typeof event.data === 'string') {
+            console.debug('[WS-Injector] Ignored non-JSON message:', parseError.message);
+          }
         }
       }
 
       imagineWs.addEventListener('message', handler);
 
-      // Send the message
+
       imagineWs.send(JSON.stringify(message));
     });
   };
@@ -239,7 +239,7 @@
    */
   window.waitForImageComplete = function (timeout = 120000) {
     return new Promise((resolve, reject) => {
-      // Find active imagine connection
+
       let imagineWs = null;
       activeConnections.forEach((conn) => {
         if (conn.url.includes('/ws/imagine/listen') && conn.ws.readyState === 1) {
@@ -254,7 +254,7 @@
 
       console.log('[WS-Injector] Waiting for image completion...');
 
-      const timeoutId = setTimeout(() => {
+      let timeoutId = setTimeout(() => {
         imagineWs.removeEventListener('message', handler);
         reject(new Error('Timeout waiting for image completion'));
       }, timeout);
@@ -263,14 +263,16 @@
 
       function handler(event) {
         try {
-          const data = JSON.parse(event.data);
+          let data = JSON.parse(event.data);
 
-          // Final HQ image comes as type:image with url and percentage_complete:100
+
           if (data.type === 'image' && data.url && data.percentage_complete === 100) {
             completedImages.push(data);
-            console.log(`[WS-Injector] Image complete: ${data.job_id} (${completedImages.length} total)`);
+            console.log(
+              `[WS-Injector] Image complete: ${data.job_id} (${completedImages.length} total)`,
+            );
 
-            // Wait a bit for potential additional images, then resolve
+
             setTimeout(() => {
               clearTimeout(timeoutId);
               imagineWs.removeEventListener('message', handler);
@@ -278,12 +280,14 @@
               resolve({
                 images: completedImages,
                 firstUrl: completedImages[0]?.url,
-                count: completedImages.length
+                count: completedImages.length,
               });
-            }, 2000); // Wait 2s for additional images
+            }, 2000);
           }
-        } catch (e) {
-          // Ignore parse errors for binary data
+        } catch (parseError) {
+          if (typeof event.data === 'string') {
+            console.debug('[WS-Injector] Ignored non-JSON message:', parseError.message);
+          }
         }
       }
 
@@ -298,52 +302,50 @@
    * @returns {Promise<object>} - Generation result
    */
   window.generateGrokImage = async function (prompt, options = {}) {
-    const {
-      aspectRatio = '2:3',
-      enableNsfw = true,
-      skipUpsampler = false
-    } = options;
+    let { aspectRatio = '2:3', enableNsfw = true, skipUpsampler = false } = options;
 
-    const requestId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    let requestId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Ensure we have a WebSocket connection (creates one if needed)
-    const imagineWs = await window.ensureImagineWebSocket();
 
-    // Send reset first
-    const resetMsg = {
+    let imagineWs = await window.ensureImagineWebSocket();
+
+
+    let resetMsg = {
       type: 'conversation.item.create',
       timestamp: Date.now(),
       item: {
         type: 'message',
-        content: [{ type: 'reset' }]
-      }
+        content: [{ type: 'reset' }],
+      },
     };
 
     imagineWs.send(JSON.stringify(resetMsg));
     console.log('[WS-Injector] Sent reset');
 
-    // Wait a bit then send prompt
-    await new Promise(r => setTimeout(r, 100));
 
-    const promptMsg = {
+    await new Promise((r) => setTimeout(r, 100));
+
+    let promptMsg = {
       type: 'conversation.item.create',
       timestamp: Date.now(),
       item: {
         type: 'message',
-        content: [{
-          requestId,
-          text: prompt,
-          type: 'input_text',
-          properties: {
-            section_count: 0,
-            is_kids_mode: false,
-            enable_nsfw: enableNsfw,
-            skip_upsampler: skipUpsampler,
-            is_initial: false,
-            aspect_ratio: aspectRatio
-          }
-        }]
-      }
+        content: [
+          {
+            requestId,
+            text: prompt,
+            type: 'input_text',
+            properties: {
+              section_count: 0,
+              is_kids_mode: false,
+              enable_nsfw: enableNsfw,
+              skip_upsampler: skipUpsampler,
+              is_initial: false,
+              aspect_ratio: aspectRatio,
+            },
+          },
+        ],
+      },
     };
 
     console.log(`[WS-Injector] Generating image: "${prompt}" (${requestId})`);
@@ -351,86 +353,93 @@
     return window.sendGrokImagineMessage(promptMsg, requestId);
   };
 
-  // Listen for commands from content script
+
   window.addEventListener('grok-generate-command', async (event) => {
-    const { prompt, options, commandId } = event.detail;
+    let { prompt, options, commandId } = event.detail;
 
     try {
       console.log(`[WS-Injector] Received generate command: ${commandId}`);
-      const result = await window.generateGrokImage(prompt, options);
+      let result = await window.generateGrokImage(prompt, options);
 
-      // Dispatch result
-      window.dispatchEvent(new CustomEvent('grok-generate-result', {
-        detail: {
-          commandId,
-          success: true,
-          result: {
-            jobId: result.lastResult?.job_id,
-            imageId: result.lastResult?.image_id,
-            prompt: result.lastResult?.prompt,
-            fullPrompt: result.lastResult?.full_prompt,
-            modelName: result.lastResult?.model_name,
-            imageUrl: result.finalUrl || result.lastResult?.url,
-            previewCount: result.imageBlobs?.length || 0
-          }
-        }
-      }));
+
+      window.dispatchEvent(
+        new CustomEvent('grok-generate-result', {
+          detail: {
+            commandId,
+            success: true,
+            result: {
+              jobId: result.lastResult?.job_id,
+              imageId: result.lastResult?.image_id,
+              prompt: result.lastResult?.prompt,
+              fullPrompt: result.lastResult?.full_prompt,
+              modelName: result.lastResult?.model_name,
+              imageUrl: result.finalUrl || result.lastResult?.url,
+              previewCount: result.imageBlobs?.length || 0,
+            },
+          },
+        }),
+      );
     } catch (error) {
-      window.dispatchEvent(new CustomEvent('grok-generate-result', {
-        detail: {
-          commandId,
-          success: false,
-          error: error.message
-        }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-generate-result', {
+          detail: {
+            commandId,
+            success: false,
+            error: error.message,
+          },
+        }),
+      );
     }
   });
 
-  // Listen for wait-image-complete commands (passive WS listener for edit mode)
+
   window.addEventListener('grok-wait-image-command', async (event) => {
-    const { commandId, timeout } = event.detail;
+    let { commandId, timeout } = event.detail;
 
     try {
       console.log(`[WS-Injector] Waiting for image completion: ${commandId}`);
-      const result = await window.waitForImageComplete(timeout || 120000);
+      let result = await window.waitForImageComplete(timeout || 120000);
 
-      window.dispatchEvent(new CustomEvent('grok-wait-image-result', {
-        detail: {
-          commandId,
-          success: true,
-          result
-        }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-wait-image-result', {
+          detail: {
+            commandId,
+            success: true,
+            result,
+          },
+        }),
+      );
     } catch (error) {
-      window.dispatchEvent(new CustomEvent('grok-wait-image-result', {
-        detail: {
-          commandId,
-          success: false,
-          error: error.message
-        }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-wait-image-result', {
+          detail: {
+            commandId,
+            success: false,
+            error: error.message,
+          },
+        }),
+      );
     }
   });
 
-  // ===== FETCH INTERCEPTOR =====
-  // Intercept fetch() calls to capture API requests for video/upscale
-  const originalFetch = window.fetch;
-  const fetchLogs = [];
+
+  let originalFetch = window.fetch;
+  let fetchLogs = [];
 
   window.fetch = async function (input, init = {}) {
-    const url = typeof input === 'string' ? input : input.url;
-    const method = init.method || 'GET';
+    let url = typeof input === 'string' ? input : input.url;
+    let method = init.method || 'GET';
 
-    // Only log interesting API calls
+
     if (url.includes('/api/') || url.includes('/rest/') || url.includes('imagine')) {
-      const logEntry = {
+      let logEntry = {
         timestamp: Date.now(),
         url,
         method,
-        body: null
+        body: null,
       };
 
-      // Capture request body for POST requests
+
       if (init.body) {
         try {
           if (typeof init.body === 'string') {
@@ -442,34 +451,38 @@
               logEntry.formData[key] = value instanceof File ? `[File: ${value.name}]` : value;
             }
           }
-        } catch (e) { }
+        } catch (e) {
+          console.warn('[WS-Injector] Failed to capture fetch body:', e.message);
+        }
       }
 
       fetchLogs.push(logEntry);
       if (fetchLogs.length > 50) fetchLogs.shift();
 
-      console.log(`[Fetch] ${method} ${url.substring(0, 80)}`, logEntry.body ? logEntry.body.substring(0, 100) : '');
+      console.log(
+        `[Fetch] ${method} ${url.substring(0, 80)}`,
+        logEntry.body ? logEntry.body.substring(0, 100) : '',
+      );
 
-      // Dispatch event for capture
+
       window.dispatchEvent(new CustomEvent('grok-fetch', { detail: logEntry }));
     }
 
     return originalFetch.apply(this, arguments);
   };
 
-  // Expose fetch logs
+
   window.getGrokFetchLogs = function () {
     return fetchLogs;
   };
 
-  // === IMAGE TO VIDEO API ===
-  // Use originalFetch to bypass our interceptor and anti-bot detection
+
   window.grokImageToVideo = async function (params) {
-    const { assetId, assetUrl, prompt, mode, aspectRatio, videoLength } = params;
+    let { assetId, assetUrl, prompt, mode, aspectRatio, videoLength } = params;
 
-    const message = `${assetUrl} ${prompt || ''} --mode=${mode || 'normal'}`.trim();
+    let message = `${assetUrl} ${prompt || ''} --mode=${mode || 'normal'}`.trim();
 
-    const response = await originalFetch('https://grok.com/rest/app-chat/conversations/new', {
+    let response = await originalFetch('https://grok.com/rest/app-chat/conversations/new', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -488,16 +501,16 @@
                 parentPostId: assetId,
                 aspectRatio: aspectRatio || '2:3',
                 videoLength: videoLength || 6,
-                isVideoEdit: false
-              }
-            }
-          }
-        }
-      })
+                isVideoEdit: false,
+              },
+            },
+          },
+        },
+      }),
     });
 
     if (!response.ok) {
-      const errBody = await response.text();
+      let errBody = await response.text();
       throw new Error(`Video gen failed: ${response.status} - ${errBody}`);
     }
 
@@ -505,24 +518,24 @@
   };
 
   window.grokUpscaleVideo = async function (videoId) {
-    const response = await originalFetch('https://grok.com/rest/media/video/upscale', {
+    let response = await originalFetch('https://grok.com/rest/media/video/upscale', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoId })
+      body: JSON.stringify({ videoId }),
     });
 
     if (!response.ok) {
-      const errBody = await response.text();
+      let errBody = await response.text();
       throw new Error(`Upscale failed: ${response.status} - ${errBody}`);
     }
 
     return await response.json();
   };
 
-  // Listen for video commands from content script
+
   window.addEventListener('grok-video-command', async (event) => {
-    const { action, params, commandId } = event.detail;
+    let { action, params, commandId } = event.detail;
 
     try {
       let result;
@@ -535,20 +548,26 @@
         result = await window.grokUpscaleVideo(params.videoId);
       }
 
-      window.dispatchEvent(new CustomEvent('grok-video-result', {
-        detail: { commandId, success: true, result }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-video-result', {
+          detail: { commandId, success: true, result },
+        }),
+      );
     } catch (error) {
       console.error('[WS-Injector] Video command error:', error);
-      window.dispatchEvent(new CustomEvent('grok-video-result', {
-        detail: { commandId, success: false, error: error.message }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('grok-video-result', {
+          detail: { commandId, success: false, error: error.message },
+        }),
+      );
     }
   });
 
   console.log('[WS-Injector] Ready!');
   console.log('[WS-Injector] API: generateGrokImage(prompt, {aspectRatio, enableNsfw})');
-  console.log('[WS-Injector] API: grokImageToVideo({assetId, assetUrl, prompt, mode, aspectRatio, videoLength})');
+  console.log(
+    '[WS-Injector] API: grokImageToVideo({assetId, assetUrl, prompt, mode, aspectRatio, videoLength})',
+  );
   console.log('[WS-Injector] API: grokUpscaleVideo(videoId)');
   console.log('[WS-Injector] API: getGrokWebSocketConnections()');
   console.log('[WS-Injector] API: getGrokWebSocketMessages()');

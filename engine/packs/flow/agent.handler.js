@@ -38,13 +38,13 @@ export default {
     cacheKey: (inputs) => `agent:${inputs.prompt}:${JSON.stringify(inputs.context)}`,
 
     execute: async (inputs, params) => {
-      const { prompt, context } = inputs;
-      const { timeout, allowedTools, model } = params;
+      let { prompt, context } = inputs;
+      let { timeout, allowedTools, model } = params;
 
-      // Check if agentBridge is available (injected via params or global)
-      const bridge = params._agentBridge || globalThis.__symbioteNodeAgentBridge;
+
+      let bridge = params._agentBridge || globalThis.__symbioteNodeAgentBridge;
       if (!bridge) {
-        // No bridge available — return pending marker
+
         return {
           result: {
             _agentPending: true,
@@ -57,12 +57,29 @@ export default {
       }
 
       try {
-        const response = await Promise.race([
-          bridge.run({ prompt, context, tools: allowedTools, model }),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Agent timeout')), timeout)
-          ),
-        ]);
+        let controller = new AbortController();
+        let timeoutId = setTimeout(() => controller.abort(new Error('Agent timeout')), timeout);
+        let parentSignal = params.signal;
+        let abortFromParent = () => controller.abort(parentSignal.reason || new Error('Agent aborted'));
+
+        if (parentSignal) {
+          if (parentSignal.aborted) abortFromParent();
+          else parentSignal.addEventListener('abort', abortFromParent, { once: true });
+        }
+
+        let response;
+        try {
+          response = await bridge.run({
+            prompt,
+            context,
+            tools: allowedTools,
+            model,
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+          parentSignal?.removeEventListener('abort', abortFromParent);
+        }
 
         return { result: response.data, error: null };
       } catch (err) {

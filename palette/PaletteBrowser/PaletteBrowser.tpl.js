@@ -4,13 +4,20 @@
  */
 import { html } from '@symbiotejs/symbiote';
 
-export const template = html`
+export let template = html`
   <div class="pal-header">
     <span class="material-symbols-outlined">widgets</span>
-    Components
+    <span ${{ textContent: 'title' }}></span>
   </div>
   <div class="pal-search">
-    <input ref="palSearch" type="text" placeholder="Search components..." ${{ oninput: 'onSearchInput' }} />
+    <input
+      ref="palSearch"
+      type="text"
+      ${{ placeholder: 'searchPlaceholder', oninput: 'onSearchInput' }}
+    />
   </div>
-  <div class="pal-list" ${{ itemize: 'categories', 'item-tag': 'pal-category', onclick: 'onItemClick' }}></div>
+  <div
+    class="pal-list"
+    ${{ itemize: 'categories', 'item-tag': 'pal-category', onclick: 'onItemClick' }}
+  ></div>
 `;

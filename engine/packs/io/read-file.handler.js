@@ -3,7 +3,7 @@
  *
  * Reads a file from disk. Auto-parses JSON files.
  *
- * @module agi-graph/packs/io/read-file
+ * @module symbiote-node/packs/io/read-file
  */
 
 import { promises as fs } from 'fs';
@@ -15,9 +15,7 @@ export default {
 
   driver: {
     description: 'Read file from disk (auto-parses JSON)',
-    inputs: [
-      { name: 'path', type: 'string' },
-    ],
+    inputs: [{ name: 'path', type: 'string' }],
     outputs: [
       { name: 'content', type: 'string' },
       { name: 'parsed', type: 'any' },
@@ -34,24 +32,23 @@ export default {
       return true;
     },
 
-    // No caching — file content may change
+
     cacheKey: null,
 
     execute: async (inputs, params) => {
       try {
-        const content = await fs.readFile(inputs.path, params.encoding || 'utf8');
+        let content = await fs.readFile(inputs.path, params.encoding || 'utf8');
 
         let parsed = null;
         if (inputs.path.endsWith('.json')) {
           try {
             parsed = JSON.parse(content);
           } catch {
-            // Not valid JSON
+
           }
         }
 
         return { content, parsed, error: null };
-
       } catch (err) {
         return { content: null, parsed: null, error: err.message };
       }

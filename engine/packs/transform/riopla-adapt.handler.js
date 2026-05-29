@@ -8,10 +8,9 @@
  * Ported from Mr-Computer/automations/argentine-spanish-bot/src/utils/transliteration/riopla.js
  * and instruct-generator.js
  *
- * @module agi-graph/packs/transform/riopla-adapt
+ * @module symbiote-node/packs/transform/riopla-adapt
  */
 
-// ─── Transliteration Engine ────────────────────────────────────────────
 
 /**
  * Lightweight word segmenter; uses Intl.Segmenter when available
@@ -21,15 +20,17 @@
 function segmentWords(text) {
   try {
     if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-      const seg = new Intl.Segmenter('es', { granularity: 'word' });
-      return Array.from(seg.segment(text)).map(s => ({
+      let seg = new Intl.Segmenter('es', { granularity: 'word' });
+      return Array.from(seg.segment(text)).map((s) => ({
         type: /\p{L}/u.test(s.segment) ? 'word' : 'sep',
         value: s.segment,
       }));
     }
-  } catch { /* fallback */ }
-  const parts = text.split(/(\p{L}+(?:[\p{Mn}\p{Pd}]?\p{L}+)*)/u);
-  return parts.filter(Boolean).map(p => ({ type: /\p{L}/u.test(p) ? 'word' : 'sep', value: p }));
+  } catch {
+
+  }
+  let parts = text.split(/(\p{L}+(?:[\p{Mn}\p{Pd}]?\p{L}+)*)/u);
+  return parts.filter(Boolean).map((p) => ({ type: /\p{L}/u.test(p) ? 'word' : 'sep', value: p }));
 }
 
 /**
@@ -41,7 +42,7 @@ function segmentWords(text) {
 function applyRules(word, rules) {
   let w = word;
   for (const { re, to } of rules) {
-    w = w.replace(re, (...args) => typeof to === 'function' ? to(...args) : to);
+    w = w.replace(re, (...args) => (typeof to === 'function' ? to(...args) : to));
   }
   return w;
 }
@@ -52,12 +53,12 @@ function applyRules(word, rules) {
  * @returns {number} Index of stressed vowel, or -1
  */
 function findSpanishStressVowelIndex(word) {
-  const vowels = [];
+  let vowels = [];
   for (let i = 0; i < word.length; i++) {
-    const char = word[i];
+    let char = word[i];
     if (char.toLowerCase() === 'u') {
-      const prev = word[i - 1]?.toLowerCase();
-      const next = word[i + 1]?.toLowerCase();
+      let prev = word[i - 1]?.toLowerCase();
+      let next = word[i + 1]?.toLowerCase();
       if (prev === 'q' && (next === 'e' || next === 'i')) continue;
       if (prev === 'g' && (next === 'e' || next === 'i')) continue;
     }
@@ -66,10 +67,10 @@ function findSpanishStressVowelIndex(word) {
     }
   }
   if (vowels.length <= 1) return -1;
-  const accentedIndex = vowels.findIndex(v => /[áéíóú]/i.test(v.char));
+  let accentedIndex = vowels.findIndex((v) => /[áéíóú]/i.test(v.char));
   if (accentedIndex >= 0) return accentedIndex;
-  const cleanWord = word.replace(/[.,:;!?¡¿]+$/, '');
-  const lastChar = cleanWord.slice(-1).toLowerCase();
+  let cleanWord = word.replace(/[.,:;!?¡¿]+$/, '');
+  let lastChar = cleanWord.slice(-1).toLowerCase();
   if (/[aeiouüns]/.test(lastChar)) return Math.max(0, vowels.length - 2);
   return vowels.length - 1;
 }
@@ -81,19 +82,22 @@ function findSpanishStressVowelIndex(word) {
  * @returns {string}
  */
 function addCyrillicStressByVowelIndex(cyrillic, vowelIndex) {
-  const normalized = cyrillic.normalize('NFD');
-  const vowelPattern = /[аеиоуяёюыэАЕИОУЯЁЮЫЭ]/g;
-  const vowels = [];
+  let normalized = cyrillic.normalize('NFD');
+  let vowelPattern = /[аеиоуяёюыэАЕИОУЯЁЮЫЭ]/g;
+  let vowels = [];
   let match;
   while ((match = vowelPattern.exec(normalized)) !== null) {
-    const nextChar = normalized[match.index + 1];
-    const hasStress = nextChar === '\u0301';
+    let nextChar = normalized[match.index + 1];
+    let hasStress = nextChar === '\u0301';
     vowels.push({ index: match.index, char: match[0], hasStress });
   }
   if (vowels.length === 0 || vowelIndex >= vowels.length) return cyrillic;
-  const targetVowel = vowels[vowelIndex];
+  let targetVowel = vowels[vowelIndex];
   if (targetVowel.hasStress) return cyrillic;
-  const result = normalized.substring(0, targetVowel.index + 1) + '\u0301' + normalized.substring(targetVowel.index + 1);
+  let result =
+    normalized.substring(0, targetVowel.index + 1) +
+    '\u0301' +
+    normalized.substring(targetVowel.index + 1);
   return result.normalize('NFC');
 }
 
@@ -104,7 +108,7 @@ function addCyrillicStressByVowelIndex(cyrillic, vowelIndex) {
  * @returns {string}
  */
 function transliterateSpanishToCyrillic(input, opts = {}) {
-  const options = {
+  let options = {
     yConj: 'и',
     keepAccents: true,
     autoStress: true,
@@ -113,8 +117,8 @@ function transliterateSpanishToCyrillic(input, opts = {}) {
   };
   if (!input) return '';
 
-  const textWithNumbers = convertNumbersToSpanish(String(input));
-  const text = options.normalize ? textWithNumbers.normalize(options.normalize) : textWithNumbers;
+  let textWithNumbers = convertNumbersToSpanish(String(input));
+  let text = options.normalize ? textWithNumbers.normalize(options.normalize) : textWithNumbers;
 
   function matchCase(src, dst) {
     if (src.toUpperCase() === src) return dst.toUpperCase();
@@ -123,27 +127,51 @@ function transliterateSpanishToCyrillic(input, opts = {}) {
   }
 
   function mapVowel(v) {
-    const lower = v.toLowerCase();
-    const table = { a: 'а', e: 'е', i: 'и', o: 'о', u: 'у', á: 'а́', é: 'е́', í: 'и́', ó: 'о́', ú: 'у́', ü: 'у' };
-    const base = table[lower] || v;
+    let lower = v.toLowerCase();
+    let table = {
+      a: 'а',
+      e: 'е',
+      i: 'и',
+      o: 'о',
+      u: 'у',
+      á: 'а́',
+      é: 'е́',
+      í: 'и́',
+      ó: 'о́',
+      ú: 'у́',
+      ü: 'у',
+    };
+    let base = table[lower] || v;
     if (!options.keepAccents) return base.replace('\u0301', '');
     return matchCase(v, base);
   }
 
-  const CONS_LOWER = { n: 'н', m: 'м', p: 'п', t: 'т', d: 'д', l: 'л', r: 'р', s: 'с', f: 'ф', g: 'г', k: 'к' };
+  const CONS_LOWER = {
+    n: 'н',
+    m: 'м',
+    p: 'п',
+    t: 'т',
+    d: 'д',
+    l: 'л',
+    r: 'р',
+    s: 'с',
+    f: 'ф',
+    g: 'г',
+    k: 'к',
+  };
   const LL = 'щ';
 
-  const rules = [
-    { re: /\bel\b/gi, to: m => matchCase(m, 'эль') },
-    { re: /\bdel\b/gi, to: m => matchCase(m, 'дель') },
-    { re: /\bal\b/gi, to: m => matchCase(m, 'аль') },
-    { re: /\byo\b/gi, to: m => matchCase(m, 'що') },
-    { re: /(?<![a-záéíóúüñ])e/gi, to: m => matchCase(m, 'э') },
-    { re: /(?<![a-záéíóúüñ])é/gi, to: m => matchCase(m, 'э́') },
-    { re: /ch/gi, to: m => matchCase(m, 'ч') },
-    { re: /rr/gi, to: m => matchCase(m, 'рр') },
-    { re: /ll/gi, to: m => matchCase(m, LL) },
-    { re: /l(?=[^aeiouáéíóú\s]|$)/gi, to: m => matchCase(m, 'ль') },
+  let rules = [
+    { re: /\bel\b/gi, to: (m) => matchCase(m, 'эль') },
+    { re: /\bdel\b/gi, to: (m) => matchCase(m, 'дель') },
+    { re: /\bal\b/gi, to: (m) => matchCase(m, 'аль') },
+    { re: /\byo\b/gi, to: (m) => matchCase(m, 'що') },
+    { re: /(?<![a-záéíóúüñ])e/gi, to: (m) => matchCase(m, 'э') },
+    { re: /(?<![a-záéíóúüñ])é/gi, to: (m) => matchCase(m, 'э́') },
+    { re: /ch/gi, to: (m) => matchCase(m, 'ч') },
+    { re: /rr/gi, to: (m) => matchCase(m, 'рр') },
+    { re: /ll/gi, to: (m) => matchCase(m, LL) },
+    { re: /l(?=[^aeiouáéíóú\s]|$)/gi, to: (m) => matchCase(m, 'ль') },
     { re: /qu([eiéí])/gi, to: (m, v) => matchCase(m, 'к') + mapVowel(v) },
     { re: /qu([aouáóú])/gi, to: (m, v) => matchCase(m, 'к') + mapVowel(v) },
     { re: /gü([ei])/gi, to: (m, v) => matchCase(m, 'гв') + mapVowel(v) },
@@ -151,37 +179,43 @@ function transliterateSpanishToCyrillic(input, opts = {}) {
     { re: /g([eiéí])/gi, to: (m, v) => matchCase(m[0], 'х') + mapVowel(v) },
     { re: /c([eiéí])/gi, to: (m, v) => matchCase(m[0], 'с') + mapVowel(v) },
     { re: /c([aouáóú])/gi, to: (m, v) => matchCase(m[0], 'к') + mapVowel(v) },
-    { re: /c/gi, to: m => matchCase(m, 'к') },
+    { re: /c/gi, to: (m) => matchCase(m, 'к') },
     { re: /\b[yY]\b/g, to: () => options.yConj },
-    { re: /y(?=[aeiouáéíóú])/gi, to: m => matchCase(m, LL) },
-    { re: /j/gi, to: m => matchCase(m, 'х') },
-    { re: /z/gi, to: m => matchCase(m, 'с') },
-    { re: /q/gi, to: m => matchCase(m, 'к') },
+    { re: /y(?=[aeiouáéíóú])/gi, to: (m) => matchCase(m, LL) },
+    { re: /j/gi, to: (m) => matchCase(m, 'х') },
+    { re: /z/gi, to: (m) => matchCase(m, 'с') },
+    { re: /q/gi, to: (m) => matchCase(m, 'к') },
     { re: /h/gi, to: () => '' },
-    { re: /x/gi, to: m => matchCase(m, 'кс') },
+    { re: /x/gi, to: (m) => matchCase(m, 'кс') },
     { re: /ñ/g, to: 'нь' },
     { re: /Ñ/g, to: 'НЬ' },
     { re: /[vb]/g, to: 'б' },
     { re: /[VB]/g, to: 'Б' },
-    { re: /ay\b/gi, to: m => matchCase(m, 'ай') },
-    { re: /ey\b/gi, to: m => matchCase(m, 'эй') },
-    { re: /oy\b/gi, to: m => matchCase(m, 'ой') },
-    { re: /uy\b/gi, to: m => matchCase(m, 'уй') },
-    { re: /iy\b/gi, to: m => matchCase(m, 'ий') },
-    { re: /[aeiouáéíóúüAEIOUÁÉÍÓÚÜ]/g, to: m => mapVowel(m) },
-    { re: /[nmp tdlrsfgk]/g, to: m => CONS_LOWER[m] || m },
-    { re: /[NMP TDLRSFGK]/g, to: m => (CONS_LOWER[m.toLowerCase()] || m.toLowerCase()).toUpperCase() },
-    { re: /l\b/gi, to: m => matchCase(m, 'ль') },
+    { re: /ay\b/gi, to: (m) => matchCase(m, 'ай') },
+    { re: /ey\b/gi, to: (m) => matchCase(m, 'эй') },
+    { re: /oy\b/gi, to: (m) => matchCase(m, 'ой') },
+    { re: /uy\b/gi, to: (m) => matchCase(m, 'уй') },
+    { re: /iy\b/gi, to: (m) => matchCase(m, 'ий') },
+    { re: /[aeiouáéíóúüAEIOUÁÉÍÓÚÜ]/g, to: (m) => mapVowel(m) },
+    { re: /[nmp tdlrsfgk]/g, to: (m) => CONS_LOWER[m] || m },
+    {
+      re: /[NMP TDLRSFGK]/g,
+      to: (m) => (CONS_LOWER[m.toLowerCase()] || m.toLowerCase()).toUpperCase(),
+    },
+    { re: /l\b/gi, to: (m) => matchCase(m, 'ль') },
   ];
 
-  const segments = segmentWords(text);
-  const out = segments.map(seg => {
-    if (seg.type !== 'word') return seg.value;
-    const spanishVowelIndex = options.autoStress ? findSpanishStressVowelIndex(seg.value) : -1;
-    const transliterated = applyRules(seg.value, rules);
-    if (spanishVowelIndex >= 0) return addCyrillicStressByVowelIndex(transliterated, spanishVowelIndex);
-    return transliterated;
-  }).join('');
+  let segments = segmentWords(text);
+  let out = segments
+    .map((seg) => {
+      if (seg.type !== 'word') return seg.value;
+      let spanishVowelIndex = options.autoStress ? findSpanishStressVowelIndex(seg.value) : -1;
+      let transliterated = applyRules(seg.value, rules);
+      if (spanishVowelIndex >= 0)
+        return addCyrillicStressByVowelIndex(transliterated, spanishVowelIndex);
+      return transliterated;
+    })
+    .join('');
 
   return out;
 }
@@ -192,10 +226,43 @@ function transliterateSpanishToCyrillic(input, opts = {}) {
  * @returns {string}
  */
 function convertNumbersToSpanish(text) {
-  const ones = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
-  const teens = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
-  const tens = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
-  const hundreds = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+  let ones = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
+  let teens = [
+    'diez',
+    'once',
+    'doce',
+    'trece',
+    'catorce',
+    'quince',
+    'dieciséis',
+    'diecisiete',
+    'dieciocho',
+    'diecinueve',
+  ];
+  let tens = [
+    '',
+    '',
+    'veinte',
+    'treinta',
+    'cuarenta',
+    'cincuenta',
+    'sesenta',
+    'setenta',
+    'ochenta',
+    'noventa',
+  ];
+  let hundreds = [
+    '',
+    'ciento',
+    'doscientos',
+    'trescientos',
+    'cuatrocientos',
+    'quinientos',
+    'seiscientos',
+    'setecientos',
+    'ochocientos',
+    'novecientos',
+  ];
 
   function numberToSpanish(n) {
     if (n === 0) return 'cero';
@@ -204,21 +271,21 @@ function convertNumbersToSpanish(text) {
     if (n === 20) return 'veinte';
     if (n < 30) return 'veinti' + ones[n - 20];
     if (n < 100) {
-      const ten = Math.floor(n / 10);
-      const one = n % 10;
+      let ten = Math.floor(n / 10);
+      let one = n % 10;
       return tens[ten] + (one ? ' y ' + ones[one] : '');
     }
     if (n === 100) return 'cien';
     if (n < 1000) {
-      const hundred = Math.floor(n / 100);
-      const rest = n % 100;
+      let hundred = Math.floor(n / 100);
+      let rest = n % 100;
       return hundreds[hundred] + (rest ? ' ' + numberToSpanish(rest) : '');
     }
     return String(n);
   }
 
-  return text.replace(/\b\d+\b/g, match => {
-    const num = parseInt(match, 10);
+  return text.replace(/\b\d+\b/g, (match) => {
+    let num = parseInt(match, 10);
     if (isNaN(num) || num > 999) return match;
     return numberToSpanish(num);
   });
@@ -238,28 +305,67 @@ function adaptSpanishToRioplatense(text) {
     .replace(/([^cs]|^)h/gi, '$1');
 }
 
-// ─── Voice Instruct Templates ──────────────────────────────────────────
 
 const INSTRUCT_TEMPLATES = {
   ru: {
     neutral: ['', 'Говори спокойно и уверенно', 'Четко и разборчиво', 'В нейтральном тоне'],
-    friendly: ['В дружелюбном тоне', 'Тепло и приветливо', 'С улыбкой в голосе', 'Доброжелательно и открыто'],
-    enthusiastic: ['С энтузиазмом', 'Увлеченно и живо', 'С воодушевлением', 'Энергично и позитивно'],
-    teaching: ['Как опытный преподаватель', 'Терпеливо и понятно', 'Объясняя как ученику', 'Четко и методично'],
-    encouraging: ['Одобрительно и поддерживающе', 'С теплотой и заботой', 'Мотивирующим тоном', 'Вдохновляюще'],
+    friendly: [
+      'В дружелюбном тоне',
+      'Тепло и приветливо',
+      'С улыбкой в голосе',
+      'Доброжелательно и открыто',
+    ],
+    enthusiastic: [
+      'С энтузиазмом',
+      'Увлеченно и живо',
+      'С воодушевлением',
+      'Энергично и позитивно',
+    ],
+    teaching: [
+      'Как опытный преподаватель',
+      'Терпеливо и понятно',
+      'Объясняя как ученику',
+      'Четко и методично',
+    ],
+    encouraging: [
+      'Одобрительно и поддерживающе',
+      'С теплотой и заботой',
+      'Мотивирующим тоном',
+      'Вдохновляюще',
+    ],
   },
   es: {
     neutral: ['', 'Habla con calma y claridad', 'De manera natural', 'Con tono neutro'],
     friendly: ['Con tono amigable', 'De manera cálida y acogedora', 'Con simpatía', 'Amablemente'],
     enthusiastic: ['Con entusiasmo', 'De manera animada', 'Con energía positiva', 'Alegremente'],
-    teaching: ['Como un profesor paciente', 'Explicando claramente', 'De forma didáctica', 'Con paciencia'],
-    encouraging: ['De manera alentadora', 'Con apoyo y calidez', 'Motivando al estudiante', 'Con palabras de ánimo'],
+    teaching: [
+      'Como un profesor paciente',
+      'Explicando claramente',
+      'De forma didáctica',
+      'Con paciencia',
+    ],
+    encouraging: [
+      'De manera alentadora',
+      'Con apoyo y calidez',
+      'Motivando al estudiante',
+      'Con palabras de ánimo',
+    ],
   },
   en: {
     neutral: ['', 'Speak calmly and clearly', 'In a natural tone', 'Neutrally'],
     friendly: ['In a friendly tone', 'Warm and welcoming', 'With a smile in your voice', 'Kindly'],
-    enthusiastic: ['With enthusiasm', 'Energetically and lively', 'With excitement', 'Positively and upbeat'],
-    teaching: ['Like a patient teacher', 'Explaining clearly', 'In a didactic manner', 'With patience'],
+    enthusiastic: [
+      'With enthusiasm',
+      'Energetically and lively',
+      'With excitement',
+      'Positively and upbeat',
+    ],
+    teaching: [
+      'Like a patient teacher',
+      'Explaining clearly',
+      'In a didactic manner',
+      'With patience',
+    ],
     encouraging: ['Encouragingly', 'With warmth and support', 'Motivatingly', 'Inspiringly'],
   },
 };
@@ -305,9 +411,9 @@ function randomChoice(arr) {
  * @returns {string}
  */
 function generateVoiceInstruct({ text, lang, context = null, randomize = true }) {
-  const langTemplates = INSTRUCT_TEMPLATES[lang] || INSTRUCT_TEMPLATES.ru;
-  const effectiveContext = context || detectContext(text);
-  const templates = langTemplates[effectiveContext] || langTemplates.neutral;
+  let langTemplates = INSTRUCT_TEMPLATES[lang] || INSTRUCT_TEMPLATES.ru;
+  let effectiveContext = context || detectContext(text);
+  let templates = langTemplates[effectiveContext] || langTemplates.neutral;
   return randomize ? randomChoice(templates) : templates[0];
 }
 
@@ -317,8 +423,8 @@ function generateVoiceInstruct({ text, lang, context = null, randomize = true })
  * @returns {Array<string>}
  */
 function generateBatchInstructs(segments) {
-  const recentlyUsed = new Set();
-  const results = [];
+  let recentlyUsed = new Set();
+  let results = [];
   for (const seg of segments) {
     let instruct = '';
     let attempts = 0;
@@ -331,7 +437,7 @@ function generateBatchInstructs(segments) {
     if (instruct) {
       recentlyUsed.add(instruct);
       if (recentlyUsed.size > 3) {
-        const first = recentlyUsed.values().next().value;
+        let first = recentlyUsed.values().next().value;
         recentlyUsed.delete(first);
       }
     }
@@ -339,7 +445,6 @@ function generateBatchInstructs(segments) {
   return results;
 }
 
-// ─── Handler Definition ────────────────────────────────────────────────
 
 export default {
   type: 'transform/riopla-adapt',
@@ -347,30 +452,55 @@ export default {
   icon: 'translate',
 
   driver: {
-    description: 'Rioplatense text adaptation: transliteration, pronunciation, number conversion, voice instructs',
-    inputs: [
-      { name: 'text', type: 'string' },
-    ],
+    description:
+      'Rioplatense text adaptation: transliteration, pronunciation, number conversion, voice instructs',
+    inputs: [{ name: 'text', type: 'string' }],
     outputs: [
       { name: 'result', type: 'any' },
       { name: 'error', type: 'string' },
     ],
     params: {
-      operation: { type: 'string', default: 'transliterate', description: 'Operation: transliterate | adapt-rioplatense | numbers-to-spanish | voice-instruct | batch-instructs' },
-      // transliterate options
-      keepAccents: { type: 'boolean', default: true, description: 'Preserve acute accents in Cyrillic output' },
-      autoStress: { type: 'boolean', default: true, description: 'Auto-add stress marks based on Spanish rules' },
-      // voice-instruct options
-      lang: { type: 'string', default: 'es', description: 'Language code for voice instruct (ru/es/en)' },
-      context: { type: 'string', default: null, description: 'Voice instruct context hint (neutral/friendly/enthusiastic/teaching/encouraging)' },
-      // batch-instructs
-      segments: { type: 'any', default: null, description: 'Array of {text, lang} for batch instruct generation' },
+      operation: {
+        type: 'string',
+        default: 'transliterate',
+        description:
+          'Operation: transliterate | adapt-rioplatense | numbers-to-spanish | voice-instruct | batch-instructs',
+      },
+
+      keepAccents: {
+        type: 'boolean',
+        default: true,
+        description: 'Preserve acute accents in Cyrillic output',
+      },
+      autoStress: {
+        type: 'boolean',
+        default: true,
+        description: 'Auto-add stress marks based on Spanish rules',
+      },
+
+      lang: {
+        type: 'string',
+        default: 'es',
+        description: 'Language code for voice instruct (ru/es/en)',
+      },
+      context: {
+        type: 'string',
+        default: null,
+        description:
+          'Voice instruct context hint (neutral/friendly/enthusiastic/teaching/encouraging)',
+      },
+
+      segments: {
+        type: 'any',
+        default: null,
+        description: 'Array of {text, lang} for batch instruct generation',
+      },
     },
   },
 
   lifecycle: {
     validate: (inputs, params) => {
-      const op = params.operation;
+      let op = params.operation;
       if (op === 'batch-instructs') {
         return Array.isArray(params.segments) && params.segments.length > 0;
       }
@@ -378,51 +508,50 @@ export default {
     },
 
     cacheKey: (inputs, params) => {
-      if (params.operation === 'batch-instructs') return null; // random, no cache
-      if (params.operation === 'voice-instruct') return null; // random, no cache
+      if (params.operation === 'batch-instructs') return null;
+      if (params.operation === 'voice-instruct') return null;
       return `riopla:${params.operation}:${inputs.text?.slice(0, 100)}`;
     },
 
     execute: async (inputs, params) => {
-      const { text } = inputs;
-      const { operation } = params;
+      let { text } = inputs;
+      let { operation } = params;
 
       try {
-        switch (operation) {
-          case 'transliterate': {
-            const result = transliterateSpanishToCyrillic(text, {
+        let opMap = {
+          transliterate: () => {
+            let result = transliterateSpanishToCyrillic(text, {
               keepAccents: params.keepAccents,
               autoStress: params.autoStress,
             });
             return { result: { original: text, cyrillic: result } };
-          }
-
-          case 'adapt-rioplatense': {
-            const result = adaptSpanishToRioplatense(text);
+          },
+          'adapt-rioplatense': () => {
+            let result = adaptSpanishToRioplatense(text);
             return { result: { original: text, adapted: result } };
-          }
-
-          case 'numbers-to-spanish': {
-            const result = convertNumbersToSpanish(text);
+          },
+          'numbers-to-spanish': () => {
+            let result = convertNumbersToSpanish(text);
             return { result: { original: text, converted: result } };
-          }
-
-          case 'voice-instruct': {
-            const instruct = generateVoiceInstruct({
+          },
+          'voice-instruct': () => {
+            let instruct = generateVoiceInstruct({
               text,
               lang: params.lang,
               context: params.context,
             });
             return { result: { text, instruct, lang: params.lang } };
-          }
-
-          case 'batch-instructs': {
-            const instructs = generateBatchInstructs(params.segments);
+          },
+          'batch-instructs': () => {
+            let instructs = generateBatchInstructs(params.segments);
             return { result: { segments: params.segments, instructs } };
-          }
+          },
+        };
 
-          default:
-            return { error: `Unknown operation: ${operation}` };
+        if (opMap[operation]) {
+          return opMap[operation]();
+        } else {
+          return { error: `Unknown operation: ${operation}` };
         }
       } catch (err) {
         return { error: `riopla-adapt ${operation} failed: ${err.message}` };

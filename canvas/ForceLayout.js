@@ -26,6 +26,9 @@ export class ForceLayout {
   /** @type {object|null} */
   #latestPositions = null;
 
+  /** @type {object|null} */
+  #latestMeta = null;
+
   /** @type {number|null} */
   #rafId = null;
 
@@ -37,6 +40,16 @@ export class ForceLayout {
 
   /** @type {Function|null} */
   onDone = null;
+
+  /**
+   * Resolve an absolute URL to the ForceWorker script.
+   * Uses import.meta.url to anchor the resolution, making it
+   * safe across import maps, bundlers, and static serving.
+   * @returns {string}
+   */
+  static defaultWorkerUrl() {
+    return new URL('./ForceWorker.js', import.meta.url).href;
+  }
 
   /**
    * @param {string} workerUrl - URL to ForceWorker.js
@@ -62,40 +75,49 @@ export class ForceLayout {
     this.#nodeIds = null;
 
     this.#worker.onmessage = (e) => {
-      const msg = e.data;
+      let msg = e.data;
 
-      // Continuous mode: receive node ID order once for Float32Array unpacking
+
       if (msg.type === 'nodeIds') {
         this.#nodeIds = msg.ids;
         return;
       }
 
       if (msg.type === 'tick') {
-        // Unpack Float32Array if present (continuous mode)
+
         if (msg.packed && this.#nodeIds) {
-          const buf = new Float32Array(msg.packed);
-          const positions = {};
+          let buf = new Float32Array(msg.packed);
+          let positions = {};
           for (let i = 0; i < this.#nodeIds.length; i++) {
             positions[this.#nodeIds[i]] = {
-              x: Math.round(buf[i * 2]),
-              y: Math.round(buf[i * 2 + 1]),
+              x: buf[i * 2],
+              y: buf[i * 2 + 1],
             };
           }
           this.#latestPositions = positions;
         } else {
-          // Converge mode: positions as plain object
+
           this.#latestPositions = msg.positions;
         }
+        this.#latestMeta = {
+          alpha: msg.alpha,
+          energy: msg.energy,
+          iteration: msg.iteration,
+        };
         this.#scheduleRender();
       }
 
       if (msg.type === 'done') {
         this.#latestPositions = msg.positions;
+        this.#latestMeta = {
+          alpha: msg.alpha,
+          energy: msg.energy,
+          iteration: msg.iteration ?? msg.iterations,
+        };
         this.#flushRender();
-        this.#running = false;
-        this.#paused = false;
+
+
         this.onDone?.(msg.positions, msg.iteration);
-        this.#cleanup();
       }
     };
 
@@ -152,11 +174,24 @@ export class ForceLayout {
     this.#worker.postMessage({ type: 'unpin', id });
   }
 
-  /** @returns {boolean} */
-  get running() { return this.#running; }
+  /**
+   * Update simulation configuration without restarting the worker.
+   * @param {object} config
+   */
+  updateConfig(config) {
+    if (!this.#worker || !this.#running) return;
+    this.#worker.postMessage({ type: 'updateConfig', config });
+  }
 
   /** @returns {boolean} */
-  get paused() { return this.#paused; }
+  get running() {
+    return this.#running;
+  }
+
+  /** @returns {boolean} */
+  get paused() {
+    return this.#paused;
+  }
 
   #scheduleRender() {
     if (this.#rafId !== null) return;
@@ -168,8 +203,9 @@ export class ForceLayout {
 
   #flushRender() {
     if (this.#latestPositions) {
-      this.onTick?.(this.#latestPositions);
+      this.onTick?.(this.#latestPositions, this.#latestMeta || {});
       this.#latestPositions = null;
+      this.#latestMeta = null;
     }
   }
 
@@ -185,5 +221,6 @@ export class ForceLayout {
     this.#running = false;
     this.#paused = false;
     this.#nodeIds = null;
+    this.#latestMeta = null;
   }
 }

@@ -260,6 +260,50 @@ describe('CanvasGraph theme contract', () => {
     assert.match(canvasRenderer, /refreshViewportTransform\(\) \{\n\s+this\.redraw\(\);\n\s+\}/);
   });
 
+  it('keeps canvas connection geometry cached during viewport pan and zoom', () => {
+    let canvasRenderer = fs.readFileSync(
+      path.join(PKG_ROOT, 'canvas/CanvasConnectionRenderer.js'),
+      'utf8',
+    );
+
+    assert.match(canvasRenderer, /#pathCache = new Map\(\);/);
+    assert.match(
+      canvasRenderer,
+      /refreshViewportTransform\(\) \{\n\s+this\.redraw\(\);\n\s+\}/,
+      'viewport transforms may redraw the canvas but must not invalidate route geometry',
+    );
+    let viewportRefreshBody = canvasRenderer.match(/refreshViewportTransform\(\) \{\n([\s\S]*?)\n  \}/)?.[1] || '';
+    assert.equal(
+      viewportRefreshBody.includes('#invalidatePathCache'),
+      false,
+      'zoom and pan must reuse cached world-space connection paths',
+    );
+    assert.match(canvasRenderer, /let cached = this\.#pathCache\.get\(conn\.id\);/);
+    assert.match(canvasRenderer, /this\.#pathCache\.set\(conn\.id, coords\);/);
+    assert.match(canvasRenderer, /#phantomSignature = '';/);
+    assert.match(canvasRenderer, /let nextSignature = this\.#getPhantomSignature\(nextNodes\);/);
+    assert.match(canvasRenderer, /if \(nextSignature === this\.#phantomSignature\) return;/);
+    assert.match(
+      canvasRenderer,
+      /setPhantomNodes\(nodes\) \{[\s\S]*?this\.#phantomSignature = nextSignature;[\s\S]*?this\.#invalidatePathCache\(\);/,
+      'changed phantom geometry must invalidate cached connection geometry',
+    );
+    for (let method of ['setPathStyle', 'addBatch', 'refreshAll', 'add', 'remove', 'updateForNode', 'clear']) {
+      assert.match(
+        canvasRenderer,
+        new RegExp(`${method}\\([^)]*\\) \\{[\\s\\S]*?this\\.#invalidatePathCache\\(\\);`),
+        `${method} must invalidate cached connection geometry`,
+      );
+    }
+
+    let canvasViewport = fs.readFileSync(path.join(PKG_ROOT, 'canvas/CanvasViewport.js'), 'utf8');
+    assert.equal(
+      canvasViewport.includes('|| allPhantom'),
+      false,
+      'all-phantom viewport passes must not resync unchanged phantom geometry',
+    );
+  });
+
   it('derives SVG connector dot geometry from the socket theme size', () => {
     let canvasCss = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.css.js'), 'utf8');
     let portCss = fs.readFileSync(path.join(PKG_ROOT, 'node/PortItem/PortItem.css.js'), 'utf8');

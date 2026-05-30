@@ -91,6 +91,8 @@ export class CanvasConnectionRenderer {
   #animationFrameId;
   #batchMode = false;
   #batchDirty = false;
+  #pathCache = new Map();
+  #phantomSignature = '';
 
   /** @type {Array<{id:string, x:number, y:number, w:number, h:number, degree:number, color:string, label:string}>} */
   #phantomNodes = [];
@@ -189,6 +191,7 @@ export class CanvasConnectionRenderer {
   /** @param {'bezier'|'orthogonal'|'straight'|'pcb'} style */
   setPathStyle(style) {
     this.#pathStyle = style;
+    this.#invalidatePathCache();
     this.redraw();
   }
 
@@ -200,10 +203,12 @@ export class CanvasConnectionRenderer {
     for (const conn of conns) {
       this.#connectionData.set(conn.id, conn);
     }
+    this.#invalidatePathCache();
     this.redraw();
   }
 
   refreshAll() {
+    this.#invalidatePathCache();
     this.redraw();
   }
 
@@ -213,15 +218,18 @@ export class CanvasConnectionRenderer {
 
   add(conn) {
     this.#connectionData.set(conn.id, conn);
+    this.#invalidatePathCache();
     this.redraw();
   }
 
   remove(conn) {
     this.#connectionData.delete(conn.id);
+    this.#invalidatePathCache();
     this.redraw();
   }
 
   updateForNode(_nodeId) {
+    this.#invalidatePathCache();
     this.redraw();
   }
 
@@ -249,6 +257,8 @@ export class CanvasConnectionRenderer {
     this.#connectionData.clear();
     this.#phantomNodes = [];
     this.#phantomMap.clear();
+    this.#phantomSignature = '';
+    this.#invalidatePathCache();
     this.redraw();
   }
 
@@ -258,12 +268,37 @@ export class CanvasConnectionRenderer {
    * @param {Array<{id:string, x:number, y:number, w:number, h:number, degree:number, color:string, label:string}>} nodes
    */
   setPhantomNodes(nodes) {
-    this.#phantomNodes = nodes || [];
+    let nextNodes = nodes || [];
+    let nextSignature = this.#getPhantomSignature(nextNodes);
+    if (nextSignature === this.#phantomSignature) return;
+
+    this.#phantomNodes = nextNodes;
+    this.#phantomSignature = nextSignature;
     this.#phantomMap.clear();
     for (const n of this.#phantomNodes) {
       this.#phantomMap.set(n.id, n);
     }
+    this.#invalidatePathCache();
     this.redraw();
+  }
+
+  #getPhantomSignature(nodes) {
+    return nodes
+      .map((node) => [
+        node?.id || '',
+        node?.x ?? 0,
+        node?.y ?? 0,
+        node?.w ?? 0,
+        node?.h ?? 0,
+        node?.degree ?? 0,
+        node?.color || '',
+        node?.label || '',
+      ].join(':'))
+      .join('|');
+  }
+
+  #invalidatePathCache() {
+    this.#pathCache.clear();
   }
 
   /**
@@ -677,6 +712,11 @@ export class CanvasConnectionRenderer {
   };
 
   #plotPath(ctx, conn) {
+    let cached = this.#pathCache.get(conn.id);
+    if (cached?.pathStyle === this.#pathStyle) {
+      return cached;
+    }
+
     let fromElNodeView = this.#nodeViews.get(conn.from);
     let toElNodeView = this.#nodeViews.get(conn.to);
 
@@ -916,13 +956,16 @@ export class CanvasConnectionRenderer {
       arrow.angle = Math.atan2(endY + cp2y - cp1y - startY, endX + cp2x - cp1x - startX);
     }
 
-    let p = new Path2D(d);
-    return { startX, startY, endX, endY, path2D: p, arrow, pathStyle: effectiveStyle };
+    let coords = { startX, startY, endX, endY, path2D: new Path2D(d), arrow, pathStyle: effectiveStyle };
+    this.#pathCache.set(conn.id, coords);
+    return coords;
   }
 
   destroy() {
     if (this.#resizeObserver) this.#resizeObserver.disconnect();
     if (this.#animationFrameId) cancelAnimationFrame(this.#animationFrameId);
     this.#connectionData.clear();
+    this.#phantomSignature = '';
+    this.#invalidatePathCache();
   }
 }

@@ -27,6 +27,12 @@ graph-explorer-shell > [slot="overlay"] {
   position: absolute;
   inset: 0;
   z-index: var(--sn-graph-explorer-overlay-z);
+  pointer-events: none;
+}
+
+graph-explorer-shell > dialog[slot="overlay"][open],
+graph-explorer-shell > [slot="overlay"][data-interactive] {
+  pointer-events: auto;
 }
 
 graph-explorer-shell node-canvas[hidden],

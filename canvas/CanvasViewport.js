@@ -240,7 +240,6 @@ export class CanvasViewport {
       }
     }
 
-    let allPhantom = this.#nodeViews.size === 0 && this.#phantomData.size > 0;
     if (isVirtualized && !FAR_ZOOM) {
       for (const [id, pd] of this.#phantomData) {
         let screenX = pd.x * zoom + panX;
@@ -273,7 +272,7 @@ export class CanvasViewport {
         for (const id of toPromote) this.#promoteNode(id);
         this.#syncPhantomToRenderer();
       }, 100);
-    } else if (this.#phantomDirty || allPhantom) {
+    } else if (this.#phantomDirty) {
       this.#phantomDirty = false;
       this.#syncPhantomToRenderer();
     }

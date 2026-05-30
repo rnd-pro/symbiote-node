@@ -244,6 +244,22 @@ describe('CanvasGraph theme contract', () => {
     assert.ok(source.includes('resolveCssVars'), 'CanvasConnectionRenderer must resolve provider CSS variables before canvas drawing');
   });
 
+  it('does not reroute SVG connections during viewport pan and zoom', () => {
+    let nodeCanvas = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.js'), 'utf8');
+    let svgRenderer = fs.readFileSync(path.join(PKG_ROOT, 'canvas/ConnectionRenderer.js'), 'utf8');
+    let canvasRenderer = fs.readFileSync(path.join(PKG_ROOT, 'canvas/CanvasConnectionRenderer.js'), 'utf8');
+
+    assert.match(nodeCanvas, /this\.sub\('\+contentTransform'/);
+    assert.match(nodeCanvas, /this\._connRenderer\?\.refreshViewportTransform\?\.\(\);/);
+    assert.equal(
+      nodeCanvas.includes("this._connRenderer?.refreshAll();\n    });"),
+      false,
+      'viewport transform must not force a full SVG connection reroute'
+    );
+    assert.match(svgRenderer, /refreshViewportTransform\(\) \{\}/);
+    assert.match(canvasRenderer, /refreshViewportTransform\(\) \{\n\s+this\.redraw\(\);\n\s+\}/);
+  });
+
   it('derives SVG connector dot geometry from the socket theme size', () => {
     let canvasCss = fs.readFileSync(path.join(PKG_ROOT, 'canvas/NodeCanvas/NodeCanvas.css.js'), 'utf8');
     let portCss = fs.readFileSync(path.join(PKG_ROOT, 'node/PortItem/PortItem.css.js'), 'utf8');

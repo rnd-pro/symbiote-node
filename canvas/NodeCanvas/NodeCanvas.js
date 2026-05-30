@@ -1349,7 +1349,7 @@ export class NodeCanvas extends Symbiote {
       if (this.ref.content) {
         this.ref.content.style.transform = val;
       }
-      this._connRenderer?.refreshAll();
+      this._connRenderer?.refreshViewportTransform?.();
     });
 
     this._updateTransform();

@@ -438,6 +438,12 @@ export class ConnectionRenderer {
   }
 
   /**
+   * SVG connections live inside the transformed content layer, so viewport
+   * pan/zoom does not require path geometry recalculation.
+   */
+  refreshViewportTransform() {}
+
+  /**
    * Set data flow animation on a connection
    * @param {string} connId
    * @param {boolean} active

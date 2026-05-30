@@ -207,6 +207,10 @@ export class CanvasConnectionRenderer {
     this.redraw();
   }
 
+  refreshViewportTransform() {
+    this.redraw();
+  }
+
   add(conn) {
     this.#connectionData.set(conn.id, conn);
     this.redraw();

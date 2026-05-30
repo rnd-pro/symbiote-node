@@ -2,6 +2,9 @@ import Symbiote, { html } from '@symbiotejs/symbiote';
 import css from './ChatSidebarItem.css.js';
 import { translate } from '../../locale/index.js';
 
+const COMPACT_LABEL_MIN_CH = 6;
+const COMPACT_LABEL_MAX_CH = 32;
+
 function emit(el, type, detail = {}) {
   el.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 }

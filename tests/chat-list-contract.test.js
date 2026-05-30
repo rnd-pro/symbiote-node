@@ -85,6 +85,14 @@ describe('chat list components', () => {
       'ChatSidebarItem must expose a deterministic compact label width helper'
     );
     assert.ok(
+      sidebarJs.includes('COMPACT_LABEL_MIN_CH'),
+      'ChatSidebarItem compact label helper must declare its minimum clamp'
+    );
+    assert.ok(
+      sidebarJs.includes('COMPACT_LABEL_MAX_CH'),
+      'ChatSidebarItem compact label helper must declare its maximum clamp'
+    );
+    assert.ok(
       sidebarCss.includes('width: var(--sn-chat-compact-flyout-width);'),
       'ChatSidebarItem compact hover bridge must cover the label and delete button'
     );

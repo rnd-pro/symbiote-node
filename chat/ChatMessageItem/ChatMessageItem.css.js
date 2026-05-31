@@ -51,7 +51,7 @@ chat-message-item {
 
 .message.user .msg-content,
 .message.agent .msg-content {
-  background: var(--sn-node-bg);
+  background: var(--sn-chat-message-bg, var(--sn-node-bg));
   color: var(--sn-text);
 }
 

@@ -530,7 +530,7 @@ const DEFAULT_PROVIDER_THEME_TOKENS = {
   '--sn-list-detail-description-color': 'var(--sn-text-dim)',
   '--sn-list-detail-description-size': '11px',
 
-  '--sn-composer-bg': 'var(--sn-node-bg)',
+  '--sn-composer-bg': 'hsl(0 0% 20%)',
   '--sn-composer-border': 'var(--sn-node-border)',
   '--sn-composer-action-bg': 'var(--sn-node-hover)',
   '--sn-composer-radius': 'calc(20px * var(--sn-theme-radius-scale))',
@@ -548,7 +548,7 @@ const DEFAULT_PROVIDER_THEME_TOKENS = {
 
   '--sn-chat-bg': 'transparent',
   '--sn-chat-gap': '8px',
-  '--sn-chat-message-bg': 'var(--sn-node-bg)',
+  '--sn-chat-message-bg': 'hsl(0 0% 20%)',
   '--sn-chat-message-radius': '8px',
   '--sn-chat-transcript-padding': '24px 20px 12px',
   '--sn-chat-scroll-bottom': '92px',

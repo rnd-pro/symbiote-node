@@ -336,6 +336,12 @@
   --sn-button-primary-border: var(--sn-node-selected);
   --sn-button-primary-color: var(--sn-text);
   --sn-button-primary-hover-filter: brightness(1.1);
+  --sn-button-success-bg: var(--sn-success-color);
+  --sn-button-success-border: var(--sn-success-color);
+  --sn-button-success-color: var(--sn-bg);
+  --sn-button-success-hover-bg: color-mix(in srgb, var(--sn-success-color) 85%, var(--sn-text));
+  --sn-button-success-hover-border: color-mix(in srgb, var(--sn-success-color) 85%, var(--sn-text));
+  --sn-button-success-hover-color: var(--sn-bg);
   --sn-button-danger-bg: transparent;
   --sn-button-danger-border: var(--sn-danger-color);
   --sn-button-danger-color: var(--sn-danger-color);
@@ -518,6 +524,8 @@
   --sn-chat-bg: transparent;
   --sn-chat-gap: 8px;
   --sn-chat-message-bg: hsl(0 0% 20%);
+  --sn-chat-user-message-bg: var(--sn-composer-bg);
+  --sn-chat-agent-message-bg: var(--sn-node-bg);
   --sn-chat-message-radius: 8px;
   --sn-chat-transcript-padding: 24px 20px 12px;
   --sn-chat-scroll-bottom: 92px;

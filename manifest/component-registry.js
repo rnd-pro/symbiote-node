@@ -1295,6 +1295,8 @@ export let COMPONENTS = [
       themeAliases: [
         '--sn-chat-bg',
         '--sn-chat-message-bg',
+        '--sn-chat-user-message-bg',
+        '--sn-chat-agent-message-bg',
         '--sn-chat-message-radius',
         '--sn-chat-gap',
       ],

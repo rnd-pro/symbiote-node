@@ -667,7 +667,7 @@ describe('symbiote-node UI exports', () => {
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-layout-gap-bg'], 'transparent');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-layout-border'], 'transparent');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-tree-row-min-height'], 'calc(22px * var(--sn-theme-density))');
-    assert.equal(ui.DEFAULT_THEME.tokens['--sn-composer-bg'], 'var(--sn-node-bg)');
+    assert.equal(ui.DEFAULT_THEME.tokens['--sn-composer-bg'], 'hsl(0 0% 20%)');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-tabs-active-bg'], 'var(--sn-node-bg)');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-bg-overlay'], 'hsl(var(--sn-hue-base) var(--sn-sat-muted) 0% / 0.45)');
     assert.equal(ui.DEFAULT_THEME.tokens['--border-color'], 'var(--sn-node-border)');

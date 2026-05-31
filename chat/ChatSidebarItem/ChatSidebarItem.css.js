@@ -3,7 +3,7 @@ export default `
 chat-sidebar-item,
 chat-sidebar-sub-item {
   display: block;
-  --sn-chat-compact-label-width: clamp(72px, calc(var(--sn-chat-compact-label-ch, 18) * 1ch + 24px), 320px);
+  --sn-chat-compact-label-width: clamp(72px, calc(var(--sn-chat-compact-label-ch, 18) * 5px + 20px), 320px);
   --sn-chat-compact-delete-width: 44px;
   --sn-chat-compact-flyout-width: calc(var(--sn-chat-compact-label-width) + var(--sn-chat-compact-delete-width));
 }
@@ -304,18 +304,27 @@ chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child::be
   overflow: visible;
 }
 
-:host-context(.chat-nav[collapsed]) .chat-item::after,
-:host-context(.chat-nav[collapsed]) .chat-item-child::after,
-.chat-nav[collapsed] chat-sidebar-item .chat-item::after,
-.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: calc(-1 * var(--sn-chat-compact-flyout-width));
-  bottom: 0;
-  width: var(--sn-chat-compact-flyout-width);
-  z-index: 20;
-  pointer-events: auto;
+:host-context(.chat-nav[collapsed]) .chat-item:hover,
+:host-context(.chat-nav[collapsed]) .chat-item:focus-within,
+:host-context(.chat-nav[collapsed]) .chat-item:has(.chat-item-delete:hover),
+:host-context(.chat-nav[collapsed]) .chat-item:has(.chat-item-delete:focus-visible),
+:host-context(.chat-nav[collapsed]) .chat-item-child:hover,
+:host-context(.chat-nav[collapsed]) .chat-item-child:focus-within,
+:host-context(.chat-nav[collapsed]) .chat-item-child:has(.chat-item-delete:hover),
+:host-context(.chat-nav[collapsed]) .chat-item-child:has(.chat-item-delete:focus-visible),
+.chat-nav[collapsed] chat-sidebar-item .chat-item:hover,
+.chat-nav[collapsed] chat-sidebar-item .chat-item:focus-within,
+.chat-nav[collapsed] chat-sidebar-item .chat-item:has(.chat-item-delete:hover),
+.chat-nav[collapsed] chat-sidebar-item .chat-item:has(.chat-item-delete:focus-visible),
+.chat-nav[collapsed] chat-sidebar-item .chat-item-child:hover,
+.chat-nav[collapsed] chat-sidebar-item .chat-item-child:focus-within,
+.chat-nav[collapsed] chat-sidebar-item .chat-item-child:has(.chat-item-delete:hover),
+.chat-nav[collapsed] chat-sidebar-item .chat-item-child:has(.chat-item-delete:focus-visible),
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child:hover,
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child:focus-within,
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child:has(.chat-item-delete:hover),
+.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child:has(.chat-item-delete:focus-visible) {
+  z-index: 30;
 }
 
 :host-context(.chat-nav[collapsed]) .chat-item-label,
@@ -323,11 +332,11 @@ chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child::be
 .chat-nav[collapsed] chat-sidebar-sub-item .chat-item-label {
   position: absolute;
   inset-block: 0;
-  inset-inline-start: 48px;
+  inset-inline-start: 46px;
   inline-size: var(--sn-chat-compact-label-width);
   display: flex;
   align-items: center;
-  padding-inline: 10px 8px;
+  padding-inline: 10px 0;
   background: var(--sn-node-bg);
   color: var(--sn-text);
   box-shadow: var(--sn-chat-item-child-shadow);
@@ -380,7 +389,7 @@ chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child::be
 :host-context(.chat-nav[collapsed]) .chat-item-delete,
 .chat-nav[collapsed] chat-sidebar-item .chat-item-delete,
 .chat-nav[collapsed] chat-sidebar-sub-item .chat-item-delete {
-  inset: 0 auto 0 calc(48px + var(--sn-chat-compact-label-width));
+  inset: 0 auto 0 calc(46px + var(--sn-chat-compact-label-width));
   width: var(--sn-chat-compact-delete-width);
   height: 100%;
   background: var(--sn-node-bg);

@@ -71,7 +71,7 @@ export function buildWorkSummaryHtml(msg, copyText) {
     ? `<button class="work-copy-btn" type="button" title="${escapeHtml(translate('chat.message.copyResponse'))}" data-copy-text="${escapeHtml(copyText)}"><span class="material-symbols-outlined">content_copy</span></button>`
     : '';
   let elapsed = formatElapsed(msg?.elapsed || 0);
-  return `<div class="work-summary-wrap"><details class="work-summary"><summary><span class="material-symbols-outlined work-summary-icon">check_circle</span>${escapeHtml(translate('chat.message.workedFor', { elapsed }))}</summary>${bodyHtml}</details>${copyBtn}</div>`;
+  return `<div class="work-summary-wrap"><details class="work-summary"><summary><span class="material-symbols-outlined work-summary-icon">check_circle</span>${escapeHtml(translate('chat.message.workedFor', { elapsed }))}${copyBtn}</summary>${bodyHtml}</details></div>`;
 }
 
 export function toChatMessageItem(msg, options = {}) {

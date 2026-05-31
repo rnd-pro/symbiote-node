@@ -49,9 +49,13 @@ chat-message-item {
   word-break: break-word;
 }
 
-.message.user .msg-content,
+.message.user .msg-content {
+  background: var(--sn-chat-user-message-bg, var(--sn-composer-bg, var(--sn-chat-message-bg, var(--sn-node-bg))));
+  color: var(--sn-text);
+}
+
 .message.agent .msg-content {
-  background: var(--sn-chat-message-bg, var(--sn-node-bg));
+  background: var(--sn-chat-agent-message-bg, var(--sn-node-bg));
   color: var(--sn-text);
 }
 
@@ -312,8 +316,9 @@ h4.md-h {
 
 .work-summary-wrap {
   display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  align-items: flex-start;
+  align-self: flex-start;
+  max-width: 100%;
   opacity: 0;
   transform: translateY(-2px);
   transition: opacity 0.12s ease, transform 0.12s ease;
@@ -362,7 +367,7 @@ h4.md-h {
   50% { opacity: 1; }
 }
 
-.work-summary summary .material-symbols-outlined {
+.work-summary summary > .work-summary-icon {
   color: var(--sn-success-color);
 }
 
@@ -372,6 +377,8 @@ h4.md-h {
 }
 
 .work-copy-btn {
+  flex: 0 0 24px;
+  margin-top: 1px;
   width: 24px;
   height: 24px;
   border: none;
@@ -397,7 +404,11 @@ h4.md-h {
 }
 
 .work-copy-btn.copied {
-  color: var(--sn-success-color);
+  color: var(--sn-text);
+}
+
+.work-copy-btn.copied .material-symbols-outlined {
+  color: var(--sn-text);
 }
 
 .work-copy-btn.copy-error {

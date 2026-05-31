@@ -9,7 +9,8 @@ chat-composer {
   z-index: 2;
 }
 
-.composer-body {
+.composer-body,
+.voice-preview {
   display: flex;
   align-items: flex-end;
   gap: var(--sn-composer-control-gap);
@@ -19,7 +20,8 @@ chat-composer {
   transition: background 0.15s;
 }
 
-.composer-body:focus-within {
+.composer-body:focus-within,
+.voice-preview:focus-within {
   background: var(--chat-composer-bg);
 }
 
@@ -82,6 +84,7 @@ sn-button.btn-send[variant="icon"].btn-stop {
   --sn-button-bg: var(--sn-danger-color);
   --sn-button-hover-bg: var(--sn-danger-color);
   color: var(--sn-text);
+  position: relative;
 }
 
 sn-button.btn-send[variant="icon"].btn-stop:hover {
@@ -89,7 +92,19 @@ sn-button.btn-send[variant="icon"].btn-stop:hover {
 }
 
 sn-button.btn-send[variant="icon"].btn-stop .material-symbols-outlined {
-  font-variation-settings: 'FILL' 1;
+  opacity: 0;
+}
+
+sn-button.btn-send[variant="icon"].btn-stop::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--sn-text);
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 .composer-footer {
@@ -413,15 +428,12 @@ chat-composer.drag-over .composer-body {
 /* ── Voice Input — Preview Banner ── */
 
 .voice-preview {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 10px 16px;
   margin: 0 0 4px;
-  border-radius: calc(var(--sn-composer-radius) / 2);
-  background: var(--sn-node-hover);
-  border: 1px solid var(--sn-node-border);
   animation: voice-preview-in 0.15s ease;
+}
+
+.voice-preview[hidden] {
+  display: none;
 }
 
 @keyframes voice-preview-in {
@@ -430,42 +442,56 @@ chat-composer.drag-over .composer-body {
 }
 
 .voice-preview.recording {
-  border-color: color-mix(in srgb, var(--sn-danger-color) 40%, transparent);
+  background: var(--chat-composer-bg);
 }
 
 .voice-preview.processing {
-  border-color: var(--sn-node-border);
+  background: var(--chat-composer-bg);
 }
 
 .voice-preview.result {
-  border-color: color-mix(in srgb, var(--sn-node-selected) 40%, transparent);
+  background: var(--chat-composer-bg);
 }
 
 .voice-preview-body {
-  flex: 1;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.4;
   color: var(--sn-text);
-  min-height: 20px;
+  min-height: var(--sn-composer-input-min-height);
+  padding: 4px 0;
   outline: none;
   word-break: break-word;
 }
 
-.voice-preview-body.voice-preview-elapsed {
+.voice-preview-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.voice-preview-status {
   color: var(--sn-text-dim);
   font-size: 12px;
+  line-height: 1.4;
   font-family: var(--sn-font-mono);
 }
 
-.voice-preview.recording .voice-preview-body.voice-preview-elapsed {
+.voice-preview.recording .voice-preview-status.voice-preview-elapsed {
   color: var(--sn-danger-color);
+}
+
+.voice-preview-status[hidden],
+.voice-preview-body[hidden] {
+  display: none;
 }
 
 .voice-preview-body[contenteditable="true"] {
   cursor: text;
-  border-radius: calc(4px * var(--sn-theme-radius-scale));
-  padding: 2px 4px;
-  margin: -2px -4px;
+  border-radius: calc(6px * var(--sn-theme-radius-scale));
+  padding-inline: 4px;
+  margin-inline: -4px;
 }
 
 .voice-preview-body[contenteditable="true"]:focus {
@@ -474,51 +500,36 @@ chat-composer.drag-over .composer-body {
 
 .voice-preview-actions {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: var(--sn-composer-control-gap);
   flex: 0 0 auto;
 }
 
 .voice-preview-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
+  --sn-button-icon-size: var(--sn-composer-send-size);
+  --sn-button-icon-font-size: var(--sn-composer-send-icon-size);
+  --sn-button-radius: 50%;
+  --sn-button-focus-ring: 2px solid color-mix(in srgb, var(--sn-text-dim) 50%, transparent);
+  width: var(--sn-composer-send-size);
+  height: var(--sn-composer-send-size);
+  min-height: var(--sn-composer-send-size);
+  padding: 0;
   border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  box-shadow: var(--sn-shadow-sm);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.voice-preview-btn:hover {
+  box-shadow: var(--sn-shadow-md);
+  transform: scale(1.05);
+}
+
+.voice-preview-btn[hidden] {
+  display: none;
 }
 
 .voice-preview-btn .material-symbols-outlined {
   font-size: 16px;
 }
 
-.voice-preview-btn.stop {
-  background: var(--sn-danger-color);
-  color: var(--sn-bg);
-}
-
-.voice-preview-btn.stop:hover {
-  filter: brightness(1.15);
-}
-
-.voice-preview-btn.cancel {
-  background: transparent;
-  color: var(--sn-text-dim);
-}
-
-.voice-preview-btn.cancel:hover {
-  background: var(--sn-node-hover);
-  color: var(--sn-text);
-}
-
-.voice-preview-btn.send {
-  background: var(--sn-node-selected);
-  color: var(--sn-bg);
-}
-
-.voice-preview-btn.send:hover {
-  filter: brightness(1.15);
-}
 `;

@@ -41,6 +41,7 @@ describe('chat list components', () => {
 
   it('keeps portal chat composition styled for Light DOM hosts', () => {
     let composerCss = read('chat/ChatComposer/ChatComposer.css.js');
+    let chatSidebarCss = read('chat/ChatSidebar/ChatSidebar.css.js');
     let sidebarJs = read('chat/ChatSidebarItem/ChatSidebarItem.js');
     let sidebarCss = read('chat/ChatSidebarItem/ChatSidebarItem.css.js');
 
@@ -69,6 +70,62 @@ describe('chat list components', () => {
       'ChatComposer send hover must use the project accent theme token'
     );
     assert.ok(
+      composerCss.includes('sn-button.btn-send[variant="icon"].btn-stop') &&
+      composerCss.includes('--sn-button-bg: var(--sn-danger-color);') &&
+      composerCss.includes('sn-button.btn-send[variant="icon"].btn-stop::after') &&
+      composerCss.includes('background: var(--sn-text);'),
+      'ChatComposer stop affordance must use a red button with a CSS-rendered filled light square'
+    );
+    assert.ok(
+      composerCss.includes('.voice-preview[hidden]'),
+      'ChatComposer voice preview hidden state must override its flex display'
+    );
+    assert.ok(
+      composerCss.includes('.voice-preview-content'),
+      'ChatComposer voice preview must keep status and transcript in a stable content column'
+    );
+    assert.ok(
+      read('chat/ChatComposer/ChatComposer.js').includes('<div class="composer-body voice-preview"'),
+      'ChatComposer voice preview must reuse the composer input shell layout'
+    );
+    assert.ok(
+      read('chat/ChatComposer/ChatComposer.js').includes("preview.className = `composer-body voice-preview ${mode}`"),
+      'ChatComposer voice preview state updates must preserve the shared composer shell class'
+    );
+    assert.ok(
+      composerCss.includes('.voice-preview-status[hidden]'),
+      'ChatComposer voice preview status must hide independently from the transcript body'
+    );
+    assert.ok(
+      composerCss.includes('.voice-preview-btn[hidden]'),
+      'ChatComposer voice preview actions must support hidden buttons'
+    );
+    assert.equal(
+      composerCss.includes('.voice-preview-btn.stop'),
+      false,
+      'ChatComposer voice preview must not keep a destructive stop button style for approval'
+    );
+    assert.ok(
+      read('control/Button/Button.css.js').includes('sn-button[variant="success"]'),
+      'Shared sn-button must expose a success variant through theme tokens'
+    );
+    assert.ok(
+      read('themes/default-provider.js').includes("'--sn-button-success-bg': 'var(--sn-success-color)'"),
+      'Default provider theme must define success button tokens'
+    );
+    assert.ok(
+      read('chat/ChatComposer/ChatComposer.js').includes("setVoicePreview({ mode = 'recording', text = '', status = ''"),
+      'ChatComposer must own a voice preview API with separate transcript and status fields'
+    );
+    assert.ok(
+      read('chat/ChatComposer/ChatComposer.js').includes('chat-composer-voice-approve'),
+      'ChatComposer recording preview must expose an approve event instead of a stop-only action'
+    );
+    assert.ok(
+      read('chat/ChatComposer/ChatComposer.js').includes('this.ref.voiceCancelBtn.hidden = false'),
+      'ChatComposer recording preview must show the cancel action alongside approve'
+    );
+    assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item-delete'),
       'ChatSidebarItem compact delete affordance must work in Light DOM collapsed nav'
     );
@@ -85,23 +142,31 @@ describe('chat list components', () => {
       'ChatSidebarItem must expose a deterministic compact label width helper'
     );
     assert.ok(
+      sidebarJs.includes('getCompactChatLabelWidthPx') && sidebarJs.includes('measureText(label).width'),
+      'ChatSidebarItem compact flyout width must be measured from the rendered chat title'
+    );
+    assert.ok(
       sidebarJs.includes('COMPACT_LABEL_MIN_CH'),
       'ChatSidebarItem compact label helper must declare its minimum clamp'
+    );
+    assert.ok(
+      sidebarJs.includes('COMPACT_LABEL_MIN_PX') && sidebarJs.includes('COMPACT_LABEL_MAX_PX'),
+      'ChatSidebarItem compact label measurement must clamp measured text width'
     );
     assert.ok(
       sidebarJs.includes('COMPACT_LABEL_MAX_CH'),
       'ChatSidebarItem compact label helper must declare its maximum clamp'
     );
     assert.ok(
-      sidebarCss.includes('width: var(--sn-chat-compact-flyout-width);'),
-      'ChatSidebarItem compact hover bridge must cover the label and delete button'
+      sidebarCss.includes('calc(var(--sn-chat-compact-label-ch, 18) * 5px + 20px)'),
+      'ChatSidebarItem compact flyout width must resolve consistently across label and delete controls'
     );
     assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item:hover .chat-item-label'),
       'ChatSidebarItem compact flyout must expose the chat title with the delete affordance'
     );
     assert.ok(
-      sidebarCss.includes('inset: 0 auto 0 calc(48px + var(--sn-chat-compact-label-width));'),
+      sidebarCss.includes('inset-inline-start: 46px;') && sidebarCss.includes('inset: 0 auto 0 calc(46px + var(--sn-chat-compact-label-width));'),
       'ChatSidebarItem compact delete affordance must slide out after the chat title'
     );
     assert.ok(
@@ -109,16 +174,12 @@ describe('chat list components', () => {
       'ChatSidebarSubItem compact delete affordance must use the same full flyout hit area'
     );
     assert.ok(
-      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item::after'),
-      'ChatSidebarItem compact delete hover bridge must extend into the chat area'
+      !sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item::after'),
+      'ChatSidebarItem compact flyout must not expose an invisible hover bridge'
     );
     assert.ok(
-      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child::after'),
-      'ChatSidebarSubItem compact delete hover bridge must extend into the chat area'
-    );
-    assert.ok(
-      sidebarCss.includes('pointer-events: auto;'),
-      'ChatSidebarItem compact delete hover bridge must participate in pointer hit-testing'
+      !sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child::after'),
+      'ChatSidebarSubItem compact flyout must not expose an invisible hover bridge'
     );
     assert.ok(
       sidebarCss.includes('.chat-item:has(.chat-item-delete:hover) .chat-item-delete'),
@@ -131,6 +192,15 @@ describe('chat list components', () => {
     assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-sub-items'),
       'Collapsed chat navigation must hide nested chat lists'
+    );
+    assert.equal(
+      chatSidebarCss.includes('.chat-nav[collapsed] .chat-nav-resize-handle') && chatSidebarCss.includes('pointer-events: none;'),
+      false,
+      'Collapsed chat navigation must keep the resize handle draggable'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item:hover') && sidebarCss.includes('z-index: 30;'),
+      'Collapsed chat flyout rows must stack above the resize handle while hovered'
     );
     assert.ok(
       sidebarCss.includes(':host-context(.chat-nav[collapsed]) .chat-sub-items'),

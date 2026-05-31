@@ -4,6 +4,11 @@ import { translate } from '../../locale/index.js';
 
 const COMPACT_LABEL_MIN_CH = 6;
 const COMPACT_LABEL_MAX_CH = 32;
+const COMPACT_LABEL_MIN_PX = 72;
+const COMPACT_LABEL_MAX_PX = 320;
+const COMPACT_LABEL_PADDING_PX = 10;
+const COMPACT_LABEL_FONT = '11px Inter, -apple-system, system-ui, sans-serif';
+let compactLabelMeasureContext;
 
 function emit(el, type, detail = {}) {
   el.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
@@ -12,6 +17,30 @@ function emit(el, type, detail = {}) {
 export function getCompactChatLabelCh(value = '') {
   let length = [...String(value || '').trim()].length;
   return Math.min(COMPACT_LABEL_MAX_CH, Math.max(COMPACT_LABEL_MIN_CH, length));
+}
+
+export function getCompactChatLabelWidthPx(value = '') {
+  let label = String(value || '').trim();
+  if (!label || typeof document === 'undefined' || typeof document.createElement !== 'function') return null;
+  try {
+    compactLabelMeasureContext ||= document.createElement('canvas').getContext('2d');
+    if (!compactLabelMeasureContext) return null;
+    compactLabelMeasureContext.font = COMPACT_LABEL_FONT;
+    let measured = Math.ceil(compactLabelMeasureContext.measureText(label).width + COMPACT_LABEL_PADDING_PX);
+    return Math.min(COMPACT_LABEL_MAX_PX, Math.max(COMPACT_LABEL_MIN_PX, measured));
+  } catch {
+    return null;
+  }
+}
+
+function syncCompactLabelWidth(element, value) {
+  element.style.setProperty('--sn-chat-compact-label-ch', String(getCompactChatLabelCh(value)));
+  let width = getCompactChatLabelWidthPx(value);
+  if (width) {
+    element.style.setProperty('--sn-chat-compact-label-width', `${width}px`);
+  } else {
+    element.style.removeProperty('--sn-chat-compact-label-width');
+  }
 }
 
 export class ChatSidebarItem extends Symbiote {
@@ -117,7 +146,7 @@ export class ChatSidebarItem extends Symbiote {
   }
 
   _syncCompactLabelWidth(value) {
-    this.style.setProperty('--sn-chat-compact-label-ch', String(getCompactChatLabelCh(value)));
+    syncCompactLabelWidth(this, value);
   }
 
   _syncStatus() {
@@ -235,7 +264,7 @@ export class ChatSidebarSubItem extends Symbiote {
   }
 
   _syncCompactLabelWidth(value) {
-    this.style.setProperty('--sn-chat-compact-label-ch', String(getCompactChatLabelCh(value)));
+    syncCompactLabelWidth(this, value);
   }
 
   _syncStatus() {

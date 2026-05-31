@@ -146,4 +146,5 @@ chat-sidebar-shell[resizing] .chat-nav  {
 .chat-nav[collapsed] .chat-items  {
   overflow: visible;
 }
+
 `;

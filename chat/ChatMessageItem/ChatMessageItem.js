@@ -114,7 +114,7 @@ export class ChatMessageItem extends Symbiote {
     let details = `<details class="${className}"${openAttr}>`;
 
     if (this.$.done) {
-      details += `<summary><span class="material-symbols-outlined work-summary-icon">check_circle</span>${escapeHtml(translate('chat.message.workedFor', { elapsed: this.$.elapsedText }))}</summary>`;
+      details += `<summary><span class="material-symbols-outlined work-summary-icon">check_circle</span>${escapeHtml(translate('chat.message.workedFor', { elapsed: this.$.elapsedText }))}${this._renderCopyButton(this.$.copyText)}</summary>`;
     } else {
       let statusHtml = this.$.status ? `<span class="thinking-status">${escapeHtml(this.$.status)}</span>` : '';
       details += `<summary><span class="material-symbols-outlined thinking-icon spin-icon">pending</span>${escapeHtml(translate('chat.message.thinkingFor', { elapsed: this.$.elapsedText }))}${statusHtml}</summary>`;
@@ -127,7 +127,7 @@ export class ChatMessageItem extends Symbiote {
     details += '</details>';
 
     if (!this.$.done) return details;
-    return this._wrapWorkSummary(details, this.$.copyText);
+    return `<div class="work-summary-wrap">${details}</div>`;
   }
 
   _renderTextMessage() {
@@ -136,11 +136,10 @@ export class ChatMessageItem extends Symbiote {
     return `<div class="msg-content">${formatMarkdown(this.$.text)}${cursor}</div>${summary}`;
   }
 
-  _wrapWorkSummary(detailsHtml, copyText) {
-    let copyBtn = copyText
+  _renderCopyButton(copyText) {
+    return copyText
       ? `<button class="work-copy-btn" type="button" title="${escapeHtml(translate('chat.message.copyResponse'))}" data-copy-text="${escapeHtml(copyText)}"><span class="material-symbols-outlined">content_copy</span></button>`
       : '';
-    return `<div class="work-summary-wrap">${detailsHtml}${copyBtn}</div>`;
   }
 }
 

@@ -416,6 +416,8 @@ export let THEME_RULE_BLOCKS = [
       '--sn-tree-row-selected-bg',
       '--sn-composer-bg',
       '--sn-chat-message-bg',
+      '--sn-chat-user-message-bg',
+      '--sn-chat-agent-message-bg',
       '--sn-tabs-active-bg',
       '--sn-source-header-bg',
       '--sn-source-editor-bg',

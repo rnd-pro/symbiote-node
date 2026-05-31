@@ -41,6 +41,18 @@ export class ChatComposer extends Symbiote {
       emit(this, 'chat-composer-send');
     },
 
+    onVoiceApprove: () => {
+      emit(this, 'chat-composer-voice-approve');
+    },
+
+    onVoiceCancel: () => {
+      emit(this, 'chat-composer-voice-cancel');
+    },
+
+    onVoiceSend: () => {
+      emit(this, 'chat-composer-voice-send');
+    },
+
     onParamChange: (event) => {
       let el = event.target;
       if (!el || (!el.classList.contains('composer-footer-select') && !el.classList.contains('composer-footer-checkbox'))) return;
@@ -104,6 +116,14 @@ export class ChatComposer extends Symbiote {
     return [...(this.ref.footer?.querySelectorAll('.composer-footer-select, .composer-footer-checkbox') || [])];
   }
 
+  getVoicePreviewElement() {
+    return this.ref.voicePreview || null;
+  }
+
+  getVoicePreviewBody() {
+    return this.ref.voicePreviewBody || null;
+  }
+
   setValue(value) {
     this.$.value = value || '';
   }
@@ -126,6 +146,48 @@ export class ChatComposer extends Symbiote {
 
   setSending(active) {
     this.$.isSending = Boolean(active);
+  }
+
+  setVoicePreview({ mode = 'recording', text = '', status = '', elapsed = false, editable = false } = {}) {
+    let preview = this.ref.voicePreview;
+    let statusEl = this.ref.voicePreviewStatus;
+    let body = this.ref.voicePreviewBody;
+    if (!preview || !body || !statusEl) return;
+
+    preview.hidden = false;
+    preview.className = `composer-body voice-preview ${mode}`;
+    statusEl.textContent = status || '';
+    statusEl.hidden = !status;
+    statusEl.classList.toggle('voice-preview-elapsed', Boolean(elapsed));
+    body.textContent = text || '';
+    body.hidden = !text && mode === 'recording';
+    if (editable) {
+      body.contentEditable = 'true';
+      body.spellcheck = false;
+    } else {
+      body.removeAttribute('contenteditable');
+      body.removeAttribute('spellcheck');
+    }
+
+    if (this.ref.voiceApproveBtn) this.ref.voiceApproveBtn.hidden = mode !== 'recording';
+    if (this.ref.voiceCancelBtn) this.ref.voiceCancelBtn.hidden = false;
+    if (this.ref.voiceSendBtn) this.ref.voiceSendBtn.hidden = mode !== 'result';
+  }
+
+  clearVoicePreview() {
+    let preview = this.ref.voicePreview;
+    let statusEl = this.ref.voicePreviewStatus;
+    let body = this.ref.voicePreviewBody;
+    if (!preview || !body || !statusEl) return;
+    preview.hidden = true;
+    preview.className = 'composer-body voice-preview';
+    statusEl.textContent = '';
+    statusEl.hidden = true;
+    statusEl.classList.remove('voice-preview-elapsed');
+    body.textContent = '';
+    body.hidden = false;
+    body.removeAttribute('contenteditable');
+    body.removeAttribute('spellcheck');
   }
 
   resizeInput() {
@@ -168,6 +230,23 @@ ChatComposer.template = html`
       <span class="context-path">{{name}}</span>
       <sn-button class="context-remove" variant="icon" ${{ '@data-key': 'key', onclick: '^onRemoveContext' }}>
         <span class="material-symbols-outlined">close</span>
+      </sn-button>
+    </div>
+  </div>
+  <div class="composer-body voice-preview" ref="voicePreview" hidden>
+    <div class="voice-preview-content">
+      <div class="voice-preview-status voice-preview-elapsed" ref="voicePreviewStatus" hidden></div>
+      <div class="voice-preview-body" ref="voicePreviewBody"></div>
+    </div>
+    <div class="voice-preview-actions">
+      <sn-button class="voice-preview-btn cancel" ref="voiceCancelBtn" variant="danger" title="Cancel" ${{ onclick: 'onVoiceCancel' }}>
+        <span class="material-symbols-outlined">close</span>
+      </sn-button>
+      <sn-button class="voice-preview-btn approve" ref="voiceApproveBtn" variant="success" title="Approve and send" ${{ onclick: 'onVoiceApprove' }}>
+        <span class="material-symbols-outlined">check</span>
+      </sn-button>
+      <sn-button class="voice-preview-btn send" ref="voiceSendBtn" variant="success" title="Send" ${{ onclick: 'onVoiceSend' }}>
+        <span class="material-symbols-outlined">send</span>
       </sn-button>
     </div>
   </div>

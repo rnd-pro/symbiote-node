@@ -50,6 +50,18 @@ sn-button[variant="primary"]:hover:not([disabled]) {
   filter: var(--sn-button-primary-hover-filter);
 }
 
+sn-button[variant="success"] {
+  border-color: var(--sn-button-success-border);
+  background: var(--sn-button-success-bg);
+  color: var(--sn-button-success-color);
+}
+
+sn-button[variant="success"]:hover:not([disabled]) {
+  border-color: var(--sn-button-success-hover-border);
+  background: var(--sn-button-success-hover-bg);
+  color: var(--sn-button-success-hover-color);
+}
+
 sn-button[variant="danger"] {
   border-color: var(--sn-button-danger-border);
   background: var(--sn-button-danger-bg);

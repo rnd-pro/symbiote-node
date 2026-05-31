@@ -12,6 +12,9 @@ export class ChatComposer extends Symbiote {
     value: '',
     disabled: false,
     placeholder: translate('chat.composer.placeholder'),
+    voiceCommandToggleOffTitle: translate('chat.composer.voiceCommandToggleOff', { command: translate('chat.composer.voiceCommandDefault') }),
+    voiceCommandToggleOnTitle: translate('chat.composer.voiceCommandToggleOn', { command: translate('chat.composer.voiceCommandDefault') }),
+    voiceCommandToggleLabel: translate('chat.composer.voiceCommandToggleLabel', { command: translate('chat.composer.voiceCommandDefault') }),
     attachedContext: [],
     footerHtml: '',
     isSending: false,
@@ -51,6 +54,10 @@ export class ChatComposer extends Symbiote {
 
     onVoiceSend: () => {
       emit(this, 'chat-composer-voice-send');
+    },
+
+    onVoiceCommandToggle: () => {
+      emit(this, 'chat-composer-voice-command-toggle');
     },
 
     onParamChange: (event) => {
@@ -148,7 +155,7 @@ export class ChatComposer extends Symbiote {
     this.$.isSending = Boolean(active);
   }
 
-  setVoicePreview({ mode = 'recording', text = '', status = '', elapsed = false, editable = false } = {}) {
+  setVoicePreview({ mode = 'recording', text = '', status = '', elapsed = false, editable = false, commandMode = false, commandPhrase = '' } = {}) {
     let preview = this.ref.voicePreview;
     let statusEl = this.ref.voicePreviewStatus;
     let body = this.ref.voicePreviewBody;
@@ -172,6 +179,22 @@ export class ChatComposer extends Symbiote {
     if (this.ref.voiceApproveBtn) this.ref.voiceApproveBtn.hidden = mode !== 'recording';
     if (this.ref.voiceCancelBtn) this.ref.voiceCancelBtn.hidden = false;
     if (this.ref.voiceSendBtn) this.ref.voiceSendBtn.hidden = mode !== 'result';
+    if (this.ref.voiceCommandToggleBtn) {
+      let active = Boolean(commandMode);
+      let command = commandPhrase || translate('chat.composer.voiceCommandDefault');
+      let title = active
+        ? translate('chat.composer.voiceCommandToggleOn', { command })
+        : translate('chat.composer.voiceCommandToggleOff', { command });
+      let label = translate('chat.composer.voiceCommandToggleLabel', { command });
+      this.ref.voiceCommandToggleBtn.hidden = mode !== 'recording';
+      this.ref.voiceCommandToggleBtn.classList.toggle('active', active);
+      this.ref.voiceCommandToggleBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      this.ref.voiceCommandToggleBtn.setAttribute('aria-label', title);
+      this.ref.voiceCommandToggleBtn.title = title;
+      let icon = this.ref.voiceCommandToggleBtn.querySelector('.material-symbols-outlined');
+      if (icon) icon.textContent = active ? 'toggle_on' : 'toggle_off';
+      if (this.ref.voiceCommandToggleText) this.ref.voiceCommandToggleText.textContent = label;
+    }
   }
 
   clearVoicePreview() {
@@ -188,6 +211,16 @@ export class ChatComposer extends Symbiote {
     body.hidden = false;
     body.removeAttribute('contenteditable');
     body.removeAttribute('spellcheck');
+    if (this.ref.voiceCommandToggleBtn) {
+      this.ref.voiceCommandToggleBtn.hidden = true;
+      this.ref.voiceCommandToggleBtn.classList.remove('active');
+      this.ref.voiceCommandToggleBtn.setAttribute('aria-pressed', 'false');
+      this.ref.voiceCommandToggleBtn.setAttribute('aria-label', this.$.voiceCommandToggleOffTitle);
+      this.ref.voiceCommandToggleBtn.title = this.$.voiceCommandToggleOffTitle;
+      let icon = this.ref.voiceCommandToggleBtn.querySelector('.material-symbols-outlined');
+      if (icon) icon.textContent = 'toggle_off';
+      if (this.ref.voiceCommandToggleText) this.ref.voiceCommandToggleText.textContent = this.$.voiceCommandToggleLabel;
+    }
   }
 
   resizeInput() {
@@ -239,6 +272,10 @@ ChatComposer.template = html`
       <div class="voice-preview-body" ref="voicePreviewBody"></div>
     </div>
     <div class="voice-preview-actions">
+      <sn-button class="voice-preview-btn command-toggle" ref="voiceCommandToggleBtn" aria-pressed="false" ${{ title: 'voiceCommandToggleOffTitle', '@aria-label': 'voiceCommandToggleOffTitle', onclick: 'onVoiceCommandToggle' }}>
+        <span class="material-symbols-outlined">toggle_off</span>
+        <span class="voice-command-toggle-text" ref="voiceCommandToggleText" ${{ textContent: 'voiceCommandToggleLabel' }}></span>
+      </sn-button>
       <sn-button class="voice-preview-btn cancel" ref="voiceCancelBtn" variant="danger" title="Cancel" ${{ onclick: 'onVoiceCancel' }}>
         <span class="material-symbols-outlined">close</span>
       </sn-button>

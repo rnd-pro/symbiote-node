@@ -126,6 +126,17 @@ describe('chat list components', () => {
       'ChatComposer recording preview must show the cancel action alongside approve'
     );
     assert.ok(
+      read('chat/ChatComposer/ChatComposer.js').includes('chat-composer-voice-command-toggle') &&
+      read('chat/ChatComposer/ChatComposer.js').includes('voiceCommandToggleBtn') &&
+      read('chat/ChatComposer/ChatComposer.js').includes('toggle_on') &&
+      read('chat/ChatComposer/ChatComposer.js').includes('voiceCommandToggleOnTitle') &&
+      read('chat/ChatComposer/ChatComposer.js').includes('voiceCommandToggleText') &&
+      composerCss.includes('.voice-preview-btn.command-toggle.active') &&
+      composerCss.includes('.voice-preview-btn.command-toggle .material-symbols-outlined') &&
+      composerCss.includes('.voice-command-toggle-text'),
+      'ChatComposer recording preview must expose an opt-in command-send toggle block'
+    );
+    assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item-delete'),
       'ChatSidebarItem compact delete affordance must work in Light DOM collapsed nav'
     );

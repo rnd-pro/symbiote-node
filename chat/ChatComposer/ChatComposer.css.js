@@ -528,6 +528,45 @@ chat-composer.drag-over .composer-body {
   display: none;
 }
 
+.voice-preview-actions .voice-preview-btn.command-toggle {
+  --sn-button-border: transparent;
+  --sn-button-bg: color-mix(in srgb, var(--sn-node-bg) 88%, var(--sn-text) 12%);
+  --sn-button-hover-bg: color-mix(in srgb, var(--sn-node-bg) 80%, var(--sn-text) 20%);
+  --sn-button-hover-border: transparent;
+  --sn-button-color: var(--sn-text);
+  width: auto;
+  max-width: min(260px, 40vw);
+  height: var(--sn-composer-send-size);
+  min-height: var(--sn-composer-send-size);
+  padding: 0 12px 0 10px;
+  gap: 6px;
+  border-radius: 999px;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.voice-preview-actions .voice-preview-btn.command-toggle.active {
+  --sn-button-border: transparent;
+  --sn-button-bg: color-mix(in srgb, var(--sn-node-bg) 72%, var(--sn-text) 28%);
+  --sn-button-hover-bg: color-mix(in srgb, var(--sn-node-bg) 66%, var(--sn-text) 34%);
+  --sn-button-hover-border: transparent;
+  --sn-button-color: var(--sn-text);
+}
+
+.voice-preview-actions .voice-preview-btn.command-toggle .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--sn-button-color);
+}
+
+.voice-command-toggle-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .voice-preview-btn .material-symbols-outlined {
   font-size: 16px;
 }

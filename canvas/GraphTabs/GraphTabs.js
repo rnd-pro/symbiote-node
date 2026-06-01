@@ -56,10 +56,6 @@ export class GraphTabs extends Symbiote {
     newTabTitle: translate('tabs.new'),
   };
 
-  renderCallback() {
-    ensureMaterialSymbols(['add']);
-  }
-
   /** @type {TabPage[]} */
   #tabs = [];
 

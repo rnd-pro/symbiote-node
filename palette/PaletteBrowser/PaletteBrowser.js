@@ -71,10 +71,6 @@ export class PaletteBrowser extends Symbiote {
     searchPlaceholder: translate('palette.searchPlaceholder'),
   };
 
-  renderCallback() {
-    ensureMaterialSymbols(['widgets']);
-  }
-
   /** @type {Array<{ category: string, color: string, items: Array<{ name: string, icon: string, type: string, desc: string, factory: function }> }>} */
   #rawCategories = [];
 

@@ -374,7 +374,9 @@ chat-composer.drag-over .composer-body {
 
 /* ── Voice Input — Mic Button ── */
 
-.btn-mic {
+.btn-mic,
+.btn-wake-listen,
+.btn-voice-response {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -389,13 +391,41 @@ chat-composer.drag-over .composer-body {
   flex: 0 0 auto;
 }
 
-.btn-mic:hover {
+.btn-mic:hover,
+.btn-wake-listen:hover,
+.btn-voice-response:hover {
   color: var(--sn-text);
   background: var(--sn-node-hover);
 }
 
-.btn-mic .material-symbols-outlined {
+.btn-mic .material-symbols-outlined,
+.btn-wake-listen .material-symbols-outlined,
+.btn-voice-response .material-symbols-outlined {
   font-size: var(--sn-composer-send-icon-size);
+}
+
+.btn-voice-response[hidden] {
+  display: none;
+}
+
+.btn-voice-response[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-voice-response.enabled,
+.btn-voice-response.speaking {
+  color: var(--sn-node-selected);
+  background: var(--sn-node-hover);
+}
+
+.btn-wake-listen.listening {
+  color: var(--sn-node-selected);
+  background: var(--sn-node-hover);
+}
+
+.btn-wake-listen.listening .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1;
 }
 
 .btn-mic.recording {

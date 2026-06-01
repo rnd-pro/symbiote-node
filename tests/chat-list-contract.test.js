@@ -141,6 +141,14 @@ describe('chat list components', () => {
       'ChatSidebarItem compact delete affordance must work in Light DOM collapsed nav'
     );
     assert.ok(
+      composerCss.includes('.btn-wake-listen') &&
+      composerCss.includes('.btn-wake-listen.listening') &&
+      composerCss.includes('.btn-voice-response') &&
+      composerCss.includes('.btn-voice-response[hidden]') &&
+      composerCss.includes('.btn-voice-response.enabled'),
+      'ChatComposer voice controls must style continuous listening and voice response buttons next to mic'
+    );
+    assert.ok(
       sidebarCss.includes('--sn-chat-compact-label-width'),
       'ChatSidebarItem compact flyout must reserve label width through a reusable CSS token'
     );

@@ -106,6 +106,27 @@ chat-message-item {
   font-size: var(--sn-chat-tool-icon-size);
 }
 
+.tool-name {
+  flex: 0 0 auto;
+}
+
+.tool-summary {
+  min-width: 0;
+  max-width: min(56ch, 60vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sn-text);
+  opacity: 0.72;
+  font-weight: 500;
+}
+
+.tool-summary::before {
+  content: '-';
+  margin-inline-end: 6px;
+  color: var(--sn-text-dim);
+}
+
 .tool-card[open] .tool-header {
   border-bottom: none;
   color: var(--sn-text);

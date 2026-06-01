@@ -1,6 +1,7 @@
 import Symbiote, { html } from '@symbiotejs/symbiote';
 import { escapeHtml, formatMarkdown } from '../../display/markdown-formatter.js';
 import { translate } from '../../locale/index.js';
+import { summarizeToolInput } from '../message-model.js';
 import css from './ChatMessageItem.css.js';
 
 export function stringifyBlock(value) {
@@ -71,8 +72,12 @@ export class ChatMessageItem extends Symbiote {
     let icon = this.$.isStreaming ? 'build_circle' : 'build';
     let spinClass = this.$.isStreaming ? 'spin-icon' : '';
     let openAttr = this.$.isLatestTool ? ' open' : '';
+    let summary = summarizeToolInput(this.$.input);
+    let summaryHtml = summary
+      ? `<span class="tool-summary" title="${escapeHtml(summary)}">${escapeHtml(summary)}</span>`
+      : '';
     let htmlStr = `<details class="tool-card"${openAttr}>
-      <summary class="tool-header"><span class="material-symbols-outlined tool-icon ${spinClass}">${icon}</span> ${escapeHtml(this.$.name || 'tool')}</summary>`;
+      <summary class="tool-header"><span class="material-symbols-outlined tool-icon ${spinClass}">${icon}</span><span class="tool-name">${escapeHtml(this.$.name || 'tool')}</span>${summaryHtml}</summary>`;
 
     if (this.$.input) {
       htmlStr += `<div class="tool-section"><div class="tool-label">${escapeHtml(translate('chat.message.input'))}</div><pre class="tool-code">${escapeHtml(stringifyBlock(this.$.input))}</pre></div>`;

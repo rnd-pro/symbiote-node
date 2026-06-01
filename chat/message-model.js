@@ -64,6 +64,22 @@ export function findPreviousAgentText(messages, fromIndex) {
   return '';
 }
 
+function compactText(value, maxLength = 96) {
+  let text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
+}
+
+export function summarizeToolInput(input) {
+  if (input == null) return '';
+  if (typeof input === 'string') return compactText(input);
+  if (typeof input !== 'object') return compactText(input);
+  for (let key of ['command', 'description', 'prompt', 'question', 'path', 'file', 'name']) {
+    if (typeof input[key] === 'string' && input[key].trim()) return compactText(input[key]);
+  }
+  return compactText(JSON.stringify(input));
+}
+
 export function buildWorkSummaryHtml(msg, copyText) {
   let metaHtml = buildWorkMetaHtml(msg?.meta);
   let bodyHtml = metaHtml ? `<div class="work-body">${metaHtml}</div>` : '';

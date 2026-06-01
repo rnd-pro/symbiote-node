@@ -6,6 +6,7 @@ import {
   buildSessionMetaHtml,
   buildWorkMetaHtml,
   findPreviousAgentText,
+  summarizeToolInput,
   toChatMessageItem,
 } from '../chat/message-model.js';
 
@@ -85,5 +86,16 @@ describe('chat message model', () => {
     assert.match(html, /abcdef123456/);
     assert.match(html, /123 tks/);
     assert.match(html, /\$0.25/);
+  });
+
+  it('builds compact tool header summaries from common input fields', () => {
+    assert.equal(
+      summarizeToolInput({ command: 'git status --short --branch' }),
+      'git status --short --branch',
+    );
+    assert.equal(summarizeToolInput({ path: 'web/components/ChatSidebar/ChatSidebar.js' }), 'web/components/ChatSidebar/ChatSidebar.js');
+    assert.equal(summarizeToolInput({ args: ['one', 'two'] }), '{"args":["one","two"]}');
+    assert.equal(summarizeToolInput(null), '');
+    assert.ok(summarizeToolInput({ command: 'x'.repeat(140) }).endsWith('...'));
   });
 });

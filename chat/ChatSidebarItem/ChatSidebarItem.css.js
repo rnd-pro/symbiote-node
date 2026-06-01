@@ -134,6 +134,11 @@ chat-sidebar-item[data-group] > .chat-item .chat-item-delete {
   margin-left: 6px;
 }
 
+.chat-item-adapter:empty,
+.chat-item-type:empty {
+  display: none;
+}
+
 .chat-item-type {
   font-size: 9px;
   color: var(--sn-cat-server);
@@ -264,6 +269,15 @@ chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child {
   padding-left: 58px;
 }
 
+:host([data-active]) > .chat-item-child,
+chat-sidebar-sub-item[data-active] > .chat-item-child {
+  padding-left: 36px;
+}
+
+chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item[data-active] > .chat-item-child {
+  padding-left: 56px;
+}
+
 chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child::before {
   left: 40px;
 }
@@ -278,6 +292,13 @@ chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item .chat-item-child::be
 .chat-nav[collapsed] chat-sidebar-sub-item .chat-sub-items {
   display: none;
   max-height: 0;
+}
+
+.chat-nav[collapsed] chat-sidebar-item[data-expanded] > .chat-sub-items,
+.chat-nav[collapsed] chat-sidebar-sub-item[data-expanded] > .chat-sub-items {
+  display: block;
+  max-height: 500px;
+  overflow: visible;
 }
 
 :host-context(.chat-nav[collapsed]) .chat-item-adapter,

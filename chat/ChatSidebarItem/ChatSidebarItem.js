@@ -51,6 +51,7 @@ export class ChatSidebarItem extends Symbiote {
     adapter: '',
     icon: 'chat',
     agentColor: '',
+    metaLabel: '',
     statusKind: '',
     statusIcon: '',
     statusTitle: '',
@@ -164,7 +165,7 @@ export class ChatSidebarItem extends Symbiote {
 }
 
 ChatSidebarItem.template = html`
-<div class="chat-item" ${{ onclick: 'onItemClick' }}>
+<div class="chat-item" ${{ '@data-id': 'id', onclick: 'onItemClick' }}>
   <span class="chat-item-icon-slot">
     <span class="material-symbols-outlined chat-icon chat-item-icon" ${{ textContent: 'icon' }}></span>
     <button class="chat-item-delete" ${{ title: 'deleteTitle', '@aria-label': 'deleteChatLabel', onclick: 'onDelete' }}>
@@ -173,10 +174,10 @@ ChatSidebarItem.template = html`
   </span>
   <span class="chat-item-label" ${{ textContent: 'cleanName' }}></span>
   <span class="material-symbols-outlined chat-status-icon" ref="statusIcon" ${{ textContent: 'statusIcon', title: 'statusTitle' }}></span>
-  <span class="chat-item-adapter" ${{ textContent: 'adapter' }}></span>
+  <span class="chat-item-adapter" ${{ textContent: 'metaLabel' }}></span>
   <span class="material-symbols-outlined chat-expand-icon" role="button" tabindex="0" ${{ title: 'toggleChildrenLabel', '@aria-label': 'toggleChildrenLabel', onclick: 'onExpandToggle' }}>chevron_right</span>
 </div>
-<div class="chat-sub-items" itemize="subChats" item-tag="chat-sidebar-sub-item"></div>
+<div class="chat-sub-items" itemize="subChats" item-tag="chat-sidebar-sub-item" ${{ '@data-parent': 'id' }}></div>
 `;
 
 export class ChatSidebarSubItem extends Symbiote {
@@ -190,7 +191,7 @@ export class ChatSidebarSubItem extends Symbiote {
     statusKind: '',
     statusIcon: '',
     statusTitle: '',
-    agentType: '',
+    metaLabel: '',
     hasChildren: false,
     isExpanded: false,
     isActive: false,
@@ -282,7 +283,7 @@ export class ChatSidebarSubItem extends Symbiote {
 }
 
 ChatSidebarSubItem.template = html`
-<div class="chat-item-child" ${{ onclick: 'onItemClick' }}>
+<div class="chat-item-child" ${{ '@data-id': 'id', onclick: 'onItemClick' }}>
   <span class="chat-item-icon-slot">
     <span class="material-symbols-outlined chat-icon chat-item-icon" ${{ textContent: 'icon' }}></span>
     <button class="chat-item-delete" ${{ title: 'deleteTitle', '@aria-label': 'deleteChatLabel', onclick: 'onDelete' }}>
@@ -290,11 +291,11 @@ ChatSidebarSubItem.template = html`
     </button>
   </span>
   <span class="chat-item-label" ${{ textContent: 'cleanName' }}></span>
-  <span class="chat-item-type" ${{ textContent: 'agentType' }}></span>
+  <span class="chat-item-type" ${{ textContent: 'metaLabel' }}></span>
   <span class="material-symbols-outlined chat-status-icon" ref="statusIcon" ${{ textContent: 'statusIcon', title: 'statusTitle' }}></span>
   <span class="material-symbols-outlined chat-expand-icon" role="button" tabindex="0" ${{ title: 'toggleChildrenLabel', '@aria-label': 'toggleChildrenLabel', onclick: 'onExpandToggle' }}>chevron_right</span>
 </div>
-<div class="chat-sub-items" itemize="subChats" item-tag="chat-sidebar-sub-item"></div>
+<div class="chat-sub-items" itemize="subChats" item-tag="chat-sidebar-sub-item" ${{ '@data-parent': 'id' }}></div>
 `;
 
 ChatSidebarItem.rootStyles = css;

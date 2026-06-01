@@ -141,6 +141,11 @@ describe('chat list components', () => {
       'ChatSidebarItem compact delete affordance must work in Light DOM collapsed nav'
     );
     assert.ok(
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item[data-expanded] > .chat-sub-items') &&
+      sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-sub-item[data-expanded] > .chat-sub-items'),
+      'ChatSidebarItem compact nav must show expanded nested chat lists'
+    );
+    assert.ok(
       composerCss.includes('.btn-wake-listen') &&
       composerCss.includes('.btn-wake-listen.listening') &&
       composerCss.includes('.btn-voice-response') &&
@@ -229,6 +234,29 @@ describe('chat list components', () => {
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-sub-item .chat-item-child::before'),
       'Collapsed nested chat rows must suppress vertical tree rails so they do not cross centered icons'
     );
+    assert.ok(
+      sidebarJs.includes("metaLabel: ''") &&
+      sidebarJs.includes("textContent: 'metaLabel'") &&
+      !sidebarJs.includes("textContent: 'agentType'"),
+      'ChatSidebarItem must display semantic metadata labels instead of technical adapter names'
+    );
+    assert.ok(
+      sidebarJs.includes("'@data-id': 'id'") &&
+      sidebarJs.includes("'@data-parent': 'id'"),
+      'ChatSidebarItem must expose row ids for delegated sidebar selection and expansion'
+    );
+    assert.ok(
+      sidebarCss.includes('.chat-item-type:empty') &&
+      sidebarCss.includes('display: none;'),
+      'ChatSidebarItem must hide empty metadata badges'
+    );
+    assert.ok(
+      sidebarCss.includes('chat-sidebar-sub-item[data-active] > .chat-item-child') &&
+      sidebarCss.includes('padding-left: 36px;') &&
+      sidebarCss.includes('chat-sidebar-sub-item .chat-sub-items chat-sidebar-sub-item[data-active] > .chat-item-child') &&
+      sidebarCss.includes('padding-left: 56px;'),
+      'ChatSidebarSubItem active rows must preserve nested indentation while showing the active border'
+    );
   });
 
   it('supports grouped project chat trees with recursive sub-items', () => {
@@ -239,6 +267,10 @@ describe('chat list components', () => {
     assert.ok(
       sidebarJs.includes('isGroup: false'),
       'ChatSidebarItem must expose an explicit group mode for non-chat tree roots'
+    );
+    assert.ok(
+      shellJs.includes("closest('.chat-item, .chat-item-child')"),
+      'ChatSidebar must delegate selection for both root and nested chat rows'
     );
     assert.ok(
       sidebarJs.includes("emit(this, 'chat-sidebar-toggle'"),

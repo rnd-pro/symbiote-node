@@ -189,7 +189,7 @@ export class ChatSidebarShell extends Symbiote {
 
   _handleChatClick(event) {
     let btnDelete = event.target.closest('.chat-item-delete');
-    let item = event.target.closest('.chat-item');
+    let item = event.target.closest('.chat-item, .chat-item-child');
     if (!item) return;
 
     let chatId = item.dataset.id;

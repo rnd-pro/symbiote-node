@@ -406,6 +406,29 @@ chat-composer.drag-over .composer-body {
   font-size: var(--sn-composer-send-icon-size);
 }
 
+.btn-wake-listen.has-command {
+  width: auto;
+  max-width: 164px;
+  padding: 0 10px;
+  gap: 6px;
+  border-radius: 999px;
+}
+
+.wake-command-text {
+  display: none;
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.btn-wake-listen.has-command .wake-command-text {
+  display: inline;
+}
+
 .btn-voice-language {
   width: auto;
   min-width: 42px;

@@ -126,15 +126,13 @@ describe('chat list components', () => {
       'ChatComposer recording preview must show the cancel action alongside approve'
     );
     assert.ok(
-      read('chat/ChatComposer/ChatComposer.js').includes('chat-composer-voice-command-toggle') &&
-      read('chat/ChatComposer/ChatComposer.js').includes('voiceCommandToggleBtn') &&
-      read('chat/ChatComposer/ChatComposer.js').includes('toggle_on') &&
-      read('chat/ChatComposer/ChatComposer.js').includes('voiceCommandToggleOnTitle') &&
-      read('chat/ChatComposer/ChatComposer.js').includes('voiceCommandToggleText') &&
-      composerCss.includes('.voice-preview-btn.command-toggle.active') &&
-      composerCss.includes('.voice-preview-btn.command-toggle .material-symbols-outlined') &&
-      composerCss.includes('.voice-command-toggle-text'),
-      'ChatComposer recording preview must expose an opt-in command-send toggle block'
+      read('chat/ChatComposer/ChatComposer.js').includes('commandHints = []') &&
+      read('chat/ChatComposer/ChatComposer.js').includes('voiceCommandHints') &&
+      read('chat/ChatComposer/ChatComposer.js').includes('voice-command-hint') &&
+      composerCss.includes('.voice-command-hints') &&
+      composerCss.includes('.voice-command-hint') &&
+      !read('chat/ChatComposer/ChatComposer.js').includes('chat-composer-voice-command-toggle'),
+      'ChatComposer recording preview must expose passive voice command hints instead of an embedded toggle'
     );
     assert.ok(
       sidebarCss.includes('.chat-nav[collapsed] chat-sidebar-item .chat-item-delete'),
@@ -149,6 +147,7 @@ describe('chat list components', () => {
       composerCss.includes('.btn-wake-listen') &&
       composerCss.includes('.btn-wake-listen.listening') &&
       composerCss.includes('.btn-voice-response') &&
+      composerCss.includes('.btn-voice-command') &&
       composerCss.includes('.btn-voice-response[hidden]') &&
       composerCss.includes('.btn-voice-response.enabled'),
       'ChatComposer voice controls must style continuous listening and voice response buttons next to mic'

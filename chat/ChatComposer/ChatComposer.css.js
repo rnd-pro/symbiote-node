@@ -376,7 +376,8 @@ chat-composer.drag-over .composer-body {
 
 .btn-mic,
 .btn-wake-listen,
-.btn-voice-response {
+.btn-voice-response,
+.btn-voice-language {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -393,7 +394,8 @@ chat-composer.drag-over .composer-body {
 
 .btn-mic:hover,
 .btn-wake-listen:hover,
-.btn-voice-response:hover {
+.btn-voice-response:hover,
+.btn-voice-language:hover {
   color: var(--sn-text);
   background: var(--sn-node-hover);
 }
@@ -402,6 +404,29 @@ chat-composer.drag-over .composer-body {
 .btn-wake-listen .material-symbols-outlined,
 .btn-voice-response .material-symbols-outlined {
   font-size: var(--sn-composer-send-icon-size);
+}
+
+.btn-voice-language {
+  width: auto;
+  min-width: 42px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0;
+  color: var(--sn-text-dim);
+  background: var(--sn-node-bg);
+}
+
+.btn-voice-language[data-mode="ru"],
+.btn-voice-language[data-mode="es"],
+.btn-voice-language[data-mode="en"] {
+  color: var(--sn-text);
+  background: var(--sn-node-hover);
+}
+
+.btn-voice-language[hidden] {
+  display: none;
 }
 
 .btn-voice-response[hidden] {

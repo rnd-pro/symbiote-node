@@ -27,6 +27,13 @@ Post-release registry state:
 - `symbiote-engine`: `latest` and `alpha` point to `0.3.0-alpha.4`.
 - `symbiote-node`: `latest` points to `0.3.0-alpha.4`; `alpha` remains on the previous alpha channel.
 
+Follow-up registry state for `0.3.0-alpha.5`:
+
+- Publish `symbiote-engine@0.3.0-alpha.5` first.
+- Publish `symbiote-ui@0.3.0-alpha.5` after the engine package is available.
+- Publish terminal `symbiote-node@0.3.0-alpha.5` after both split packages are available.
+- Verify `latest` and `alpha` dist-tags point to `0.3.0-alpha.5` for all three packages after publish.
+
 ## Consumer Verification
 
 After publish, verify a clean consumer install that includes:

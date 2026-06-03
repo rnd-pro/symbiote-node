@@ -42,7 +42,7 @@ Engine internals must not import browser UI runtime modules.
 
 ### `symbiote-node`
 
-`symbiote-node@0.3.0-alpha.4` is the terminal migration package. It keeps old public entrypoints working by delegating to `symbiote-ui` and `symbiote-engine`.
+`symbiote-node@0.3.0-alpha.5` is the terminal migration package. It keeps old public entrypoints working by delegating to `symbiote-ui` and `symbiote-engine`.
 
 New feature work should not be added to `symbiote-node`.
 

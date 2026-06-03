@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0-alpha.5
+
+- Updated the migration facade dependencies to the `0.3.0-alpha.5` split packages.
+- Kept legacy entrypoints delegating to `symbiote-ui` and `symbiote-engine`.
+
 ## 0.3.0-alpha.4
 
 - Terminal migration release.

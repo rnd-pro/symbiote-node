@@ -68,7 +68,7 @@ describe('packed consumer install', () => {
       console.log([uiPkg.default.version, enginePkg.default.version, nodePkg.default.version].join(':'));
     `], { cwd: consumerDir });
 
-    assert.equal(output.trim(), '0.3.0-alpha.4:0.3.0-alpha.4:0.3.0-alpha.4');
+    assert.equal(output.trim(), '0.3.0-alpha.5:0.3.0-alpha.5:0.3.0-alpha.5');
 
     let tree = run('npm', ['ls', '@symbiotejs/symbiote', '--json'], { cwd: consumerDir });
     let parsed = JSON.parse(tree);

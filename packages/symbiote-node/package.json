@@ -1,6 +1,6 @@
 {
   "name": "symbiote-node",
-  "version": "0.3.0-alpha.4",
+  "version": "0.3.0-alpha.5",
   "type": "module",
   "description": "Terminal migration package. Use symbiote-ui for UI/provider contracts and symbiote-engine for runtime/CLI.",
   "main": "index.js",
@@ -82,8 +82,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "symbiote-engine": "0.3.0-alpha.4",
-    "symbiote-ui": "0.3.0-alpha.4"
+    "symbiote-engine": "0.3.0-alpha.5",
+    "symbiote-ui": "0.3.0-alpha.5"
   },
   "peerDependencies": {
     "@symbiotejs/symbiote": "3.8.0-webmcp.2",

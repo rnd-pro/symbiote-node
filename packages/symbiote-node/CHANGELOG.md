@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0-alpha.6
+
+- Updated terminal facade metadata and related package links for the standalone `symbiote-ui` and `symbiote-engine` repositories.
+- Updated facade dependencies to the `0.3.0-alpha.6` split packages.
+
 ## 0.3.0-alpha.5
 
 - Updated the migration facade dependencies to the `0.3.0-alpha.5` split packages.

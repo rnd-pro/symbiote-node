@@ -8,6 +8,6 @@ Use `symbiote-engine` for graph runtime execution, CLI runtime commands, server 
 
 ## Related Packages
 
-- [`symbiote-ui`](https://github.com/RND-PRO/symbiote-node/tree/main/packages/symbiote-ui) - Web Components, provider manifests, themes, schemas, WebMCP metadata, and JSDA SSR integration.
-- [`symbiote-engine`](https://github.com/RND-PRO/symbiote-node/tree/main/packages/symbiote-engine) - runtime execution, CLI commands, server helpers, registry, persistence, and handlers.
+- [`symbiote-ui`](https://github.com/RND-PRO/symbiote-ui) - Web Components, provider manifests, themes, schemas, WebMCP metadata, and JSDA SSR integration.
+- [`symbiote-engine`](https://github.com/RND-PRO/symbiote-engine) - runtime execution, CLI commands, server helpers, registry, persistence, and handlers.
 - [Package split guide](https://github.com/RND-PRO/symbiote-node/blob/main/docs/package-split.md)

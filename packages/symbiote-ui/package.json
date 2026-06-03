@@ -1,6 +1,6 @@
 {
   "name": "symbiote-ui",
-  "version": "0.3.0-alpha.5",
+  "version": "0.3.0-alpha.6",
   "type": "module",
   "description": "Symbiote provider UI, Web Components, themes, manifests, schemas, graph layout helpers, WebMCP metadata, and SSR-safe UI contracts.",
   "main": "index.js",
@@ -148,19 +148,18 @@
     "ssr"
   ],
   "dependencies": {
-    "symbiote-engine": "0.3.0-alpha.5"
+    "symbiote-engine": "0.3.0-alpha.6"
   },
   "peerDependencies": {
     "@symbiotejs/symbiote": "3.8.0-webmcp.2"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RND-PRO/symbiote-node.git",
-    "directory": "packages/symbiote-ui"
+    "url": "git+https://github.com/RND-PRO/symbiote-ui.git"
   },
-  "homepage": "https://github.com/RND-PRO/symbiote-node/tree/main/packages/symbiote-ui",
+  "homepage": "https://github.com/RND-PRO/symbiote-ui#readme",
   "bugs": {
-    "url": "https://github.com/RND-PRO/symbiote-node/issues"
+    "url": "https://github.com/RND-PRO/symbiote-ui/issues"
   },
   "author": "RND-PRO <nicothin@gmail.com>",
   "license": "MIT",

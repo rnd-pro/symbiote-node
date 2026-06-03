@@ -1,6 +1,6 @@
 {
   "name": "symbiote-node",
-  "version": "0.3.0-alpha.5",
+  "version": "0.3.0-alpha.6",
   "type": "module",
   "description": "Terminal migration package. Use symbiote-ui for UI/provider contracts and symbiote-engine for runtime/CLI.",
   "main": "index.js",
@@ -82,8 +82,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "symbiote-engine": "0.3.0-alpha.5",
-    "symbiote-ui": "0.3.0-alpha.5"
+    "symbiote-engine": "0.3.0-alpha.6",
+    "symbiote-ui": "0.3.0-alpha.6"
   },
   "peerDependencies": {
     "@symbiotejs/symbiote": "3.8.0-webmcp.2",
@@ -99,10 +99,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RND-PRO/symbiote-node.git",
-    "directory": "packages/symbiote-node"
+    "url": "git+https://github.com/RND-PRO/symbiote-node.git"
   },
-  "homepage": "https://github.com/RND-PRO/symbiote-node/tree/main/packages/symbiote-node",
+  "homepage": "https://github.com/RND-PRO/symbiote-node#readme",
   "bugs": {
     "url": "https://github.com/RND-PRO/symbiote-node/issues"
   },

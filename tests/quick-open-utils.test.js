@@ -6,7 +6,7 @@ import {
   fuzzyScore,
   normalizeQuickOpenItems,
   searchQuickOpenItems,
-} from '../navigation/quick-open-utils.js';
+} from '../packages/symbiote-ui/navigation/quick-open-utils.js';
 
 describe('quick-open utilities', () => {
   it('collects unique files from project-graph skeleton shapes', () => {

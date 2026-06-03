@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKER_PATH = path.join(__dirname, '..', 'canvas', 'ForceWorker.js');
+const WORKER_PATH = path.join(__dirname, '..', 'packages', 'symbiote-ui', 'canvas', 'ForceWorker.js');
 
 const NODE_W = 260;
 const NODE_H = 40;

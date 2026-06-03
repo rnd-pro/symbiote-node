@@ -5,7 +5,7 @@ import {
   createNetworkApprovalPageStyles,
   createNetworkApprovalCellBgScript,
   renderNetworkApprovalPage,
-} from '../display/network-approval-page.js';
+} from '../packages/symbiote-ui/display/network-approval-page.js';
 
 describe('network approval page renderer', () => {
   it('renders a provider-themed standalone approval page', () => {

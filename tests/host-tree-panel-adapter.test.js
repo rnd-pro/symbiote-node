@@ -9,7 +9,7 @@ import {
   showTree,
   showTreePlaceholder,
   syncTreeFilter,
-} from '../ui/host-adapters.js';
+} from '../packages/symbiote-ui/ui/host-adapters.js';
 
 function createTree() {
   let listeners = new Map();

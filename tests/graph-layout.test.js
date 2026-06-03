@@ -9,7 +9,7 @@ import {
   getForceLayoutOptions,
   getGraphCacheKey,
   getOrBuildGraph,
-} from '../canvas/graph-layout.js';
+} from '../packages/symbiote-ui/canvas/graph-layout.js';
 
 function createEditor(nodes) {
   return {

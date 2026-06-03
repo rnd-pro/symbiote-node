@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import * as LayoutTree from '../layout/LayoutTree.js';
+import * as LayoutTree from '../packages/symbiote-ui/layout/LayoutTree.js';
 
 test('collectPanels supports canonical layout node shapes', () => {
   let tree = LayoutTree.createSplit(

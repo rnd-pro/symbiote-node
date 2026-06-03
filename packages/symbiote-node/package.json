@@ -1,0 +1,110 @@
+{
+  "name": "symbiote-node",
+  "version": "0.3.0-alpha.4",
+  "type": "module",
+  "description": "Terminal migration package. Use symbiote-ui for UI/provider contracts and symbiote-engine for runtime/CLI.",
+  "main": "index.js",
+  "bin": {
+    "symbiote-node": "cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "default": "./index.js"
+    },
+    "./core": {
+      "import": "./core.js",
+      "default": "./core.js"
+    },
+    "./engine": {
+      "import": "./engine.js",
+      "default": "./engine.js"
+    },
+    "./engine/cli": "./cli.js",
+    "./graph": {
+      "import": "./graph.js",
+      "default": "./graph.js"
+    },
+    "./locale": {
+      "import": "./locale.js",
+      "default": "./locale.js"
+    },
+    "./manifest": {
+      "import": "./manifest.js",
+      "default": "./manifest.js"
+    },
+    "./layout": {
+      "import": "./layout.js",
+      "default": "./layout.js"
+    },
+    "./xr": {
+      "import": "./xr.js",
+      "default": "./xr.js"
+    },
+    "./ui": {
+      "import": "./ui.js",
+      "default": "./ui.js"
+    },
+    "./webmcp": {
+      "import": "./webmcp.js",
+      "default": "./webmcp.js"
+    },
+    "./display/output-preview": "./display/output-preview.js",
+    "./display/highlight": "./display/highlight.js",
+    "./display/markdown-formatter": "./display/markdown-formatter.js",
+    "./display/format-utils": "./display/format-utils.js",
+    "./display/icons": "./display/icons.js",
+    "./display/network-approval-page": "./display/network-approval-page.js",
+    "./display/event-feed-adapter": "./display/event-feed-adapter.js",
+    "./themes/default-provider.js": "./themes/default-provider.js",
+    "./tokens/*": "./tokens/*",
+    "./rules/*": "./rules/*",
+    "./schemas/*": "./schemas/*",
+    "./shapes/*": "./shapes/*",
+    "./plugins/*": "./plugins/*",
+    "./chat/chat-context.js": "./chat/chat-context.js",
+    "./custom-elements.json": "./custom-elements.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "*.js",
+    "display/",
+    "themes/",
+    "tokens/",
+    "rules/",
+    "schemas/",
+    "shapes/",
+    "plugins/",
+    "chat/",
+    "custom-elements.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "symbiote-engine": "0.3.0-alpha.4",
+    "symbiote-ui": "0.3.0-alpha.4"
+  },
+  "peerDependencies": {
+    "@symbiotejs/symbiote": "3.8.0-webmcp.2",
+    "ws": ">=8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ws": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RND-PRO/symbiote-node.git",
+    "directory": "packages/symbiote-node"
+  },
+  "author": "RND-PRO <nicothin@gmail.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

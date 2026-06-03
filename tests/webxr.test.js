@@ -89,7 +89,7 @@ import {
   getWebXREmulationSupport,
   installWebXREmulationRuntime,
   syncWebXRCanvas,
-} from '../xr/index.js';
+} from '../packages/symbiote-ui/xr/index.js';
 
 describe('WebXR provider adapter', () => {
   it('stays fallback-safe without WebXR APIs', async () => {
@@ -2362,7 +2362,7 @@ describe('WebXR provider adapter', () => {
     assert.equal(transaction.operations[0].layout, 'graph');
     assert.equal(transaction.operations[0].nodeId, 'file-tree');
     assert.deepEqual(transaction.operations[0].patch.layout.rect, next.relativeRect);
-    assert.equal(transaction.metadata.source, 'symbiote-node/xr');
+    assert.equal(transaction.metadata.source, 'symbiote-ui/xr');
   });
 
   it('maps XR frame resize handles to layout.updateNode transactions', () => {
@@ -2552,7 +2552,7 @@ describe('WebXR provider adapter', () => {
 
   it('publishes explicit experimental renderer metadata', () => {
     assert.equal(WEBXR_RENDERER.status, 'experimental');
-    assert.equal(WEBXR_RENDERER.specifier, 'symbiote-node/xr');
+    assert.equal(WEBXR_RENDERER.specifier, 'symbiote-ui/xr');
     assert.ok(WEBXR_RENDERER.modes.includes('immersive-vr'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-layout-projection'));
     assert.ok(WEBXR_RENDERER.capabilities.includes('xr-spatial-scene'));

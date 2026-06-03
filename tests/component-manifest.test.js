@@ -13,9 +13,9 @@ import {
   getComponentTags,
   hasComponent,
   listComponents,
-} from '../manifest/component-registry.js';
+} from '../packages/symbiote-ui/manifest/component-registry.js';
 
-let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
+let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../packages/symbiote-ui');
 let manifestPath = path.join(PKG_ROOT, 'custom-elements.json');
 let manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 let componentDirs = [
@@ -167,7 +167,7 @@ describe('component registry', () => {
     assert.equal(hasComponent('node-canvas'), true);
     assert.equal(getComponent('node-canvas').className, 'NodeCanvas');
     assert.equal(getComponentModule('node-canvas'), 'canvas/NodeCanvas/NodeCanvas.js');
-    assert.equal(getComponentSpecifier('node-canvas'), 'symbiote-node/ui');
+    assert.equal(getComponentSpecifier('node-canvas'), 'symbiote-ui/ui');
     assert.equal(getComponentExportName('node-canvas'), 'NodeCanvas');
     assert.equal(getComponent('canvas-graph').className, 'CanvasGraph');
     assert.equal(getComponentModule('canvas-graph'), 'canvas/CanvasGraph/CanvasGraph.js');
@@ -237,7 +237,7 @@ describe('component registry', () => {
 
   it('advertises public package specifiers instead of private implementation imports', () => {
     for (let component of COMPONENTS) {
-      assert.equal(component.specifier, 'symbiote-node/ui');
+      assert.equal(component.specifier, 'symbiote-ui/ui');
       assert.ok(component.module.endsWith('.js'), `${component.tagName} keeps source metadata`);
     }
   });
@@ -294,7 +294,9 @@ describe('component registry', () => {
     ]) {
       let component = getComponent(tag);
       assert.ok(component.contract, `${tag} must expose contract metadata`);
-      assert.equal(component.contract.schemaVersion, 'component-descriptor-v1');
+      assert.equal(component.contract.schemaVersion, 'component-descriptor-v2');
+      assert.ok(component.contract.ssr, `${tag} must expose SSR metadata`);
+      assert.equal(typeof component.contract.ssr.mode, 'string');
       assert.ok(Array.isArray(component.contract.capabilities));
       assert.ok(Array.isArray(component.contract.themeAliases));
       assert.equal(JSON.stringify(component.contract).includes('function '), false);
@@ -331,7 +333,9 @@ describe('component registry', () => {
     assert.ok(getComponent('output-list-preview').contract.methods.some((method) => method.name === 'setItems'));
     assert.ok(getComponent('output-graph-preview').contract.methods.some((method) => method.name === 'setGraph'));
     assert.ok(getComponent('quick-open').contract.events.some((event) => event.name === 'quick-open-select'));
+    assert.ok(getComponent('quick-open').contract.webmcp.tools.some((tool) => tool.name === 'quick_open_select'));
     assert.ok(getComponent('chat-message-item').contract.properties.some((property) => property.name === 'cardItems'));
+    assert.ok(getComponent('chat-composer').contract.webmcp.tools.some((tool) => tool.name === 'chat_composer_submit'));
     assert.ok(getComponent('chat-list').contract.events.some((event) => event.name === 'chat-list-select'));
     assert.ok(getComponent('chat-sidebar-shell').contract.events.some((event) => event.name === 'chat-sidebar-select'));
     assert.ok(getComponent('chat-sidebar-item').contract.properties.some((property) => property.name === 'subChats'));
@@ -346,5 +350,8 @@ describe('component registry', () => {
     assert.ok(getComponent('graph-tabs').contract.methods.some((method) => method.name === 'addTab'));
     assert.ok(getComponent('graph-breadcrumb').contract.methods.some((method) => method.name === 'setPath'));
     assert.ok(getComponent('graph-frame').contract.properties.some((property) => property.name === 'color'));
+    assert.ok(getComponent('sn-tree-panel').contract.webmcp.tools.some((tool) => tool.name === 'tree_panel_select'));
+    assert.ok(getComponent('sn-list-item').contract.webmcp.tools.some((tool) => tool.name === 'list_item_select'));
+    assert.ok(getComponent('project-tabs').contract.webmcp.tools.some((tool) => tool.name === 'project_tabs_select'));
   });
 });

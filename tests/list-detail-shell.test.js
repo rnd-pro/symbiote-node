@@ -4,9 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getComponent } from '../manifest/component-registry.js';
+import { getComponent } from '../packages/symbiote-ui/manifest/component-registry.js';
 
-let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
+let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../packages/symbiote-ui');
 let componentFiles = [
   'list/ListDetailShell/ListDetailShell.js',
   'list/ListDetailShell/ListDetailShell.tpl.js',

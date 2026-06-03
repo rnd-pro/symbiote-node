@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createProjectRuntime } from '../graph/index.js';
+import { createProjectRuntime } from '../packages/symbiote-ui/graph/index.js';
 
 const baseProject = {
   version: 'project-package-v1',

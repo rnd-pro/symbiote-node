@@ -8,7 +8,7 @@ import {
   resetOverlayStack,
   restoreOverlayHome,
   syncOverlayTheme,
-} from '../ui/overlay-stack.js';
+} from '../packages/symbiote-ui/ui/overlay-stack.js';
 
 describe('overlay stack', () => {
   it('increments overlay z-index above the shared base', () => {

@@ -4,12 +4,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getGraphSchema, listGraphVersions } from '../manifest/graph-schema.js';
-import { getProjectSchema, listProjectSchemaVersions } from '../manifest/project-schema-catalog.js';
-import { getRule, getRuleSet, listRuleSets, listRules } from '../manifest/rule-catalog.js';
-import { getUiSchema, listUiSchemaVersions } from '../manifest/ui-schema-catalog.js';
+import { getGraphSchema, listGraphVersions } from '../packages/symbiote-ui/manifest/graph-schema.js';
+import { getProjectSchema, listProjectSchemaVersions } from '../packages/symbiote-ui/manifest/project-schema-catalog.js';
+import { getRule, getRuleSet, listRuleSets, listRules } from '../packages/symbiote-ui/manifest/rule-catalog.js';
+import { getUiSchema, listUiSchemaVersions } from '../packages/symbiote-ui/manifest/ui-schema-catalog.js';
 
-let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
+let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../packages/symbiote-ui');
 let ruleset = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'rules/symbiote-3x.json'), 'utf-8'));
 let graphSchema = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/graph-v1.json'), 'utf-8'));
 let graphModelSchema = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/graph-model-v1.json'), 'utf-8'));
@@ -17,6 +17,7 @@ let projectPackageSchema = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schem
 let projectTransactionSchema = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/project-transaction-v1.json'), 'utf-8'));
 let uiSchemas = {
   'component-descriptor-v1': JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/component-descriptor-v1.json'), 'utf-8')),
+  'component-descriptor-v2': JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/component-descriptor-v2.json'), 'utf-8')),
   'runtime-ui-v1': JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/runtime-ui-v1.json'), 'utf-8')),
   'theme-rule-block-v1': JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'schemas/theme-rule-block-v1.json'), 'utf-8')),
 };
@@ -90,6 +91,7 @@ describe('runtime UI schema catalog', () => {
   it('exposes provider UI schema versions', () => {
     assert.deepEqual(listUiSchemaVersions(), [
       'component-descriptor-v1',
+      'component-descriptor-v2',
       'runtime-ui-v1',
       'theme-rule-block-v1',
     ]);
@@ -103,6 +105,8 @@ describe('runtime UI schema catalog', () => {
 
   it('defines constructible component, runtime UI, and theme rule block contracts', () => {
     assert.ok(getUiSchema('component-descriptor-v1').$defs.componentContract);
+    assert.ok(getUiSchema('component-descriptor-v2').$defs.ssrContract);
+    assert.ok(getUiSchema('component-descriptor-v2').$defs.webMcpTool);
     assert.ok(getUiSchema('runtime-ui-v1').$defs.node);
     assert.ok(getUiSchema('runtime-ui-v1').$defs.componentRegistry);
     assert.ok(getUiSchema('runtime-ui-v1').$defs.layout);

@@ -11,7 +11,7 @@ import {
   createXRTextureDebugModeSummary,
   createXRTextureGateSummary,
   readXRHtmlCanvasOriginTrialHeaderStatus,
-} from '../xr/index.js';
+} from '../packages/symbiote-ui/xr/index.js';
 
 describe('XR HTML-in-Canvas renderer bridge', () => {
   it('reports structured fallback when ProCanvas APIs are unavailable', () => {

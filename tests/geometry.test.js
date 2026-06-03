@@ -11,11 +11,11 @@
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { NodeEditor } from '../core/Editor.js';
-import { Node } from '../core/Node.js';
-import { Connection } from '../core/Connection.js';
-import { Socket, Input, Output, InputControl } from '../core/Socket.js';
-import { getShape } from '../shapes/index.js';
+import { NodeEditor } from '../packages/symbiote-ui/core/Editor.js';
+import { Node } from '../packages/symbiote-ui/core/Node.js';
+import { Connection } from '../packages/symbiote-ui/core/Connection.js';
+import { Socket, Input, Output, InputControl } from '../packages/symbiote-ui/core/Socket.js';
+import { getShape } from '../packages/symbiote-ui/shapes/index.js';
 
 
 /**

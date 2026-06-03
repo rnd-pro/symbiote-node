@@ -73,7 +73,7 @@ after(() => {
 });
 
 test('GraphExplorerShell exposes graph shell API without Portal policy', async () => {
-  const { GraphExplorerShell } = await import('../canvas/GraphExplorerShell/GraphExplorerShell.js');
+  const { GraphExplorerShell } = await import('../packages/symbiote-ui/canvas/GraphExplorerShell/GraphExplorerShell.js');
   const shell = new GraphExplorerShell();
   const structuredOnly = {};
   const flatOnly = {};
@@ -147,7 +147,7 @@ test('GraphExplorerShell exposes graph shell API without Portal policy', async (
 });
 
 test('GraphExplorerShell emits generic action events', async () => {
-  const { GraphExplorerShell } = await import('../canvas/GraphExplorerShell/GraphExplorerShell.js');
+  const { GraphExplorerShell } = await import('../packages/symbiote-ui/canvas/GraphExplorerShell/GraphExplorerShell.js');
   const shell = new GraphExplorerShell();
   const events = [];
   const button = {
@@ -180,8 +180,8 @@ test('GraphExplorerShell emits generic action events', async () => {
 
 test('light DOM CSS contracts cover slotted graph shell and loading overlay state', async () => {
   const [{ default: shellCss }, { default: loadingCss }] = await Promise.all([
-    import('../canvas/GraphExplorerShell/GraphExplorerShell.css.js'),
-    import('../display/LoadingOverlay/LoadingOverlay.css.js'),
+    import('../packages/symbiote-ui/canvas/GraphExplorerShell/GraphExplorerShell.css.js'),
+    import('../packages/symbiote-ui/display/LoadingOverlay/LoadingOverlay.css.js'),
   ]);
 
   assert.match(shellCss, /graph-explorer-shell > \[slot="canvas"\]/);
@@ -196,7 +196,7 @@ test('light DOM CSS contracts cover slotted graph shell and loading overlay stat
 });
 
 test('chat sidebar item CSS supports light DOM active and expanded state', async () => {
-  const { default: css } = await import('../chat/ChatSidebarItem/ChatSidebarItem.css.js');
+  const { default: css } = await import('../packages/symbiote-ui/chat/ChatSidebarItem/ChatSidebarItem.css.js');
 
   assert.match(css, /chat-sidebar-item\[data-active\] > \.chat-item/);
   assert.match(css, /chat-sidebar-sub-item\[data-active\] > \.chat-item-child/);

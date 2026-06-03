@@ -12,12 +12,12 @@ import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 
 import {
-  cmdDiscover,
   cmdList,
   cmdInspect,
   cmdValidate,
   parseArgs,
-} from '../engine/cli.js';
+} from '../packages/symbiote-engine/cli.js';
+import { cmdDiscover } from '../packages/symbiote-ui/discover.js';
 
 let tmpFile;
 let workflowJSON = {
@@ -89,7 +89,7 @@ describe('discover command', () => {
   });
 
   it('exposes package metadata', () => {
-    assert.equal(data.package.name, 'symbiote-node');
+    assert.equal(data.package.name, 'symbiote-ui');
     assert.equal(typeof data.package.version, 'string');
     assert.equal(typeof data.package.description, 'string');
   });
@@ -104,14 +104,14 @@ describe('discover command', () => {
     }
 
     let entrypoints = new Map(data.exports.entrypoints.map((entry) => [entry.specifier, entry]));
-    for (let specifier of ['symbiote-node/ui', 'symbiote-node/layout', 'symbiote-node/locale', 'symbiote-node/manifest', 'symbiote-node/display/network-approval-page', 'symbiote-node/custom-elements.json']) {
+    for (let specifier of ['symbiote-ui/ui', 'symbiote-ui/layout', 'symbiote-ui/locale', 'symbiote-ui/manifest', 'symbiote-ui/custom-elements.json', 'symbiote-ui/webmcp']) {
       assert.ok(entrypoints.has(specifier), `${specifier} must be described`);
       assert.equal(typeof entrypoints.get(specifier).description, 'string');
     }
-    assert.equal(entrypoints.get('symbiote-node/ui').kind, 'browser');
-    assert.equal(entrypoints.get('symbiote-node/layout').kind, 'ssr-safe');
-    assert.equal(entrypoints.get('symbiote-node/locale').kind, 'node-safe');
-    assert.equal(entrypoints.get('symbiote-node/display/network-approval-page').kind, 'node-safe');
+    assert.equal(entrypoints.get('symbiote-ui/ui').kind, 'browser');
+    assert.equal(entrypoints.get('symbiote-ui/layout').kind, 'ssr-entry-safe');
+    assert.equal(entrypoints.get('symbiote-ui/locale').kind, 'node-safe');
+    assert.equal(entrypoints.get('symbiote-ui/webmcp').kind, 'browser');
   });
 
   describe('registry', () => {
@@ -178,7 +178,7 @@ describe('discover command', () => {
 
       assert.ok(renderer, 'html-in-canvas renderer must be discoverable');
       assert.equal(renderer.status, 'experimental');
-      assert.equal(renderer.specifier, 'symbiote-node/ui');
+      assert.equal(renderer.specifier, 'symbiote-ui/ui');
       assert.equal(renderer.fallback, 'dom-overlay');
       assert.ok(renderer.modes.includes('offscreen2d'));
       assert.ok(renderer.capabilities.includes('interactive-canvas-ui'));
@@ -190,7 +190,7 @@ describe('discover command', () => {
       let webxr = data.manifest.renderers.find((item) => item.name === 'webxr');
       assert.ok(webxr, 'webxr renderer must be discoverable');
       assert.equal(webxr.status, 'experimental');
-      assert.equal(webxr.specifier, 'symbiote-node/xr');
+      assert.equal(webxr.specifier, 'symbiote-ui/xr');
       assert.equal(webxr.fallback, 'dom-canvas');
       assert.ok(webxr.modes.includes('immersive-vr'));
       assert.ok(webxr.modes.includes('immersive-ar'));
@@ -230,7 +230,7 @@ describe('discover command', () => {
       let threeWebxr = data.manifest.renderers.find((item) => item.name === 'three-webxr');
       assert.ok(threeWebxr, 'three-webxr adapter must be discoverable');
       assert.equal(threeWebxr.status, 'optional-adapter');
-      assert.equal(threeWebxr.specifier, 'symbiote-node/xr');
+      assert.equal(threeWebxr.specifier, 'symbiote-ui/xr');
       assert.equal(threeWebxr.dependency.name, 'three');
       assert.equal(threeWebxr.dependency.injection, 'host-supplied');
       assert.ok(threeWebxr.capabilities.includes('three-webxr-manager'));
@@ -261,7 +261,7 @@ describe('discover command', () => {
         assert.equal(typeof c.tagName, 'string');
         assert.equal(typeof c.className, 'string');
         assert.equal(typeof c.module, 'string');
-        assert.equal(c.specifier, 'symbiote-node/ui');
+        assert.equal(c.specifier, 'symbiote-ui/ui');
         assert.ok(c.importKind === 'named' || c.importKind === 'side-effect');
         if (c.importKind === 'named') assert.equal(typeof c.exportName, 'string');
         assert.equal(typeof c.category, 'string');
@@ -328,14 +328,17 @@ describe('discover command', () => {
         let component = components.get(tag);
         assert.ok(component, `${tag} must be discoverable`);
         assert.ok(component.contract, `${tag} must expose a component contract`);
-        assert.equal(component.contract.schemaVersion, 'component-descriptor-v1');
+        assert.equal(component.contract.schemaVersion, 'component-descriptor-v2');
+        assert.ok(component.contract.ssr, `${tag} must expose SSR classification`);
         assert.ok(Array.isArray(component.contract.capabilities), `${tag} capabilities must be data`);
         assert.ok(Array.isArray(component.contract.events), `${tag} events must be data`);
         assert.ok(Array.isArray(component.contract.themeAliases), `${tag} theme aliases must be data`);
         assert.equal(/\bhost-app-specific\b/.test(JSON.stringify(component.contract)), false, `${tag} contract must stay provider-neutral`);
       }
       assert.ok(components.get('chat-composer').contract.events.some((event) => event.name === 'chat-composer-send'));
+      assert.ok(components.get('chat-composer').contract.webmcp.tools.some((tool) => tool.name === 'chat_composer_submit'));
       assert.ok(components.get('source-editor').contract.events.some((event) => event.name === 'source-editor-input'));
+      assert.ok(components.get('source-editor').contract.webmcp.tools.some((tool) => tool.name === 'source_editor_content'));
       assert.ok(components.get('sn-list-item').contract.events.some((event) => event.name === 'sn-list-item-select'));
       assert.ok(components.get('sn-tree-view').contract.events.some((event) => event.name === 'sn-tree-select'));
       assert.ok(components.get('sn-tree-panel').contract.methods.some((method) => method.name === 'showPlaceholder'));
@@ -455,7 +458,7 @@ describe('discover command', () => {
 
     it('exposes graph and runtime UI schemas', () => {
       let schemas = new Map(data.manifest.schemas.map((schema) => [schema.version, schema]));
-    for (let version of ['v1', 'graph-model-v1', 'project-package-v1', 'project-transaction-v1', 'component-descriptor-v1', 'runtime-ui-v1', 'theme-rule-block-v1']) {
+    for (let version of ['v1', 'graph-model-v1', 'project-package-v1', 'project-transaction-v1', 'component-descriptor-v1', 'component-descriptor-v2', 'runtime-ui-v1', 'theme-rule-block-v1']) {
       assert.ok(schemas.has(version), `${version} schema must be discoverable`);
       assert.equal(typeof schemas.get(version).path, 'string');
       assert.equal(typeof schemas.get(version).$id, 'string');

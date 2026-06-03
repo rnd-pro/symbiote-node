@@ -42,8 +42,8 @@ before(async () => {
     buildDirectoryInfo,
     getSourceLanguage,
     isDirectoryLikePath,
-  } = await import('../display/SourceViewer/SourceViewer.js'));
-  ({ CodeBlock } = await import('../display/CodeBlock/CodeBlock.js'));
+  } = await import('../packages/symbiote-ui/display/SourceViewer/SourceViewer.js'));
+  ({ CodeBlock } = await import('../packages/symbiote-ui/display/CodeBlock/CodeBlock.js'));
 });
 
 after(() => {
@@ -98,7 +98,7 @@ describe('SourceViewer display helpers', () => {
       'display/SourceViewer/SourceViewer.css.js',
       'display/SourceEditor/SourceEditor.css.js',
     ]) {
-      let source = fs.readFileSync(path.join(ROOT, relative), 'utf8');
+      let source = fs.readFileSync(path.join(ROOT, 'packages/symbiote-ui', relative), 'utf8');
       for (let literal of [
         'hsl(30, 10%',
         'hsl(30, 15%',
@@ -116,12 +116,12 @@ describe('SourceViewer display helpers', () => {
       }
     }
 
-    let codeBlockCss = fs.readFileSync(path.join(ROOT, 'display/CodeBlock/CodeBlock.css.js'), 'utf8');
+    let codeBlockCss = fs.readFileSync(path.join(ROOT, 'packages/symbiote-ui/display/CodeBlock/CodeBlock.css.js'), 'utf8');
     for (let token of ['--sn-syntax-keyword', '--sn-syntax-string', '--sn-syntax-comment', '--sn-diagnostic-error-bg']) {
       assert.ok(codeBlockCss.includes(token), `CodeBlock must consume ${token}`);
     }
 
-    let sourceViewerCss = fs.readFileSync(path.join(ROOT, 'display/SourceViewer/SourceViewer.css.js'), 'utf8');
+    let sourceViewerCss = fs.readFileSync(path.join(ROOT, 'packages/symbiote-ui/display/SourceViewer/SourceViewer.css.js'), 'utf8');
     assert.ok(sourceViewerCss.includes('--sn-source-action-icon-size'));
   });
 

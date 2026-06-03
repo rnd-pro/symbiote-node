@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 
 import {
   normalizeProjectPackage,
-} from '../graph/index.js';
-import { getProjectSchema, listProjectSchemaVersions } from '../manifest/project-schema-catalog.js';
+} from '../packages/symbiote-ui/graph/index.js';
+import { getProjectSchema, listProjectSchemaVersions } from '../packages/symbiote-ui/manifest/project-schema-catalog.js';
 
 const localAbsolutePath = ['', 'Users', 'example', 'private.js'].join('/');
 
@@ -17,7 +17,7 @@ const packages = [
       name: 'Workspace Control Plane',
       entry: { graph: 'project', layout: 'workspace', theme: 'default' },
       packs: [
-        { id: 'symbiote-node/ui', kind: 'provider' },
+        { id: 'symbiote-ui/ui', kind: 'provider' },
         { id: 'project-graph', kind: 'data-provider' },
       ],
       graphs: {
@@ -184,12 +184,12 @@ describe('project-package-v1 contract', () => {
         main: {
           version: 'runtime-ui-v1',
           componentRegistries: [
-            { id: 'symbiote-node/ui', provider: 'symbiote-node' },
+            { id: 'symbiote-ui/ui', provider: 'symbiote-node' },
             { id: 'portal/runtime', provider: 'agent-portal' },
           ],
           root: {
             component: 'panel-layout',
-            componentRegistry: 'symbiote-node/ui',
+            componentRegistry: 'symbiote-ui/ui',
             children: [{ component: 'pg-agent-chat', componentRegistry: 'portal/runtime' }],
           },
         },
@@ -197,7 +197,7 @@ describe('project-package-v1 contract', () => {
       themes: { default: { extends: 'symbiote-default' } },
     });
 
-    assert.equal(project.layouts.main.componentRegistries[0].id, 'symbiote-node/ui');
+    assert.equal(project.layouts.main.componentRegistries[0].id, 'symbiote-ui/ui');
     assert.equal(project.layouts.main.root.children[0].component, 'pg-agent-chat');
     assert.equal(project.layouts.main.root.children[0].componentRegistry, 'portal/runtime');
   });
@@ -208,7 +208,7 @@ describe('project-package-v1 contract', () => {
       id: 'agent-portal-config',
       entry: { graph: 'workspace', layout: 'portal', theme: 'default' },
       packs: [
-        { id: 'symbiote-node/ui', kind: 'provider' },
+        { id: 'symbiote-ui/ui', kind: 'provider' },
         { id: 'agent-portal/runtime', kind: 'application-adapter' },
       ],
       graphs: {
@@ -241,15 +241,15 @@ describe('project-package-v1 contract', () => {
         portal: {
           version: 'runtime-ui-v1',
           componentRegistries: [
-            { id: 'symbiote-node/ui', provider: 'symbiote-node' },
+            { id: 'symbiote-ui/ui', provider: 'symbiote-node' },
             { id: 'agent-portal/runtime', provider: 'agent-portal' },
           ],
           root: {
             id: 'root',
             component: 'panel-layout',
-            componentRegistry: 'symbiote-node/ui',
+            componentRegistry: 'symbiote-ui/ui',
             children: [
-              { id: 'chat', component: 'chat-transcript', componentRegistry: 'symbiote-node/ui' },
+              { id: 'chat', component: 'chat-transcript', componentRegistry: 'symbiote-ui/ui' },
               { id: 'graph', component: 'pg-project-graph', componentRegistry: 'agent-portal/runtime' },
             ],
           },
@@ -266,7 +266,7 @@ describe('project-package-v1 contract', () => {
       },
     });
 
-    assert.equal(project.packs[0].id, 'symbiote-node/ui');
+    assert.equal(project.packs[0].id, 'symbiote-ui/ui');
     assert.equal(project.graphs.workspace.edges[0].kind, 'ui.binding');
     assert.equal(project.layouts.portal.root.children[1].componentRegistry, 'agent-portal/runtime');
     assert.equal(project.themes.default.modifiers.hue, 218);

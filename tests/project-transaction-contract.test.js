@@ -6,8 +6,8 @@ import {
   normalizeProjectPackage,
   normalizeProjectTransaction,
   updateLayoutNode,
-} from '../graph/index.js';
-import { getProjectSchema, listProjectSchemaVersions } from '../manifest/project-schema-catalog.js';
+} from '../packages/symbiote-ui/graph/index.js';
+import { getProjectSchema, listProjectSchemaVersions } from '../packages/symbiote-ui/manifest/project-schema-catalog.js';
 
 const localAbsolutePath = ['', 'Users', 'example', 'private.js'].join('/');
 

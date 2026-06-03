@@ -19,7 +19,7 @@ import {
   shouldFitForceLayoutInitialTick,
   shouldRestoreFlatFocus,
   toggleGraphLayerButtonState,
-} from '../canvas/graph-explorer.js';
+} from '../packages/symbiote-ui/canvas/graph-explorer.js';
 
 describe('graph explorer view helpers', () => {
   it('resolves initial view mode from query params', () => {

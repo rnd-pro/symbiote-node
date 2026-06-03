@@ -7,13 +7,13 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 
-import * as lib from '../index.js';
-import * as core from '../core/index.js';
-import * as engine from '../engine/index.js';
-import * as graph from '../graph/index.js';
-import * as layout from '../layout/index.js';
-import * as manifest from '../manifest/index.js';
-import * as locale from '../locale/index.js';
+import * as lib from '../packages/symbiote-ui/index.js';
+import * as core from '../packages/symbiote-ui/core/index.js';
+import * as engine from '../packages/symbiote-engine/index.js';
+import * as graph from '../packages/symbiote-ui/graph/index.js';
+import * as layout from '../packages/symbiote-ui/layout/index.js';
+import * as manifest from '../packages/symbiote-ui/manifest/index.js';
+import * as locale from '../packages/symbiote-ui/locale/index.js';
 
 const ROOT_EXPORTS = [
   ['NodeEditor', 'function'],
@@ -636,7 +636,7 @@ describe('symbiote-node UI exports', () => {
       get() {},
     };
     globalThis.document = { createElement() { return {}; } };
-    ui = await import('../ui/index.js');
+    ui = await import('../packages/symbiote-ui/ui/index.js');
   });
 
   after(() => {

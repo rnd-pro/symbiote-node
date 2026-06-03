@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   configureMaterialSymbols,
   ensureMaterialSymbols,
-} from '../icons/MaterialSymbols.js';
+} from '../packages/symbiote-ui/icons/MaterialSymbols.js';
 
 const PACKAGE_ROOT = path.resolve(fileURLToPath(import.meta.url), '../..');
 
@@ -19,8 +19,8 @@ afterEach(() => {
 
 describe('Material Symbols provider assets', () => {
   it('ships a local icon font stylesheet for deterministic host rendering', () => {
-    let cssPath = path.join(PACKAGE_ROOT, 'icons/material-symbols.css');
-    let fontPath = path.join(PACKAGE_ROOT, 'icons/material-symbols-outlined-400.ttf');
+    let cssPath = path.join(PACKAGE_ROOT, 'packages/symbiote-ui/icons/material-symbols.css');
+    let fontPath = path.join(PACKAGE_ROOT, 'packages/symbiote-ui/icons/material-symbols-outlined-400.ttf');
     let css = fs.readFileSync(cssPath, 'utf8');
 
     assert.ok(fs.statSync(fontPath).size > 100_000, 'local Material Symbols font must be packaged');

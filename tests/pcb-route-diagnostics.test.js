@@ -5,7 +5,7 @@ import {
   analyzePcbRouteSet,
   parsePcbPathPoints,
   summarizePcbRouteQuality,
-} from '../canvas/PcbRouteDiagnostics.js';
+} from '../packages/symbiote-ui/canvas/PcbRouteDiagnostics.js';
 
 describe('PCB route diagnostics', () => {
   it('parses PCB path commands into points for rendered-route checks', () => {

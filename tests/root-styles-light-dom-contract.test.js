@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-let ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+let ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../packages/symbiote-ui');
 
 const LIGHT_DOM_ROOT_STYLE_FILES = [
   ['chat/ChatList/ChatList.css.js', 'chat-list'],

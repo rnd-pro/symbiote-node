@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { formatMarkdown } from '../display/markdown-formatter.js';
+import { formatMarkdown } from '../packages/symbiote-ui/display/markdown-formatter.js';
 
 describe('markdown rendering security boundary', () => {
   it('escapes image attributes and rejects scriptable image URLs', () => {

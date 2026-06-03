@@ -4,10 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getThemeCssTokens } from '../manifest/theme-catalog.js';
-import { DEFAULT_PROVIDER_THEME } from '../themes/default-provider.js';
+import { getThemeCssTokens } from '../packages/symbiote-ui/manifest/theme-catalog.js';
+import { DEFAULT_PROVIDER_THEME } from '../packages/symbiote-ui/themes/default-provider.js';
 
-let PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+let PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../packages/symbiote-ui');
 
 let COMPONENT_DIRS = [
   'canvas',

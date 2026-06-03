@@ -202,7 +202,7 @@ before(async () => {
     },
   };
 
-  ({ TreeView } = await import('../tree/TreeView/TreeView.js'));
+  ({ TreeView } = await import('../packages/symbiote-ui/tree/TreeView/TreeView.js'));
 });
 
 after(() => {
@@ -396,7 +396,7 @@ describe('TreeView behavior', () => {
   });
 
   it('publishes light DOM host selectors for tree view sizing', async () => {
-    let { default: css } = await import('../tree/TreeView/TreeView.css.js');
+    let { default: css } = await import('../packages/symbiote-ui/tree/TreeView/TreeView.css.js');
 
     assert.match(css, /sn-tree-view \{/);
     assert.match(css, /sn-tree-view\[hidden\]/);

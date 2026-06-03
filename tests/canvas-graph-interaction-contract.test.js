@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../packages/symbiote-ui');
 
 describe('CanvasGraph interaction contract', () => {
   it('keeps drag and click selection stable while focus transforms animate', () => {

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   bindListItemSelect,
   syncListItem,
-} from '../ui/host-adapters.js';
+} from '../packages/symbiote-ui/ui/host-adapters.js';
 
 function createListItem() {
   let listeners = new Map();

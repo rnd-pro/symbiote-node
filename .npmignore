@@ -5,9 +5,10 @@ tmp/
 *.log
 .agent/
 .agents/
+.agent-portal/
+.gitmodules
 .gemini/
 .github/
 demo/
-tests/
-test-ssr.js
-engine/extensions/
+tests/internal/
+.project-graph-cache.json

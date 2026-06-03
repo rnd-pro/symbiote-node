@@ -18,11 +18,11 @@ import {
   listThemeRuleBlocks,
   listThemes,
   listTokenFiles,
-} from '../manifest/theme-catalog.js';
-import { listComponents } from '../manifest/component-registry.js';
-import { DEFAULT_PROVIDER_THEME } from '../themes/default-provider.js';
+} from '../packages/symbiote-ui/manifest/theme-catalog.js';
+import { listComponents } from '../packages/symbiote-ui/manifest/component-registry.js';
+import { DEFAULT_PROVIDER_THEME } from '../packages/symbiote-ui/themes/default-provider.js';
 
-let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
+let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../packages/symbiote-ui');
 
 function isTokenLeaf(value) {
   return value && typeof value === 'object' && '$value' in value && '$type' in value;

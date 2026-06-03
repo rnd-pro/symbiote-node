@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
+let PKG_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../packages/symbiote-ui');
 
 function read(relative) {
   return fs.readFileSync(path.join(PKG_ROOT, relative), 'utf8');

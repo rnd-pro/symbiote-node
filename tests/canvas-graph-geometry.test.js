@@ -14,7 +14,7 @@ import {
   getNodeRadius,
   getRadialMenuHit,
   getRadialMenuLayout,
-} from '../canvas/CanvasGraph/CanvasGraphGeometry.js';
+} from '../packages/symbiote-ui/canvas/CanvasGraph/CanvasGraphGeometry.js';
 import {
   getDepthGroupsFrame,
   getLayerAnimationFrame,
@@ -24,9 +24,9 @@ import {
   resolveFocusFrame,
   resolveIdleFrame,
   resolveViewportAnimation,
-} from '../canvas/CanvasGraph/CanvasGraphDrawState.js';
+} from '../packages/symbiote-ui/canvas/CanvasGraph/CanvasGraphDrawState.js';
 
-let PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+let PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../packages/symbiote-ui');
 
 describe('CanvasGraph geometry helpers', () => {
   it('keeps plain node radius scaled by connection hub weight', () => {

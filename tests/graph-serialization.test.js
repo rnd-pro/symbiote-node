@@ -5,13 +5,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { NodeEditor } from '../core/Editor.js';
-import { Node } from '../core/Node.js';
-import { Connection } from '../core/Connection.js';
-import { Frame } from '../core/Frame.js';
-import { Socket, Input, Output } from '../core/Socket.js';
-import { editorToText, textToGraph } from '../core/GraphText.js';
-import { editorToMermaid, mermaidToGraph } from '../core/GraphMermaid.js';
+import { NodeEditor } from '../packages/symbiote-ui/core/Editor.js';
+import { Node } from '../packages/symbiote-ui/core/Node.js';
+import { Connection } from '../packages/symbiote-ui/core/Connection.js';
+import { Frame } from '../packages/symbiote-ui/core/Frame.js';
+import { Socket, Input, Output } from '../packages/symbiote-ui/core/Socket.js';
+import { editorToText, textToGraph } from '../packages/symbiote-ui/core/GraphText.js';
+import { editorToMermaid, mermaidToGraph } from '../packages/symbiote-ui/core/GraphMermaid.js';
 
 /**
  * Build a test workflow editor similar to the RU workflow

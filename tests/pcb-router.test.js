@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { routePcbTrace } from '../canvas/PcbRouter.js';
+import { routePcbTrace } from '../packages/symbiote-ui/canvas/PcbRouter.js';
 
 function parseOrthogonalPath(path) {
   const commands = path.match(/[MLHV][^MLHV]*/g) || [];

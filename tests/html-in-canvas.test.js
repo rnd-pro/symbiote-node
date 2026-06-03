@@ -14,7 +14,7 @@ import {
   setupHtmlInCanvas,
   uploadHtmlElementToWebGLTexture,
   copyHtmlElementToWebGPUTexture,
-} from '../canvas/html-in-canvas.js';
+} from '../packages/symbiote-ui/canvas/html-in-canvas.js';
 
 describe('HTML-in-Canvas adapter', () => {
   it('stays unsupported and fallback-safe without browser APIs', () => {

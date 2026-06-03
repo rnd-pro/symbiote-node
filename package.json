@@ -1,166 +1,26 @@
 {
-  "name": "symbiote-node",
-  "version": "0.3.0-alpha.3",
+  "name": "symbiote-node-workspace",
+  "version": "0.3.0-alpha.4",
+  "private": true,
   "type": "module",
-  "description": "Visual Node Graph Editor + Execution Engine — extensible, themeable graph editor and runtime built on Symbiote.js",
-  "main": "index.js",
-  "customElements": "custom-elements.json",
-  "exports": {
-    ".": {
-      "import": "./index.js",
-      "default": "./index.js"
-    },
-    "./core": {
-      "import": "./core/index.js",
-      "default": "./core/index.js"
-    },
-    "./core/*": "./core/*",
-    "./engine": {
-      "import": "./engine/index.js",
-      "default": "./engine/index.js"
-    },
-    "./graph": {
-      "import": "./graph/index.js",
-      "default": "./graph/index.js"
-    },
-    "./locale": {
-      "import": "./locale/index.js",
-      "default": "./locale/index.js"
-    },
-    "./engine/cli": "./engine/cli.js",
-    "./manifest": {
-      "import": "./manifest/index.js",
-      "default": "./manifest/index.js"
-    },
-    "./manifest/*": "./manifest/*",
-    "./layout": {
-      "import": "./layout/index.js",
-      "default": "./layout/index.js"
-    },
-    "./xr": {
-      "import": "./xr/index.js",
-      "default": "./xr/index.js"
-    },
-    "./tokens/*": "./tokens/*",
-    "./rules/*": "./rules/*",
-    "./schemas/*": "./schemas/*",
-    "./custom-elements.json": "./custom-elements.json",
-    "./display/output-preview": "./display/output-preview.js",
-    "./display/highlight": "./display/highlight.js",
-    "./display/markdown-formatter": "./display/markdown-formatter.js",
-    "./display/format-utils": "./display/format-utils.js",
-    "./display/icons": "./display/icons.js",
-    "./display/network-approval-page": "./display/network-approval-page.js",
-    "./display/event-feed-adapter": "./display/event-feed-adapter.js",
-    "./themes/default-provider.js": "./themes/default-provider.js",
-    "./shapes/*": "./shapes/*",
-    "./plugins/*": "./plugins/*",
-    "./chat/chat-context.js": "./chat/chat-context.js",
-    "./package.json": "./package.json",
-    "./ui": {
-      "import": "./ui/index.js",
-      "default": "./ui/index.js"
-    }
-  },
-  "files": [
-    "index.js",
-    "custom-elements.json",
-    "core/",
-    "graph/",
-    "icons/",
-    "engine/*.js",
-    "manifest/",
-    "tokens/",
-    "rules/",
-    "schemas/",
-    "shapes/",
-    "themes/",
-    "plugins/",
-    "canvas/",
-    "node/",
-    "interactions/",
-    "layout/",
-    "locale/",
-    "xr/",
-    "navigation/",
-    "display/",
-    "effects/",
-    "control/",
-    "surface/",
-    "chat/",
-    "list/",
-    "tree/",
-    "toolbar/",
-    "inspector/",
-    "palette/",
-    "menu/",
-    "ui/",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md"
+  "description": "Workspace for Symbiote UI, engine, and terminal migration packages.",
+  "workspaces": [
+    "packages/*"
   ],
-  "sideEffects": [
-    "**/*.css.js",
-    "**/*.tpl.js",
-    "core/base-path.js",
-    "ui/index.js",
-    "canvas/**/*.js",
-    "node/**/*.js",
-    "layout/**/*.js",
-    "xr/**/*.js",
-    "display/**/*.js",
-    "effects/**/*.js",
-    "control/**/*.js",
-    "surface/**/*.js",
-    "chat/**/*.js",
-    "list/**/*.js",
-    "tree/**/*.js",
-    "navigation/**/*.js",
-    "toolbar/**/*.js",
-    "inspector/**/*.js",
-    "palette/**/*.js",
-    "menu/**/*.js"
-  ],
-  "bin": {
-    "symbiote-node": "engine/cli.js"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "demo": "npx -y serve -l 3000 .",
-    "release:alpha": "npm version prerelease --preid=alpha && npm publish --tag alpha",
-    "release:minor": "npm version minor && npm publish",
-    "release:patch": "npm version patch && npm publish"
+    "test:packages": "npm test --workspaces --if-present",
+    "pack:dry-run": "npm pack --dry-run --workspaces"
   },
-  "keywords": [
-    "node-editor",
-    "graph-editor",
-    "visual-programming",
-    "node-graph",
-    "symbiote",
-    "web-components",
-    "data-flow",
-    "dag",
-    "workflow-engine",
-    "execution-engine"
-  ],
-  "peerDependencies": {
-    "@symbiotejs/symbiote": ">=3.0.0",
+  "overrides": {
+    "@symbiotejs/symbiote": "3.8.0-webmcp.2"
+  },
+  "devDependencies": {
+    "@symbiotejs/symbiote": "3.8.0-webmcp.2",
+    "jsda-kit": "1.5.3",
+    "linkedom": ">=0.16.0",
     "ws": ">=8.0.0"
   },
-  "peerDependenciesMeta": {
-    "ws": {
-      "optional": true
-    }
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/RND-PRO/symbiote-node.git"
-  },
-  "author": "RND-PRO <nicothin@gmail.com>",
-  "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
   }

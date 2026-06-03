@@ -5,7 +5,7 @@ import {
   createXRDomPanelWorkbench,
   createXRPanelHost,
   createXRSpatialScene,
-} from '../xr/index.js';
+} from '../packages/symbiote-ui/xr/index.js';
 
 function createElement(tagName) {
   return {

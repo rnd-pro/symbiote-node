@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   createCanvasGraphStore,
   normalizeCanvasGraphModel,
-} from '../canvas/graph-model.js';
+} from '../packages/symbiote-ui/canvas/graph-model.js';
 
 describe('canvas graph model', () => {
   it('normalizes nodes, edges, and explicit roots', () => {

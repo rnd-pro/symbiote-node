@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   canvasGraphModelToGraphModel,
   graphModelToCanvasGraphModel,
-} from '../graph/index.js';
+} from '../packages/symbiote-ui/graph/index.js';
 
 describe('graph canvas adapter', () => {
   it('converts graph-model-v1 nodes and endpoints into a canvas graph model', () => {

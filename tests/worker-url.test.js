@@ -15,10 +15,10 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 
-import { ForceLayout } from '../canvas/ForceLayout.js';
+import { ForceLayout } from '../packages/symbiote-ui/canvas/ForceLayout.js';
 
 const __dir = path.dirname(fileURLToPath(import.meta.url));
-const WORKER_PATH = path.join(__dir, '..', 'canvas', 'ForceWorker.js');
+const WORKER_PATH = path.join(__dir, '..', 'packages', 'symbiote-ui', 'canvas', 'ForceWorker.js');
 
 describe('ForceLayout worker URL contract', () => {
   it('defaultWorkerUrl() returns a string', () => {

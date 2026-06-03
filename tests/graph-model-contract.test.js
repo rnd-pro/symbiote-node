@@ -5,8 +5,8 @@ import {
   normalizeGraphModel,
   normalizeGraphNode,
   normalizeGraphEdge,
-} from '../graph/index.js';
-import { getGraphSchema, listGraphVersions } from '../manifest/graph-schema.js';
+} from '../packages/symbiote-ui/graph/index.js';
+import { getGraphSchema, listGraphVersions } from '../packages/symbiote-ui/manifest/graph-schema.js';
 
 const scenarios = [
   {

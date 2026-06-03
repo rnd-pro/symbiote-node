@@ -15,8 +15,8 @@ import {
   resetLocalization,
   resolveLocale,
   resolveLocaleForMode,
-} from '../locale/index.js';
-import { configureBrowserLocalization, detectBrowserLocale } from '../ui/locale.js';
+} from '../packages/symbiote-ui/locale/index.js';
+import { configureBrowserLocalization, detectBrowserLocale } from '../packages/symbiote-ui/ui/locale.js';
 
 describe('localization helpers', () => {
   beforeEach(() => {

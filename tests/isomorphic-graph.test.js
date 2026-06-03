@@ -6,12 +6,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { NodeEditor } from '../core/Editor.js';
-import { Node } from '../core/Node.js';
-import { Connection } from '../core/Connection.js';
-import { Frame } from '../core/Frame.js';
-import { Socket, Input, Output } from '../core/Socket.js';
-import { Graph } from '../engine/Graph.js';
+import { NodeEditor } from '../packages/symbiote-ui/core/Editor.js';
+import { Node } from '../packages/symbiote-ui/core/Node.js';
+import { Connection } from '../packages/symbiote-ui/core/Connection.js';
+import { Frame } from '../packages/symbiote-ui/core/Frame.js';
+import { Socket, Input, Output } from '../packages/symbiote-ui/core/Socket.js';
+import { Graph } from '../packages/symbiote-engine/Graph.js';
 
 /**
  * Build a test workflow editor with diverse node types
@@ -233,8 +233,8 @@ describe('Editor → Graph interop', () => {
 
 describe('Executor duck-typing', () => {
   it('Executor.run() accepts Editor directly (no conversion)', async () => {
-    const { Executor } = await import('../engine/Executor.js');
-    const { registerNodeType } = await import('../engine/Registry.js');
+    const { Executor } = await import('../packages/symbiote-engine/Executor.js');
+    const { registerNodeType } = await import('../packages/symbiote-engine/Registry.js');
 
 
     registerNodeType({

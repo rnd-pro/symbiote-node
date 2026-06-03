@@ -7,7 +7,7 @@ import {
   normalizeProjectGraphMetadata,
   pathMatchesPattern,
   validateProjectGraphMetadata,
-} from '../graph/index.js'
+} from '../packages/symbiote-ui/graph/index.js'
 
 describe('project graph metadata contract', () => {
   it('normalizes clusters, aliases, theme token colors, and stories', () => {

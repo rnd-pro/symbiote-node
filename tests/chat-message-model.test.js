@@ -8,7 +8,7 @@ import {
   findPreviousAgentText,
   summarizeToolInput,
   toChatMessageItem,
-} from '../chat/message-model.js';
+} from '../packages/symbiote-ui/chat/message-model.js';
 
 describe('chat message model', () => {
   it('maps raw chat messages to renderer items', () => {

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   normalizeOutputList,
   normalizePreviewGraph,
-} from '../display/output-preview.js';
+} from '../packages/symbiote-ui/display/output-preview.js';
 
 describe('normalizeOutputList', () => {
   it('normalizes scalar output as a single generic item', () => {
@@ -121,8 +121,8 @@ describe('output preview component API', () => {
     globalThis.document = { createElement() { return {}; } };
 
     let [{ OutputListPreview }, { OutputGraphPreview }] = await Promise.all([
-      import('../display/OutputListPreview/OutputListPreview.js'),
-      import('../display/OutputGraphPreview/OutputGraphPreview.js'),
+      import('../packages/symbiote-ui/display/OutputListPreview/OutputListPreview.js'),
+      import('../packages/symbiote-ui/display/OutputGraphPreview/OutputGraphPreview.js'),
     ]);
 
     assert.equal(typeof OutputListPreview.prototype.setItems, 'function');

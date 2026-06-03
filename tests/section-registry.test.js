@@ -7,8 +7,8 @@ import {
   normalizeSectionScope,
   sectionMatchesScope,
   withGlobalPanel,
-} from '../layout/LayoutRouter/SectionRegistry.js';
-import * as LayoutTree from '../layout/LayoutTree.js';
+} from '../packages/symbiote-ui/layout/LayoutRouter/SectionRegistry.js';
+import * as LayoutTree from '../packages/symbiote-ui/layout/LayoutTree.js';
 
 describe('section registry', () => {
   it('registers, sorts, scopes, and resolves layouts', () => {

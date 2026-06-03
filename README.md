@@ -6,9 +6,9 @@ The libraries are designed for agents that construct dynamic components and layo
 
 ## Packages
 
-- `symbiote-ui` - Web Components, UI/layout primitives, provider catalogs, themes, tokens, rules, schemas, WebMCP metadata, and JSDA SSR integration contracts.
-- `symbiote-engine` - graph runtime, CLI runtime commands, server helpers, registry, persistence, and handlers.
-- `symbiote-node` - terminal migration package for existing consumers. New feature work belongs in `symbiote-ui` or `symbiote-engine`.
+- [`symbiote-ui`](packages/symbiote-ui) - Web Components, UI/layout primitives, provider catalogs, themes, tokens, rules, schemas, WebMCP metadata, and JSDA SSR integration contracts.
+- [`symbiote-engine`](packages/symbiote-engine) - graph runtime, CLI runtime commands, server helpers, registry, persistence, and handlers.
+- [`symbiote-node`](packages/symbiote-node) - terminal migration package for existing consumers. New feature work belongs in `symbiote-ui` or `symbiote-engine`.
 
 ## Documentation
 

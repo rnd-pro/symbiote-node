@@ -2,6 +2,14 @@
 
 `symbiote-node` is being split into two active packages plus one terminal migration package.
 
+## Repository Links
+
+| Package | Role | Source | npm |
+|---|---|---|---|
+| `symbiote-ui` | Active UI/provider package | [`packages/symbiote-ui`](../packages/symbiote-ui) | [`symbiote-ui`](https://www.npmjs.com/package/symbiote-ui) |
+| `symbiote-engine` | Active runtime package | [`packages/symbiote-engine`](../packages/symbiote-engine) | [`symbiote-engine`](https://www.npmjs.com/package/symbiote-engine) |
+| `symbiote-node` | Terminal migration package | [`packages/symbiote-node`](../packages/symbiote-node) | [`symbiote-node`](https://www.npmjs.com/package/symbiote-node) |
+
 ## Active Packages
 
 ### `symbiote-ui`

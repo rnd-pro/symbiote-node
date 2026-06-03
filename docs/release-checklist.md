@@ -16,23 +16,16 @@ On 2026-06-03, the preflight showed `symbiote-ui` and `symbiote-engine` were not
 
 ## Publish Order
 
-1. Published `symbiote-ui@0.3.0-alpha.4` with browser npm authorization.
-2. Published `symbiote-engine@0.3.0-alpha.4` with browser npm authorization.
-3. Published terminal `symbiote-node@0.3.0-alpha.4` as the migration facade.
-4. Verified public registry dist-tags after publish.
+1. Published `symbiote-engine@0.3.0-alpha.6` with browser npm authorization.
+2. Published `symbiote-ui@0.3.0-alpha.6` with browser npm authorization.
+3. Published terminal `symbiote-node@0.3.0-alpha.6` as the migration facade.
+4. Verified public registry dist-tags after publish and browser-auth tag updates.
 
 Post-release registry state:
 
-- `symbiote-ui`: `latest` and `alpha` point to `0.3.0-alpha.4`.
-- `symbiote-engine`: `latest` and `alpha` point to `0.3.0-alpha.4`.
-- `symbiote-node`: `latest` points to `0.3.0-alpha.4`; `alpha` remains on the previous alpha channel.
-
-Follow-up registry state for `0.3.0-alpha.5`:
-
-- Publish `symbiote-engine@0.3.0-alpha.5` first.
-- Publish `symbiote-ui@0.3.0-alpha.5` after the engine package is available.
-- Publish terminal `symbiote-node@0.3.0-alpha.5` after both split packages are available.
-- Verify `latest` and `alpha` dist-tags point to `0.3.0-alpha.5` for all three packages after publish.
+- `symbiote-engine`: `latest`, `alpha`, and `next` point to `0.3.0-alpha.6`.
+- `symbiote-ui`: `latest`, `alpha`, and `next` point to `0.3.0-alpha.6`.
+- `symbiote-node`: `latest` and `alpha` point to `0.3.0-alpha.6`.
 
 ## Consumer Verification
 

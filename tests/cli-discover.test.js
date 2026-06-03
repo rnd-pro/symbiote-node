@@ -111,7 +111,7 @@ describe('discover command', () => {
     assert.equal(entrypoints.get('symbiote-ui/ui').kind, 'browser');
     assert.equal(entrypoints.get('symbiote-ui/layout').kind, 'ssr-entry-safe');
     assert.equal(entrypoints.get('symbiote-ui/locale').kind, 'node-safe');
-    assert.equal(entrypoints.get('symbiote-ui/webmcp').kind, 'browser');
+    assert.equal(entrypoints.get('symbiote-ui/webmcp').kind, 'ssr-entry-safe');
   });
 
   describe('registry', () => {

@@ -14,6 +14,7 @@ The libraries are designed for agents that construct dynamic components and layo
 
 - [Package split](docs/package-split.md)
 - [Agentic runtime goal](docs/agentic-runtime.md)
+- [Agent contract index](docs/agent-contracts.md)
 - [WebMCP contracts](docs/webmcp.md)
 - [Documentation audit](docs/documentation-audit.md)
 - [Release checklist](docs/release-checklist.md)

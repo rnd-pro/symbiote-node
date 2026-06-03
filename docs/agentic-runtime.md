@@ -31,3 +31,5 @@ Agent-constructable components should publish:
 - client-only constraints for canvas, XR, browser APIs, or hydration-only behavior
 
 This keeps agent composition practical without turning every internal method into a public protocol.
+
+For the concrete public artifacts agents should read, use the [Agent Contract Index](agent-contracts.md).

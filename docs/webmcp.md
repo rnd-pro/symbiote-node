@@ -20,11 +20,14 @@ This workspace uses WebMCP metadata as agent-facing documentation in reasonable 
 Use `component-descriptor-v2` for public components that need agent-readable metadata:
 
 - `contract.ssr.mode`
-- `contract.webmcp.name`
-- `contract.webmcp.description`
-- `contract.webmcp.inputSchema`
-- `contract.webmcp.annotations`
-- visibility and permission hints
+- `contract.webmcp.tools[].name`
+- `contract.webmcp.tools[].description`
+- `contract.webmcp.tools[].inputSchema`
+- `contract.webmcp.tools[].annotations`
+- `contract.webmcp.tools[].exposedTo`
+- `contract.webmcp.tools[].visibilityDeps`
+
+Permission and visibility hints currently live in `annotations`, `exposedTo`, and `visibilityDeps`; there is no separate `permissions` field in the schema.
 
 Do not expose private handler internals, product routes, credentials, local file paths, or host-specific policies through WebMCP descriptors.
 

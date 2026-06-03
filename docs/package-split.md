@@ -55,6 +55,7 @@ New feature work should not be added to `symbiote-node`.
 | `symbiote-node/manifest` | `symbiote-ui/manifest` |
 | `symbiote-node/layout` | `symbiote-ui/layout` |
 | `symbiote-node/graph` | `symbiote-ui/graph` |
+| `symbiote-node/locale` | `symbiote-ui/locale` |
 | `symbiote-node/xr` | `symbiote-ui/xr` |
 | `symbiote-node/webmcp` | `symbiote-ui/webmcp` |
 | `symbiote-node/engine` | `symbiote-engine` |

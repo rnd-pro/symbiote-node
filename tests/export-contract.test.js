@@ -6,6 +6,9 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import * as lib from '../packages/symbiote-ui/index.js';
 import * as core from '../packages/symbiote-ui/core/index.js';
@@ -14,6 +17,9 @@ import * as graph from '../packages/symbiote-ui/graph/index.js';
 import * as layout from '../packages/symbiote-ui/layout/index.js';
 import * as manifest from '../packages/symbiote-ui/manifest/index.js';
 import * as locale from '../packages/symbiote-ui/locale/index.js';
+
+const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
+const UI_ROOT = path.resolve(TEST_DIR, '../packages/symbiote-ui');
 
 const ROOT_EXPORTS = [
   ['NodeEditor', 'function'],
@@ -52,7 +58,6 @@ const ROOT_EXPORTS = [
   ['MODERN_SKIN', 'object'],
   ['COMPACT_SKIN', 'object'],
   ['ROUNDED_SKIN', 'object'],
-  ['GraphHistory', 'function'],
   ['Readonly', 'function'],
   ['History', 'function'],
   ['computeAutoLayout', 'function'],
@@ -653,11 +658,6 @@ describe('symbiote-node UI exports', () => {
     });
   }
 
-  it('exposes graph history separately from plugin history', () => {
-    assert.equal(ui.GraphHistory, engine.GraphHistory);
-    assert.notEqual(ui.History, ui.GraphHistory);
-  });
-
   it('uses default provider as the default theme and palette', () => {
     assert.equal(ui.DEFAULT_THEME, ui.DEFAULT_PROVIDER_THEME);
     assert.equal(ui.DEFAULT_PALETTE, ui.DEFAULT_PROVIDER_PALETTE);
@@ -671,6 +671,24 @@ describe('symbiote-node UI exports', () => {
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-tabs-active-bg'], 'var(--sn-node-bg)');
     assert.equal(ui.DEFAULT_THEME.tokens['--sn-bg-overlay'], 'hsl(var(--sn-hue-base) var(--sn-sat-muted) 0% / 0.45)');
     assert.equal(ui.DEFAULT_THEME.tokens['--border-color'], 'var(--sn-node-border)');
+  });
+
+  it('keeps UI entrypoints off the engine barrel export', () => {
+    let entrypoints = [
+      path.join(UI_ROOT, 'index.js'),
+      path.join(UI_ROOT, 'core/Editor.js'),
+      path.join(UI_ROOT, 'ui/index.js'),
+    ];
+    let violations = [];
+
+    for (let entrypoint of entrypoints) {
+      let source = fs.readFileSync(entrypoint, 'utf8');
+      if (source.includes("from 'symbiote-engine'") || source.includes('from "symbiote-engine"')) {
+        violations.push(path.relative(UI_ROOT, entrypoint));
+      }
+    }
+
+    assert.deepEqual(violations, []);
   });
 });
 

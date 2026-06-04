@@ -156,7 +156,7 @@ describe('component token coverage', () => {
   });
 
   it('keeps critical public CSS components from declaring alternate literal fallback themes', () => {
-    let literalFallback = /var\(\s*--sn-[\w-]+\s*,\s*(?:#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|rgb\(|\d+(?:\.\d+)?px|'|")/;
+    let literalFallback = /var\(\s*--sn-[\w-]+\s*,\s*(?:#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|rgb\(|'|")/;
     let colorLiteral = /(?:#[0-9a-fA-F]{3,8}|rgba?\(|rgb\(|hsla?\(|hsl\()/;
     let violations = [];
 

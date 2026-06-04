@@ -124,9 +124,12 @@ describe('package publish configuration', () => {
 describe('terminal migration package', () => {
   it('keeps symbiote-node as a facade over the split packages', () => {
     let pkg = readJson(path.join(packageRoot('symbiote-node'), 'package.json'));
-    assert.equal(pkg.dependencies['symbiote-ui'], pkg.version);
-    assert.equal(pkg.dependencies['symbiote-engine'], pkg.version);
+    assert.equal(pkg.version, '0.3.0-alpha.7');
+    assert.equal(pkg.dependencies['symbiote-ui'], '0.3.0-alpha.11');
+    assert.equal(pkg.dependencies['symbiote-engine'], '0.3.0-alpha.6');
     assert.equal(pkg.exports['./webmcp'].import, './webmcp.js');
+    assert.equal(pkg.exports['./themes/cascade-theme.js'], './themes/cascade-theme.js');
+    assert.equal(pkg.exports['./themes/scrollbar-styles.js'], './themes/scrollbar-styles.js');
     assert.equal(pkg.bin['symbiote-node'], 'cli.js');
   });
 });

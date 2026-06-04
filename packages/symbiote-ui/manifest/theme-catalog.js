@@ -1,4 +1,8 @@
 import { DEFAULT_PROVIDER_THEME } from '../themes/default-provider.js';
+import {
+  CASCADE_THEME_DESCRIPTOR,
+  getCascadeThemeControls,
+} from '../themes/cascade-theme.js';
 
 export let THEME_NAMES = [
   'default-provider',
@@ -37,6 +41,10 @@ export let TOKEN_FILES = [
     kind: 'theme',
     extends: 'tokens/base.json',
   })),
+];
+
+export let THEME_RUNTIME_DESCRIPTORS = [
+  CASCADE_THEME_DESCRIPTOR,
 ];
 
 const RUNTIME_THEMES = {
@@ -101,6 +109,7 @@ export let THEME_CONTROLS = {
     { name: 'motion', type: 'number', default: '1', cssVar: '--sn-theme-motion-scale', description: 'Global motion multiplier for transitions and feedback effects.' },
     { name: 'elevation', type: 'number', default: '1', cssVar: '--sn-theme-elevation-scale', description: 'Global shadow and overlay intensity multiplier.' },
   ],
+  'cascade-theme': getCascadeThemeControls(),
 };
 
 export let THEME_ELEMENT_GROUPS = [
@@ -878,6 +887,30 @@ export let THEME_TOKENS = {
       "scrollbarThumbHover": {
         "$type": "color",
         "$value": "hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.25)"
+      },
+      "scrollbarTrack": {
+        "$type": "color",
+        "$value": "transparent"
+      },
+      "scrollbarWidth": {
+        "$type": "string",
+        "$value": "thin"
+      },
+      "scrollbarSize": {
+        "$type": "dimension",
+        "$value": "10px"
+      },
+      "scrollbarRadius": {
+        "$type": "dimension",
+        "$value": "999px"
+      },
+      "scrollbarThumbBorder": {
+        "$type": "border",
+        "$value": "3px solid transparent"
+      },
+      "scrollbarThumbMinSize": {
+        "$type": "dimension",
+        "$value": "36px"
       },
       "nodeActiveBorder": {
         "$type": "color",
@@ -2093,6 +2126,14 @@ export function getThemeRuleBlocks(themeName) {
 
 export function getThemeControls(themeName) {
   return copyData(THEME_CONTROLS[themeName] || []);
+}
+
+export function listThemeRuntimeDescriptors() {
+  return copyData(THEME_RUNTIME_DESCRIPTORS);
+}
+
+export function getThemeRuntimeDescriptor(name) {
+  return copyData(THEME_RUNTIME_DESCRIPTORS.find((descriptor) => descriptor.name === name));
 }
 
 export function listThemeElementGroups() {

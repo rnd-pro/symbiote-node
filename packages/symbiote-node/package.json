@@ -1,6 +1,6 @@
 {
   "name": "symbiote-node",
-  "version": "0.3.0-alpha.6",
+  "version": "0.3.0-alpha.7",
   "type": "module",
   "description": "Terminal migration package. Use symbiote-ui for UI/provider contracts and symbiote-engine for runtime/CLI.",
   "main": "index.js",
@@ -57,6 +57,8 @@
     "./display/network-approval-page": "./display/network-approval-page.js",
     "./display/event-feed-adapter": "./display/event-feed-adapter.js",
     "./themes/default-provider.js": "./themes/default-provider.js",
+    "./themes/cascade-theme.js": "./themes/cascade-theme.js",
+    "./themes/scrollbar-styles.js": "./themes/scrollbar-styles.js",
     "./tokens/*": "./tokens/*",
     "./rules/*": "./rules/*",
     "./schemas/*": "./schemas/*",
@@ -83,7 +85,7 @@
   ],
   "dependencies": {
     "symbiote-engine": "0.3.0-alpha.6",
-    "symbiote-ui": "0.3.0-alpha.6"
+    "symbiote-ui": "0.3.0-alpha.11"
   },
   "peerDependencies": {
     "@symbiotejs/symbiote": "3.8.0-webmcp.2",

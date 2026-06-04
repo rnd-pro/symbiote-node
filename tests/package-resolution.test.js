@@ -28,6 +28,7 @@ describe('package exports resolution', () => {
     assert.equal(typeof root.createWebXRAdapter, 'function');
     assert.equal(root.DEFAULT_LOCALE, 'en');
     assert.equal(typeof root.createTranslator, 'function');
+    assert.equal(typeof root.applyCascadeTheme, 'function');
     assert.equal(root.applyTheme, undefined, 'DOM theme helpers must live in symbiote-node/ui');
     assert.equal(root.applyPalette, undefined, 'DOM palette helpers must live in symbiote-node/ui');
     assert.equal(root.applySkin, undefined, 'DOM skin helpers must live in symbiote-node/ui');
@@ -62,6 +63,9 @@ describe('package exports resolution', () => {
     assert.equal(typeof ui.uiPrompt, 'function');
     assert.equal(typeof ui.detectBrowserLocale, 'function');
     assert.equal(typeof ui.configureBrowserLocalization, 'function');
+    assert.equal(typeof ui.applyCascadeTheme, 'function');
+    assert.equal(ui.CASCADE_THEME_DESCRIPTOR.name, 'cascade-theme');
+    assert.equal(ui.CASCADE_THEME_DESCRIPTOR.webmcp.name, 'symbiote-ui.createCascadeTheme');
     assert.ok('SourceEditor' in ui, 'UI entrypoint must expose SourceEditor binding');
     assert.ok('navigate' in ui, 'UI entrypoint must expose router binding');
     assert.equal(typeof engine.Graph, 'function');
@@ -124,6 +128,17 @@ describe('package exports resolution', () => {
     assert.equal(typeof xr.installWebXREmulationRuntime, 'function');
     assert.equal(typeof markdownFormatter.formatMarkdown, 'function');
     assert.equal(typeof markdownFormatter.escapeHtml, 'function');
+  });
+
+  it('exposes terminal migration helpers for the cascade theme contract', async () => {
+    let cascade = await import('symbiote-node/themes/cascade-theme.js');
+    let scrollbars = await import('symbiote-node/themes/scrollbar-styles.js');
+
+    assert.equal(typeof cascade.createCascadeTheme, 'function');
+    assert.equal(typeof cascade.applyCascadeTheme, 'function');
+    assert.equal(cascade.CASCADE_THEME_DESCRIPTOR.name, 'cascade-theme');
+    assert.equal(typeof scrollbars.themedScrollbarRootStyles, 'string');
+    assert.match(scrollbars.themedScrollbarRootStyles, /--sn-scrollbar-thumb/);
   });
 
   it('does not expose removed legacy themes as package subpaths', async () => {

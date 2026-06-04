@@ -6,6 +6,8 @@ Use `symbiote-ui` for Web Components, provider manifests, themes, schemas, WebMC
 
 Use `symbiote-engine` for graph runtime execution, CLI runtime commands, server helpers, registry, persistence, and handlers.
 
+This package keeps legacy imports working for the terminal migration release. Theme work now belongs in `symbiote-ui`; migration consumers can import `applyCascadeTheme()` from `symbiote-node/ui` or `symbiote-node/themes/cascade-theme.js` while moving direct dependencies to `symbiote-ui`.
+
 ## Related Packages
 
 - [`symbiote-ui`](https://github.com/RND-PRO/symbiote-ui) - Web Components, provider manifests, themes, schemas, WebMCP metadata, and JSDA SSR integration.

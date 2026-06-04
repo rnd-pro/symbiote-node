@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0-alpha.7
+
+- Updated the terminal facade to consume `symbiote-ui@0.3.0-alpha.11` while keeping `symbiote-engine@0.3.0-alpha.6`.
+- Re-exported the cascade theme and themed scrollbar helpers for migration consumers.
+- Kept new theme implementation ownership in `symbiote-ui`; `symbiote-node` remains a terminal facade.
+
 ## 0.3.0-alpha.6
 
 - Updated terminal facade metadata and related package links for the standalone `symbiote-ui` and `symbiote-engine` repositories.

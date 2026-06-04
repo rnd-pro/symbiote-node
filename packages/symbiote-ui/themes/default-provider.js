@@ -7,6 +7,8 @@
  * @module symbiote-node/themes/default-provider
  */
 
+import { themedScrollbarRootStyles } from './scrollbar-styles.js';
+
 const DEFAULT_PROVIDER_THEME_TOKENS = {
   '--sn-theme-hue': '218',
   '--sn-theme-chroma': '89%',
@@ -68,6 +70,7 @@ const DEFAULT_PROVIDER_THEME_TOKENS = {
   '--sn-portal-bridge-dot': 'var(--sn-node-selected)',
   '--sn-portal-bridge-grid': '20',
   '--sn-portal-bridge-stub': '36',
+  '--sn-portal-bridge-clearance': '28',
   '--sn-portal-bridge-chamfer': '8',
   '--sn-xr-panel-bg': 'var(--sn-panel-bg)',
   '--sn-xr-panel-border': 'var(--sn-node-border)',
@@ -264,6 +267,12 @@ const DEFAULT_PROVIDER_THEME_TOKENS = {
 
   '--sn-scrollbar-thumb': 'hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.08)',
   '--sn-scrollbar-thumb-hover': 'hsl(var(--sn-hue-base) var(--sn-sat-muted) var(--sn-lit-text) / 0.25)',
+  '--sn-scrollbar-track': 'transparent',
+  '--sn-scrollbar-width': 'thin',
+  '--sn-scrollbar-size': '10px',
+  '--sn-scrollbar-radius': '999px',
+  '--sn-scrollbar-thumb-border': '3px solid transparent',
+  '--sn-scrollbar-thumb-min-size': '36px',
 
   '--sn-tabs-height': '38px',
   '--sn-tabs-item-height': '32px',
@@ -709,6 +718,7 @@ const DEFAULT_PROVIDER_PALETTE_COLORS = {
 export let DEFAULT_PROVIDER_THEME = {
   name: 'default-provider',
   tokens: { ...DEFAULT_PROVIDER_THEME_TOKENS },
+  extraCSS: themedScrollbarRootStyles,
 };
 
 /** @type {import('./Palette.js').PaletteDefinition} */

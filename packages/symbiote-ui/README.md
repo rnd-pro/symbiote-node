@@ -61,6 +61,40 @@ console.log(listModules());
 
 The root package and Node-safe entry points must import without creating DOM globals. Import safety does not mean every exported helper is useful without host data, a DOM adapter, browser hydration, or runtime-provided objects. Browser-only custom elements and module definition helpers belong behind `symbiote-ui/ui`.
 
+## Cascade Theme
+
+`symbiote-ui` exposes a reusable cascade theme contract for agent-built UI, graph canvases, layouts, scrollbars, and VR-ready panels:
+
+```js
+import { applyCascadeTheme, createCascadeTheme } from 'symbiote-ui';
+
+let theme = createCascadeTheme({
+  mode: 'dark',
+  brightness: 0,
+  contrast: 58,
+  chroma: 89,
+  hue: 218,
+  outline: 38,
+  type: 100,
+  density: 100,
+});
+
+applyCascadeTheme(document.documentElement, theme.state);
+```
+
+Apply the cascade once at `:root`, an app shell, or a subtree boundary. Components inherit `--sn-*` tokens; host projects should not duplicate the formulas in app-local CSS or JS.
+
+The contract writes both low-level controls such as `--sn-theme-bg-lightness`,
+`--sn-theme-outline-strength`, `--sn-theme-type-scale`, and
+`--sn-theme-density`, and public component aliases such as `--sn-bg`,
+`--sn-text`, `--sn-node-bg`, `--sn-panel-bg`, `--sn-ctx-bg`,
+`--sn-button-bg`, and `--sn-field-control-bg`.
+
+## Demos
+
+- [`demo/cascade-theme-lab.html`](./demo/cascade-theme-lab.html) - cascade theme controls for dark/light mode, brightness, contrast, accent chroma, and graph/UI token inheritance.
+- [`demo/pcb-router-stress.html`](./demo/pcb-router-stress.html) - animated PCB route diagnostics with orbit metrics, keyframes, and agent-readable JSON samples.
+
 ## WebMCP
 
 Component metadata uses `component-descriptor-v2` with bounded agent-facing contracts:

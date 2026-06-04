@@ -23,6 +23,15 @@ function npmPack(workspace, destination) {
   return path.join(destination, pack.filename);
 }
 
+function collectPackageVersions(node, packageName, versions) {
+  for (let [name, dep] of Object.entries(node.dependencies || {})) {
+    if (name === packageName && dep.version) {
+      versions.add(dep.version);
+    }
+    collectPackageVersions(dep, packageName, versions);
+  }
+}
+
 describe('packed consumer install', () => {
   it('installs all split packages into an isolated consumer with one Symbiote version', () => {
     let tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'symbiote-packed-consumer-'));
@@ -68,7 +77,7 @@ describe('packed consumer install', () => {
       console.log([uiPkg.default.version, enginePkg.default.version, nodePkg.default.version].join(':'));
     `], { cwd: consumerDir });
 
-    assert.equal(output.trim(), '0.3.0-alpha.6:0.3.0-alpha.6:0.3.0-alpha.6');
+    assert.equal(output.trim(), '0.3.0-alpha.11:0.3.0-alpha.6:0.3.0-alpha.7');
 
     let tree = run('npm', ['ls', '@symbiotejs/symbiote', '--json'], { cwd: consumerDir });
     let parsed = JSON.parse(tree);
@@ -84,5 +93,10 @@ describe('packed consumer install', () => {
     collect(parsed);
 
     assert.deepEqual([...versions], ['3.8.0-webmcp.2']);
+
+    let uiTree = JSON.parse(run('npm', ['ls', 'symbiote-ui', '--json'], { cwd: consumerDir }));
+    let uiVersions = new Set();
+    collectPackageVersions(uiTree, 'symbiote-ui', uiVersions);
+    assert.deepEqual([...uiVersions], ['0.3.0-alpha.11']);
   });
 });

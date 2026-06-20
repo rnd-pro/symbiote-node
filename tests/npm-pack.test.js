@@ -1,5 +1,5 @@
 /**
- * npm pack and public documentation integrity tests for the workspace.
+ * npm pack and public documentation integrity tests for symbiote-node.
  *
  * Run: node --test tests/npm-pack.test.js
  */
@@ -12,7 +12,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
-const PACKAGES = ['symbiote-ui', 'symbiote-engine', 'symbiote-node'];
+const PACKAGE_NAME = 'symbiote-node';
+const UI_VERSION = '0.3.0-alpha.45';
+const ENGINE_VERSION = '0.3.0-alpha.11';
 const PRIVATE_PATTERNS = [
   '.agent-portal',
   '.gitmodules',
@@ -20,14 +22,16 @@ const PRIVATE_PATTERNS = [
   'team-memory',
   '/tmp/',
   'tmp/',
+  'symbiote-ui/',
+  'symbiote-engine/',
 ];
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf-8'));
 }
 
-function packageRoot(name) {
-  return path.join(ROOT, 'packages', name);
+function packageRoot() {
+  return path.join(ROOT, 'packages', PACKAGE_NAME);
 }
 
 function exportTarget(target) {
@@ -35,12 +39,12 @@ function exportTarget(target) {
   return target?.import || target?.default || '';
 }
 
-function assertPackageFile(pkgRoot, rel, message = `${rel} must exist`) {
-  assert.ok(fs.existsSync(path.join(pkgRoot, rel)), message);
+function assertPackageFile(rel, message = `${rel} must exist`) {
+  assert.ok(fs.existsSync(path.join(packageRoot(), rel)), message);
 }
 
-function npmPackDryRun(workspace) {
-  let raw = execFileSync('npm', ['pack', '--dry-run', '--json', '--workspace', workspace], {
+function npmPackDryRun() {
+  let raw = execFileSync('npm', ['pack', '--dry-run', '--json', '--workspace', PACKAGE_NAME], {
     cwd: ROOT,
     encoding: 'utf-8',
   });
@@ -48,10 +52,11 @@ function npmPackDryRun(workspace) {
   return pack.files.map((file) => file.path);
 }
 
-describe('workspace public documentation', () => {
-  it('has the open-source documentation structure for the split', () => {
+describe('repository public documentation', () => {
+  it('has the open-source documentation structure for the facade', () => {
     for (let rel of [
       'README.md',
+      'llms.txt',
       'CHANGELOG.md',
       'CONTRIBUTING.md',
       'SECURITY.md',
@@ -65,6 +70,21 @@ describe('workspace public documentation', () => {
     }
   });
 
+  it('links external UI and engine sources instead of internal folders', () => {
+    let docs = [
+      fs.readFileSync(path.join(ROOT, 'README.md'), 'utf-8'),
+      fs.readFileSync(path.join(ROOT, 'docs/package-split.md'), 'utf-8'),
+      fs.readFileSync(path.join(ROOT, 'CONTRIBUTING.md'), 'utf-8'),
+    ].join('\n');
+
+    assert.match(docs, /https:\/\/github\.com\/RND-PRO\/symbiote-ui/);
+    assert.match(docs, /https:\/\/github\.com\/RND-PRO\/symbiote-engine/);
+    assert.doesNotMatch(docs, /\]\(packages\/symbiote-ui\)/);
+    assert.doesNotMatch(docs, /\]\(packages\/symbiote-engine\)/);
+    assert.doesNotMatch(docs, /`packages\/symbiote-ui`/);
+    assert.doesNotMatch(docs, /`packages\/symbiote-engine`/);
+  });
+
   it('links the upstream WebMCP documentation', () => {
     let docs = fs.readFileSync(path.join(ROOT, 'docs/webmcp.md'), 'utf-8');
     assert.match(
@@ -73,63 +93,60 @@ describe('workspace public documentation', () => {
       'docs/webmcp.md must link the upstream Symbiote WebMCP reference'
     );
   });
+});
 
-  it('documents the agentic runtime goal', () => {
-    let docs = fs.readFileSync(path.join(ROOT, 'docs/agentic-runtime.md'), 'utf-8');
-    assert.match(docs, /construct UI and runtime structure dynamically/);
-    assert.match(docs, /without a server restart/);
+describe('workspace package contract', () => {
+  it('limits workspaces to symbiote-node', () => {
+    let pkg = readJson(path.join(ROOT, 'package.json'));
+    assert.deepEqual(pkg.workspaces, ['packages/symbiote-node']);
+    assert.match(pkg.description, /symbiote-node terminal migration package/);
   });
-});
 
-describe('package publish configuration', () => {
-  for (let name of PACKAGES) {
-    it(`${name} has package-local public docs and license`, () => {
-      let pkgRoot = packageRoot(name);
-      assertPackageFile(pkgRoot, 'README.md');
-      assertPackageFile(pkgRoot, 'CHANGELOG.md');
-      assertPackageFile(pkgRoot, 'LICENSE');
-    });
-
-    it(`${name} uses a whitelist files[] publish config`, () => {
-      let pkg = readJson(path.join(packageRoot(name), 'package.json'));
-      assert.ok(Array.isArray(pkg.files), `${name} files[] must be an array`);
-      assert.ok(pkg.files.length > 0, `${name} files[] must not be empty`);
-      assert.equal(pkg.types, undefined, `${name} must not publish TypeScript declarations`);
-      assert.ok(!pkg.files.some((entry) => entry.endsWith('.d.ts')), `${name} files[] must not include .d.ts files`);
-    });
-
-    it(`${name} export targets resolve inside the package root`, () => {
-      let pkgRoot = packageRoot(name);
-      let pkg = readJson(path.join(pkgRoot, 'package.json'));
-      for (let [key, target] of Object.entries(pkg.exports || {})) {
-        let tgt = exportTarget(target);
-        assert.ok(!tgt.includes('../') && !tgt.includes('..\\'), `${name} export ${key} must not traverse`);
-        if (!tgt || tgt.endsWith('/*') || tgt === './package.json') continue;
-        assert.ok(fs.existsSync(path.join(pkgRoot, tgt)), `${name} export ${key} -> ${tgt} must exist`);
-      }
-    });
-
-    it(`${name} dry-run package does not include private coordination artifacts`, () => {
-      let files = npmPackDryRun(name);
-      assert.ok(files.length > 0, `${name} pack dry-run must include files`);
-      for (let file of files) {
-        for (let pattern of PRIVATE_PATTERNS) {
-          assert.ok(!file.includes(pattern), `${name} pack output must not include ${pattern}: ${file}`);
-        }
-      }
-    });
-  }
-});
-
-describe('terminal migration package', () => {
-  it('keeps symbiote-node as a facade over the split packages', () => {
-    let pkg = readJson(path.join(packageRoot('symbiote-node'), 'package.json'));
+  it('keeps symbiote-node as a facade over external packages', () => {
+    let pkg = readJson(path.join(packageRoot(), 'package.json'));
     assert.equal(pkg.version, '0.3.0-alpha.7');
-    assert.equal(pkg.dependencies['symbiote-ui'], '0.3.0-alpha.11');
-    assert.equal(pkg.dependencies['symbiote-engine'], '0.3.0-alpha.6');
+    assert.equal(pkg.dependencies['symbiote-ui'], UI_VERSION);
+    assert.equal(pkg.dependencies['symbiote-engine'], ENGINE_VERSION);
     assert.equal(pkg.exports['./webmcp'].import, './webmcp.js');
     assert.equal(pkg.exports['./themes/cascade-theme.js'], './themes/cascade-theme.js');
     assert.equal(pkg.exports['./themes/scrollbar-styles.js'], './themes/scrollbar-styles.js');
     assert.equal(pkg.bin['symbiote-node'], 'cli.js');
+  });
+
+  it('has package-local public docs and license', () => {
+    assertPackageFile('README.md');
+    assertPackageFile('llms.txt');
+    assertPackageFile('CHANGELOG.md');
+    assertPackageFile('LICENSE');
+  });
+
+  it('uses a whitelist files[] publish config', () => {
+    let pkg = readJson(path.join(packageRoot(), 'package.json'));
+    assert.ok(Array.isArray(pkg.files), 'files[] must be an array');
+    assert.ok(pkg.files.length > 0, 'files[] must not be empty');
+    assert.equal(pkg.types, undefined, 'must not publish TypeScript declarations');
+    assert.ok(!pkg.files.some((entry) => entry.endsWith('.d.ts')), 'files[] must not include .d.ts files');
+  });
+
+  it('export targets resolve inside the package root', () => {
+    let pkgRoot = packageRoot();
+    let pkg = readJson(path.join(pkgRoot, 'package.json'));
+    for (let [key, target] of Object.entries(pkg.exports || {})) {
+      let tgt = exportTarget(target);
+      assert.ok(!tgt.includes('../') && !tgt.includes('..\\'), `export ${key} must not traverse`);
+      if (!tgt || tgt.endsWith('/*') || tgt === './package.json') continue;
+      assert.ok(fs.existsSync(path.join(pkgRoot, tgt)), `export ${key} -> ${tgt} must exist`);
+    }
+  });
+
+  it('dry-run package does not include private or external source artifacts', () => {
+    let files = npmPackDryRun();
+    assert.ok(files.length > 0, 'pack dry-run must include files');
+    assert.ok(files.includes('llms.txt'), 'pack output must include llms.txt');
+    for (let file of files) {
+      for (let pattern of PRIVATE_PATTERNS) {
+        assert.ok(!file.includes(pattern), `pack output must not include ${pattern}: ${file}`);
+      }
+    }
   });
 });

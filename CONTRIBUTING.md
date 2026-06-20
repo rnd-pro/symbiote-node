@@ -1,12 +1,10 @@
 # Contributing
 
-This repository is an npm workspace with three packages:
+This repository is an npm workspace with one package:
 
-- `packages/symbiote-ui`
-- `packages/symbiote-engine`
 - `packages/symbiote-node`
 
-Keep changes inside the package that owns the behavior. UI/provider metadata belongs in `symbiote-ui`; runtime execution belongs in `symbiote-engine`; `symbiote-node` is a terminal migration facade.
+Keep changes inside the package that owns the behavior. This repository owns only the `symbiote-node` terminal migration facade. UI/provider metadata belongs in the external `symbiote-ui` project, and runtime execution belongs in the external `symbiote-engine` project.
 
 Run the relevant tests before opening a change:
 

@@ -1,0 +1,47 @@
+# symbiote-node
+
+> Terminal migration facade for legacy Symbiote Node consumers. New UI/provider work belongs in symbiote-ui; runtime execution belongs in symbiote-engine.
+
+symbiote-node keeps the historical terminal package surface available while the split Symbiote packages move forward independently. Use this repository to understand the facade contract, migration docs, and release checks. Do not treat this repository as the source owner for UI primitives, graph runtime internals, themes, provider catalogs, or host product behavior.
+
+## Key resources
+
+- [README](https://github.com/rnd-pro/symbiote-node/blob/main/README.md): repository purpose, package location, external package ownership, and documentation index
+- [CHANGELOG](https://github.com/rnd-pro/symbiote-node/blob/main/CHANGELOG.md): workspace-level release notes for the migration facade
+- [Package README](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/README.md): npm package purpose and related split packages
+- [Package CHANGELOG](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/CHANGELOG.md): published package changes
+- [Package manifest](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/package.json): exports, dependencies, bin, publish file list, and package metadata
+
+## Migration docs
+
+- [Package split guide](https://github.com/rnd-pro/symbiote-node/blob/main/docs/package-split.md): ownership split between symbiote-node, symbiote-ui, and symbiote-engine
+- [Agent contract index](https://github.com/rnd-pro/symbiote-node/blob/main/docs/agent-contracts.md): agent-facing migration and package-boundary contracts
+- [Agentic runtime goal](https://github.com/rnd-pro/symbiote-node/blob/main/docs/agentic-runtime.md): runtime migration context for terminal consumers
+- [WebMCP contracts](https://github.com/rnd-pro/symbiote-node/blob/main/docs/webmcp.md): upstream WebMCP reference links and facade contract notes
+- [Release checklist](https://github.com/rnd-pro/symbiote-node/blob/main/docs/release-checklist.md): release hygiene, tests, package proof, and public repository checks
+
+## Facade surfaces
+
+- [`symbiote-node`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/index.js): terminal migration barrel for legacy imports
+- [`symbiote-node/core`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/core.js): core facade exports for migration consumers
+- [`symbiote-node/engine`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/engine.js): runtime facade backed by symbiote-engine
+- [`symbiote-node/engine/cli`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/cli.js): legacy CLI entrypoint
+- [`symbiote-node/ui`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/ui.js): UI facade backed by symbiote-ui
+- [`symbiote-node/manifest`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/manifest.js): provider metadata facade backed by symbiote-ui
+- [`symbiote-node/webmcp`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/webmcp.js): WebMCP facade backed by symbiote-ui
+- [`symbiote-node/themes/cascade-theme.js`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/themes/cascade-theme.js): temporary Cascade theme migration path
+
+## Related split packages
+
+- [symbiote-ui](https://github.com/rnd-pro/symbiote-ui): Web Components, layouts, provider manifests, Cascade themes, tokens, schemas, WebMCP metadata, and UI contracts
+- [symbiote-engine](https://github.com/rnd-pro/symbiote-engine): graph runtime execution, CLI runtime commands, server helpers, registry, persistence, and handlers
+- [symbiote-workspace](https://github.com/rnd-pro/symbiote-workspace): workspace-as-config construction, host contracts, MCP/CLI dispatch, portability validation, and no-reload mounting
+- [Symbiote WebMCP reference](https://github.com/symbiotejs/symbiote.js/blob/webmcp/docs/webmcp.md): upstream protocol reference
+
+## Agent guidance
+
+- Prefer direct `symbiote-ui` imports for new UI, layout, theme, manifest, WebMCP, graph, chat, display, and component work.
+- Prefer direct `symbiote-engine` imports for runtime execution, graph primitives, registry, persistence, handlers, packs, CLI runtime commands, and server helpers.
+- Keep `symbiote-node` changes focused on migration compatibility, package metadata, release hygiene, and legacy entrypoint delegation.
+- Do not reintroduce embedded `packages/symbiote-ui` or `packages/symbiote-engine` source ownership into this repository.
+- Keep `.agent-portal/` private and out of npm packages, public docs, tests, fixtures, and release artifacts.

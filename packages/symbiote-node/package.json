@@ -80,12 +80,13 @@
     "chat/",
     "custom-elements.json",
     "README.md",
+    "llms.txt",
     "CHANGELOG.md",
     "LICENSE"
   ],
   "dependencies": {
     "symbiote-engine": "0.3.0-alpha.11",
-    "symbiote-ui": "0.3.0-alpha.44"
+    "symbiote-ui": "0.3.0-alpha.45"
   },
   "peerDependencies": {
     "@symbiotejs/symbiote": "3.8.0-webmcp.2",

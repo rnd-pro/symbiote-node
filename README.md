@@ -1,14 +1,19 @@
-# symbiote-node workspace
+# symbiote-node
 
-This repository hosts the Symbiote provider workspace for agentic UI and runtime construction.
+This repository maintains the `symbiote-node` terminal migration facade.
 
-The libraries are designed for agents that construct dynamic components and layouts at runtime. A chat agent can describe, register, and render a component with data, compose surrounding layouts, and hydrate browser-only behavior without requiring a server restart.
+`symbiote-ui` and `symbiote-engine` are standalone external projects. This repository does not own their source trees; it depends on their published packages and keeps the legacy `symbiote-node` entrypoints available while consumers migrate.
 
-## Packages
+## Package
 
-- [`symbiote-ui`](packages/symbiote-ui) - Web Components, UI/layout primitives, provider catalogs, themes, tokens, rules, schemas, WebMCP metadata, and JSDA SSR integration contracts.
-- [`symbiote-engine`](packages/symbiote-engine) - graph runtime, CLI runtime commands, server helpers, registry, persistence, and handlers.
-- [`symbiote-node`](packages/symbiote-node) - terminal migration package for existing consumers. New feature work belongs in `symbiote-ui` or `symbiote-engine`.
+- [`symbiote-node`](packages/symbiote-node) - terminal migration package for existing consumers.
+
+## External Projects
+
+- [`symbiote-ui`](https://github.com/RND-PRO/symbiote-ui) - Web Components, UI/layout primitives, provider catalogs, themes, tokens, rules, schemas, WebMCP metadata, and JSDA SSR integration contracts.
+- [`symbiote-engine`](https://github.com/RND-PRO/symbiote-engine) - graph runtime, CLI runtime commands, server helpers, registry, persistence, and handlers.
+
+The current facade dependencies are `symbiote-ui@0.3.0-alpha.45` and `symbiote-engine@0.3.0-alpha.11`.
 
 ## Documentation
 

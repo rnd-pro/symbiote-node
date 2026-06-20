@@ -1,6 +1,6 @@
 # Agentic Runtime Goal
 
-Symbiote packages are libraries for agentic construction of arbitrary projects, not a single application shell.
+The Symbiote package family provides libraries for agentic construction of arbitrary projects, not a single application shell.
 
 The core goal is to let an agent construct UI and runtime structure dynamically:
 
@@ -13,9 +13,9 @@ The core goal is to let an agent construct UI and runtime structure dynamically:
 
 ## Design Boundary
 
-`symbiote-ui` owns the component, layout, token, manifest, and WebMCP-facing metadata needed by agents and hosts to compose interfaces.
+The external `symbiote-ui` project owns the component, layout, token, manifest, and WebMCP-facing metadata needed by agents and hosts to compose interfaces.
 
-`symbiote-engine` owns runtime execution and workflow behavior.
+The external `symbiote-engine` project owns runtime execution and workflow behavior.
 
 Hosts own product routing, persistence policy, authorization, transport, and user-specific orchestration.
 

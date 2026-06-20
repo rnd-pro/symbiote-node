@@ -3,14 +3,14 @@
   "version": "0.3.0-alpha.7",
   "private": true,
   "type": "module",
-  "description": "Workspace for Symbiote UI, engine, and terminal migration packages.",
+  "description": "Workspace for the symbiote-node terminal migration package.",
   "workspaces": [
-    "packages/*"
+    "packages/symbiote-node"
   ],
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "test:packages": "npm test --workspaces --if-present",
-    "pack:dry-run": "npm pack --dry-run --workspaces"
+    "test:packages": "npm test --workspace symbiote-node --if-present",
+    "pack:dry-run": "npm pack --dry-run --workspace symbiote-node"
   },
   "overrides": {
     "@symbiotejs/symbiote": "3.8.0-webmcp.2"

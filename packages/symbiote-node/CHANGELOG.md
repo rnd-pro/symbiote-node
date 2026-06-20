@@ -1,8 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Added `llms.txt` as a package-level resource map and included it in the
+  published package.
+- Updated the facade source to consume external `symbiote-ui@0.3.0-alpha.45` and `symbiote-engine@0.3.0-alpha.11`.
+- Removed assumptions that the UI and engine source trees live inside this repository.
+
 ## 0.3.0-alpha.7
 
-- Updated the terminal facade to consume `symbiote-ui@0.3.0-alpha.11` while keeping `symbiote-engine@0.3.0-alpha.6`.
+- Updated the terminal facade to consume external split package dependencies.
 - Re-exported the cascade theme and themed scrollbar helpers for migration consumers.
 - Kept new theme implementation ownership in `symbiote-ui`; `symbiote-node` remains a terminal facade.
 

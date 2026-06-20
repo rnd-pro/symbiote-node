@@ -7,7 +7,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
-const PACKAGES = ['symbiote-engine', 'symbiote-ui', 'symbiote-node'];
+const UI_VERSION = '0.3.0-alpha.45';
+const ENGINE_VERSION = '0.3.0-alpha.11';
+const NODE_VERSION = '0.3.0-alpha.7';
 
 function run(command, args, options = {}) {
   return execFileSync(command, args, {
@@ -17,8 +19,8 @@ function run(command, args, options = {}) {
   });
 }
 
-function npmPack(workspace, destination) {
-  let raw = run('npm', ['pack', '--json', '--workspace', workspace, '--pack-destination', destination]);
+function npmPack(destination) {
+  let raw = run('npm', ['pack', '--json', '--workspace', 'symbiote-node', '--pack-destination', destination]);
   let [pack] = JSON.parse(raw);
   return path.join(destination, pack.filename);
 }
@@ -33,7 +35,7 @@ function collectPackageVersions(node, packageName, versions) {
 }
 
 describe('packed consumer install', () => {
-  it('installs all split packages into an isolated consumer with one Symbiote version', () => {
+  it('installs the facade with external UI and engine dependencies', () => {
     let tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'symbiote-packed-consumer-'));
     let packDir = path.join(tmp, 'packs');
     let consumerDir = path.join(tmp, 'consumer');
@@ -51,14 +53,14 @@ describe('packed consumer install', () => {
       },
     }, null, 2));
 
-    let tarballs = PACKAGES.map((name) => npmPack(name, packDir));
+    let tarball = npmPack(packDir);
     run('npm', [
       'install',
       '--ignore-scripts',
       '--no-audit',
       '--no-fund',
       '--save-exact',
-      ...tarballs,
+      tarball,
       'linkedom',
       'ws',
     ], { cwd: consumerDir });
@@ -77,26 +79,17 @@ describe('packed consumer install', () => {
       console.log([uiPkg.default.version, enginePkg.default.version, nodePkg.default.version].join(':'));
     `], { cwd: consumerDir });
 
-    assert.equal(output.trim(), '0.3.0-alpha.11:0.3.0-alpha.6:0.3.0-alpha.7');
+    assert.equal(output.trim(), `${UI_VERSION}:${ENGINE_VERSION}:${NODE_VERSION}`);
 
     let tree = run('npm', ['ls', '@symbiotejs/symbiote', '--json'], { cwd: consumerDir });
     let parsed = JSON.parse(tree);
-    let versions = new Set();
-    function collect(node) {
-      for (let [name, dep] of Object.entries(node.dependencies || {})) {
-        if (name === '@symbiotejs/symbiote' && dep.version) {
-          versions.add(dep.version);
-        }
-        collect(dep);
-      }
-    }
-    collect(parsed);
-
-    assert.deepEqual([...versions], ['3.8.0-webmcp.2']);
+    let symbioteVersions = new Set();
+    collectPackageVersions(parsed, '@symbiotejs/symbiote', symbioteVersions);
+    assert.deepEqual([...symbioteVersions], ['3.8.0-webmcp.2']);
 
     let uiTree = JSON.parse(run('npm', ['ls', 'symbiote-ui', '--json'], { cwd: consumerDir }));
     let uiVersions = new Set();
     collectPackageVersions(uiTree, 'symbiote-ui', uiVersions);
-    assert.deepEqual([...uiVersions], ['0.3.0-alpha.11']);
+    assert.deepEqual([...uiVersions], [UI_VERSION]);
   });
 });

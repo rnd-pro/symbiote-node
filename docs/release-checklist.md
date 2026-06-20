@@ -1,41 +1,35 @@
 # Release Checklist
 
-This checklist records the package split release gates and post-release verification.
+This checklist records the `symbiote-node` facade release gates. It does not publish or version `symbiote-ui` or `symbiote-engine`; those are external projects.
 
 ## Registry Preflight
 
-Run immediately before publish:
+Run immediately before a `symbiote-node` publish:
 
 ```sh
-npm view symbiote-ui
-npm view symbiote-engine
+npm view symbiote-ui dist-tags --json
+npm view symbiote-engine dist-tags --json
 npm view symbiote-node version --json
+npm view symbiote-ui@0.3.0-alpha.45 version
+npm view symbiote-engine@0.3.0-alpha.11 version
 ```
 
-On 2026-06-03, the preflight showed `symbiote-ui` and `symbiote-engine` were not published in the public npm registry, and `symbiote-node` resolved to `0.3.0-alpha.1`.
+The current facade source depends on:
 
-## Publish Order
-
-1. Published `symbiote-engine@0.3.0-alpha.6` with browser npm authorization.
-2. Published `symbiote-ui@0.3.0-alpha.6` with browser npm authorization.
-3. Published terminal `symbiote-node@0.3.0-alpha.6` as the migration facade.
-4. Verified public registry dist-tags after publish and browser-auth tag updates.
-
-Post-release registry state:
-
-- `symbiote-engine`: `latest`, `alpha`, and `next` point to `0.3.0-alpha.6`.
-- `symbiote-ui`: `latest`, `alpha`, and `next` point to `0.3.0-alpha.6`.
-- `symbiote-node`: `latest` and `alpha` point to `0.3.0-alpha.6`.
+- `symbiote-ui@0.3.0-alpha.45`
+- `symbiote-engine@0.3.0-alpha.11`
+- `@symbiotejs/symbiote@3.8.0-webmcp.2`
 
 ## Consumer Verification
 
-After publish, verify a clean consumer install that includes:
+After packing or publishing, verify a clean consumer install that includes:
 
-- registry `symbiote-ui`, `symbiote-engine`, and `symbiote-node`;
+- registry `symbiote-node`;
+- registry dependencies `symbiote-ui` and `symbiote-engine`;
 - `@symbiotejs/symbiote@3.8.0-webmcp.2`;
 - `linkedom`;
-- `jsda-kit`;
-- one resolved Symbiote version.
+- `ws`;
+- one resolved Symbiote runtime version.
 
 For `jsda-kit` consumers, use npm overrides to keep a single Symbiote runtime:
 
@@ -60,7 +54,7 @@ symbiote-node is a terminal migration package. Use symbiote-ui for UI, provider 
 
 ## Pack Hygiene
 
-Before publish, `npm pack --dry-run --json --workspace <package>` must not include:
+Before publish, `npm pack --dry-run --json --workspace symbiote-node` must not include:
 
 - `.agent-portal/`;
 - `.gitmodules`;
@@ -68,5 +62,6 @@ Before publish, `npm pack --dry-run --json --workspace <package>` must not inclu
 - delegation logs;
 - private memory files;
 - local tarballs;
+- embedded `symbiote-ui` or `symbiote-engine` source trees;
 - absolute local paths;
 - secrets or private URLs.

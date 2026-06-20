@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added `llms.txt` as a compact agent-facing resource map for the migration
+  facade repository.
+- Removed embedded `symbiote-ui` and `symbiote-engine` source ownership from the workspace.
+- Kept this repository focused on the terminal `symbiote-node` facade and external package dependencies.
+
 ## 0.3.0-alpha.5
 
 - Published the package split export contract that keeps browser UI entrypoints off the engine barrel.

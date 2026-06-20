@@ -6,14 +6,11 @@ Documentation is part of each implementation stage.
 
 Before closing a stage, verify that documentation matches current behavior for:
 
-- public package responsibilities
+- public `symbiote-node` facade responsibilities
 - package export maps
 - CLI behavior
-- provider catalogs
-- Web Component catalog
-- WebMCP descriptors
-- SSR classifications
-- tokens, rules, and schemas
+- external provider package versions
+- WebMCP descriptor references
 - migration notes for terminal `symbiote-node`
 - release hygiene and npm package contents
 
@@ -21,11 +18,11 @@ Before closing a stage, verify that documentation matches current behavior for:
 
 Public documentation should stay in these locations:
 
-- root `README.md` for workspace orientation
+- root `README.md` for repository orientation
 - root `CHANGELOG.md` for workspace-level release notes
 - `docs/` for architecture, contracts, migration, WebMCP, and audit policy
-- `packages/*/README.md` for package-local use and ownership
-- `packages/*/CHANGELOG.md` for package-local release notes
+- `packages/symbiote-node/README.md` for package-local use and ownership
+- `packages/symbiote-node/CHANGELOG.md` for package-local release notes
 
 Private coordination, delegation logs, and corporate memory stay in `.agent-portal/` and must not be copied into public docs, tests, package artifacts, or release notes.
 

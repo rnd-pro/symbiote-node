@@ -1,16 +1,16 @@
 # Package Split
 
-`symbiote-node` is being split into two active packages plus one terminal migration package.
+The split is complete: `symbiote-ui` and `symbiote-engine` are standalone external projects, and this repository now maintains only the terminal `symbiote-node` migration facade.
 
 ## Repository Links
 
 | Package | Role | Source | npm |
 |---|---|---|---|
-| `symbiote-ui` | Active UI/provider package | [`packages/symbiote-ui`](../packages/symbiote-ui) | [`symbiote-ui`](https://www.npmjs.com/package/symbiote-ui) |
-| `symbiote-engine` | Active runtime package | [`packages/symbiote-engine`](../packages/symbiote-engine) | [`symbiote-engine`](https://www.npmjs.com/package/symbiote-engine) |
+| `symbiote-ui` | Active UI/provider package | [`RND-PRO/symbiote-ui`](https://github.com/RND-PRO/symbiote-ui) | [`symbiote-ui`](https://www.npmjs.com/package/symbiote-ui) |
+| `symbiote-engine` | Active runtime package | [`RND-PRO/symbiote-engine`](https://github.com/RND-PRO/symbiote-engine) | [`symbiote-engine`](https://www.npmjs.com/package/symbiote-engine) |
 | `symbiote-node` | Terminal migration package | [`packages/symbiote-node`](../packages/symbiote-node) | [`symbiote-node`](https://www.npmjs.com/package/symbiote-node) |
 
-## Active Packages
+## Active External Packages
 
 ### `symbiote-ui`
 
@@ -42,7 +42,12 @@ Engine internals must not import browser UI runtime modules.
 
 ### `symbiote-node`
 
-`symbiote-node@0.3.0-alpha.6` is the terminal migration package. It keeps old public entrypoints working by delegating to `symbiote-ui` and `symbiote-engine`.
+`symbiote-node@0.3.0-alpha.7` is the terminal migration package. It keeps old public entrypoints working by delegating to the external `symbiote-ui` and `symbiote-engine` packages.
+
+Current facade dependencies:
+
+- `symbiote-ui@0.3.0-alpha.45`
+- `symbiote-engine@0.3.0-alpha.11`
 
 New feature work should not be added to `symbiote-node`.
 
@@ -62,4 +67,4 @@ New feature work should not be added to `symbiote-node`.
 
 ## Release Hygiene
 
-Before publishing, verify packed packages do not include `.agent-portal/`, `.gitmodules`, temporary audits, delegation logs, private memory files, or local environment paths.
+Before publishing, verify packed packages do not include `.agent-portal/`, `.gitmodules`, temporary audits, delegation logs, private memory files, local environment paths, local tarballs, or embedded source trees for the external UI and engine projects.

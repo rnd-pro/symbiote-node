@@ -1,0 +1,47 @@
+# symbiote-node
+
+> Terminal migration facade for legacy Symbiote Node imports. New feature ownership lives in symbiote-ui and symbiote-engine.
+
+The symbiote-node package preserves historical entrypoints while consumers move to the split packages. It delegates UI, theme, manifest, WebMCP, and display surfaces to symbiote-ui, and runtime, graph, CLI, registry, persistence, and handler surfaces to symbiote-engine.
+
+## Key resources
+
+- [Package README](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/README.md): package purpose, migration guidance, and related packages
+- [Package CHANGELOG](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/CHANGELOG.md): package-level release history
+- [Package manifest](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/package.json): exports, dependencies, bin, files list, and npm metadata
+- [Repository README](https://github.com/rnd-pro/symbiote-node/blob/main/README.md): repository-level split ownership and documentation index
+- [Package split guide](https://github.com/rnd-pro/symbiote-node/blob/main/docs/package-split.md): migration boundaries for agents and maintainers
+
+## Export surfaces
+
+- [`symbiote-node`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/index.js): legacy terminal migration barrel
+- [`symbiote-node/core`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/core.js): core facade exports
+- [`symbiote-node/engine`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/engine.js): symbiote-engine-backed runtime facade
+- [`symbiote-node/engine/cli`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/cli.js): legacy CLI path
+- [`symbiote-node/graph`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/graph.js): graph facade backed by split package dependencies
+- [`symbiote-node/ui`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/ui.js): symbiote-ui-backed UI facade
+- [`symbiote-node/layout`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/layout.js): layout facade backed by symbiote-ui
+- [`symbiote-node/manifest`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/manifest.js): provider metadata facade backed by symbiote-ui
+- [`symbiote-node/webmcp`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/webmcp.js): WebMCP facade backed by symbiote-ui
+- [`symbiote-node/themes/cascade-theme.js`](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/themes/cascade-theme.js): Cascade theme migration path
+
+## Included compatibility assets
+
+- [custom-elements.json](https://github.com/rnd-pro/symbiote-node/blob/main/packages/symbiote-node/custom-elements.json): compatibility component catalog copied for migration consumers
+- [schemas](https://github.com/rnd-pro/symbiote-node/tree/main/packages/symbiote-node/schemas): compatibility schemas
+- [tokens](https://github.com/rnd-pro/symbiote-node/tree/main/packages/symbiote-node/tokens): compatibility design tokens
+- [rules](https://github.com/rnd-pro/symbiote-node/tree/main/packages/symbiote-node/rules): compatibility Symbiote rules
+- [display](https://github.com/rnd-pro/symbiote-node/tree/main/packages/symbiote-node/display): display utility facades
+
+## Related packages
+
+- [symbiote-ui](https://github.com/rnd-pro/symbiote-ui): Web Components, layouts, graph UI, chat, display, themes, tokens, schemas, manifests, and WebMCP metadata
+- [symbiote-engine](https://github.com/rnd-pro/symbiote-engine): graph runtime, execution lifecycle, registry, persistence, handlers, packs, CLI runtime, and optional server helpers
+- [symbiote-workspace](https://github.com/rnd-pro/symbiote-workspace): portable workspace construction and host integration contracts
+
+## Agent guidance
+
+- Use this package only when preserving legacy `symbiote-node/*` imports.
+- For new UI/provider/theme/schema work, depend on symbiote-ui directly.
+- For new runtime/graph/execution work, depend on symbiote-engine directly.
+- Do not add host credentials, local paths, user identity, private memory, or embedded split-package source trees to this package.

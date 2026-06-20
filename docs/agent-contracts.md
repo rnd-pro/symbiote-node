@@ -1,6 +1,6 @@
 # Agent Contract Index
 
-This workspace exposes agent-facing contracts through package exports, schemas, manifests, and WebMCP descriptors. Agents should prefer these public artifacts over implementation files.
+This repository exposes the `symbiote-node` terminal facade. Agent-facing UI and runtime contracts come from the external `symbiote-ui` and `symbiote-engine` packages through package exports, schemas, manifests, and WebMCP descriptors. Agents should prefer these public artifacts over implementation files.
 
 ## Contract Sources
 
@@ -68,10 +68,10 @@ Agents must respect `contract.ssr.mode` from `component-descriptor-v2`:
 
 `node-safe` and `ssr-entry-safe` mean import safety. They do not guarantee that every exported helper is meaningful without host data, a DOM adapter, browser hydration, or runtime-provided objects.
 
-External SSR hosts can use `jsda-kit` and `linkedom` for integration tests, but `jsda-kit` is not a runtime dependency of `symbiote-ui` and is not maintained in this workspace.
+External SSR hosts can use `jsda-kit` and `linkedom` for integration tests, but `jsda-kit` is not a runtime dependency of `symbiote-ui` and is not maintained in this repository.
 
 ## Boundaries
 
-Agents should not deep-import `packages/symbiote-ui/**`, `packages/symbiote-engine/**`, or legacy `packages/symbiote-node/**` implementation paths from consuming projects. If a capability is missing from a package export, add or request a public contract instead of relying on a private file path.
+Agents should not deep-import implementation paths from `symbiote-ui`, `symbiote-engine`, or legacy `symbiote-node` sources in consuming projects. If a capability is missing from a package export, add or request a public contract instead of relying on a private file path.
 
 Private `.agent-portal/` content is coordination memory. It is not a public contract and must not be copied into package docs, tests, fixtures, or release artifacts.

@@ -26,7 +26,7 @@ describe('discover command', () => {
 
     assert.equal(data.command, 'discover');
     assert.equal(data.package.name, 'symbiote-ui');
-    assert.equal(data.package.version, '0.3.0-alpha.45');
+    assert.equal(data.package.version, '0.3.0-alpha.46');
 
     let entrypoints = new Map(data.exports.entrypoints.map((entry) => [entry.specifier, entry]));
     for (let specifier of [

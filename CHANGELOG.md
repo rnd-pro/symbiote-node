@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0-alpha.8
+
 - Added `llms.txt` as a compact agent-facing resource map for the migration
   facade repository.
 - Removed embedded `symbiote-ui` and `symbiote-engine` source ownership from the workspace.

@@ -13,8 +13,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
 const PACKAGE_NAME = 'symbiote-node';
-const UI_VERSION = '0.3.0-alpha.45';
-const ENGINE_VERSION = '0.3.0-alpha.11';
+const UI_VERSION = '0.3.0-alpha.46';
+const ENGINE_VERSION = '0.3.0-alpha.12';
 const PRIVATE_PATTERNS = [
   '.agent-portal',
   '.gitmodules',
@@ -104,7 +104,7 @@ describe('workspace package contract', () => {
 
   it('keeps symbiote-node as a facade over external packages', () => {
     let pkg = readJson(path.join(packageRoot(), 'package.json'));
-    assert.equal(pkg.version, '0.3.0-alpha.7');
+    assert.equal(pkg.version, '0.3.0-alpha.8');
     assert.equal(pkg.dependencies['symbiote-ui'], UI_VERSION);
     assert.equal(pkg.dependencies['symbiote-engine'], ENGINE_VERSION);
     assert.equal(pkg.exports['./webmcp'].import, './webmcp.js');

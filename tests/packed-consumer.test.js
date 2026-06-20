@@ -7,9 +7,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../');
-const UI_VERSION = '0.3.0-alpha.45';
-const ENGINE_VERSION = '0.3.0-alpha.11';
-const NODE_VERSION = '0.3.0-alpha.7';
+const UI_VERSION = '0.3.0-alpha.46';
+const ENGINE_VERSION = '0.3.0-alpha.12';
+const NODE_VERSION = '0.3.0-alpha.8';
 
 function run(command, args, options = {}) {
   return execFileSync(command, args, {

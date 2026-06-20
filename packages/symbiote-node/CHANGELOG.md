@@ -2,9 +2,11 @@
 
 ## Unreleased
 
+## 0.3.0-alpha.8
+
 - Added `llms.txt` as a package-level resource map and included it in the
   published package.
-- Updated the facade source to consume external `symbiote-ui@0.3.0-alpha.45` and `symbiote-engine@0.3.0-alpha.11`.
+- Updated the facade source to consume external `symbiote-ui@0.3.0-alpha.46` and `symbiote-engine@0.3.0-alpha.12`.
 - Removed assumptions that the UI and engine source trees live inside this repository.
 
 ## 0.3.0-alpha.7
